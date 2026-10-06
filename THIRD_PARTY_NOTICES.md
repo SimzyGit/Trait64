@@ -4,8 +4,8 @@
 
 - Source : https://github.com/Disservin/chess-library
 - Révision copiée : `53e6a841dcda7059a2af363d85f785ef1817304a` (2026-07-26).
-- Fichier : `third_party/chess-library/chess.hpp`, copié sans modification.
-- SHA-256 : `f2c8e2e929641e2c71cbe9d8abd718cf3cac46c2a34531215ebd733905e98d7f`.
+- Fichier : `third_party/chess-library/chess.hpp`, avec une adaptation de compatibilité GCC 12 documentée dans `third_party/chess-library/PATCHES.md`.
+- SHA-256 du fichier amont avant adaptation : `f2c8e2e929641e2c71cbe9d8abd718cf3cac46c2a34531215ebd733905e98d7f`.
 - Licence MIT, texte intégral conservé dans `third_party/chess-library/LICENSE`.
 - Utilisé pour les règles, coups légaux, SAN/UCI, représentation des positions et fins de partie. Le parseur PGN avec arbre de variantes est propre à Trait64.
 

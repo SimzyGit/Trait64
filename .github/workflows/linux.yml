@@ -14,13 +14,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distribution: ["debian:bookworm", "debian:trixie"]
+        include:
+          - distribution: "debian:bookworm"
+            label: debian12-amd64
+          - distribution: "debian:trixie"
+            label: debian13-amd64
     container: ${{ matrix.distribution }}
     steps:
       - name: Install build and runtime dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git build-essential cmake ninja-build qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite fonts-dejavu-core stockfish
+          apt-get install -y --no-install-recommends ca-certificates git file build-essential cmake ninja-build qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite fonts-dejavu-core stockfish
       - uses: actions/checkout@v4
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -30,9 +34,13 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Package for this distribution
         run: cd build && cpack -G DEB
+      - name: Verify installed package
+        run: |
+          apt-get install -y ./build/*.deb
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software trait64 --smoke-test
       - uses: actions/upload-artifact@v4
         with:
-          name: Trait64-${{ strategy.job-index }}-linux-deb
+          name: Trait64-${{ matrix.label }}
           path: build/*.deb
           retention-days: 30
 

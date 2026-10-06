@@ -302,7 +302,8 @@ class Square {
     // clang-format on
 
 // when c++20
-#if (__cplusplus >= 202002L && __GNUC__ >= 12) || (defined(_MSC_VER) && _MSVC_LANG >= 202002L)
+// Trait64: GCC 12 ICEs on the using-enum aliases in setFenCommon. Use the upstream fallback there.
+#if (__cplusplus >= 202002L && __GNUC__ >= 13) || (defined(_MSC_VER) && _MSVC_LANG >= 202002L)
     using enum underlying;
 #else
 
