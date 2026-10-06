@@ -1,0 +1,31 @@
+[Event "Découverte : partie italienne"]
+[Site "Trait64"]
+[Date "2026.10.06"]
+[Round "?"]
+[White "Les Blancs"]
+[Black "Les Noirs"]
+[Result "*"]
+[ECO "C50"]
+
+{Une ligne pédagogique pour découvrir les variantes. Revenez à la position initiale et créez une carte d’entraînement.} 1. e4 {Occuper le centre et libérer le fou.} e5 2. Nf3 Nc6 3. Bc4 {La partie italienne.} (3. Bb5 {La partie espagnole.} a6 4. Ba4 Nf6) Bc5 4. c3 Nf6 5. d3 d6 6. O-O O-O *
+
+[Event "Découverte : défense sicilienne"]
+[Site "Trait64"]
+[Date "2026.10.06"]
+[Round "?"]
+[White "Les Blancs"]
+[Black "Les Noirs"]
+[Result "*"]
+[ECO "B20"]
+
+1. e4 c5 {Une lutte asymétrique pour le centre.} 2. Nf3 (2. c3 {Variante Alapine.} d5 3. exd5 Qxd5) d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 *
+
+[Event "Découverte : mat du berger"]
+[Site "Trait64"]
+[Date "2026.10.06"]
+[Round "?"]
+[White "Attaque"]
+[Black "Défense"]
+[Result "1-0"]
+
+1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6?? {La menace sur f7 a été oubliée.} (3... g6 {Une défense contre la menace immédiate.} 4. Qf3 Nf6) 4. Qxf7# 1-0

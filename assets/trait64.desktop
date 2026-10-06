@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Trait64
+Comment=Étudier, analyser et préparer ses échecs hors ligne
+Exec=trait64
+Icon=trait64
+Terminal=false
+Categories=Game;BoardGame;Education;
+Keywords=chess;échecs;PGN;Stockfish;
+StartupWMClass=Trait64
