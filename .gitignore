@@ -1,0 +1,10 @@
+/build*/
+/dist/
+*.user
+*.sqlite
+*.sqlite-*
+*.t64
+*.log
+*.lock
+/.cache/
+/compile_commands.json
