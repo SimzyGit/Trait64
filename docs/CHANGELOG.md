@@ -7,6 +7,7 @@ Personnalisation des pièces/échiquier/fond ; Chess960 et éditeur de position 
 Corrections ciblées pendant la vérification :
 
 - Chemins des ressources SVG corrigés et chargement des 48 images testé.
+- Dépendance explicite au greffon SVG séparé de Debian 13, y compris avec une installation sans paquets recommandés.
 - Contraste des aperçus, du texte de fond et des boutons ajusté ; panneaux vérifiés sur petite fenêtre et navigation latérale défilante.
 - Plantage de redimensionnement après actualisation des statistiques corrigé en conservant les composants des tableaux de bord.
 - Résultats exacts du moteur conservés face à ses bornes intermédiaires ; réponses de bilan périmées ignorées après annulation.

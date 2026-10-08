@@ -24,6 +24,10 @@ sudo apt-get install --no-install-recommends -y \
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
     qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window \
     libqt6sql6-sqlite libqt6svg6 qt6-wayland fonts-dejavu-core stockfish
+# Debian 13 splits image-format plugins out of libqt6svg6.
+if apt-cache show qt6-svg-plugins >/dev/null 2>&1; then
+    sudo apt-get install --no-install-recommends -y qt6-svg-plugins
+fi
 echo 'Compilation de Trait64 pour cet ordinateur…'
 cmake -S "${trait64_source}" -B "${trait64_source}/build-linux" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${trait64_prefix}"
