@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     try {
         t64::Uci engine;
-        QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines);
+        QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines),
+            complete(&engine, &t64::Uci::completed);
         QString path = qEnvironmentVariable("T64_STOCKFISH");
         if (path.isEmpty())
             path = QStandardPaths::findExecutable("stockfish");
@@ -67,6 +68,17 @@ int main(int argc, char **argv) {
         engine.stop();
         engine.shutdown();
         check(best.size() == 1, "Old bestmove incorrectly emitted");
+        check(complete.size() == 1 && !complete.last()[1].toList().empty(),
+              "Completed search includes exact PV");
+        check(!complete.last()[1].toList().first().toMap()["bound"].toBool(),
+              "Bound score cannot replace exact completed score");
+        engine.start(path, 1, 16, 1, 20);
+        auto frc = QString::fromStdString(t64::chess960Fen(37));
+        engine.analyse(frc, "position fen " + frc, true, 100, 24, true);
+        check(waitFor([&] { return best.size() == 2; }), "Chess960 UCI reply");
+        t64::Game frcGame(frc.toStdString(), true);
+        frcGame.play(0, best.last()[0].toString().toStdString());
+        engine.shutdown();
         std::cout << "UCI handshake, MultiPV, cancellation, legal reply and shutdown passed\n";
         return 0;
     } catch (const std::exception &e) {

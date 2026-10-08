@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "database.h"
+#include <QBuffer>
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDir>
@@ -7,10 +8,12 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
+#include <algorithm>
 #include <stdexcept>
 
 namespace t64 {
@@ -44,11 +47,11 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 1, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 2, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
-        check((v == 0 && appId.value(0).toInt() == 0) || (v == 1 && appId.value(0).toInt() == 1412830276),
+        check((v == 0 && appId.value(0).toInt() == 0) || (v >= 1 && appId.value(0).toInt() == 1412830276),
               "Ce fichier n’est pas une bibliothèque Trait64.");
         appId.finish();
         if (v == 0) {
@@ -77,6 +80,33 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
                 sql("PRAGMA user_version=1");
                 if (!db_.commit())
                     throw std::runtime_error(db_.lastError().text().toStdString());
+            } catch (...) {
+                db_.rollback();
+                throw;
+            }
+        }
+        if (v < 2) {
+            if (v == 1)
+                backup(path_ + ".before-v2-" + QUuid::createUuid().toString(QUuid::WithoutBraces) +
+                       ".sqlite");
+            check(db_.transaction(), db_.lastError().text());
+            try {
+                sql("ALTER TABLE games ADD COLUMN white_elo INTEGER DEFAULT 0");
+                sql("ALTER TABLE games ADD COLUMN black_elo INTEGER DEFAULT 0");
+                sql("ALTER TABLE games ADD COLUMN plies INTEGER DEFAULT 0");
+                sql("ALTER TABLE games ADD COLUMN fingerprint TEXT DEFAULT ''");
+                sql("CREATE INDEX games_fingerprint ON games(fingerprint)");
+                sql("CREATE TABLE all_positions(game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE "
+                    "CASCADE, node INTEGER NOT NULL, fen TEXT NOT NULL, material TEXT NOT NULL, PRIMARY "
+                    "KEY(game_id,node))");
+                sql("CREATE INDEX all_positions_fen ON all_positions(fen)");
+                sql("CREATE INDEX all_positions_material ON all_positions(material)");
+                sql("CREATE TABLE review_log(id INTEGER PRIMARY KEY, card_id INTEGER REFERENCES cards(id) ON "
+                    "DELETE SET NULL, reviewed TEXT NOT NULL, success INTEGER NOT NULL)");
+                sql("PRAGMA user_version=2");
+                if (v == 1)
+                    rebuildIndexes();
+                check(db_.commit(), db_.lastError().text());
             } catch (...) {
                 db_.rollback();
                 throw;
@@ -155,6 +185,40 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             pos.bindValue(4, i + 1 < line.size() ? s(game.nodes[line[i + 1]].san) : QString());
             run(pos);
         }
+        QSqlQuery metadata(db_);
+        metadata.prepare("UPDATE games SET white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?");
+        metadata.addBindValue(tag(game, "WhiteElo").toInt());
+        metadata.addBindValue(tag(game, "BlackElo").toInt());
+        metadata.addBindValue(int(line.size()) - 1);
+        QByteArray fingerprint =
+            QByteArray::fromStdString(game.nodes[0].fen) + (game.chess960 ? "960" : "standard");
+        for (int n : line)
+            fingerprint += ' ' + QByteArray::fromStdString(game.nodes[n].uci);
+        metadata.addBindValue(
+            QString::fromLatin1(QCryptographicHash::hash(fingerprint, QCryptographicHash::Sha256).toHex()));
+        metadata.addBindValue(id);
+        run(metadata);
+        QSqlQuery erase(db_);
+        erase.prepare("DELETE FROM all_positions WHERE game_id=?");
+        erase.addBindValue(id);
+        run(erase);
+        QSqlQuery all(db_);
+        all.prepare("INSERT INTO all_positions(game_id,node,fen,material) VALUES(?,?,?,?)");
+        std::vector<int> pending{0};
+        while (!pending.empty()) {
+            int n = pending.back();
+            pending.pop_back();
+            const auto &node = game.nodes[n];
+            QString material = s(node.fen).section(' ', 0, 0);
+            material.remove(QRegularExpression("[^prnbqkPRNBQK]"));
+            std::sort(material.begin(), material.end());
+            all.bindValue(0, id);
+            all.bindValue(1, n);
+            all.bindValue(2, s(positionKey(node.fen)));
+            all.bindValue(3, material);
+            run(all);
+            pending.insert(pending.end(), node.children.begin(), node.children.end());
+        }
         sql("RELEASE save_game");
         return id;
     } catch (...) {
@@ -163,13 +227,18 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         throw;
     }
 }
-int Database::importGames(const std::vector<Game> &games) {
+int Database::importGames(const std::vector<Game> &games, const std::function<bool(int)> &progress) {
     int before = stats()["games"].toInt();
     if (!db_.transaction())
         throw std::runtime_error(db_.lastError().text().toStdString());
     try {
-        for (const auto &g : games)
+        int count = 0;
+        for (const auto &g : games) {
+            check(!progress || progress(count), "Import interrompu : aucune partie ajoutée.");
             save(g);
+            ++count;
+        }
+        check(!progress || progress(count), "Import interrompu : aucune partie ajoutée.");
         if (!db_.commit())
             throw std::runtime_error(db_.lastError().text().toStdString());
     } catch (...) {
@@ -189,7 +258,7 @@ Game Database::load(qint64 id) const {
     return std::move(games[0]);
 }
 QVariantList Database::search(const QString &query, const QString &result, bool favorite,
-                              const QString &position, bool trash) const {
+                              const QString &position, bool trash, const QVariantMap &filters) const {
     QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite "
                         "FROM games g WHERE g.deleted=?";
     QVariantList args{trash ? 1 : 0};
@@ -206,10 +275,41 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (favorite)
         statement += " AND g.favorite=1";
     if (!position.isEmpty()) {
-        statement += " AND EXISTS(SELECT 1 FROM positions p WHERE p.game_id=g.id AND p.fen=?)";
+        statement += " AND EXISTS(SELECT 1 FROM all_positions p WHERE p.game_id=g.id AND p.fen=?)";
         args << s(positionKey(position.toStdString()));
     }
-    statement += " ORDER BY g.updated DESC,g.id DESC LIMIT 1000";
+    for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
+        if (!filters.value(key).toString().isEmpty()) {
+            statement += " AND g." + key + " LIKE ?";
+            args << "%" + filters[key].toString() + "%";
+        }
+    for (const auto &key : QStringList{"dateFrom", "dateTo"})
+        if (!filters.value(key).toString().isEmpty()) {
+            statement += key == "dateFrom" ? " AND g.date>=?" : " AND g.date<=?";
+            args << filters[key].toString();
+        }
+    if (filters.value("minElo").toInt() > 0) {
+        statement += " AND g.white_elo>=? AND g.black_elo>=?";
+        args << filters["minElo"] << filters["minElo"];
+    }
+    if (filters.value("maxPlies").toInt() > 0) {
+        statement += " AND g.plies<=?";
+        args << filters["maxPlies"];
+    }
+    if (!filters.value("material").toString().isEmpty()) {
+        QString material = filters["material"].toString();
+        material.remove(QRegularExpression("[^prnbqkPRNBQK]"));
+        std::sort(material.begin(), material.end());
+        statement += " AND EXISTS(SELECT 1 FROM all_positions p WHERE p.game_id=g.id AND p.material=?)";
+        args << material;
+    }
+    const QMap<QString, QString> order{{"date", "g.date DESC"},
+                                       {"players", "g.white,g.black"},
+                                       {"elo", "(g.white_elo+g.black_elo) DESC"},
+                                       {"length", "g.plies ASC"}};
+    statement += " ORDER BY " + order.value(filters.value("sort").toString(), "g.updated DESC") +
+                 ",g.id DESC LIMIT 1000 OFFSET ?";
+    args << std::max(0, filters.value("offset").toInt());
     QSqlQuery q(db_);
     q.prepare(statement);
     for (const auto &a : args)
@@ -228,8 +328,11 @@ QVariantMap Database::stats() const {
              {"games", "SELECT COUNT(*) FROM games WHERE deleted=0"},
              {"favorites", "SELECT COUNT(*) FROM games WHERE favorite=1 AND deleted=0"},
              {"cards", "SELECT COUNT(*) FROM cards"},
-             {"due", "SELECT COUNT(*) FROM cards WHERE due<=date('now')"},
+             {"due", "SELECT COUNT(*) FROM cards WHERE due<=date('now','localtime')"},
              {"reviews", "SELECT COALESCE(SUM(reviews),0) FROM cards"},
+             {"todayReviews", "SELECT COUNT(*) FROM review_log WHERE date(reviewed)=date('now','localtime')"},
+             {"weekReviews",
+              "SELECT COUNT(*) FROM review_log WHERE date(reviewed)>=date('now','localtime','-6 days')"},
              {"successes", "SELECT COALESCE(SUM(successes),0) FROM cards"},
              {"whiteWins", "SELECT COUNT(*) FROM games WHERE result='1-0' AND deleted=0"},
              {"blackWins", "SELECT COUNT(*) FROM games WHERE result='0-1' AND deleted=0"},
@@ -278,19 +381,36 @@ void Database::collection(qint64 id, const QString &value) {
     run(q);
 }
 QString Database::exportPgn() const {
+    QBuffer buffer;
+    buffer.open(QIODevice::WriteOnly);
+    exportPgn(buffer);
+    return QString::fromUtf8(buffer.data());
+}
+void Database::exportPgn(QIODevice &output) const {
     QSqlQuery q(db_);
+    q.setForwardOnly(true);
     if (!q.exec("SELECT pgn FROM games WHERE deleted=0 ORDER BY id"))
         throw std::runtime_error(q.lastError().text().toStdString());
-    QString out;
-    while (q.next())
-        out += q.value(0).toString() + '\n';
-    return out;
+    while (q.next()) {
+        const auto bytes = q.value(0).toString().toUtf8() + '\n';
+        check(output.write(bytes) == bytes.size(), output.errorString());
+    }
+    check(!q.lastError().isValid(), q.lastError().text());
+}
+void Database::validateOutputPath(const QString &path) const {
+    auto resolved = [](const QString &p) {
+        const QFileInfo f(p);
+        if (f.exists())
+            return f.canonicalFilePath();
+        const auto parent = f.dir().canonicalPath();
+        return parent.isEmpty() ? f.absoluteFilePath() : parent + '/' + f.fileName();
+    };
+    for (const auto &suffix : QStringList{"", "-wal", "-shm", "-journal"})
+        check(resolved(path) != resolved(path_ + suffix),
+              "L’export ne peut pas remplacer la bibliothèque ouverte ni ses journaux.");
 }
 void Database::backup(const QString &path) {
-    check(QFileInfo(path).absoluteFilePath() != QFileInfo(path_).absoluteFilePath() &&
-              (!QFileInfo(path).exists() ||
-               QFileInfo(path).canonicalFilePath() != QFileInfo(path_).canonicalFilePath()),
-          "Choisissez un autre fichier pour la sauvegarde.");
+    validateOutputPath(path);
     const QString temp = path + "." + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".tmp";
     QSqlQuery q(db_);
     q.prepare("VACUUM INTO ?");
@@ -332,7 +452,7 @@ void Database::addCard(const QString &title, const QString &fen, const QString &
     for (const auto &m : sequence)
         node = g.play(node, m.toStdString());
     QSqlQuery q(db_);
-    q.prepare("INSERT INTO cards(title,fen,moves,due) VALUES(?,?,?,date('now'))");
+    q.prepare("INSERT INTO cards(title,fen,moves,due) VALUES(?,?,?,date('now','localtime'))");
     q.addBindValue(title.left(200));
     q.addBindValue(fen);
     q.addBindValue(sequence.join(' '));
@@ -352,17 +472,32 @@ QVariantList Database::cards() const {
     return out;
 }
 void Database::review(qint64 id, bool success) {
-    QSqlQuery q(db_);
-    q.prepare("UPDATE cards SET interval=CASE WHEN ? THEN MIN(365,MAX(1,interval*2)) ELSE 1 "
-              "END,reviews=reviews+1,successes=successes+? WHERE id=?");
-    q.addBindValue(success);
-    q.addBindValue(success ? 1 : 0);
-    q.addBindValue(id);
-    run(q);
-    QSqlQuery d(db_);
-    d.prepare("UPDATE cards SET due=date('now','+'||interval||' days') WHERE id=?");
-    d.addBindValue(id);
-    run(d);
+    sql("SAVEPOINT review_card");
+    try {
+        QSqlQuery q(db_);
+        q.prepare("UPDATE cards SET interval=CASE WHEN ? THEN MIN(365,MAX(1,interval*2)) ELSE 1 "
+                  "END,reviews=reviews+1,successes=successes+? WHERE id=?");
+        q.addBindValue(success);
+        q.addBindValue(success ? 1 : 0);
+        q.addBindValue(id);
+        run(q);
+        check(q.numRowsAffected() == 1, "Carte introuvable.");
+        QSqlQuery d(db_);
+        d.prepare("UPDATE cards SET due=date('now','localtime','+'||interval||' days') WHERE id=?");
+        d.addBindValue(id);
+        run(d);
+        QSqlQuery log(db_);
+        log.prepare(
+            "INSERT INTO review_log(card_id,reviewed,success) VALUES(?,datetime('now','localtime'),?)");
+        log.addBindValue(id);
+        log.addBindValue(success);
+        run(log);
+        sql("RELEASE review_card");
+    } catch (...) {
+        sql("ROLLBACK TO review_card");
+        sql("RELEASE review_card");
+        throw;
+    }
 }
 void Database::deleteCard(qint64 id) {
     QSqlQuery q(db_);

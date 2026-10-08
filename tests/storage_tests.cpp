@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "archive.h"
 #include "database.h"
+#include <QBuffer>
 #include <QCoreApplication>
 #include <QFile>
 #include <QSqlQuery>
@@ -30,6 +31,14 @@ int main(int argc, char **argv) {
                                    "(2.Bc4) Nc6 1-0\n\n[White \"Carol\"]\n1.d4 d5 *");
         check(db.importGames(games) == 2, "Import games");
         check(db.importGames(games) == 0, "Deduplicate exact PGN");
+        QBuffer exported;
+        exported.open(QIODevice::WriteOnly);
+        db.exportPgn(exported);
+        check(t64::parsePgn(exported.data().toStdString()).size() == 2, "PGN export streams to a device");
+        rejects([&] { db.validateOutputPath(db.path()); });
+        rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
+        check(QFile::link(db.path(), dir.path() + "/alias.pgn"), "Create export alias fixture");
+        rejects([&] { db.validateOutputPath(dir.path() + "/alias.pgn"); });
         auto rows = db.search("Alice");
         check(rows.size() == 1, "Search player");
         auto id = rows[0].toMap()["id"].toLongLong();
@@ -89,6 +98,69 @@ int main(int argc, char **argv) {
         file.write(QByteArray(8, 'x'));
         file.close();
         rejects([&] { t64::Archive::read(archive); });
+        auto variation =
+            t64::parsePgn("[White \"Expert\"]\n[Black \"Rival\"]\n[WhiteElo \"2200\"]\n[BlackElo "
+                          "\"2300\"]\n[Date \"2025.06.20\"]\n1.e4 e5 (1...c5 2.Nf3) *")
+                .at(0);
+        auto variantId = db.save(variation);
+        int vn = variation.nodes[1].children[1];
+        check(db.search({}, {}, false, QString::fromStdString(variation.nodes[vn].fen)).size() == 1,
+              "Search indexes side variations");
+        QVariantMap filters{
+            {"white", "Expert"}, {"minElo", 2100}, {"dateFrom", "2025.01.01"}, {"dateTo", "2025.12.31"}};
+        check(db.search({}, {}, false, {}, false, filters).size() == 1,
+              "Combined player, Elo and date filters");
+        filters["minElo"] = 2400;
+        check(db.search({}, {}, false, {}, false, filters).empty(), "Elo excludes lower-rated games");
+        auto profile = db.player("Expert");
+        check(profile["games"].toInt() == 1 && profile["unfinished"].toInt() == 1,
+              "Player profile excludes unfinished from score");
+        auto annotated = variation;
+        annotated.nodes[1].comment = "Different note";
+        db.save(annotated);
+        check(!db.duplicates().empty(), "Move-sequence duplicates ignore comments");
+        variation.removeVariation(vn);
+        db.save(variation, variantId);
+        check(db.rebuildIndexes() == 4, "Rebuild all indexes transactionally");
+        check(db.stats()["todayReviews"].toInt() == 3, "Review history tracks today's work");
+        db.deleteCard(cardId);
+        check(db.stats()["todayReviews"].toInt() == 3, "Deleting card preserves activity history");
+        // Migration of a genuine v1 layout must back up, preserve data and rebuild variant indexes.
+        const auto oldPath = dir.path() + "/old.sqlite";
+        db.backup(oldPath);
+        {
+            auto old = QSqlDatabase::addDatabase("QSQLITE", "old-fixture");
+            old.setDatabaseName(oldPath);
+            check(old.open(), "Open migration fixture");
+            QSqlQuery q(old);
+            for (const auto &sql :
+                 QStringList{"DROP TABLE all_positions", "DROP TABLE review_log",
+                             "DROP INDEX games_fingerprint", "ALTER TABLE games DROP COLUMN white_elo",
+                             "ALTER TABLE games DROP COLUMN black_elo", "ALTER TABLE games DROP COLUMN plies",
+                             "ALTER TABLE games DROP COLUMN fingerprint", "PRAGMA user_version=1"})
+                check(q.exec(sql), "Downgrade fixture schema");
+            q.finish();
+            old.close();
+        }
+        QSqlDatabase::removeDatabase("old-fixture");
+        {
+            t64::Database migrated(oldPath);
+            check(migrated.stats()["games"].toInt() == 4, "Migration preserves games");
+            check(migrated.search({}, {}, false, QString::fromStdString(annotated.nodes[vn].fen)).size() == 1,
+                  "Migration rebuilds variant positions");
+            check(migrated.integrity() == "ok", "Migrated database integrity");
+        }
+        const auto streamPath = dir.path() + "/stream.pgn";
+        QFile streamFile(streamPath);
+        check(streamFile.open(QIODevice::WriteOnly), "Open streaming fixture");
+        for (int i = 0; i < 15; ++i)
+            streamFile.write(QByteArray("[Event \"Stream ") + QByteArray::number(i) + "\"]\n1.c4 e5 *\n");
+        streamFile.close();
+        const int beforeImport = db.stats()["games"].toInt();
+        rejects([&] { db.importPgnFile(streamPath, [](int n) { return n < 5; }); });
+        check(db.stats()["games"].toInt() == beforeImport, "Canceled streaming import rolls back all games");
+        check(db.importPgnFile(streamPath, [](int) { return true; }) == 15,
+              "Streaming importer commits complete file");
         std::cout << checks << " storage checks passed\n";
         return 0;
     } catch (const std::exception &e) {

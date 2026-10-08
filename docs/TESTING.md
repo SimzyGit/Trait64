@@ -1,19 +1,23 @@
-# Vérification
+# Vérification 0.2
 
-`ctest --test-dir build --output-on-failure` exécute :
+`ctest --test-dir build --output-on-failure` exécute cinq suites :
 
-| Suite | Ce qu’elle vérifie |
+| Suite | Scénarios vérifiés |
 |---|---|
-| `core` | Perft initiale profondeur 4 = 197281 ; Kiwipete profondeur 3 = 97862 ; finale profondeur 4 = 43238 ; roques, sous-promotion, prise en passant, mat et répétition ; PGN multijeux, commentaires, NAG, variantes imbriquées, round trip ; entrées invalides |
-| `storage` | Import et dédoublonnage, mise à jour stable, recherche, paramètres SQL, index de positions, corbeille/restauration, progression d’entraînement, sauvegarde SQLite ; archive T64, troncature, écriture déchirée, récupération, profil inconnu |
-| `engine` | Véritable Stockfish : handshake, MultiPV, interruption et remplacement de recherche, exclusion d’un ancien bestmove, coup légal, fermeture. Si Stockfish est absent, le test est marqué **skipped**, pas réussi |
-| `desktop_smoke` | Chargement QML et rendu de tous les espaces, enregistrement/réouverture d’une partie, absence d’avertissements QML ; dossier de données temporaire |
-| `desktop_interactions` | Événements souris réels QtTest sur clic et glisser-déposer, édition de notes pendant la navigation, bouton Enregistrer, variantes, entraînement et restauration de session |
+| `core` | Perft initiale profondeur 4 = 197281, Kiwipete profondeur 3 = 97862, finale profondeur 4 = 43238 ; coups spéciaux, répétition et mat ; 960 départs distincts, roque Chess960 avec roi immobile, PGN variante ; arbre PGN et lecture en flux, commentaires/RAV imbriqués, round trip, fusion idempotente, EPD et rejets d’entrées invalides |
+| `storage` | Import/dédoublonnage, mise à jour stable, filtres SQL, positions de variantes/matériel/Elo, joueurs, corbeille, révisions quotidiennes, sauvegarde ; migration version 1 → 2 ; import en flux annulé sans résultat partiel ; export en flux et protection des chemins ; récupération T64 après troncature/écriture déchirée |
+| `engine` | Véritable Stockfish : handshake, MultiPV, annulation/remplacement, exclusion des anciens bestmove, conservation du dernier score exact, résultats de recherche terminée, coup Chess960 légal, fermeture |
+| `desktop_smoke` | Chargement et rendu des 7 espaces, enregistrement/réouverture, aucune alerte QML ; dossier temporaire isolé |
+| `desktop_interactions` | Événements QtTest clic/glisser, notes et navigation, sauvegarde et entraînement, 48 SVG, styles/couleurs, annuler/rétablir, onglets et session, flèches PGN, profils moteur, bilan et annulation, ECO, exports PDF/PNG, roque 960, pendule/incrément, dialogues et géométrie à 960 × 720 |
 
-Le cœur ne dépend pas de Qt : `-DT64_BUILD_GUI=OFF`. Les tests GUI utilisent le backend logiciel Qt et la plateforme `offscreen`, sans serveur graphique. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
+Le test moteur est **skipped**, pas réussi, si Stockfish est absent. Les tests GUI utilisent `QT_QPA_PLATFORM=offscreen` et `QT_QUICK_BACKEND=software`. Ils ne remplacent pas un essai sur le GPU et l’écran du PC cible. Le cœur compile sans Qt avec `-DT64_BUILD_GUI=OFF`. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
 
-Le pipeline CI est défini pour Debian 12 et 13. La validation du pipeline distant doit être constatée dans GitHub Actions ; la présence du fichier de configuration ne constitue pas un résultat de test. Le script utilisateur compile et teste sur la machine cible avant installation.
+La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les cinq suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
 
-Pas encore certifié : gros corpus de plusieurs millions de parties, tous les moteurs UCI, autres variantes d’échecs, fichiers PGN non UTF-8, chaque GPU/serveur Wayland/X11, Windows/macOS. Les tests de récupération simulent des écritures interrompues ; ils ne remplacent pas une campagne de coupures électriques matérielles.
+Vérification locale de cette version : **5 suites sur 5 réussies**, dont 1 967 contrôles du cœur, 55 du stockage et 104 des interactions de bureau ; le cœur passe aussi sous ASan/UBSan. Le redimensionnement immédiatement après sauvegarde et les captures 1440 × 940 sont vérifiés.
 
-Validation initiale dans l’environnement de développement : Linux x86_64 Ubuntu 24.04, GCC 13.3, Qt 6.4.2 et Stockfish 16 ; cinq suites passent. Le cœur passe également avec ASan/UBSan ; LeakSanitizer a dû être désactivé localement (`ASAN_OPTIONS=detect_leaks=0`) car l’environnement empêche son inspection de `/proc`. Cela ne valide donc pas l’absence de fuite mémoire. La CI standard garde sa configuration par défaut.
+Le développement utilise Ubuntu 24.04 x86_64, GCC 13.3, Qt 6.4.2 et Stockfish 16. Localement LeakSanitizer doit être désactivé (`ASAN_OPTIONS=detect_leaks=0`) car l’environnement bloque son inspection de `/proc` ; cela ne valide pas l’absence de fuites. La tâche CI conserve sa configuration par défaut.
+
+Le bilan est une heuristique à seuils fixes, pas un estimateur Elo. Syzygy est une option transmise au moteur : aucun jeu complet de fichiers de tablebases n’est embarqué ou qualifié. Pas de certification pour des millions de parties, tous les moteurs UCI, chaque GPU/Wayland/X11, les PGN non UTF-8, Windows/macOS ou l’arbitrage FIDE complet. Les tests de récupération ne remplacent pas des coupures électriques matérielles.
+
+Les captures documentaires se reproduisent avec `T64_SCREENSHOT=/chemin/image.png`, éventuellement `T64_PREVIEW=appearance` et `T64_SCREENSHOT_WIDTH=1440 T64_SCREENSHOT_HEIGHT=940`, sur `trait64 --smoke-test`. Ces variables ne s’appliquent qu’au mode de test.

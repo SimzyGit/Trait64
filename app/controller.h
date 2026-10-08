@@ -2,10 +2,13 @@
 #pragma once
 #include "database.h"
 #include "uci.h"
+#include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QObject>
 #include <QSettings>
 #include <QTimer>
+#include <atomic>
+#include <deque>
 #include <memory>
 
 class Controller : public QObject {
@@ -21,6 +24,12 @@ class Controller : public QObject {
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+    Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
+    Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
+    Q_PROPERTY(QVariantList review READ review NOTIFY reviewChanged)
+    Q_PROPERTY(QVariantMap reviewState READ reviewState NOTIFY reviewChanged)
+    Q_PROPERTY(QVariantList players READ players NOTIFY libraryChanged)
+    Q_PROPERTY(QVariantMap playerProfile READ playerProfile NOTIFY libraryChanged)
   public:
     explicit Controller(const QString &dataPath, QObject *parent = nullptr);
     ~Controller() override;
@@ -35,7 +44,45 @@ class Controller : public QObject {
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;
     bool busy() const { return busy_; }
+    int taskProgress() const { return taskProgress_->load(); }
+    Q_INVOKABLE void cancelTask() { cancelTask_->store(true); }
     bool smokeTest(QString *error);
+    QVariantList tabs() const;
+    QVariantList review() const { return review_; }
+    QVariantMap reviewState() const;
+    QVariantList players() const { return players_; }
+    QVariantMap playerProfile() const { return playerProfile_; }
+    Q_INVOKABLE void switchTab(int index);
+    Q_INVOKABLE void closeTab(int index);
+    Q_INVOKABLE void duplicateStudy();
+    Q_INVOKABLE void undo();
+    Q_INVOKABLE void redo();
+    Q_INVOKABLE void applyBoardPreset(const QString &name);
+    Q_INVOKABLE void resetAppearance();
+    Q_INVOKABLE void importPieceSet(const QString &folder);
+    Q_INVOKABLE void setPosition(const QString &fen, bool chess960);
+    Q_INVOKABLE void newChess960(int number);
+    Q_INVOKABLE void toggleAnnotation(const QString &from, const QString &to, const QString &color = "G");
+    Q_INVOKABLE void clearAnnotations();
+    Q_INVOKABLE void mergeGame(qint64 id);
+    Q_INVOKABLE void analyseGame(int milliseconds = 500);
+    Q_INVOKABLE void cancelReview();
+    Q_INVOKABLE void annotateReview();
+    Q_INVOKABLE void createMistakeCards();
+    Q_INVOKABLE void exportStudyPdf(const QString &url);
+    Q_INVOKABLE void exportDiagram(const QString &url);
+    Q_INVOKABLE void identifyOpening();
+    Q_INVOKABLE void searchAdvanced(const QVariantMap &filters);
+    Q_INVOKABLE void inspectPlayer(const QString &name);
+    Q_INVOKABLE void rebuildIndexes();
+    Q_INVOKABLE void findDuplicates();
+    Q_INVOKABLE void nextDueCard();
+    Q_INVOKABLE void saveEngineProfile(const QString &name);
+    Q_INVOKABLE void loadEngineProfile(int index);
+    Q_INVOKABLE void removeEngineProfile(int index);
+    Q_INVOKABLE void startLocalGame(int minutes, int increment, int opponent, bool humanWhite);
+    Q_INVOKABLE void resignGame();
+    Q_INVOKABLE void claimDraw();
     Q_INVOKABLE void newGame();
     Q_INVOKABLE void loadGame(qint64 id);
     Q_INVOKABLE void saveGame(bool copy = false);
@@ -86,11 +133,12 @@ class Controller : public QObject {
     void message(const QString &text, bool error = false);
     void promotionNeeded(const QString &prefix);
     void showAnalysis();
+    void reviewChanged();
 
   private:
     struct ImportResult {
         int count = 0, duplicates = 0;
-        QString error;
+        QString error, operation = "import";
     };
     QString dataPath_, sessionPath_;
     std::unique_ptr<t64::Database> db_;
@@ -111,6 +159,52 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     t64::Uci engine_;
     QFutureWatcher<ImportResult> importer_;
+    std::shared_ptr<std::atomic_bool> cancelTask_ = std::make_shared<std::atomic_bool>(false);
+    std::shared_ptr<std::atomic_int> taskProgress_ = std::make_shared<std::atomic_int>(0);
+    QTimer taskPoll_;
+    struct Snapshot {
+        t64::Game game;
+        int node = 0;
+        qint64 id = 0;
+        bool dirty = false;
+        size_t bytes = 0;
+    };
+    struct Study {
+        Snapshot position;
+        std::deque<Snapshot> undo, redo;
+        QVariantList review;
+    };
+    std::vector<Study> studies_;
+    int activeTab_ = 0;
+    std::deque<Snapshot> undo_, redo_;
+    QVariantList review_, players_;
+    QVariantMap advancedFilters_, playerProfile_;
+    t64::Uci reviewer_;
+    t64::Game reviewGame_;
+    std::vector<int> reviewNodes_;
+    QVariantList reviewScores_;
+    bool reviewing_ = false;
+    int reviewIndex_ = 0, reviewMilliseconds_ = 500, reviewEpoch_ = 0;
+    QString reviewError_;
+    QTimer clock_;
+    QElapsedTimer clockElapsed_, commentEdit_;
+    int commentNode_ = -1;
+    bool beforeFlipped_ = false;
+    qint64 whiteMs_ = 0, blackMs_ = 0;
+    int incrementMs_ = 0;
+    bool clockRunning_ = false, localGame_ = false;
+    QString clockResult_;
+    void remember();
+    Snapshot snapshot() const;
+    void restore(const Snapshot &snapshot);
+    void storeTab(bool history = true);
+    void initFeatures();
+    QVariantList annotations() const;
+    void requestReviewPosition();
+    void finishReviewPosition(const QString &fen, const QVariantList &lines);
+    void tickClock();
+    void afterClockMove(bool white);
+    void detectOpening();
     void refresh(bool changedContent = false);
     void refreshLibrary();
     void checkpoint();

@@ -5,31 +5,34 @@ import QtQuick.Dialogs as Native
 
 ApplicationWindow {
     id: win
-    width: 1440; height: 940
-    minimumWidth: 1080; minimumHeight: 760
+    width: Math.max(minimumWidth,Math.min(1440,Screen.desktopAvailableWidth)); height: Math.max(minimumHeight,Math.min(940,Screen.desktopAvailableHeight))
+    minimumWidth: 960; minimumHeight: 640
     visible: true
     title: "Trait64 — " + controller.state.title + (controller.state.dirty ? " •" : "")
     property int page: 0
     property bool light: controller.preferences.lightTheme
-    property color bg: light ? "#f3f3ed" : "#121b18"
-    property color panel: light ? "#ffffff" : "#1b2722"
-    property color raised: light ? "#e9eee6" : "#24332b"
-    property color line: light ? "#d7dfd3" : "#324138"
-    property color fg: light ? "#213428" : "#e8ede4"
-    property color muted: light ? "#67756a" : "#9dab9d"
-    property color accent: "#a8d39c"
+    property color bg: controller.preferences.background
+    property color panel: controller.preferences.panel
+    property color raised: controller.preferences.raised
+    property color line: controller.preferences.line
+    property color fg: controller.preferences.foreground
+    property color muted: controller.preferences.muted
+    property color accent: controller.preferences.accentColor
     property bool exportAll: false
     property string promotionPrefix: ""
     property int selectedGame: 0
-    property var nav: ["Accueil", "Bibliothèque", "Analyse", "Ouvertures", "Entraînement", "Outils"]
+    property var nav: ["Accueil", "Bibliothèque", "Analyse", "Ouvertures", "Entraînement", "Outils", "Joueurs"]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
-    palette.alternateBase: raised; palette.highlight: "#6f986b"; palette.highlightedText: "#ffffff"
+    palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: "#ffffff"
     palette.placeholderText: muted
     color: bg
     font.family: "DejaVu Sans"
     font.pixelSize: 13
-    function filterLibrary() {controller.search(searchField.text, resultBox.currentIndex===0 ? "" : resultBox.currentText, favoriteCheck.checked, positionCheck.checked, trashCheck.checked)}
+    property int libraryOffset:0
+    property var advanced:({})
+    function applyAdvanced(){var f=Object.assign({},advanced);f.offset=libraryOffset;controller.searchAdvanced(f)}
+    function filterLibrary() {libraryOffset=0;applyAdvanced();controller.search(searchField.text, resultBox.currentIndex===0 ? "" : resultBox.currentText, favoriteCheck.checked, positionCheck.checked, trashCheck.checked)}
     function openExport(all) {exportAll=all;exportDialog.open()}
 
     header: Rectangle {
@@ -54,10 +57,12 @@ ApplicationWindow {
     RowLayout {
         anchors.fill:parent;spacing:0
         Rectangle {
-            Layout.preferredWidth:214;Layout.fillHeight:true;color:win.bg
+            Layout.preferredWidth:win.width<1200?190:214;Layout.fillHeight:true;color:win.bg
             Rectangle {anchors.right:parent.right;height:parent.height;width:1;color:win.line}
+            ScrollView {
+                id:navScroll;anchors.fill:parent;anchors.margins:16;clip:true;contentWidth:availableWidth
             ColumnLayout {
-                anchors.fill:parent;anchors.margins:16;spacing:8
+                width:navScroll.availableWidth;height:Math.max(implicitHeight,navScroll.availableHeight);spacing:8
                 Label {text:"VOTRE ESPACE";color:win.muted;font.pixelSize:10;font.letterSpacing:2;Layout.topMargin:16;Layout.bottomMargin:16;Layout.leftMargin:12}
                 Repeater {
                     model:win.nav
@@ -68,7 +73,7 @@ ApplicationWindow {
                         text:modelData
                         contentItem:RowLayout {
                             spacing:13
-                            Label {text:["⌂","▤","♙","↗","◎","⚙"][index];font.pixelSize:20;color:win.page===index?win.accent:win.muted;Layout.preferredWidth:24;horizontalAlignment:Text.AlignHCenter}
+                            Label {text:["⌂","▤","♙","↗","◎","⚙","♟"][index];font.pixelSize:20;color:win.page===index?win.accent:win.muted;Layout.preferredWidth:24;horizontalAlignment:Text.AlignHCenter}
                             Label {text:modelData;font.pixelSize:13;font.weight:win.page===index?Font.DemiBold:Font.Normal;color:win.page===index?win.fg:win.muted;Layout.fillWidth:true}
                             Rectangle {width:4;height:19;radius:2;color:win.accent;visible:win.page===index}
                         }
@@ -78,7 +83,7 @@ ApplicationWindow {
                 }
                 Item {Layout.fillHeight:true}
                 Rectangle {
-                    Layout.fillWidth:true;implicitHeight:104;radius:10;color:win.panel;border.color:win.line
+                    Layout.fillWidth:true;implicitHeight:104;radius:10;color:win.panel;border.color:win.line;visible:win.height>=850
                     ColumnLayout {
                         anchors.fill:parent;anchors.margins:14;spacing:6
                         Label {text:"Le prochain bon coup";font.pixelSize:12;font.weight:Font.DemiBold}
@@ -86,9 +91,11 @@ ApplicationWindow {
                         Label {text:"LOCAL · LIBRE · PERSONNEL";font.pixelSize:8;font.letterSpacing:1.1;color:win.accent;Layout.topMargin:5}
                     }
                 }
+                TButton {text:"Pièces & couleurs";Layout.fillWidth:true;onClicked:appearanceDialog.open()}
                 TButton {text:"Paramètres";Layout.fillWidth:true;Layout.topMargin:12;onClicked:settingsDialog.open()}
                 TButton {text:"Aide & raccourcis";Layout.fillWidth:true;onClicked:helpDialog.open()}
-                Label {text:"TRAIT64  0.1.0 · ALPHA";color:win.muted;font.pixelSize:9;font.letterSpacing:1;Layout.leftMargin:8;Layout.topMargin:10}
+                Label {text:"TRAIT64  0.2.0 · ALPHA";color:win.muted;font.pixelSize:9;font.letterSpacing:1;Layout.leftMargin:8;Layout.topMargin:10}
+            }
             }
         }
         StackLayout {
@@ -114,13 +121,13 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth:true;spacing:16;Layout.topMargin:12
                         Repeater {
-                            model:[{name:"PARTIES",value:controller.stats.games||0,note:"dans votre bibliothèque",target:1},{name:"FAVORIS",value:controller.stats.favorites||0,note:"pour vos prochaines études",target:1},{name:"À RÉVISER",value:controller.stats.due||0,note:"cartes prêtes aujourd’hui",target:4}]
+                            model:[{name:"PARTIES",key:"games",note:"dans votre bibliothèque",target:1},{name:"FAVORIS",key:"favorites",note:"pour vos prochaines études",target:1},{name:"À RÉVISER",key:"due",note:"cartes prêtes aujourd’hui",target:4}]
                             delegate:Rectangle {
                                 required property var modelData
                                 Layout.fillWidth:true;implicitHeight:146;radius:12;color:win.panel;border.color:win.line
                                 ColumnLayout {anchors.fill:parent;anchors.margins:21;spacing:8
                                     Label {text:modelData.name;font.pixelSize:10;font.letterSpacing:1.5;color:win.muted}
-                                    Label {text:modelData.value;font.pixelSize:37;font.weight:Font.DemiBold}
+                                    Label {text:controller.stats[modelData.key]||0;font.pixelSize:37;font.weight:Font.DemiBold}
                                     Label {text:modelData.note;font.pixelSize:11;color:win.muted}
                                 }
                                 MouseArea {anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:win.page=modelData.target}
@@ -136,9 +143,11 @@ ApplicationWindow {
                                 Label {visible:controller.games.length===0;text:"Votre première étude vous attend.";color:win.muted;Layout.topMargin:24}
                                 Label {visible:controller.games.length===0;text:"Importez un PGN ou découvrez les trois exemples inclus.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                                 TButton {visible:controller.games.length===0;text:"Charger les exemples";onClicked:controller.loadExamples()}
-                                Repeater {model:controller.games.slice(0,3)
+                                Repeater {model:3
                                     delegate:ItemDelegate {
-                                        required property var modelData
+                                        required property int index
+                                        property var modelData:controller.games[index]||({white:"",black:"",event:"",result:""})
+                                        visible:index<controller.games.length
                                         Layout.fillWidth:true;implicitHeight:59
                                         background:Rectangle {color:parent.hovered?win.raised:"transparent";radius:6}
                                         contentItem:RowLayout {spacing:16
@@ -223,7 +232,13 @@ ApplicationWindow {
                     }
                     Label {anchors.centerIn:parent;visible:controller.games.length===0;text:trashCheck.checked?"La corbeille est vide.":"Aucune partie. Importez un PGN pour commencer.";color:win.muted}
                 }
-                Label {text:"Affichage limité à 1 000 résultats. Affinez la recherche pour retrouver une partie.";color:win.muted;font.pixelSize:10}
+                RowLayout {Layout.fillWidth:true
+                    TButton {text:"Recherche avancée";onClicked:advancedDialog.open()}
+                    TButton {text:"Doublons de coups";onClicked:controller.findDuplicates()}
+                    Item {Layout.fillWidth:true}
+                    TButton {text:"Page précédente";enabled:win.libraryOffset>0;onClicked:{win.libraryOffset=Math.max(0,win.libraryOffset-1000);win.applyAdvanced()}}
+                    TButton {text:"Page suivante";enabled:controller.games.length===1000;onClicked:{win.libraryOffset+=1000;win.applyAdvanced()}}
+                }
             }
 
             // ANALYSIS
@@ -239,24 +254,36 @@ ApplicationWindow {
                     TButton {objectName:"saveStudy";text:controller.state.training?"Voir la solution":"Enregistrer";accent:true;onClicked:controller.state.training?controller.revealCard():controller.saveGame()}
                     TButton {text:"⋮";visible:!controller.state.training;onClicked:analysisMenu.open()}
                 }
+                RowLayout {Layout.fillWidth:true
+                    ListView {Layout.fillWidth:true;Layout.preferredHeight:36;orientation:ListView.Horizontal;model:controller.tabs;spacing:5;clip:true
+                        delegate:RowLayout {required property var modelData;required property int index;spacing:0
+                            TButton {text:(modelData.dirty?"• ":"")+modelData.title;accent:modelData.active;implicitHeight:32;implicitWidth:Math.min(200,Math.max(120,text.length*7));onClicked:controller.switchTab(index)}
+                            TButton {text:"×";implicitWidth:27;implicitHeight:32;onClicked:controller.closeTab(index)}
+                        }
+                    }
+                    TButton {text:"↶";enabled:controller.state.canUndo;onClicked:controller.undo();ToolTip.visible:hovered;ToolTip.text:"Annuler"}
+                    TButton {text:"↷";enabled:controller.state.canRedo;onClicked:controller.redo();ToolTip.visible:hovered;ToolTip.text:"Rétablir"}
+                    TButton {text:"Bilan";enabled:!controller.state.training;onClicked:reviewDialog.open()}
+                }
                 SplitView {
+                    id:analysisSplit;objectName:"analysisSplit"
                     Layout.fillWidth:true;Layout.fillHeight:true;orientation:Qt.Horizontal
                     handle:Rectangle {implicitWidth:12;color:"transparent";Rectangle {anchors.centerIn:parent;width:2;height:36;radius:1;color:win.line}}
                     ColumnLayout {
-                        SplitView.preferredWidth:570;SplitView.minimumWidth:360;spacing:10
+                        SplitView.preferredWidth:Math.min(570,Math.max(360,analysisSplit.width-322));SplitView.minimumWidth:360;spacing:10
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:2;Layout.rightMargin:2
                             Label {text:controller.state.flipped?(controller.state.tags.White||"Blancs"):(controller.state.tags.Black||"Noirs");font.weight:Font.DemiBold}
                             Item {Layout.fillWidth:true}
-                            Label {text:controller.state.flipped?"BLANCS":"NOIRS";color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
+                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):(controller.state.flipped?"BLANCS":"NOIRS");color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
                         }
                         Item {
-                            Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:300
+                            Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:220
                             Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:Math.min(parent.width,parent.height);height:width;anchors.centerIn:parent}
                         }
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:2;Layout.rightMargin:2
                             Label {text:controller.state.flipped?(controller.state.tags.Black||"Noirs"):(controller.state.tags.White||"Blancs");font.weight:Font.DemiBold}
                             Item {Layout.fillWidth:true}
-                            Label {text:controller.state.flipped?"NOIRS":"BLANCS";color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
+                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):(controller.state.flipped?"NOIRS":"BLANCS");color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
                         }
                         RowLayout {Layout.alignment:Qt.AlignHCenter;spacing:6
                             TButton {text:"|◀";enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2)}
@@ -265,17 +292,18 @@ ApplicationWindow {
                             TButton {text:"▶|";enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2)}
                             TButton {text:"⇅  Retourner";onClicked:controller.flip()}
                         }
-                        Label {text:controller.state.status;color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:12;Layout.topMargin:4}
+                        Label {text:controller.state.clockResult||controller.state.status;color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:12;Layout.topMargin:4}
                         RowLayout {Layout.fillWidth:true
                             TextField {text:controller.state.fen;readOnly:true;font.pixelSize:10;Layout.fillWidth:true;selectByMouse:true}
                             TButton {text:"FEN";onClicked:controller.copyText("fen");ToolTip.visible:hovered;ToolTip.text:"Copier la position FEN"}
                         }
                         RowLayout {Layout.fillWidth:true;visible:!controller.state.training
-                            TButton {text:"Charger une position";Layout.fillWidth:true;onClicked:{fenField.text=controller.state.fen;fenDialog.open()}}
-                            TButton {text:controller.state.playing?"Arrêter la partie":"Jouer contre le moteur";Layout.fillWidth:true;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
+                            TButton {text:"Éditer la position";Layout.fillWidth:true;onClicked:positionEditor.open()}
+                            TButton {text:controller.state.playing?"Arrêter la partie":"Jouer une partie";Layout.fillWidth:true;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
                     }
                     ColumnLayout {
+                        objectName:"analysisPanel"
                         SplitView.fillWidth:true;SplitView.minimumWidth:310;spacing:12
                         Rectangle {
                             Layout.fillWidth:true;implicitHeight:controller.state.analysis?218:102;radius:10;color:win.panel;border.color:win.line
@@ -285,7 +313,7 @@ ApplicationWindow {
                                     Item {Layout.fillWidth:true}
                                     TButton {text:controller.state.analysis?"Arrêter":"Analyser";accent:!controller.state.analysis;enabled:!controller.state.training;implicitHeight:30;onClicked:controller.toggleAnalysis()}
                                 }
-                                Label {text:controller.engineStatus;elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:10}
+                                Label {text:controller.engineStatus+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:10}
                                 ListView {
                                     Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:5
                                     delegate:RowLayout {
@@ -389,12 +417,18 @@ ApplicationWindow {
                     TButton {text:"+  Créer une carte";accent:true;onClicked:cardDialog.open()}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:16
-                    Repeater {model:[{title:"À réviser",value:controller.stats.due||0},{title:"Révisions effectuées",value:controller.stats.reviews||0},{title:"Réussites",value:controller.stats.successes||0}]
+                    Repeater {model:[{title:"À réviser",key:"due"},{title:"Révisions effectuées",key:"reviews"},{title:"Réussites",key:"successes"}]
                         delegate:Rectangle {required property var modelData;Layout.fillWidth:true;height:102;radius:10;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:modelData.title;color:win.muted;font.pixelSize:11} Label {text:modelData.value;font.pixelSize:28;font.weight:Font.DemiBold}}
+                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:modelData.title;color:win.muted;font.pixelSize:11} Label {text:controller.stats[modelData.key]||0;font.pixelSize:28;font.weight:Font.DemiBold}}
                         }
                     }
                 }
+                RowLayout {Layout.fillWidth:true
+                    TButton {text:"Réviser la prochaine carte";accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
+                    Label {text:"Aujourd’hui : "+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+" · Cette semaine : "+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
+                    Label {text:"Objectif"} SpinBox {from:1;to:1000;value:controller.preferences.dailyGoal;onValueModified:controller.setPreference("dailyGoal",value)}
+                }
+                ProgressBar {Layout.fillWidth:true;from:0;to:controller.preferences.dailyGoal;value:controller.stats.todayReviews||0}
                 Label {text:"MES CARTES";font.pixelSize:10;color:win.muted;font.letterSpacing:1.5;Layout.topMargin:8}
                 ListView {id:trainingList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:8;model:controller.cards;ScrollBar.vertical:ScrollBar {}
                     delegate:Rectangle {required property var modelData;width:trainingList.width;height:80;radius:10;color:win.panel
@@ -443,7 +477,7 @@ ApplicationWindow {
                                 Label {text:"Intégrité & diagnostic";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
-                                RowLayout {TButton {text:"Vérifier la base";onClicked:controller.verifyDatabase()} TButton {text:"Perft 3";onClicked:controller.runPerft(3)}}
+                                RowLayout {TButton {text:"Vérifier la base";onClicked:controller.verifyDatabase()} TButton {text:"Réindexer";enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
                         Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:12;color:win.panel;border.color:win.line
@@ -464,13 +498,15 @@ ApplicationWindow {
                     Item {height:20}
                 }
             }
+            Players {backend:controller;Layout.margins:24}
         }
     }
     footer:Rectangle {
         height:29;color:win.panel
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
-            Label {text:controller.busy?"●  Import PGN en cours…":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
+            Label {text:controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
             Item {Layout.fillWidth:true}
+            TButton {visible:controller.busy;text:"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
             Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted}
         }
     }
@@ -486,8 +522,8 @@ ApplicationWindow {
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
-    Native.FileDialog {id:importDialog;title:"Importer des parties";nameFilters:["Parties (*.pgn *.t64)","Tous les fichiers (*)"];onAccepted:controller.importFile(selectedFile.toString())}
-    Native.FileDialog {id:exportDialog;title:"Exporter en PGN ou archive T64 expérimentale";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)","Archive T64 expérimentale (*.t64)"];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
+    Native.FileDialog {id:importDialog;title:"Importer des parties";nameFilters:["Parties et positions (*.pgn *.t64 *.epd *.fen)","Tous les fichiers (*)"];onAccepted:controller.importFile(selectedFile.toString())}
+    Native.FileDialog {id:exportDialog;title:"Exporter en PGN ou archive T64 expérimentale";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)","Position EPD (*.epd)","Archive T64 expérimentale (*.t64)"];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
     Native.FileDialog {id:backupDialog;title:"Créer une sauvegarde complète";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"sqlite";nameFilters:["Bibliothèque Trait64 (*.sqlite)"];onAccepted:controller.backup(selectedFile.toString())}
     Native.FileDialog {id:openDatabaseDialog;title:"Ouvrir une bibliothèque Trait64";nameFilters:["Bibliothèque Trait64 (*.sqlite)"];onAccepted:controller.openBackup(selectedFile.toString())}
     Native.FileDialog {id:engineFileDialog;title:"Choisir l’exécutable Stockfish ou UCI";onAccepted:{controller.setPreference("enginePath",selectedFile.toString());enginePathField.text=controller.preferences.enginePath}}
@@ -519,10 +555,14 @@ ApplicationWindow {
         Label {text:"Son historique de révision sera également supprimé."}
         onAccepted:controller.deleteCard(cardId)
     }
-    Dialog {id:playDialog;title:"Jouer contre votre moteur";anchors.centerIn:parent;width:420;modal:true
+    Dialog {id:playDialog;title:"Partie locale";anchors.centerIn:parent;width:470;modal:true
         ColumnLayout {anchors.fill:parent;spacing:16
-            Label {text:"La force et le temps de réflexion se règlent dans les paramètres. Stockfish doit être installé.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
-            RowLayout {TButton {text:"Jouer les Blancs";accent:true;onClicked:{controller.playComputer(true);playDialog.close()}} TButton {text:"Jouer les Noirs";onClicked:{controller.playComputer(false);playDialog.close()}}}
+            ComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
+            RowLayout {Label {text:"Minutes"} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:"Incrément (s)"} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
+            ComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
+            TButton {text:"Démarrer avec pendule";accent:true;Layout.fillWidth:true;onClicked:{controller.startLocalGame(clockMinutes.value,clockIncrement.value,opponent.currentIndex,playSide.currentIndex===0);playDialog.close()}}
+            TButton {text:"Moteur sans pendule";visible:opponent.currentIndex===1;Layout.fillWidth:true;onClicked:{controller.playComputer(playSide.currentIndex===0);playDialog.close()}}
+            Label {text:"La partie démarre depuis la position de l’échiquier. Parcourir les coups arrête la pendule.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:11}
         }
     }
     Dialog {id:tagsDialog;title:"Informations sur la partie";anchors.centerIn:parent;width:540;modal:true;standardButtons:Dialog.Close
@@ -536,6 +576,15 @@ ApplicationWindow {
         }
     }
     Menu {id:analysisMenu;x:win.width-width-30;y:125
+        MenuItem {text:"Éditer la position";onTriggered:positionEditor.open()}
+        MenuItem {text:"Nouvelle partie Chess960";onTriggered:chess960Dialog.open()}
+        MenuItem {text:"Dupliquer l’étude";onTriggered:controller.duplicateStudy()}
+        MenuItem {text:"Identifier et renseigner l’ouverture";onTriggered:controller.identifyOpening()}
+        MenuItem {text:"Exporter le diagramme en PNG";onTriggered:diagramDialog.open()}
+        MenuItem {text:"Exporter l’étude en PDF";onTriggered:pdfDialog.open()}
+        MenuItem {text:"Effacer les flèches et cercles";onTriggered:controller.clearAnnotations()}
+        MenuItem {text:"Abandonner la partie";visible:controller.state.playing;onTriggered:controller.resignGame()}
+        MenuItem {text:"Réclamer la nulle";visible:controller.state.playing;onTriggered:controller.claimDraw()}
         MenuItem {text:"Informations de la partie";onTriggered:tagsDialog.open()}
         MenuItem {text:"Exporter cette étude";onTriggered:win.openExport(false)}
         MenuItem {text:"Copier le PGN";onTriggered:controller.copyText("pgn")}
@@ -549,6 +598,7 @@ ApplicationWindow {
         onAccepted:controller.deleteVariation()
     }
     Menu {id:gameMenu;x:win.width-width-40;y:220
+        MenuItem {text:"Fusionner dans l’étude courante";onTriggered:controller.mergeGame(win.selectedGame)}
         MenuItem {text:"Modifier la collection";onTriggered:collectionDialog.open()}
         MenuItem {text:trashCheck.checked?"Restaurer la partie":"Mettre à la corbeille";onTriggered:controller.trash(win.selectedGame,!trashCheck.checked)}
     }
@@ -556,7 +606,16 @@ ApplicationWindow {
         TextField {id:collectionField;anchors.fill:parent;placeholderText:"Ex. Préparation tournoi, Répertoire Blancs…"}
         onAccepted:controller.setCollection(win.selectedGame,collectionField.text)
     }
-    Dialog {id:settingsDialog;title:"Paramètres";anchors.centerIn:parent;width:650;modal:true;standardButtons:Dialog.Close
+    PositionEditor {id:positionEditor;objectName:"positionEditor";backend:controller}
+    Review {id:reviewDialog;objectName:"reviewDialog";backend:controller}
+    Native.FileDialog {id:diagramDialog;title:"Exporter le diagramme";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
+    Native.FileDialog {id:pdfDialog;title:"Exporter l’étude en PDF";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
+    Dialog {id:chess960Dialog;title:"Nouvelle étude Chess960";anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        ColumnLayout {Label {text:"Numéro de la position (518 = position classique)"} SpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}
+        onAccepted:controller.newChess960(frcNumber.value)
+    }
+    Appearance {id:appearanceDialog;objectName:"appearanceDialog";backend:controller}
+    Dialog {id:settingsDialog;objectName:"settingsDialog";title:"Paramètres";anchors.centerIn:parent;width:700;height:Math.min(690,win.height-32);modal:true;standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:18
             Label {text:"MOTEUR UCI LOCAL";font.pixelSize:10;font.letterSpacing:1.5;color:win.muted}
             RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {text:"Parcourir";onClicked:engineFileDialog.open()}}
@@ -568,6 +627,17 @@ ApplicationWindow {
                 Label {text:"Réflexion (ms)";color:win.muted} SpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}
             }
             Label {text:"Le niveau concerne le jeu contre Stockfish. L’analyse utilise sa pleine force.\nLes réglages sont appliqués au démarrage du moteur.";color:win.muted;font.pixelSize:11;wrapMode:Text.WordWrap;Layout.fillWidth:true}
+            RowLayout {Label {text:"Profondeur d’analyse";color:win.muted} SpinBox {from:1;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)}}
+            TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:"Dossier des tablebases Syzygy locales (optionnel)";onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
+            RowLayout {Layout.fillWidth:true
+                TextField {id:profileName;Layout.fillWidth:true;placeholderText:"Nom du profil moteur"}
+                TButton {text:"Mémoriser";onClicked:controller.saveEngineProfile(profileName.text)}
+            }
+            RowLayout {Layout.fillWidth:true
+                ComboBox {id:profileBox;Layout.fillWidth:true;model:controller.preferences.engineProfiles;textRole:"name"}
+                TButton {text:"Charger";enabled:profileBox.currentIndex>=0;onClicked:controller.loadEngineProfile(profileBox.currentIndex)}
+                TButton {text:"×";enabled:profileBox.currentIndex>=0;onClicked:controller.removeEngineProfile(profileBox.currentIndex)}
+            }
             RowLayout {TButton {text:"Démarrer / appliquer";accent:true;onClicked:controller.startEngine()} Label {text:controller.engineStatus;elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}}
             Rectangle {Layout.fillWidth:true;height:1;color:win.line}
             RowLayout {CheckBox {text:"Thème clair";checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} CheckBox {text:"Coordonnées de l’échiquier";checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
@@ -579,8 +649,24 @@ ApplicationWindow {
             Label {text:"Un atelier personnel pour vos échecs.";font.pixelSize:21;font.weight:Font.DemiBold}
             Label {text:"• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.";wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:"Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne";color:win.muted;lineHeight:1.6}
-            Label {text:"Version alpha 0.1.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.";wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}
+            Label {text:"Version alpha 0.2.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.";wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}
         }
+    }
+    Dialog {id:advancedDialog;title:"Recherche avancée";anchors.centerIn:parent;width:600;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        GridLayout {anchors.fill:parent;columns:2;columnSpacing:12;rowSpacing:10
+            Repeater {model:[{key:"white",label:"Blancs"},{key:"black",label:"Noirs"},{key:"event",label:"Événement"},{key:"eco",label:"Code ECO"},{key:"collection",label:"Collection"},{key:"dateFrom",label:"À partir de (AAAA.MM.JJ)"},{key:"dateTo",label:"Jusqu’au (AAAA.MM.JJ)"},{key:"material",label:"Matériel exact (ex. KRkrp)"}]
+                delegate:ColumnLayout {required property var modelData;Layout.fillWidth:true
+                    Label {text:modelData.label;font.pixelSize:11}
+                    TextField {Layout.fillWidth:true;text:win.advanced[modelData.key]||"";onTextEdited:win.advanced[modelData.key]=text}
+                }
+            }
+            Label {text:"Elo minimal des deux joueurs"} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:"Demi-coups maximum (0 = tous)"} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
+            Label {text:"Trier par"} ComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
+            Label {text:"Le matériel et les positions sont recherchés dans toutes les variantes. P = pion, N = cavalier, B = fou, R = tour, Q = dame, K = roi ; minuscules pour les Noirs.";wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:10;color:win.muted}
+            TButton {text:"Effacer les filtres";onClicked:{win.advanced={};minElo.value=0;maxPlies.value=0;sortBy.currentIndex=0;win.libraryOffset=0;win.applyAdvanced();advancedDialog.close()}}
+        }
+        onAccepted:{win.advanced.minElo=minElo.value;win.advanced.maxPlies=maxPlies.value;win.advanced.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.libraryOffset=0;win.applyAdvanced()}
     }
     Dialog {id:commands;title:"Commandes rapides";anchors.centerIn:parent;width:510;modal:true
         ColumnLayout {anchors.fill:parent;spacing:8
@@ -593,9 +679,12 @@ ApplicationWindow {
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
-    Shortcut {sequence:"Left";enabled:win.page===2&&!note.activeFocus&&!fenDialog.visible&&!tagsDialog.visible;onActivated:controller.step(-1)}
-    Shortcut {sequence:"Right";enabled:win.page===2&&!note.activeFocus&&!fenDialog.visible&&!tagsDialog.visible;onActivated:controller.step(1)}
-    Shortcut {sequence:"Home";enabled:win.page===2&&!note.activeFocus;onActivated:controller.step(-2)}
-    Shortcut {sequence:"End";enabled:win.page===2&&!note.activeFocus;onActivated:controller.step(2)}
-    Shortcut {sequence:"F";enabled:win.page===2&&!note.activeFocus&&!fenDialog.visible&&!tagsDialog.visible&&!settingsDialog.visible&&!cardDialog.visible;onActivated:controller.flip()}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible}
+    Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
+    Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
+    Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}
+    Shortcut {sequence:"End";enabled:win.navigationKeys();onActivated:controller.step(2)}
+    Shortcut {sequence:"F";enabled:win.navigationKeys();onActivated:controller.flip()}
+    Shortcut {sequence:"Ctrl+Z";enabled:win.navigationKeys()&&controller.state.canUndo;onActivated:controller.undo()}
+    Shortcut {sequence:"Ctrl+Shift+Z";enabled:win.navigationKeys()&&controller.state.canRedo;onActivated:controller.redo()}
 }

@@ -1,20 +1,21 @@
 # Périmètre livré et travaux restants
 
-La vision de Trait64 est un environnement complet d’analyse, de préparation et d’entraînement. La version 0.1 réalise un ensemble local utilisable ; elle n’achève pas le catalogue d’environ 245 fonctions envisagé.
+La version 0.2 est une application locale enrichie. Elle n’achève pas le catalogue d’environ 245 fonctions envisagé pour Trait64. Les fonctions ci-dessous sont celles réellement présentes dans le code.
 
-| Domaine | Livré en 0.1 | Suite prévue, non implémentée |
+| Domaine | Livré en 0.2, en plus de 0.1 | Travaux restants |
 |---|---|---|
-| Échiquier | Règles classiques, coups spéciaux, clic/glisser, promotion, FEN, flèches temporaires | Chess960, éditeur graphique de positions, annotations persistantes |
-| Études | Arbre, variantes, commentaires, NAG, métadonnées, session récupérable | Onglets, chapitres, images, références, mise en page/impression |
-| Fichiers | PGN multi-parties/variantes, FEN, archive T64 expérimentale | EPD, Polyglot, formats SCID/ChessBase, T64 compact final |
-| Bibliothèque | SQLite, index positions principales, recherche, favoris, collections, corbeille | Indexation massive incrémentale, recherche matérielle/structurelle, fusion intelligente, doublons positionnels |
-| Analyse | UCI, MultiPV, score Blancs, lignes insérables, profondeur, nœuds/s | Analyse de partie, graphe, classification d’erreurs, tablebases, plusieurs moteurs, budgets CPU adaptatifs |
-| Ouvertures | Explorateur de base locale, statistiques, cartes tirées des lignes | Détection ECO automatique, fusion de répertoires, lacunes/couverture, nouveautés, livres d’ouverture |
-| Entraînement | Cartes de lignes, réponse automatique, progression, intervalles 1/2/4… jours | Génération de tactiques depuis erreurs, solutions équivalentes, finales spécialisées, objectifs, agenda |
-| Jeu local | Adversaire UCI, force, temps fixe, camp au choix | Pendule complète, handicap, parties moteur-moteur, annotations automatiques |
-| Préparation | Recherche par joueur et position | Fiches adversaires, styles, statistiques fines, préparation de tournoi |
-| Interface | Six espaces, clair/sombre, séparateur redimensionnable, raccourcis, commandes | Panneaux détachables, presets, raccourcis personnalisables, traductions complètes, logo final |
-| Plateforme | Installation utilisateur Debian/Ubuntu, CMake, tests, CI | AppImage/Flatpak, validation Windows/macOS, mises à jour, API/plugins |
-| Réseau | Aucun requis | Import distant volontaire, partage d’études, communauté ; jeu en ligne exclu du périmètre |
+| Apparence | 4 jeux SVG + Unicode, import SVG personnel, 8 palettes, couleurs des cases/fond/repères, préférences persistantes | Textures, animations avancées, logo final |
+| Échiquier | Chess960, 960 départs numérotés, éditeur graphique FEN, flèches/cercles persistants | Autres variantes |
+| Études | 16 onglets restaurables, annuler/rétablir, duplication, fusion d’arbres, diagramme PNG, étude PDF | Chapitres, références et documents attachés, mise en page avancée |
+| Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
+| Bibliothèque | Schéma 2, index des variantes/matériel/Elo, filtres, pagination, doublons de ligne principale, réindexation annulable | Indexation massive incrémentale, dédoublonnage intelligent avec choix de fusion, recherche structurelle fine |
+| Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils moteur, profondeur et chemin Syzygy | Comparaison simultanée de moteurs, analyse des branches, budgets adaptatifs, interface de tablebases dédiée |
+| Ouvertures | Dictionnaire ECO CC0 embarqué, balises depuis une position, fusion d’études | Couverture/lacunes de répertoire, nouveautés, livres d’ouverture |
+| Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, objectif | Solutions équivalentes, cours de finales, agenda détaillé, certification tactique |
+| Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
+| Préparation | Fiches joueurs, résultats par couleur, ouvertures, dernières parties | Styles d’adversaires, préparation et gestion de tournois |
+| Interface | 7 espaces, personnalisation, petites fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traductions complètes |
+| Plateforme | Paquets Debian 12/13 amd64, installateur source Debian/Ubuntu/Voyager, tests et CI | AppImage/Flatpak, Windows/macOS, mises à jour intégrées, API/plugins |
+| Réseau | Aucun service requis | Import distant volontaire, partage, communauté ; jeu en ligne exclu du périmètre |
 
-Priorités techniques : fiabiliser l’alpha sur le PC cible ; enrichir les tests de flux ; rendre la notation et l’indexation incrémentales ; concevoir et versionner le véritable stockage compact avant toute promesse de compatibilité .t64 durable. Conserver PGN/SQLite comme sorties récupérables pendant cette évolution.
+Priorité suivante : retours sur le PC cible et corpus représentatifs, modèles Qt incrémentaux, amélioration de l’analyse et du répertoire. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.

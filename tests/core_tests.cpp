@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "game.h"
 #include <iostream>
+#include <set>
+#include <sstream>
 #include <stdexcept>
 int checks = 0;
 void check(bool ok, const char *message) {
@@ -80,6 +82,56 @@ int main() {
         auto mate = t64::parsePgn("1.f3 e5 2.g4 Qh4# 0-1");
         check(mate[0].boardAt(4).isGameOver().first == chess::GameResultReason::CHECKMATE,
               "Checkmate detected");
+        std::set<std::string> starts;
+        for (int i = 0; i < 960; ++i) {
+            const auto fen = t64::chess960Fen(i);
+            starts.insert(fen);
+            t64::Game frc(fen, true);
+            auto b960 = frc.boardAt(0);
+            check(t64::perft(b960, 1) >= 18, "Chess960 legal initial moves");
+            check(t64::parsePgn(frc.pgn()).at(0).chess960, "Chess960 PGN variant preserved");
+        }
+        check(starts.size() == 960, "960 distinct starts");
+        check(t64::chess960Fen(518).starts_with("rnbqkbnr/"), "Scharnagl 518 is classical");
+        t64::Game stationary("k7/8/8/8/8/8/8/6KR w H - 0 1", true);
+        int castled = stationary.play(0, "g1h1");
+        auto cb = stationary.boardAt(castled);
+        check(cb.at(chess::Square("g1")) == chess::Piece::WHITEKING &&
+                  cb.at(chess::Square("f1")) == chess::Piece::WHITEROOK,
+              "Chess960 stationary king castling");
+        check(stationary.nodes[castled].san == "O-O", "960 castle SAN");
+        check(t64::parsePgn(stationary.pgn()).at(0).pgn() == stationary.pgn(), "960 castling PGN round trip");
+        rejects([] { t64::Game bad("k7/8/8/8/8/8/8/1K4RR w HG - 0 1", true); });
+        auto epds = t64::parseEpd("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - id \"Start; "
+                                  "position\"; bm e4 d4; hmvc 0; fmvn 1;\n");
+        check(epds.size() == 1 && epds[0].tags.at("EPD_id") == "\"Start; position\"", "EPD quoted semicolon");
+        check(t64::parseEpd(t64::exportEpd(epds[0]))[0].tags.at("EPD_bm") == "e4 d4",
+              "EPD operation round trip");
+        rejects([] { t64::parseEpd("8/8/8/8/8/8/8/K6k w - - bm e4;"); });
+        rejects([] { t64::parseEpd("8/8/8/8/8/8/8/K6k w - - bad]key 1;"); });
+        auto left = t64::parsePgn("1.e4 {center} e5 *").at(0),
+             right = t64::parsePgn("1.e4 {idea} c5 (1...e5 2.Nf3) *").at(0);
+        left.merge(right);
+        auto merged = t64::parsePgn(left.pgn()).at(0);
+        check(merged.nodes[1].children.size() == 2 && merged.nodes[1].comment == "center\nidea",
+              "Merge combines branches and comments");
+        auto once = left.pgn();
+        left.merge(right);
+        check(left.pgn() == once, "Merge is idempotent");
+        rejects([&] { left.merge(stationary); });
+        for (const auto &bad :
+             std::vector<std::string>{"[", "{", "( 1. e4 )", "1. e4 $999 *", "1. e4 [Bad", "1. e4 )"})
+            rejects([&] { t64::parsePgn(bad); });
+        std::istringstream stream(text);
+        std::vector<t64::Game> streamed;
+        t64::readPgn(stream, [&](t64::Game &&game) { streamed.push_back(std::move(game)); });
+        check(streamed.size() == 2 && streamed[0].pgn() == games[0].pgn(),
+              "Streaming PGN preserves nested variations and headers");
+        std::istringstream comments("[Event \"Quoted * name\"]\n{a * comment} 1.e4 (1.d4 {1-0} d5) e5 "
+                                    "*\n[Event \"Next\"]\n1.d4 d5 *");
+        int count = 0;
+        t64::readPgn(comments, [&](t64::Game &&) { ++count; });
+        check(count == 2, "PGN stream ignores result tokens inside comments");
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     QCoreApplication::setApplicationName("Trait64");
     QCoreApplication::setOrganizationName("Trait64");
-    QCoreApplication::setApplicationVersion("0.1.0");
+    QCoreApplication::setApplicationVersion("0.2.0");
     QQuickStyle::setStyle("Basic");
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
@@ -54,11 +54,20 @@ int main(int argc, char *argv[]) {
             }
             auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
             const QString screenshot = qEnvironmentVariable("T64_SCREENSHOT");
+            if (!screenshot.isEmpty() && qEnvironmentVariableIsSet("T64_SCREENSHOT_WIDTH"))
+                window->resize(qEnvironmentVariableIntValue("T64_SCREENSHOT_WIDTH"),
+                               qEnvironmentVariableIntValue("T64_SCREENSHOT_HEIGHT"));
             // Traverse every page so that QML delegates and lazy models are exercised.
-            for (int i = 0; i < 6; ++i)
+            for (int i = 0; i < 7; ++i)
                 QTimer::singleShot(150 + i * 170, &app, [window, i] { window->setProperty("page", i); });
-            QTimer::singleShot(1400, &app, [window] { window->setProperty("page", 2); });
-            QTimer::singleShot(1800, &app, [&, window, screenshot] {
+            QTimer::singleShot(1500, &app, [window] {
+                window->setProperty("page", 2);
+                const auto preview = qEnvironmentVariable("T64_PREVIEW");
+                if (!preview.isEmpty())
+                    if (auto *dialog = window->findChild<QObject *>(preview + "Dialog"))
+                        QMetaObject::invokeMethod(dialog, "open");
+            });
+            QTimer::singleShot(2000, &app, [&, window, screenshot] {
                 if (screenshot.isEmpty()) {
                     qInfo() << "Desktop smoke test completed";
                     app.exit(qmlWarnings ? 5 : 0);

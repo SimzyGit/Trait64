@@ -5,7 +5,8 @@ Item {
     id: root
     property var backend
     property bool coordinates: true
-    property var arrows: []
+    property var prefs: backend.preferences
+    property var arrows: backend.state.arrows || []
     property string arrowFrom: ""
     property string draggedFrom: ""
     property real cell: width / 8
@@ -32,15 +33,13 @@ Item {
                 property int sqIndex: root.backend.state.flipped ? Math.floor(index/8)*8+7-index%8 : (7-Math.floor(index/8))*8+index%8
                 property var cellData: root.backend.squares[sqIndex] || ({})
                 width: root.cell; height: root.cell
-                color: cellData.check ? "#c45b59" : root.backend.state.selected === sqIndex ? "#c5b960" : cellData.last ? ((Math.floor(index/8)+index%8)%2===0 ? "#d9d990":"#adb56b") : (Math.floor(index/8)+index%8)%2===0 ? "#dce4d3" : "#718c7c"
-                Text {
+                color: (Math.floor(index/8)+index%8)%2===0 ? root.prefs.boardLight : root.prefs.boardDark
+                Rectangle {anchors.fill:parent;color:tile.cellData.check ? "#d34545" : root.prefs.boardHighlight;opacity:tile.cellData.check?.78:root.backend.state.selected===tile.sqIndex?.85:.48;visible:!!tile.cellData.check || root.backend.state.selected===tile.sqIndex || (!!tile.cellData.last && root.prefs.lastMove)}
+                Piece {
                     anchors.centerIn: parent
-                    text: tile.cellData.piece || ""
-                    font.family: "DejaVu Sans"
-                    font.pixelSize: root.cell * 0.77
-                    color: tile.cellData.white ? "#fffaf0" : "#23302e"
-                    style: Text.Outline
-                    styleColor: tile.cellData.white ? "#39473f" : "#151d1a"
+                    width:root.cell*.91;height:width
+                    code: tile.cellData.code || ""
+                    pieceStyle:root.prefs.pieceStyle;customPath:root.prefs.customPiecePath
                     opacity: root.draggedFrom===tile.cellData.square ? 0.35 : 1
                 }
                 Rectangle {
@@ -51,20 +50,20 @@ Item {
                     color: tile.cellData.occupied ? "transparent" : "#55596751"
                     border.color: tile.cellData.occupied ? "#8a384e39" : "transparent"
                     border.width: tile.cellData.occupied ? 5 : 0
-                    visible: !!tile.cellData.legal
+                    visible: root.prefs.legalMoves && !!tile.cellData.legal
                 }
                 Text {
                     anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 4
                     text: tile.cellData.square ? tile.cellData.square[1] : ""
                     visible: root.coordinates && tile.index%8===0
-                    color: (Math.floor(tile.index/8)+tile.index%8)%2===0 ? "#496352":"#e4ebdd"
+                    color: (Math.floor(tile.index/8)+tile.index%8)%2===0 ? root.prefs.boardDark:root.prefs.boardLight
                     font.pixelSize: Math.max(10, root.cell*0.15); font.bold: true
                 }
                 Text {
                     anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 4
                     text: tile.cellData.square ? tile.cellData.square[0] : ""
                     visible: root.coordinates && tile.index>=56
-                    color: (Math.floor(tile.index/8)+tile.index%8)%2===0 ? "#496352":"#e4ebdd"
+                    color: (Math.floor(tile.index/8)+tile.index%8)%2===0 ? root.prefs.boardDark:root.prefs.boardLight
                     font.pixelSize: Math.max(10, root.cell*0.15); font.bold: true
                 }
             }
@@ -76,9 +75,9 @@ Item {
         onPaint: {
             var ctx=getContext("2d");ctx.clearRect(0,0,width,height)
             for(var i=0;i<root.arrows.length;i++) {
-                var a=root.displayIndex(root.arrows[i][0]),b=root.displayIndex(root.arrows[i][1])
+                var a=root.displayIndex(root.arrows[i].from),b=root.displayIndex(root.arrows[i].to)
                 var x1=(a%8+0.5)*root.cell,y1=(Math.floor(a/8)+0.5)*root.cell,x2=(b%8+0.5)*root.cell,y2=(Math.floor(b/8)+0.5)*root.cell
-                ctx.strokeStyle="#d477ae55";ctx.fillStyle="#d477ae55";ctx.lineWidth=root.cell*0.13;ctx.lineCap="round"
+                var col=({G:"#599c46",R:"#d75050",B:"#4289cc",Y:"#dcac35"})[root.arrows[i].color]||"#599c46";ctx.strokeStyle=col;ctx.fillStyle=col;ctx.globalAlpha=.82;ctx.lineWidth=root.cell*0.13;ctx.lineCap="round"
                 if(a===b){ctx.beginPath();ctx.arc(x1,y1,root.cell*0.4,0,Math.PI*2);ctx.stroke();continue}
                 var angle=Math.atan2(y2-y1,x2-x1),head=root.cell*0.3
                 ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-head*0.45*Math.cos(angle),y2-head*0.45*Math.sin(angle));ctx.stroke()
@@ -100,20 +99,21 @@ Item {
         onPositionChanged: function(mouse) {if(pressed && pressedButtons===Qt.LeftButton && Math.abs(mouse.x-downX)+Math.abs(mouse.y-downY)>12){moved=true;root.draggedFrom=from}}
         onReleased: function(mouse) {
             var to=root.squareAt(mouse.x,mouse.y)
-            if(mouse.button===Qt.RightButton && to!==""){var list=root.arrows.slice();list.push([root.arrowFrom,to]);root.arrows=list;drawing.requestPaint()}
-            else if(to!==""){root.arrows=[];drawing.requestPaint();if(moved)root.backend.tryMove(from,to);else root.backend.clickSquare(to)}
+            if(mouse.button===Qt.RightButton && to!==""){root.backend.toggleAnnotation(root.arrowFrom,to,(mouse.modifiers & Qt.ShiftModifier)?"R":(mouse.modifiers & Qt.ControlModifier)?"B":(mouse.modifiers & Qt.AltModifier)?"Y":"G")}
+            else if(to!==""){if(moved)root.backend.tryMove(from,to);else root.backend.clickSquare(to)}
             root.draggedFrom=""
         }
         onCanceled: root.draggedFrom=""
     }
-    Text {
+    Piece {
         visible: root.draggedFrom!==""
         property int index: root.draggedFrom!=="" ? root.draggedFrom.charCodeAt(0)-97+(root.draggedFrom.charCodeAt(1)-49)*8 : 0
         property var cellData: root.backend.squares[index] || ({})
         x: input.mouseX-width/2; y: input.mouseY-height/2
-        text: cellData.piece || "";font.family: "DejaVu Sans";font.pixelSize: root.cell*0.8
-        color: cellData.white ? "#fffaf0":"#23302e";style: Text.Outline;styleColor:"#39473f"
+        width:root.cell*.94;height:width
+        code:cellData.code||"";pieceStyle:root.prefs.pieceStyle;customPath:root.prefs.customPiecePath
     }
     Connections {target: root.backend;function onChanged(){drawing.requestPaint()}}
+    onArrowsChanged: drawing.requestPaint()
     onWidthChanged: drawing.requestPaint()
 }

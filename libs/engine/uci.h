@@ -12,9 +12,10 @@ class Uci : public QObject {
   public:
     explicit Uci(QObject *parent = nullptr);
     ~Uci() override;
-    void start(const QString &executable, int threads = 1, int hash = 128, int multiPV = 3, int skill = 20);
+    void start(const QString &executable, int threads = 1, int hash = 128, int multiPV = 3, int skill = 20,
+               const QString &syzygyPath = {});
     void analyse(const QString &fen, const QString &positionCommand, bool play = false,
-                 int milliseconds = 800);
+                 int milliseconds = 800, int depth = 24, bool chess960 = false);
     void stop();
     void shutdown();
     QString name() const { return name_; }
@@ -23,16 +24,20 @@ class Uci : public QObject {
     void status(const QString &text);
     void lines(const QVariantList &lines);
     void bestMove(const QString &uci, const QString &fen);
+    void completed(const QString &fen, const QVariantList &lines);
+    void failed(const QString &reason);
 
   private:
     enum State { Off, Handshake, WaitingReady, Ready, Searching, Stopping } state_ = Off;
     QProcess process_;
     QTimer timeout_;
     QByteArray buffer_;
-    QString name_, activeFen_, pendingFen_, pendingPosition_;
+    QString name_, activeFen_, pendingFen_, pendingPosition_, syzygyPath_;
     bool pending_ = false, pendingPlay_ = false, activePlay_ = false;
+    bool pending960_ = false, active960_ = false;
+    int depth_ = 24;
     int threads_ = 1, hash_ = 128, multiPV_ = 3, skill_ = 20, moveTime_ = 800;
-    QMap<int, QVariantMap> variations_;
+    QMap<int, QVariantMap> variations_, exactVariations_;
     QSet<QString> options_;
     void command(const QString &text);
     void consume();

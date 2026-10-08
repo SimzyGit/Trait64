@@ -38,7 +38,7 @@ std::string stripCheck(std::string s) {
 }
 } // namespace
 
-chess::Board checkedBoard(const std::string &fen) {
+chess::Board checkedBoard(const std::string &fen, bool variant960) {
     require(fen.size() < 256, "FEN trop longue.");
     std::istringstream input(fen);
     std::array<std::string, 6> f;
@@ -48,6 +48,7 @@ chess::Board checkedBoard(const std::string &fen) {
     require(!(input >> extra), "Champs FEN supplémentaires.");
     require(f[1] == "w" || f[1] == "b", "Trait invalide dans la FEN.");
     std::array<char, 64> squares{};
+    int whitePieces = 0, blackPieces = 0, whitePawns = 0, blackPawns = 0;
     int rank = 7, file = 0, whiteKing = 0, blackKing = 0;
     for (char c : f[0]) {
         if (c == '/') {
@@ -64,13 +65,53 @@ chess::Board checkedBoard(const std::string &fen) {
             squares[rank * 8 + file++] = c;
             whiteKing += c == 'K';
             blackKing += c == 'k';
+            if (std::isupper(static_cast<unsigned char>(c)))
+                ++whitePieces;
+            else
+                ++blackPieces;
+            whitePawns += c == 'P';
+            blackPawns += c == 'p';
         }
     }
     require(rank == 0 && file == 8 && whiteKing == 1 && blackKing == 1,
             "La position doit comporter huit rangées et un roi par couleur.");
-    require(f[2] == "-" || std::regex_match(f[2], std::regex("K?Q?k?q?")),
-            "Droits de roque invalides (échecs classiques uniquement).");
-    for (char c : f[2]) {
+    require(whitePieces <= 16 && blackPieces <= 16 && whitePawns <= 8 && blackPawns <= 8,
+            "Trop de pièces ou de pions dans la position.");
+    require(f[2] == "-" || std::regex_match(f[2], std::regex(variant960 ? "[A-HKQa-hkq]{1,4}" : "K?Q?k?q?")),
+            "Droits de roque invalides.");
+    if (variant960 && f[2] != "-") {
+        std::string seen;
+        int wings = 0;
+        for (char c : f[2]) {
+            const bool white = std::isupper(static_cast<unsigned char>(c));
+            const int offset = white ? 0 : 56;
+            const char king = white ? 'K' : 'k', rook = white ? 'R' : 'r';
+            auto first = squares.begin() + offset;
+            auto k = std::find(first, first + 8, king);
+            require(k != first + 8, "Roi hors de sa rangée de roque.");
+            int rookFile = std::toupper(static_cast<unsigned char>(c)) - 'A';
+            if (c == 'K' || c == 'k') {
+                rookFile = 7;
+                while (rookFile > k - first && squares[offset + rookFile] != rook)
+                    --rookFile;
+                require(rookFile > k - first, "Tour de petit roque absente.");
+            } else if (c == 'Q' || c == 'q') {
+                rookFile = 0;
+                while (rookFile < k - first && squares[offset + rookFile] != rook)
+                    ++rookFile;
+                require(rookFile < k - first, "Tour de grand roque absente.");
+            }
+            require(rookFile >= 0 && rookFile < 8 && squares[offset + rookFile] == rook,
+                    "Tour de roque incohérente.");
+            const int wing = (white ? 0 : 2) + (rookFile > k - first ? 1 : 0);
+            require(!(wings & (1 << wing)), "Deux droits de roque du même côté du roi.");
+            wings |= 1 << wing;
+            char key = char(offset + rookFile);
+            require(seen.find(key) == std::string::npos, "Droit de roque dupliqué.");
+            seen += key;
+        }
+    }
+    for (char c : variant960 ? std::string() : f[2]) {
         if (c == 'K')
             require(squares[4] == 'K' && squares[7] == 'R', "Roque blanc incohérent.");
         if (c == 'Q')
@@ -94,21 +135,23 @@ chess::Board checkedBoard(const std::string &fen) {
         const auto value = std::stoi(f[i]);
         require(i == 4 ? value <= 255 : (value >= 1 && value <= 32000), "Compteur FEN hors limites.");
     }
-    chess::Board board;
+    chess::Board board(chess::constants::STARTPOS, variant960);
     require(board.setFen(fen), "FEN invalide.");
     require(!board.isAttacked(board.kingSq(~board.sideToMove()), board.sideToMove()),
             "Le roi du camp qui vient de jouer est en échec.");
     return board;
 }
 
-Game::Game(const std::string &fen) {
-    const auto b = checkedBoard(fen);
+Game::Game(const std::string &fen, bool variant960) : chess960(variant960) {
+    const auto b = checkedBoard(fen, chess960);
     tags = {{"Event", "Étude Trait64"}, {"Site", "?"},      {"Date", "????.??.??"}, {"Round", "?"},
             {"White", "Blancs"},        {"Black", "Noirs"}, {"Result", "*"}};
+    if (chess960)
+        tags["Variant"] = "Chess960";
     Node root;
     root.fen = b.getFen();
     nodes.push_back(root);
-    if (root.fen != chess::constants::STARTPOS) {
+    if (chess960 || root.fen != chess::constants::STARTPOS) {
         tags["SetUp"] = "1";
         tags["FEN"] = root.fen;
     }
@@ -119,7 +162,7 @@ chess::Board Game::boardAt(int node) const {
     std::vector<int> path;
     for (int n = node; n > 0; n = nodes[n].parent)
         path.push_back(n);
-    auto board = checkedBoard(nodes[0].fen);
+    auto board = checkedBoard(nodes[0].fen, chess960);
     for (auto it = path.rbegin(); it != path.rend(); ++it)
         board.makeMove(chess::uci::uciToMove(board, nodes[*it].uci));
     return board;
@@ -131,11 +174,11 @@ int Game::play(int parent, const std::string &uci) {
         if (nodes[c].uci == uci)
             return c;
     require(nodes.size() < 100000, "Limite de 100 000 positions par étude atteinte.");
-    auto board = checkedBoard(nodes[parent].fen);
+    auto board = checkedBoard(nodes[parent].fen, chess960);
     chess::Movelist moves;
     chess::movegen::legalmoves(moves, board);
     for (auto m : moves) {
-        if (chess::uci::moveToUci(m) != uci)
+        if (chess::uci::moveToUci(m, chess960) != uci)
             continue;
         Node n;
         n.parent = parent;
@@ -152,14 +195,14 @@ int Game::play(int parent, const std::string &uci) {
 }
 
 int Game::playSan(int parent, const std::string &san) {
-    auto board = checkedBoard(nodes.at(parent).fen);
+    auto board = checkedBoard(nodes.at(parent).fen, chess960);
     chess::Movelist moves;
     chess::movegen::legalmoves(moves, board);
     auto target = san;
     std::replace(target.begin(), target.end(), '0', 'O');
     for (auto m : moves)
         if (stripCheck(chess::uci::moveToSan(board, m)) == stripCheck(target))
-            return play(parent, chess::uci::moveToUci(m));
+            return play(parent, chess::uci::moveToUci(m, chess960));
     throw std::runtime_error("Coup PGN invalide : " + san + " (position " + std::to_string(parent) + ")");
 }
 
@@ -198,7 +241,7 @@ std::string Game::pgn() const {
         require(depth <= 128, "Trop de niveaux de variantes.");
         while (node > 0) {
             const auto &n = nodes[node];
-            const auto b = checkedBoard(nodes[n.parent].fen);
+            const auto b = checkedBoard(nodes[n.parent].fen, chess960);
             out << b.fullMoveNumber() << (b.sideToMove() == chess::Color::WHITE ? ". " : "... ") << n.san
                 << ' ';
             for (int nag : n.nags)
@@ -234,9 +277,13 @@ std::vector<Game> parsePgn(const std::string &text, size_t maxGames) {
             return;
         if (headers.contains("Variant"))
             require(headers["Variant"] == "Standard" || headers["Variant"] == "From Position" ||
-                        headers["Variant"] == "Chess",
+                        headers["Variant"] == "Chess" || headers["Variant"] == "Chess960" ||
+                        headers["Variant"] == "Fischerandom",
                     "Variante non prise en charge : " + headers["Variant"]);
-        game = Game(headers.contains("FEN") ? headers["FEN"] : std::string(chess::constants::STARTPOS));
+        const bool frc = headers.contains("Variant") &&
+                         (headers["Variant"] == "Chess960" || headers["Variant"] == "Fischerandom");
+        require(!frc || headers.contains("FEN"), "Une partie Chess960 doit préciser sa FEN initiale.");
+        game = Game(headers.contains("FEN") ? headers["FEN"] : std::string(chess::constants::STARTPOS), frc);
         for (const auto &[k, v] : headers)
             game.tags[k] = v;
         started = true;

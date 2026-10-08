@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#include "controller.h"
+#include <QColor>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QImageReader>
+#include <QUuid>
+#include <algorithm>
+#include <cmath>
+
+QVariantMap Controller::preferences() const {
+    QVariantMap defaults{{"enginePath", ""},
+                         {"threads", 1},
+                         {"hash", 128},
+                         {"multiPV", 3},
+                         {"skill", 12},
+                         {"moveTime", 1000},
+                         {"analysisDepth", 24},
+                         {"syzygyPath", ""},
+                         {"lightTheme", false},
+                         {"coordinates", true},
+                         {"pieceStyle", "cburnett"},
+                         {"customPiecePath", ""},
+                         {"boardLight", "#dce4d3"},
+                         {"boardDark", "#718c7c"},
+                         {"boardHighlight", "#c9ba55"},
+                         {"backgroundColor", ""},
+                         {"accentColor", "#a8d39c"},
+                         {"legalMoves", true},
+                         {"lastMove", true},
+                         {"dailyGoal", 10},
+                         {"engineProfiles", QVariantList()}};
+    for (auto it = defaults.begin(); it != defaults.end(); ++it)
+        it.value() = settings_.value(it.key(), it.value());
+    defaults["dataPath"] = dataPath_;
+    QColor bg(defaults["backgroundColor"].toString());
+    if (!bg.isValid())
+        bg = QColor(defaults["lightTheme"].toBool() ? "#f3f3ed" : "#121b18");
+    auto linear = [](double x) { return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4); };
+    const double luminance =
+        .2126 * linear(bg.redF()) + .7152 * linear(bg.greenF()) + .0722 * linear(bg.blueF());
+    const bool light = luminance > .179;
+    // Blend toward the opposite brightness, including pure black where lighter() cannot work.
+    auto blend = [&](double factor) {
+        QColor to = light ? QColor("#000000") : QColor("#ffffff");
+        return QColor::fromRgbF(bg.redF() * (1 - factor) + to.redF() * factor,
+                                bg.greenF() * (1 - factor) + to.greenF() * factor,
+                                bg.blueF() * (1 - factor) + to.blueF() * factor)
+            .name();
+    };
+    defaults["background"] = bg.name();
+    defaults["panel"] = blend(.045);
+    defaults["raised"] = blend(.085);
+    defaults["line"] = blend(.17);
+    defaults["foreground"] = light ? "#19221e" : "#f1f3f0";
+    defaults["muted"] = light ? "#4b5951" : "#bcc6bf";
+    return defaults;
+}
+void Controller::setPreference(const QString &key, const QVariant &value) {
+    try {
+        const QMap<QString, QPair<int, int>> limits{{"threads", {1, 32}},       {"hash", {16, 4096}},
+                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}},
+                                                    {"moveTime", {100, 10000}}, {"analysisDepth", {1, 99}},
+                                                    {"dailyGoal", {1, 1000}}};
+        QVariant clean = value;
+        if (limits.contains(key)) {
+            bool ok;
+            int n = value.toInt(&ok);
+            if (!ok)
+                throw std::runtime_error("Nombre invalide.");
+            clean = std::clamp(n, limits[key].first, limits[key].second);
+        } else if (QStringList{"lightTheme", "coordinates", "legalMoves", "lastMove"}.contains(key))
+            clean = value.toBool();
+        else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
+                     .contains(key)) {
+            if (key == "backgroundColor" && value.toString().isEmpty())
+                clean = "";
+            else {
+                QColor color(value.toString());
+                if (!color.isValid())
+                    throw std::runtime_error("Couleur invalide : utilisez #RRGGBB.");
+                color.setAlpha(255);
+                clean = color.name();
+            }
+        } else if (key == "pieceStyle") {
+            if (!QStringList{"cburnett", "merida", "spatial", "pixel", "unicode", "custom"}.contains(
+                    value.toString()))
+                return;
+            if (value == "custom" && settings_.value("customPiecePath").toString().isEmpty())
+                return;
+        } else if (key == "enginePath" || key == "syzygyPath") {
+            clean = localPath(value.toString());
+            if (clean.toString().contains('\n') || clean.toString().contains('\r'))
+                throw std::runtime_error("Chemin invalide.");
+        } else
+            return;
+        settings_.setValue(key, clean);
+        emit preferencesChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::applyBoardPreset(const QString &name) {
+    static const QMap<QString, QStringList> presets{
+        {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},     {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},
+        {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},     {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}},
+        {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},      {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}},
+        {"Contraste", {"#ffffff", "#494949", "#e2ab31"}}, {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}}};
+    if (!presets.contains(name))
+        return;
+    const auto c = presets[name];
+    settings_.setValue("boardLight", c[0]);
+    settings_.setValue("boardDark", c[1]);
+    settings_.setValue("boardHighlight", c[2]);
+    emit preferencesChanged();
+}
+void Controller::resetAppearance() {
+    for (const auto &key :
+         QStringList{"lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
+                     "backgroundColor", "accentColor", "coordinates", "legalMoves", "lastMove"})
+        settings_.remove(key);
+    emit preferencesChanged();
+}
+void Controller::importPieceSet(const QString &folder) {
+    QString destination;
+    try {
+        const QDir src(localPath(folder));
+        QStringList names;
+        for (QChar c : QString("wb"))
+            for (QChar p : QString("KQRBNP")) {
+                QString name = QString(c) + p + ".svg";
+                QFileInfo f(src.filePath(name));
+                if (!f.isFile() || f.size() > 1024 * 1024 || !QImageReader(f.filePath()).canRead())
+                    throw std::runtime_error("Le dossier doit contenir 12 SVG lisibles : wK, wQ, wR, wB, wN, "
+                                             "wP et bK, bQ, bR, bB, bN, bP.");
+                names << name;
+            }
+        destination = dataPath_ + "/pieces/" + QUuid::createUuid().toString(QUuid::WithoutBraces);
+        QDir().mkpath(destination);
+        for (const auto &name : names)
+            if (!QFile::copy(src.filePath(name), destination + "/" + name))
+                throw std::runtime_error("Copie du jeu de pièces impossible.");
+        settings_.setValue("customPiecePath", destination);
+        settings_.setValue("pieceStyle", "custom");
+        emit preferencesChanged();
+        emit message("Jeu de pièces personnel installé.");
+    } catch (const std::exception &e) {
+        if (!destination.isEmpty())
+            QDir(destination).removeRecursively();
+        fail(e);
+    }
+}

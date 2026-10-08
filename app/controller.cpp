@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -74,10 +75,23 @@ Controller::Controller(const QString &path, QObject *parent)
     connect(&engine_, &t64::Uci::bestMove, this, [this](const QString &move, const QString &fen) {
         if (playing_ && fen == s(game_.nodes[node_].fen)) {
             try {
-                node_ = game_.play(node_, move.toStdString());
+                if (clockRunning_) {
+                    tickClock();
+                    if (!clockRunning_)
+                        return;
+                }
+                const bool white = game_.boardAt(node_).sideToMove() == chess::Color::WHITE;
+                auto candidate = game_;
+                const int target = candidate.play(node_, move.toStdString());
+                remember();
+                game_ = std::move(candidate);
+                node_ = target;
+                review_.clear();
+                emit reviewChanged();
+                afterClockMove(white);
                 refresh(true);
             } catch (const std::exception &e) {
-                playing_ = false;
+                stopPlaying();
                 fail(e);
                 refresh();
             }
@@ -85,12 +99,15 @@ Controller::Controller(const QString &path, QObject *parent)
     });
     connect(&importer_, &QFutureWatcher<ImportResult>::finished, this, [this] {
         busy_ = false;
+        taskPoll_.stop();
         emit busyChanged();
         const auto r = importer_.result();
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())
             emit message(r.error, true);
+        else if (r.operation == "reindex")
+            emit message(QString("Index reconstruits pour %1 partie(s).").arg(r.count));
         else
             emit message(
                 QString("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
@@ -113,10 +130,13 @@ Controller::Controller(const QString &path, QObject *parent)
                         sessionPath_ + ".unreadable-" + QString::number(QDateTime::currentMSecsSinceEpoch()));
         }
     }
+    initFeatures();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    reviewer_.shutdown();
+    cancelTask_->store(true);
     importer_.waitForFinished();
     try {
         if (cardId_)
@@ -125,26 +145,17 @@ Controller::~Controller() {
     } catch (...) {
     }
 }
-QVariantMap Controller::preferences() const {
-    return {{"enginePath", settings_.value("enginePath", "")},
-            {"threads", settings_.value("threads", 1)},
-            {"hash", settings_.value("hash", 128)},
-            {"multiPV", settings_.value("multiPV", 3)},
-            {"skill", settings_.value("skill", 12)},
-            {"moveTime", settings_.value("moveTime", 1000)},
-            {"lightTheme", settings_.value("lightTheme", false)},
-            {"coordinates", settings_.value("coordinates", true)},
-            {"dataPath", dataPath_}};
-}
 void Controller::fail(const std::exception &e) {
     emit message(QString::fromUtf8(e.what()), true);
 }
 void Controller::refreshLibrary() {
     try {
         games_ = db_->search(query_, resultFilter_, favoritesOnly_,
-                             positionFilter_ ? s(game_.nodes[node_].fen) : QString(), trashFilter_);
+                             positionFilter_ ? s(game_.nodes[node_].fen) : QString(), trashFilter_,
+                             advancedFilters_);
         stats_ = db_->stats();
         cards_ = db_->cards();
+        players_ = db_->players();
         emit libraryChanged();
     } catch (const std::exception &e) {
         fail(e);
@@ -164,7 +175,20 @@ void Controller::refresh(bool content) {
     if (board.inCheck())
         status += " · Échec";
     if (end.second != chess::GameResult::NONE) {
-        playing_ = false;
+        const bool final = end.first == chess::GameResultReason::CHECKMATE ||
+                           end.first == chess::GameResultReason::STALEMATE ||
+                           end.first == chess::GameResultReason::INSUFFICIENT_MATERIAL;
+        if (final) {
+            if (playing_ || localGame_)
+                game_.tags["Result"] = end.first == chess::GameResultReason::CHECKMATE
+                                           ? (board.sideToMove() == chess::Color::WHITE ? "0-1" : "1-0")
+                                           : "1/2-1/2";
+            playing_ = false;
+            localGame_ = false;
+            clockRunning_ = false;
+            clock_.stop();
+            engine_.stop();
+        }
         switch (end.first) {
         case chess::GameResultReason::CHECKMATE:
             status =
@@ -202,7 +226,16 @@ void Controller::refresh(bool content) {
         {"dirty", dirty_},
         {"savedId", gameId_},
         {"analysis", analysis_},
-        {"playing", playing_},
+        {"playing", playing_ || localGame_},
+        {"clockRunning", clockRunning_},
+        {"whiteClock", QString("%1:%2").arg(whiteMs_ / 60000).arg((whiteMs_ / 1000) % 60, 2, 10, QChar('0'))},
+        {"blackClock", QString("%1:%2").arg(blackMs_ / 60000).arg((blackMs_ / 1000) % 60, 2, 10, QChar('0'))},
+        {"clockResult", clockResult_},
+        {"chess960", game_.chess960},
+        {"arrows", annotations()},
+        {"activeTab", activeTab_},
+        {"canUndo", !undo_.empty() && !cardId_ && !clockRunning_},
+        {"canRedo", !redo_.empty() && !cardId_ && !clockRunning_},
         {"training", bool(cardId_)},
         {"trainingComplete", trainingComplete_},
         {"trainingProgress", QString::number(solutionIndex_) + " / " + QString::number(solution_.size())},
@@ -215,7 +248,7 @@ void Controller::refresh(bool content) {
     QSet<int> targets;
     if (selected_ >= 0)
         for (auto m : legal) {
-            auto u = s(chess::uci::moveToUci(m));
+            auto u = s(chess::uci::moveToUci(m, game_.chess960));
             if (u.left(2) == squareName(selected_))
                 targets.insert(squareIndex(u.mid(2, 2)));
         }
@@ -228,6 +261,9 @@ void Controller::refresh(bool content) {
         squares_ << QVariantMap{
             {"square", squareName(i)},
             {"piece", glyph},
+            {"code", occupied ? (p.color() == chess::Color::WHITE ? QString("w") : QString("b")) +
+                                    QString("PNBRQK")[int(p.type())]
+                              : QString()},
             {"white", occupied && p.color() == chess::Color::WHITE},
             {"occupied", occupied},
             {"legal", targets.contains(i)},
@@ -246,7 +282,7 @@ void Controller::refresh(bool content) {
             return;
         while (n > 0 && notation_.size() < 10000) {
             const auto &v = game_.nodes[n];
-            auto b = t64::checkedBoard(game_.nodes[v.parent].fen);
+            auto b = t64::checkedBoard(game_.nodes[v.parent].fen, game_.chess960);
             QString label = QString::number(b.fullMoveNumber()) +
                             (b.sideToMove() == chess::Color::WHITE ? ". " : "… ") + s(v.san);
             static const QStringList nags = {"", "!", "?", "!!", "??", "!?", "?!"};
@@ -271,6 +307,7 @@ void Controller::refresh(bool content) {
     } catch (const std::exception &e) {
         fail(e);
     }
+    detectOpening();
     emit changed();
     if (positionFilter_)
         refreshLibrary();
@@ -280,25 +317,30 @@ void Controller::refresh(bool content) {
 void Controller::writeSession() {
     if (cardId_)
         return;
-    // PGN parsing can reorder node IDs; persist the path as SAN-independent UCI.
-    QStringList path;
-    for (int n = node_; n > 0; n = game_.nodes[n].parent)
-        path.prepend(s(game_.nodes[n].uci));
-    auto canonical = t64::parsePgn(game_.pgn()).at(0);
-    int canonicalNode = 0;
-    for (const auto &m : path)
-        canonicalNode = canonical.play(canonicalNode, m.toStdString());
-    QJsonObject json{{"pgn", s(game_.pgn())},
-                     {"node", canonicalNode},
-                     {"id", gameId_},
-                     {"dirty", dirty_},
-                     {"library", db_->path()}};
-    atomicWrite(sessionPath_, QJsonDocument(json).toJson());
+    storeTab(false);
+    QJsonArray tabs;
+    for (const auto &study : studies_) {
+        const auto &v = study.position;
+        QJsonArray path;
+        QStringList moves;
+        for (int n = v.node; n > 0; n = v.game.nodes[n].parent)
+            moves.prepend(s(v.game.nodes[n].uci));
+        for (const auto &m : moves)
+            path.append(m);
+        tabs.append(QJsonObject{
+            {"pgn", s(v.game.pgn())}, {"path", path}, {"id", QString::number(v.id)}, {"dirty", v.dirty}});
+    }
+    QJsonObject json{{"library", db_->path()}, {"tabs", tabs}, {"activeTab", activeTab_}};
+    auto bytes = QJsonDocument(json).toJson(QJsonDocument::Compact);
+    require(bytes.size() <= 64 * 1024 * 1024,
+            "Session trop volumineuse : enregistrez et fermez quelques onglets.");
+    atomicWrite(sessionPath_, bytes);
 }
 void Controller::checkpoint() {
     if (cardId_)
         finishTraining();
     if (dirty_) {
+        require(!busy_, "Attendez la fin du traitement ou interrompez-le avant de changer d’étude.");
         gameId_ = db_->save(game_, gameId_);
         dirty_ = false;
         refreshLibrary();
@@ -306,9 +348,26 @@ void Controller::checkpoint() {
     writeSession();
 }
 void Controller::replaceGame(t64::Game game, qint64 id) {
+    if (id)
+        for (int i = 0; i < int(studies_.size()); ++i)
+            if ((i == activeTab_ ? gameId_ : studies_[i].position.id) == id) {
+                switchTab(i);
+                emit showAnalysis();
+                return;
+            }
+    require(studies_.size() < 16, "16 études ouvertes : fermez un onglet avant d’en ouvrir un autre.");
     checkpoint();
-    engine_.stop();
-    playing_ = false;
+    cancelReview();
+    stopPlaying();
+    storeTab();
+    studies_.emplace_back();
+    activeTab_ = int(studies_.size()) - 1;
+    undo_.clear();
+    redo_.clear();
+    review_.clear();
+    commentNode_ = -1;
+    clockResult_.clear();
+    emit reviewChanged();
     game_ = std::move(game);
     gameId_ = id;
     node_ = 0;
@@ -325,6 +384,7 @@ void Controller::newGame() {
         replaceGame(t64::Game());
         game_.tags["Date"] = QDate::currentDate().toString("yyyy.MM.dd").toStdString();
         refresh();
+        writeSession();
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -339,6 +399,7 @@ void Controller::loadGame(qint64 id) {
 void Controller::saveGame(bool copy) {
     try {
         require(!cardId_, "Terminez l’entraînement avant de sauvegarder.");
+        require(!busy_, "Attendez la fin du traitement avant d’enregistrer.");
         gameId_ = db_->save(game_, copy ? 0 : gameId_);
         dirty_ = false;
         writeSession();
@@ -369,7 +430,36 @@ void Controller::importText(const QString &text) {
 }
 void Controller::importFile(const QString &url) {
     try {
+        require(!busy_, "Un traitement est déjà en cours.");
         const auto path = localPath(url);
+        if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
+            require(QFileInfo(path).isFile(), "PGN introuvable.");
+            if (cardId_)
+                finishTraining();
+            busy_ = true;
+            cancelTask_->store(false);
+            taskProgress_->store(0);
+            taskPoll_.start();
+            emit busyChanged();
+            const auto databasePath = db_->path();
+            const auto canceled = cancelTask_;
+            const auto progress = taskProgress_;
+            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress] {
+                ImportResult r;
+                try {
+                    t64::Database db(databasePath);
+                    r.count = db.importPgnFile(path, [&](int n) {
+                        progress->store(n);
+                        return !canceled->load();
+                    });
+                    r.duplicates = progress->load() - r.count;
+                } catch (const std::exception &e) {
+                    r.error = QString::fromUtf8(e.what());
+                }
+                return r;
+            }));
+            return;
+        }
         if (path.endsWith(".t64", Qt::CaseInsensitive)) {
             importBytes(t64::Archive::read(path));
             return;
@@ -377,7 +467,15 @@ void Controller::importFile(const QString &url) {
         QFile f(path);
         require(f.open(QIODevice::ReadOnly), f.errorString());
         require(f.size() <= 64 * 1024 * 1024, "PGN limité à 64 Mio par import.");
-        importBytes(f.readAll());
+        if (path.endsWith(".epd", Qt::CaseInsensitive)) {
+            auto games = t64::parseEpd(f.readAll().toStdString());
+            int count = db_->importGames(games);
+            refreshLibrary();
+            emit message(QString("%1 position(s) EPD importée(s).").arg(count));
+        } else if (path.endsWith(".fen", Qt::CaseInsensitive))
+            setFen(QString::fromUtf8(f.readAll()));
+        else
+            importBytes(f.readAll());
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -387,16 +485,26 @@ void Controller::importBytes(const QByteArray &bytes) {
         emit message("Un import est déjà en cours.", true);
         return;
     }
+    if (cardId_)
+        finishTraining();
     const auto path = db_->path();
+    cancelTask_->store(false);
+    taskProgress_->store(0);
     busy_ = true;
+    taskPoll_.start();
     emit busyChanged();
-    importer_.setFuture(QtConcurrent::run([path, bytes] {
+    const auto canceled = cancelTask_;
+    const auto progress = taskProgress_;
+    importer_.setFuture(QtConcurrent::run([path, bytes, canceled, progress] {
         ImportResult r;
         try {
             auto games = t64::parsePgn(bytes.toStdString());
             require(!games.empty(), "Aucune partie trouvée.");
             t64::Database db(path);
-            r.count = db.importGames(games);
+            r.count = db.importGames(games, [&](int n) {
+                progress->store(n);
+                return !canceled->load();
+            });
             r.duplicates = int(games.size()) - r.count;
         } catch (const std::exception &e) {
             r.error = QString::fromUtf8(e.what());
@@ -407,11 +515,22 @@ void Controller::importBytes(const QByteArray &bytes) {
 void Controller::exportFile(const QString &url, bool all) {
     try {
         const auto path = localPath(url);
-        auto data = (all ? db_->exportPgn() : s(game_.pgn())).toUtf8();
-        if (path.endsWith(".t64", Qt::CaseInsensitive))
-            t64::Archive::append(path, data);
-        else
-            atomicWrite(path, data);
+        db_->validateOutputPath(path);
+        if (all && !path.endsWith(".epd", Qt::CaseInsensitive) &&
+            !path.endsWith(".t64", Qt::CaseInsensitive)) {
+            QSaveFile file(path);
+            require(file.open(QIODevice::WriteOnly), file.errorString());
+            db_->exportPgn(file);
+            require(file.commit(), file.errorString());
+        } else {
+            auto data = path.endsWith(".epd", Qt::CaseInsensitive)
+                            ? QByteArray::fromStdString(t64::exportEpd(game_, node_))
+                            : (all ? db_->exportPgn() : s(game_.pgn())).toUtf8();
+            if (path.endsWith(".t64", Qt::CaseInsensitive))
+                t64::Archive::append(path, data);
+            else
+                atomicWrite(path, data);
+        }
         emit message("Export terminé : " + QFileInfo(path).fileName());
     } catch (const std::exception &e) {
         fail(e);
@@ -419,7 +538,8 @@ void Controller::exportFile(const QString &url, bool all) {
 }
 void Controller::backup(const QString &url) {
     try {
-        require(!busy_, "Attendez la fin de l’import.");
+        require(!busy_, "Attendez la fin du traitement.");
+        checkpoint();
         db_->backup(localPath(url));
         emit message("Sauvegarde complète créée, entraînements inclus.");
     } catch (const std::exception &e) {
@@ -436,6 +556,20 @@ void Controller::openBackup(const QString &url) {
         require(candidate->integrity() == "ok", "Cette bibliothèque est endommagée.");
         db_ = std::move(candidate);
         gameId_ = 0;
+        dirty_ = true;
+        for (auto &tab : studies_) {
+            tab.position.id = 0;
+            tab.position.dirty = true;
+            for (auto &v : tab.undo)
+                v.id = 0;
+            for (auto &v : tab.redo)
+                v.id = 0;
+        }
+        for (auto &v : undo_)
+            v.id = 0;
+        for (auto &v : redo_)
+            v.id = 0;
+        writeSession();
         refreshLibrary();
         refresh();
         emit message("Bibliothèque ouverte : " + QFileInfo(path).fileName());
@@ -456,7 +590,9 @@ void Controller::clickSquare(const QString &sq) {
         const auto from = squareName(selected_);
         auto b = game_.boardAt(node_);
         auto p = b.at(chess::Square(index));
-        if (p == chess::Piece::NONE || p.color() != b.sideToMove()) {
+        if (p == chess::Piece::NONE || p.color() != b.sideToMove() ||
+            (game_.chess960 && b.at(chess::Square(selected_)).type() == chess::PieceType::KING &&
+             p.type() == chess::PieceType::ROOK)) {
             tryMove(from, sq);
             return;
         }
@@ -477,7 +613,7 @@ void Controller::tryMove(const QString &from, const QString &to) {
     chess::movegen::legalmoves(list, b);
     QStringList candidates;
     for (auto m : list) {
-        auto u = s(chess::uci::moveToUci(m));
+        auto u = s(chess::uci::moveToUci(m, game_.chess960));
         if (u.left(4) == from + to)
             candidates << u;
     }
@@ -524,7 +660,20 @@ void Controller::move(const QString &uci) {
             refresh();
             return;
         }
-        node_ = game_.play(node_, uci.toStdString());
+        if (clockRunning_) {
+            tickClock();
+            if (!clockRunning_)
+                return;
+        }
+        const bool white = game_.boardAt(node_).sideToMove() == chess::Color::WHITE;
+        auto candidate = game_;
+        const int target = candidate.play(node_, uci.toStdString());
+        remember();
+        game_ = std::move(candidate);
+        node_ = target;
+        review_.clear();
+        emit reviewChanged();
+        afterClockMove(white);
         selected_ = -1;
         refresh(true);
     } catch (const std::exception &e) {
@@ -536,7 +685,17 @@ void Controller::navigate(int node) {
         return;
     if (node < 0 || node >= int(game_.nodes.size()))
         return;
+    for (int n = node; n > 0; n = game_.nodes[n].parent) {
+        int p = game_.nodes[n].parent;
+        if (p < 0 || std::find(game_.nodes[p].children.begin(), game_.nodes[p].children.end(), n) ==
+                         game_.nodes[p].children.end())
+            return;
+    }
+    commentNode_ = -1;
     playing_ = false;
+    localGame_ = false;
+    clockRunning_ = false;
+    clock_.stop();
     engine_.stop();
     node_ = node;
     selected_ = -1;
@@ -567,12 +726,20 @@ void Controller::flip() {
 void Controller::setComment(const QString &comment) {
     if (cardId_)
         return;
+    if (game_.nodes[node_].comment == comment.toStdString())
+        return;
+    if (commentNode_ != node_ || !commentEdit_.isValid() || commentEdit_.elapsed() > 1200) {
+        remember();
+        commentNode_ = node_;
+    }
+    commentEdit_.restart();
     game_.nodes[node_].comment = comment.left(100000).toStdString();
     refresh(true);
 }
 void Controller::setNag(int nag) {
     if (cardId_)
         return;
+    remember();
     game_.nodes[node_].nags.clear();
     if (nag > 0 && nag <= 255)
         game_.nodes[node_].nags.push_back(nag);
@@ -586,6 +753,7 @@ void Controller::setTags(const QVariantMap &tags) {
         emit message("Résultat invalide : utilisez *, 1-0, 0-1 ou 1/2-1/2.", true);
         return;
     }
+    remember();
     for (const auto &key : QStringList{"White", "Black", "Event", "Site", "Date", "Round", "Result", "ECO",
                                        "WhiteElo", "BlackElo"})
         if (tags.contains(key))
@@ -596,7 +764,10 @@ void Controller::promote() {
     try {
         if (cardId_)
             return;
+        remember();
         game_.promote(node_);
+        review_.clear();
+        emit reviewChanged();
         refresh(true);
     } catch (const std::exception &e) {
         fail(e);
@@ -606,6 +777,10 @@ void Controller::deleteVariation() {
     try {
         if (cardId_)
             return;
+        require(node_ > 0, "La position initiale ne peut pas être supprimée.");
+        remember();
+        review_.clear();
+        emit reviewChanged();
         int parent = game_.nodes[node_].parent;
         game_.removeVariation(node_);
         node_ = parent;
@@ -625,6 +800,7 @@ void Controller::search(const QString &query, const QString &result, bool favori
 }
 void Controller::favorite(qint64 id, bool value) {
     try {
+        require(!busy_, "Traitement en cours.");
         db_->favorite(id, value);
         refreshLibrary();
     } catch (const std::exception &e) {
@@ -633,6 +809,7 @@ void Controller::favorite(qint64 id, bool value) {
 }
 void Controller::trash(qint64 id, bool value) {
     try {
+        require(!busy_, "Traitement en cours.");
         db_->trash(id, value);
         refreshLibrary();
     } catch (const std::exception &e) {
@@ -641,6 +818,7 @@ void Controller::trash(qint64 id, bool value) {
 }
 void Controller::setCollection(qint64 id, const QString &c) {
     try {
+        require(!busy_, "Traitement en cours.");
         db_->collection(id, c);
         refreshLibrary();
     } catch (const std::exception &e) {
@@ -651,22 +829,11 @@ void Controller::copyText(const QString &what) {
     QGuiApplication::clipboard()->setText(what == "fen" ? s(game_.nodes[node_].fen) : s(game_.pgn()));
     emit message(what.toUpper() + " copié.");
 }
-void Controller::setPreference(const QString &key, const QVariant &value) {
-    if (!QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "moveTime", "lightTheme",
-                     "coordinates"}
-             .contains(key))
-        return;
-    try {
-        settings_.setValue(key, key == "enginePath" ? QVariant(localPath(value.toString())) : value);
-        emit preferencesChanged();
-    } catch (const std::exception &e) {
-        fail(e);
-    }
-}
 void Controller::startEngine() {
     engine_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
                   settings_.value("hash", 128).toInt(), settings_.value("multiPV", 3).toInt(),
-                  playing_ ? settings_.value("skill", 12).toInt() : 20);
+                  playing_ ? settings_.value("skill", 12).toInt() : 20,
+                  settings_.value("syzygyPath").toString());
     if (analysis_ || playing_)
         requestEngine();
 }
@@ -684,13 +851,19 @@ void Controller::requestEngine() {
         auto b = game_.boardAt(node_);
         if ((b.sideToMove() == chess::Color::WHITE) != humanWhite_)
             engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), true,
-                            settings_.value("moveTime", 1000).toInt());
+                            settings_.value("moveTime", 1000).toInt(),
+                            settings_.value("analysisDepth", 24).toInt(), game_.chess960);
     } else if (analysis_)
-        engine_.analyse(s(game_.nodes[node_].fen), positionCommand());
+        engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), false, 800,
+                        settings_.value("analysisDepth", 24).toInt(), game_.chess960);
 }
 void Controller::toggleAnalysis() {
     if (cardId_)
         return;
+    cancelReview();
+    clockRunning_ = false;
+    localGame_ = false;
+    clock_.stop();
     playing_ = false;
     analysis_ = !analysis_;
     if (analysis_) {
@@ -707,6 +880,8 @@ void Controller::addEngineLine(int index) {
         auto line = engineLines_[index].toMap();
         require(line["fen"].toString() == s(game_.nodes[node_].fen),
                 "Cette analyse correspond à une autre position.");
+        require(!cardId_, "Terminez l’entraînement.");
+        remember();
         int n = node_;
         for (const auto &m : line["uci"].toString().split(' ', Qt::SkipEmptyParts))
             n = game_.play(n, m.toStdString());
@@ -718,6 +893,10 @@ void Controller::addEngineLine(int index) {
 void Controller::playComputer(bool humanWhite) {
     if (cardId_)
         return;
+    cancelReview();
+    clockRunning_ = false;
+    localGame_ = false;
+    clock_.stop();
     humanWhite_ = humanWhite;
     playing_ = true;
     analysis_ = false;
@@ -726,6 +905,9 @@ void Controller::playComputer(bool humanWhite) {
     refresh();
 }
 void Controller::stopPlaying() {
+    clockRunning_ = false;
+    localGame_ = false;
+    clock_.stop();
     playing_ = false;
     analysis_ = false;
     analysisTimer_.stop();
@@ -734,6 +916,8 @@ void Controller::stopPlaying() {
 }
 void Controller::createCard(const QString &title) {
     try {
+        require(!busy_, "Traitement en cours.");
+        require(!game_.chess960, "Les cartes de lignes concernent pour le moment les échecs classiques.");
         QStringList moves;
         int n = node_;
         while (!game_.nodes[n].children.empty() && moves.size() < 40) {
@@ -750,6 +934,7 @@ void Controller::createCard(const QString &title) {
 }
 void Controller::startCard(qint64 id) {
     try {
+        require(!busy_, "Attendez la fin de l’import avant une révision.");
         if (cardId_)
             finishTraining();
         checkpoint();
@@ -764,6 +949,8 @@ void Controller::startCard(qint64 id) {
         beforeNode_ = node_;
         beforeId_ = gameId_;
         beforeDirty_ = dirty_;
+        beforeFlipped_ = flipped_;
+        cancelReview();
         stopPlaying();
         cardId_ = id;
         solution_ = card["moves"].toString().split(' ', Qt::SkipEmptyParts);
@@ -803,6 +990,7 @@ void Controller::finishTraining() {
     node_ = beforeNode_;
     gameId_ = beforeId_;
     dirty_ = beforeDirty_;
+    flipped_ = beforeFlipped_;
     cardId_ = 0;
     trainingComplete_ = false;
     selected_ = -1;
@@ -810,6 +998,7 @@ void Controller::finishTraining() {
 }
 void Controller::deleteCard(qint64 id) {
     try {
+        require(!busy_, "Traitement en cours.");
         if (cardId_ == id)
             finishTraining();
         db_->deleteCard(id);

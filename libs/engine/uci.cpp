@@ -11,6 +11,7 @@ Uci::Uci(QObject *parent) : QObject(parent) {
     connect(&timeout_, &QTimer::timeout, this, [this] {
         shutdown();
         emit status("Le moteur ne répond pas. Vérifiez l’exécutable UCI.");
+        emit failed("Le moteur ne répond pas.");
     });
     connect(&process_, &QProcess::readyReadStandardOutput, this, &Uci::consume);
     connect(&process_, &QProcess::readyReadStandardError, this, [this] { process_.readAllStandardError(); });
@@ -22,11 +23,15 @@ Uci::Uci(QObject *parent) : QObject(parent) {
         state_ = Off;
         timeout_.stop();
         emit status("Moteur : " + process_.errorString());
+        emit failed(process_.errorString());
     });
     connect(&process_, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
             [this](int, QProcess::ExitStatus) {
+                bool unexpected = state_ != Off;
                 state_ = Off;
                 timeout_.stop();
+                if (unexpected)
+                    emit failed("Le moteur s’est arrêté pendant son travail.");
                 emit status("Moteur arrêté");
             });
 }
@@ -37,19 +42,23 @@ void Uci::command(const QString &text) {
     if (process_.state() == QProcess::Running)
         process_.write(text.toUtf8() + '\n');
 }
-void Uci::start(const QString &executable, int threads, int hash, int multiPV, int skill) {
+void Uci::start(const QString &executable, int threads, int hash, int multiPV, int skill,
+                const QString &syzygyPath) {
     shutdown();
     threads_ = std::clamp(threads, 1, 32);
     hash_ = std::clamp(hash, 16, 4096);
     multiPV_ = std::clamp(multiPV, 1, 5);
     skill_ = std::clamp(skill, 0, 20);
+    syzygyPath_ = syzygyPath.contains('\n') || syzygyPath.contains('\r') ? QString() : syzygyPath;
     if (!QFileInfo(executable).isExecutable()) {
         emit status("Choisissez un exécutable UCI valide (Stockfish).");
+        emit failed("Exécutable UCI invalide.");
         return;
     }
     buffer_.clear();
     options_.clear();
     variations_.clear();
+    exactVariations_.clear();
     pending_ = false;
     name_ = "Moteur UCI";
     state_ = Handshake;
@@ -59,6 +68,7 @@ void Uci::start(const QString &executable, int threads, int hash, int multiPV, i
     process_.start();
 }
 void Uci::shutdown() {
+    state_ = Off;
     timeout_.stop();
     pending_ = false;
     if (process_.state() != QProcess::NotRunning) {
@@ -72,11 +82,18 @@ void Uci::shutdown() {
     state_ = Off;
     activePlay_ = false;
 }
-void Uci::analyse(const QString &fen, const QString &position, bool play, int milliseconds) {
+void Uci::analyse(const QString &fen, const QString &position, bool play, int milliseconds, int depth,
+                  bool variant960) {
     if (state_ == Off) {
         emit status("Démarrez un moteur dans les paramètres.");
         return;
     }
+    if (position.contains('\n') || position.contains('\r')) {
+        emit failed("Commande de position invalide.");
+        return;
+    }
+    pending960_ = variant960;
+    depth_ = std::clamp(depth, 1, 99);
     pendingFen_ = fen;
     pendingPosition_ = position;
     pendingPlay_ = play;
@@ -101,14 +118,26 @@ void Uci::stop() {
 void Uci::beginSearch() {
     if (!pending_ || state_ != Ready)
         return;
+    if (pending960_ && !options_.contains("UCI_Chess960")) {
+        pending_ = false;
+        emit failed("Ce moteur ne déclare pas la prise en charge de Chess960.");
+        return;
+    }
+    active960_ = pending960_;
+    if (options_.contains("UCI_Chess960"))
+        command(QString("setoption name UCI_Chess960 value ") + (active960_ ? "true" : "false"));
     activeFen_ = pendingFen_;
     activePlay_ = pendingPlay_;
     pending_ = false;
     variations_.clear();
+    exactVariations_.clear();
     emit lines({});
     command(pendingPosition_);
     state_ = Searching;
-    command(activePlay_ ? "go movetime " + QString::number(moveTime_) : "go depth 24");
+    command(activePlay_ ? "go movetime " + QString::number(moveTime_)
+                        : "go depth " + QString::number(depth_));
+    if (activePlay_)
+        timeout_.start(moveTime_ + 10000);
     emit status(name_ + (activePlay_ ? " · réfléchit…" : " · analyse locale"));
 }
 void Uci::consume() {
@@ -116,6 +145,7 @@ void Uci::consume() {
     if (buffer_.size() > 1024 * 1024) {
         shutdown();
         emit status("Réponse du moteur trop volumineuse.");
+        emit failed("Réponse du moteur trop volumineuse.");
         return;
     }
     qsizetype pos;
@@ -139,6 +169,8 @@ void Uci::parse(const QString &line) {
                  {"Threads", threads_}, {"Hash", hash_}, {"MultiPV", multiPV_}, {"Skill Level", skill_}})
             if (options_.contains(pair.first))
                 command("setoption name " + pair.first + " value " + QString::number(pair.second));
+        if (options_.contains("SyzygyPath") && !syzygyPath_.isEmpty())
+            command("setoption name SyzygyPath value " + syzygyPath_);
         state_ = WaitingReady;
         command("isready");
         timeout_.start(5000);
@@ -152,9 +184,16 @@ void Uci::parse(const QString &line) {
         return;
     }
     if (line.startsWith("bestmove ") && (state_ == Searching || state_ == Stopping)) {
-        const bool deliver = state_ == Searching && activePlay_ && !pending_;
+        const bool complete = state_ == Searching && !pending_;
+        const bool deliver = complete && activePlay_;
         timeout_.stop();
         state_ = Ready;
+        if (complete) {
+            QVariantList result;
+            for (const auto &v : exactVariations_)
+                result << v;
+            emit completed(activeFen_, result);
+        }
         if (deliver)
             emit bestMove(line.section(' ', 1, 1), activeFen_);
         beginSearch();
@@ -187,7 +226,7 @@ void Uci::parse(const QString &line) {
     QStringList san, uci;
     const int pi = parts.indexOf("pv");
     try {
-        auto board = checkedBoard(activeFen_.toStdString());
+        auto board = checkedBoard(activeFen_.toStdString(), active960_);
         for (int i = pi + 1; i < parts.size() && uci.size() < 24; ++i) {
             if (!QRegularExpression("^[a-h][1-8][a-h][1-8][qrbn]?$").match(parts[i]).hasMatch())
                 break;
@@ -195,7 +234,7 @@ void Uci::parse(const QString &line) {
             chess::movegen::legalmoves(legal, board);
             bool found = false;
             for (auto m : legal)
-                if (chess::uci::moveToUci(m) == parts[i].toStdString()) {
+                if (chess::uci::moveToUci(m, active960_) == parts[i].toStdString()) {
                     san << QString::fromStdString(chess::uci::moveToSan(board, m));
                     uci << parts[i];
                     board.makeMove(m);
@@ -208,9 +247,18 @@ void Uci::parse(const QString &line) {
     } catch (...) {
         return;
     }
-    variations_[rank] = {
-        {"rank", rank},        {"eval", eval},         {"score", score},       {"depth", value("depth")},
-        {"nps", value("nps")}, {"san", san.join(' ')}, {"uci", uci.join(' ')}, {"fen", activeFen_}};
+    variations_[rank] = {{"rank", rank},
+                         {"eval", eval},
+                         {"score", score},
+                         {"depth", value("depth")},
+                         {"nps", value("nps")},
+                         {"san", san.join(' ')},
+                         {"uci", uci.join(' ')},
+                         {"fen", activeFen_},
+                         {"tbhits", value("tbhits", "0")},
+                         {"bound", parts.contains("lowerbound") || parts.contains("upperbound")}};
+    if (si >= 0 && !variations_[rank]["bound"].toBool() && !uci.empty())
+        exactVariations_[rank] = variations_[rank];
     QVariantList list;
     for (const auto &v : variations_)
         list << v;
