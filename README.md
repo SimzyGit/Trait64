@@ -2,12 +2,21 @@
 
 Un atelier d’échecs libre, local et personnel pour **étudier, analyser, préparer et mémoriser**.
 
-**Version 0.2.0 alpha — application de bureau C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian.**
-Cette version enrichit l’application locale avec la personnalisation, Chess960 et le bilan de partie. Il ne constitue pas encore l’intégralité du catalogue de fonctionnalités imaginé pour Trait64. Le périmètre exact et la suite sont décrits dans [docs/ROADMAP.md](docs/ROADMAP.md).
+**Version 0.3 en développement — application de bureau C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian.**
+Cette version ajoute les mises à jour GitHub, les sauvegardes automatiques, la comparaison de moteurs et les index de grandes bibliothèques. Elle ne constitue pas encore l’intégralité du catalogue de fonctionnalités imaginé pour Trait64. Le périmètre exact et la suite sont décrits dans [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
 ## Installer sur ton PC
+
+Les [versions publiées](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) contiennent une **AppImage x86_64** (Debian 12/13, glibc ≥ 2.36) et deux paquets **.deb**, un pour chaque version de Debian. Le dépôt est privé : connecte-toi à ton compte GitHub pour télécharger les fichiers.
+
+- **AppImage** : télécharge le fichier `.AppImage`, rends-le exécutable dans ses propriétés, puis ouvre-le. Si FUSE est absent, utilise `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage`. Stockfish reste un moteur externe : `sudo apt install stockfish`.
+- **Paquet Debian** : choisis `debian12` ou `debian13` selon `/etc/debian_version`, puis installe le fichier avec `sudo apt install ./nom-du-fichier.deb`. Les dépendances et le menu sont installés automatiquement.
+
+Après cette première installation, ouvre **Mises à jour**. Pour recevoir les préversions actuellement publiées, choisis **Développement** et configure l’accès GitHub privé. Le canal Stable ne reçoit que les véritables Releases stables. Une modification du code ne déclenche jamais de mise à jour stable. Voir [docs/UPDATES.md](docs/UPDATES.md).
+
+### Compiler et installer depuis les sources
 
 Debian 12 ou 13, Ubuntu 24.04 et leurs dérivés avec Qt ≥ 6.4 sont les cibles de l’installateur. La compilation utilise les bibliothèques de **ton** système ; aucun binaire Ubuntu n’est présenté comme universel pour Debian.
 
@@ -27,7 +36,7 @@ Ouvre **Trait64** dans le menu des applications, ou :
 ~/.local/bin/trait64
 ```
 
-Pour une mise à jour, télécharge la nouvelle version et relance le même script. Les données sont stockées hors du dossier source. N’exécute pas tout le script avec `sudo`.
+Pour mettre à jour une compilation locale, tu peux relancer le script ou utiliser le module de mise à jour qui installera l’AppImage dans `~/.local/bin/trait64`. Les données sont stockées hors du dossier source. N’exécute pas tout le script avec `sudo`.
 
 ## Ce qui fonctionne
 
@@ -35,12 +44,13 @@ Pour une mise à jour, télécharge la nouvelle version et relance le même scri
 - **Échiquier** : clic/glisser, coups légaux, promotion au choix, échecs classiques et Chess960 (960 positions numérotées), éditeur graphique de position, inversion, flèches et cercles persistants dans le PGN.
 - **Études** : arbre de variantes, promotion/suppression de branches, commentaires, NAG, métadonnées, annuler/rétablir, jusqu’à 16 onglets récupérés au redémarrage, duplication et fusion de deux études de même racine.
 - **Fichiers** : PGN multijeux avec variantes, FEN, import/export EPD classique, conteneur T64 expérimental, diagramme PNG avec votre apparence et annotations, étude PDF avec diagramme et notation. L’import PGN depuis un fichier travaille partie par partie, en arrière-plan, avec progression et annulation transactionnelle. L’export PGN de bibliothèque écrit aussi partie par partie.
-- **Bibliothèque** : SQLite, recherche par joueur/événement/ECO/date/Elo/collection/résultat, matériel et positions incluant les variantes ; favoris, corbeille restaurable, pagination, détection des doublons de ligne principale, réindexation annulable. Fiches joueurs, scores et ouvertures issues de votre base.
-- **Analyse** : moteur UCI local, MultiPV, insertion d’une ligne, profils de réglages, limite de profondeur, chemin Syzygy transmis aux moteurs compatibles. Bilan automatique de la ligne principale avec graphe, pertes en centipions, annotations et création de cartes depuis les erreurs.
+- **Bibliothèque** : SQLite schéma 3, recherche de fragments indexée FTS5 (si disponible), statistiques et arbres d’ouvertures actualisés à chaque écriture, filtres exacts indexés, recherche par joueur/événement/ECO/date/Elo/collection/résultat, matériel et positions incluant les variantes ; favoris, corbeille restaurable, pagination, détection des doublons de ligne principale, réindexation annulable. Fiches joueurs, scores et ouvertures issues de votre base.
+- **Analyse** : moteur UCI local, comparaison simultanée de 2 à 4 profils avec budgets CPU/hash partagés, MultiPV, insertion d’une ligne, profils de réglages, limite de profondeur, chemin Syzygy transmis aux moteurs compatibles. Bilan automatique de la ligne principale avec graphe, pertes en centipions, annotations et création de cartes depuis les erreurs.
 - **Jeu local** : contre un moteur ou à deux sur le même ordinateur, camp/force/réflexion réglables, pendule avec incrément, abandon et réclamation de nulle.
 - **Ouvertures** : explorateur des lignes principales de vos parties, résultats statistiques, reconnaissance ECO hors ligne à partir de 3 865 positions nommées et attribution des balises à l’étude.
 - **Entraînement** : cartes depuis vos lignes ou les erreurs analysées, réponses adverses automatiques, solution, suivi quotidien/hebdomadaire, objectif et répétition espacée simple.
-- **Fiabilité** : session atomique, sauvegarde SQLite complète, contrôle d’intégrité, sauvegarde avant migration du schéma, imports entièrement annulés en cas d’erreur, protection de la bibliothèque contre un export sur elle-même.
+- **Mises à jour** : vérification GitHub en arrière-plan, Stable/Bêta/Développement, notes de version, téléchargement vérifié SHA-256, installation après sauvegarde et redémarrage.
+- **Fiabilité** : sauvegardes automatiques toutes les 6 heures (14 instantanés), session atomique, sauvegarde SQLite complète, contrôle d’intégrité, sauvegarde avant migration du schéma, imports entièrement annulés en cas d’erreur, protection de la bibliothèque contre un export sur elle-même.
 
 ![Choix des pièces et couleurs](docs/screenshots/appearance.png)
 
@@ -70,7 +80,7 @@ Pour mémoriser une ligne, place-toi **avant** son premier coup, puis **Créer u
 
 ## Données et formats
 
-Par défaut sur Linux : `~/.local/share/Trait64/Trait64/` (ou le dossier XDG équivalent). Le chemin effectif est affiché dans **Paramètres**. La bibliothèque est `library.sqlite` ; `session.json` contient les onglets et leurs positions actives. La migration 0.1 → 0.2 crée d’abord un fichier `.before-v2-….sqlite` à côté de la base. Une ancienne version du logiciel ne doit pas ouvrir une base déjà migrée. Les paramètres sont enregistrés dans le dossier de configuration Qt de l’utilisateur.
+Par défaut sur Linux : `~/.local/share/Trait64/Trait64/` (ou le dossier XDG équivalent). Le chemin effectif est affiché dans **Paramètres**. La bibliothèque est `library.sqlite` ; `session.json` contient les onglets et leurs positions actives. Les migrations créent d’abord une copie `.before-v2-….sqlite` ou `.before-v3-….sqlite` à côté de la base. Le schéma 3 construit ses index lors de la première ouverture : cela peut prendre du temps sur un grand corpus. Une ancienne version du logiciel ne doit pas ouvrir une base déjà migrée. Les paramètres sont enregistrés dans le dossier de configuration Qt de l’utilisateur.
 
 Utilise **Outils → Sauvegarder** pour une copie cohérente de la bibliothèque, entraînements inclus. **Ouvrir une base** ouvre une sauvegarde séparément sans écraser la base principale. Au lancement suivant, la base principale redevient active ; une étude venant d’une autre base conserve son contenu dans la session sans réutiliser son identifiant dans la mauvaise base.
 

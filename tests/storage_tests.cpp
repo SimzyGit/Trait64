@@ -133,6 +133,22 @@ int main(int argc, char **argv) {
             old.setDatabaseName(oldPath);
             check(old.open(), "Open migration fixture");
             QSqlQuery q(old);
+            check(q.exec("SELECT name,type FROM sqlite_master WHERE type IN ('trigger','index') AND (name "
+                         "LIKE 'game_totals_%' OR name LIKE 'edge_%' OR name LIKE 'fts_%' OR name IN "
+                         "('games_recent','games_white_rating','games_black_rating','games_white_recent','"
+                         "games_black_recent','games_collection','"
+                         "games_date','review_log_date','cards_due','player_counts_rank'))"),
+                  "Find v3 migration fixture objects");
+            QList<QPair<QString, QString>> extra;
+            while (q.next())
+                extra << qMakePair(q.value(0).toString(), q.value(1).toString());
+            q.finish();
+            for (const auto &object : extra)
+                check(q.exec("DROP " + object.second + " " + object.first), "Remove v3 fixture object");
+            for (const auto &table : QStringList{"games_fts", "library_counts", "player_counts",
+                                                 "opening_edges", "opening_stats"})
+                check(q.exec("DROP TABLE IF EXISTS " + table), "Remove v3 table");
+
             for (const auto &sql :
                  QStringList{"DROP TABLE all_positions", "DROP TABLE review_log",
                              "DROP INDEX games_fingerprint", "ALTER TABLE games DROP COLUMN white_elo",
@@ -161,6 +177,63 @@ int main(int argc, char **argv) {
         check(db.stats()["games"].toInt() == beforeImport, "Canceled streaming import rolls back all games");
         check(db.importPgnFile(streamPath, [](int) { return true; }) == 15,
               "Streaming importer commits complete file");
+        // Materialized totals must remain equivalent to the raw rows after every write path.
+        {
+            const auto path = dir.path() + "/counters.sqlite";
+            t64::Database counter(path);
+            auto g = t64::parsePgn("[White \"RepeatedPlayer\"]\n[Black \"Opponent\"]\n[Result "
+                                   "\"1-0\"]\n1.Nf3 Nf6 2.Ng1 Ng8 3.Nf3 Nf6 1-0")
+                         .at(0);
+            const auto id = counter.save(g);
+            const auto start = QString::fromStdString(chess::constants::STARTPOS);
+            check(counter.explorer(start).first().toMap()["count"].toInt() == 1,
+                  "Repeated positions count once per game in materialized opening tree");
+            check(counter.explorer(start).first().toMap()["white"].toInt() == 1,
+                  "Opening result initialized");
+            counter.favorite(id, true);
+            counter.favorite(id, true);
+            check(counter.stats()["favorites"].toInt() == 1, "Idempotent favorite totals");
+            g.tags["Result"] = "0-1";
+            g.tags["White"] = "NewPlayer";
+            counter.save(g, id);
+            check(counter.stats()["whiteWins"].toInt() == 0 && counter.stats()["blackWins"].toInt() == 1,
+                  "Result edit adjusts cached totals");
+            auto edge = counter.explorer(start).first().toMap();
+            check(edge["white"].toInt() == 0 && edge["black"].toInt() == 1 && edge["count"].toInt() == 1,
+                  "Result edit does not duplicate opening edges");
+            check(counter.search("peated").empty() && counter.search("wPlay").size() == 1,
+                  "Trigram substring search follows metadata edits");
+            check(counter.search({}, {}, false, {}, false, {{"white", "New"}, {"exactNames", true}}).empty(),
+                  "Exact player search excludes prefixes");
+            check(counter.search({}, {}, false, {}, false, {{"white", "NewPlayer"}, {"exactNames", true}})
+                          .size() == 1,
+                  "Exact player search finds full name");
+            counter.trash(id, true);
+            counter.trash(id, true);
+            check(counter.stats()["games"].toInt() == 0 && counter.stats()["favorites"].toInt() == 0 &&
+                      counter.players().empty() && counter.explorer(start).empty(),
+                  "Trash removes every materialized contribution exactly once");
+            counter.trash(id, false);
+            counter.trash(id, false);
+            check(counter.stats()["games"].toInt() == 1 && counter.players().size() == 2 &&
+                      counter.explorer(start).first().toMap()["black"].toInt() == 1,
+                  "Restore recovers totals and player/opening statistics");
+            counter.rebuildIndexes();
+            check(counter.explorer(start).first().toMap()["count"].toInt() == 1,
+                  "Reindex keeps opening statistics consistent");
+            auto raw = QSqlDatabase::addDatabase("QSQLITE", "counter-raw");
+            raw.setDatabaseName(path);
+            check(raw.open(), "Open counter verification connection");
+            {
+                QSqlQuery q(raw);
+                check(q.exec("PRAGMA foreign_keys=ON") && q.exec("DELETE FROM games"), "Delete fixture rows");
+            }
+            check(counter.stats()["games"].toInt() == 0 && counter.explorer(start).empty(),
+                  "Hard delete and foreign-key cascades preserve totals");
+            raw.close();
+            raw = QSqlDatabase();
+            QSqlDatabase::removeDatabase("counter-raw");
+        }
         std::cout << checks << " storage checks passed\n";
         return 0;
     } catch (const std::exception &e) {

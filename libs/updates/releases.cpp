@@ -11,8 +11,8 @@ namespace t64 {
 std::optional<Version> Version::parse(QString value) {
     if (value.startsWith('v'))
         value.remove(0, 1);
-    static const QRegularExpression re(
-        "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z.-]+))?(?:\\+[0-9A-Za-z.-]+)?$");
+    static const QRegularExpression re("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z.-"
+                                       "]+))?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$");
     auto m = re.match(value);
     if (!m.hasMatch())
         return {};

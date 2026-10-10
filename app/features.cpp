@@ -244,7 +244,18 @@ void Controller::initFeatures() {
                 gameId_ = v.id;
                 dirty_ = v.dirty;
             }
-        } catch (const std::exception &) { /* The legacy active-study recovery remains usable. */
+        } catch (const std::exception &) {
+            // Preserve the full original before falling back to the legacy active study.
+            f.close();
+            const auto preserved =
+                sessionPath_ + ".unreadable-tabs-" + QString::number(QDateTime::currentMSecsSinceEpoch());
+            need(QFile::copy(sessionPath_, preserved),
+                 "Impossible de préserver les onglets de session illisibles.");
+            QTimer::singleShot(0, this, [this, preserved] {
+                emit message("Certains onglets n’ont pas été restaurés. Session originale conservée : " +
+                                 preserved,
+                             true);
+            });
         }
     }
     connect(&reviewer_, &t64::Uci::completed, this, &Controller::finishReviewPosition);
@@ -443,6 +454,47 @@ void Controller::saveEngineProfile(const QString &name) {
     list << p;
     settings_.setValue("engineProfiles", list);
     emit preferencesChanged();
+}
+void Controller::compareEngines(const QVariantList &indices) {
+    try {
+        need(!cardId_ && !busy_, "Terminez l’entraînement ou le traitement en cours.");
+        const auto available = settings_.value("engineProfiles").toList();
+        QVariantList profiles;
+        QSet<int> seen;
+        for (const auto &value : indices) {
+            const int index = value.toInt();
+            need(index >= 0 && index < available.size(), "Profil moteur introuvable.");
+            if (!seen.contains(index)) {
+                profiles << available[index];
+                seen.insert(index);
+            }
+        }
+        cancelReview();
+        stopPlaying();
+        comparison_.start(profiles, qs(game_.nodes[node_].fen), positionCommand(), game_.chess960);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::addComparisonLine(int engine, int variation) {
+    try {
+        need(!cardId_, "Terminez l’entraînement.");
+        const auto rows = comparison_.rows();
+        need(engine >= 0 && engine < rows.size(), "Moteur indisponible.");
+        const auto lines = rows[engine].toMap()["lines"].toList();
+        need(variation >= 0 && variation < lines.size(), "Variante indisponible.");
+        const auto line = lines[variation].toMap();
+        need(line["fen"].toString() == qs(game_.nodes[node_].fen), "L’analyse concerne une autre position.");
+        auto candidate = game_;
+        int n = node_;
+        for (const auto &move : line["uci"].toString().split(' ', Qt::SkipEmptyParts))
+            n = candidate.play(n, move.toStdString());
+        remember();
+        game_ = std::move(candidate);
+        refresh(true);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
 }
 void Controller::loadEngineProfile(int index) {
     auto list = settings_.value("engineProfiles").toList();

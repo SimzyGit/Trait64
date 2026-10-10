@@ -141,7 +141,7 @@ void Updater::fail(const QString &msg) {
     emit changed();
 }
 void Updater::check(bool manual) {
-    if (busy() || status_ == "installed")
+    if (busy() || status_ == "installed" || auth_.state() != QProcess::NotRunning)
         return;
     if (!manual && settings_.value("updates/snooze").toDateTime() > QDateTime::currentDateTimeUtc())
         return;

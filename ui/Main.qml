@@ -555,7 +555,7 @@ ApplicationWindow {
         onAccepted:controller.createCard(cardTitle.text)
     }
     Dialog {id:deleteCardDialog;property int cardId:0;title:"Supprimer cette carte ?";anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No
-        Label {text:"Son historique de révision sera également supprimé."}
+        Label {text:"L’activité déjà enregistrée restera dans votre progression."}
         onAccepted:controller.deleteCard(cardId)
     }
     Dialog {id:playDialog;title:"Partie locale";anchors.centerIn:parent;width:470;modal:true
@@ -579,6 +579,7 @@ ApplicationWindow {
         }
     }
     Menu {id:analysisMenu;x:win.width-width-30;y:125
+        MenuItem {text:"Comparer plusieurs moteurs";onTriggered:compareDialog.open()}
         MenuItem {text:"Éditer la position";onTriggered:positionEditor.open()}
         MenuItem {text:"Nouvelle partie Chess960";onTriggered:chess960Dialog.open()}
         MenuItem {text:"Dupliquer l’étude";onTriggered:controller.duplicateStudy()}
@@ -611,6 +612,7 @@ ApplicationWindow {
     }
     PositionEditor {id:positionEditor;objectName:"positionEditor";backend:controller}
     Review {id:reviewDialog;objectName:"reviewDialog";backend:controller}
+    CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Native.FileDialog {id:diagramDialog;title:"Exporter le diagramme";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:"Exporter l’étude en PDF";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
     Dialog {id:chess960Dialog;title:"Nouvelle étude Chess960";anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
@@ -619,7 +621,8 @@ ApplicationWindow {
     }
     Appearance {id:appearanceDialog;objectName:"appearanceDialog";backend:controller}
     Dialog {id:settingsDialog;objectName:"settingsDialog";title:"Paramètres";anchors.centerIn:parent;width:700;height:Math.min(690,win.height-32);modal:true;standardButtons:Dialog.Close
-        ColumnLayout {anchors.fill:parent;spacing:18
+        ScrollView {anchors.fill:parent;contentWidth:availableWidth;clip:true
+        ColumnLayout {width:parent.width;spacing:18
             Label {text:"MOTEUR UCI LOCAL";font.pixelSize:10;font.letterSpacing:1.5;color:win.muted}
             RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {text:"Parcourir";onClicked:engineFileDialog.open()}}
             CheckBox {text:"Sauvegardes automatiques (14 instantanés)";checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
@@ -649,12 +652,13 @@ ApplicationWindow {
             Label {text:"Vos données : "+controller.preferences.dataPath;wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:10}
         }
     }
+    }
     Dialog {id:helpDialog;title:"Bienvenue dans Trait64";anchors.centerIn:parent;width:620;modal:true;standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:15
             Label {text:"Un atelier personnel pour vos échecs.";font.pixelSize:21;font.weight:Font.DemiBold}
             Label {text:"• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.";wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:"Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne";color:win.muted;lineHeight:1.6}
-            Label {text:"Version alpha 0.2.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.";wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}
+            Label {text:"Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.";wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}
         }
     }
     Dialog {id:advancedDialog;title:"Recherche avancée";anchors.centerIn:parent;width:600;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
@@ -667,6 +671,7 @@ ApplicationWindow {
             }
             Label {text:"Elo minimal des deux joueurs"} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
             Label {text:"Demi-coups maximum (0 = tous)"} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
+            CheckBox {text:"Correspondance exacte des champs texte";checked:win.advanced.exactNames||false;Layout.columnSpan:2;onToggled:win.advanced.exactNames=checked}
             Label {text:"Trier par"} ComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
             Label {text:"Le matériel et les positions sont recherchés dans toutes les variantes. P = pion, N = cavalier, B = fou, R = tour, Q = dame, K = roi ; minuscules pour les Noirs.";wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:10;color:win.muted}
             TButton {text:"Effacer les filtres";onClicked:{win.advanced={};minElo.value=0;maxPlies.value=0;sortBy.currentIndex=0;win.libraryOffset=0;win.applyAdvanced();advancedDialog.close()}}
@@ -684,7 +689,7 @@ ApplicationWindow {
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
-    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
     Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}

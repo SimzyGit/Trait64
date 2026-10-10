@@ -7,4 +7,7 @@
 - Sauvegardes automatiques toutes les six heures, conservation de 14 instantanés ; sauvegardes avant mise à jour conservées séparément.
 - Tests automatiques Debian 12/13, contrôles mémoire du cœur, paquets .deb et AppImage Linux x86_64.
 
+- Comparaison de 2 à 4 moteurs UCI, MultiPV, insertion de variantes et budgets CPU/hash partagés.
+- Bibliothèque schéma 3 : index FTS5, filtres exacts et statistiques d’ouvertures/joueurs incrémentales ; sauvegarde avant migration.
+
 Les fonctions 0.2 sont conservées. Cette préversion ne réalise pas encore l’ensemble du catalogue initial. Le module de mise à jour ne peut pas être ajouté rétroactivement à 0.2 : cette première version doit être installée manuellement.

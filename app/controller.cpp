@@ -42,7 +42,8 @@ void atomicWrite(const QString &path, const QByteArray &bytes) {
 }
 } // namespace
 Controller::Controller(const QString &path, QObject *parent)
-    : QObject(parent), dataPath_(path), sessionPath_(path + "/session.json"), engine_(this) {
+    : QObject(parent), dataPath_(path), sessionPath_(path + "/session.json"), engine_(this),
+      comparison_(this) {
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     flipped_ = settings_.value("flipped", false).toBool();
@@ -116,7 +117,11 @@ Controller::Controller(const QString &path, QObject *parent)
     if (session.open(QIODevice::ReadOnly)) {
         try {
             require(session.size() <= 64 * 1024 * 1024, "Session trop volumineuse.");
-            auto json = QJsonDocument::fromJson(session.readAll()).object();
+            QJsonParseError parseError;
+            const auto document = QJsonDocument::fromJson(session.readAll(), &parseError);
+            require(parseError.error == QJsonParseError::NoError && document.isObject(),
+                    "Session JSON illisible.");
+            auto json = document.object();
             auto games = t64::parsePgn(json["pgn"].toString().toStdString());
             if (!games.empty()) {
                 game_ = std::move(games[0]);
@@ -126,8 +131,13 @@ Controller::Controller(const QString &path, QObject *parent)
             }
         } catch (const std::exception &) {
             session.close();
-            QFile::copy(sessionPath_,
-                        sessionPath_ + ".unreadable-" + QString::number(QDateTime::currentMSecsSinceEpoch()));
+            const auto preserved =
+                sessionPath_ + ".unreadable-" + QString::number(QDateTime::currentMSecsSinceEpoch());
+            require(QFile::copy(sessionPath_, preserved),
+                    "Impossible de préserver la session illisible ; ouverture interrompue.");
+            QTimer::singleShot(0, this, [this, preserved] {
+                emit message("Session illisible conservée pour récupération : " + preserved, true);
+            });
         }
     }
     initFeatures();
@@ -136,6 +146,7 @@ Controller::Controller(const QString &path, QObject *parent)
     refresh();
 }
 Controller::~Controller() {
+    comparison_.stop();
     backupWorker_.waitForFinished();
     reviewer_.shutdown();
     cancelTask_->store(true);
@@ -315,6 +326,8 @@ void Controller::refresh(bool content) {
         refreshLibrary();
     if ((analysis_ || playing_) && !cardId_ && previousFen != s(current.fen))
         analysisTimer_.start();
+    if (!cardId_)
+        comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
 }
 void Controller::writeSession() {
     if (cardId_)
@@ -862,6 +875,7 @@ void Controller::requestEngine() {
 void Controller::toggleAnalysis() {
     if (cardId_)
         return;
+    comparison_.stop();
     cancelReview();
     clockRunning_ = false;
     localGame_ = false;
@@ -895,6 +909,7 @@ void Controller::addEngineLine(int index) {
 void Controller::playComputer(bool humanWhite) {
     if (cardId_)
         return;
+    comparison_.stop();
     cancelReview();
     clockRunning_ = false;
     localGame_ = false;
@@ -907,6 +922,7 @@ void Controller::playComputer(bool humanWhite) {
     refresh();
 }
 void Controller::stopPlaying() {
+    comparison_.stop();
     clockRunning_ = false;
     localGame_ = false;
     clock_.stop();

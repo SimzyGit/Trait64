@@ -41,6 +41,8 @@ class Database {
     QString path() const { return path_; }
 
   private:
+    bool enhanced_ = false, fts_ = false;
+    void upgradeV3(int originalVersion);
     QString connection_, path_;
     QSqlDatabase db_;
     void sql(const QString &query) const;

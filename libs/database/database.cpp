@@ -47,7 +47,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 2, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 3, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -112,6 +112,8 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
                 throw;
             }
         }
+        upgradeV3(v);
+        fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
         sql("PRAGMA synchronous=FULL");
@@ -170,6 +172,12 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         if (!id)
             id = q.lastInsertId().toLongLong();
         check(q.numRowsAffected() > 0, "Partie introuvable lors de la sauvegarde.");
+        if (enhanced_) {
+            QSqlQuery edges(db_);
+            edges.prepare("DELETE FROM opening_edges WHERE game_id=?");
+            edges.addBindValue(id);
+            run(edges);
+        }
         QSqlQuery del(db_);
         del.prepare("DELETE FROM positions WHERE game_id=?");
         del.addBindValue(id);
@@ -184,6 +192,13 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             pos.bindValue(3, i + 1 < line.size() ? s(game.nodes[line[i + 1]].uci) : QString());
             pos.bindValue(4, i + 1 < line.size() ? s(game.nodes[line[i + 1]].san) : QString());
             run(pos);
+        }
+        if (enhanced_) {
+            QSqlQuery edges(db_);
+            edges.prepare("INSERT INTO opening_edges SELECT game_id,fen,uci,MIN(san) FROM positions WHERE "
+                          "game_id=? AND uci<>'' GROUP BY game_id,fen,uci");
+            edges.addBindValue(id);
+            run(edges);
         }
         QSqlQuery metadata(db_);
         metadata.prepare("UPDATE games SET white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?");
@@ -259,10 +274,21 @@ Game Database::load(qint64 id) const {
 }
 QVariantList Database::search(const QString &query, const QString &result, bool favorite,
                               const QString &position, bool trash, const QVariantMap &filters) const {
-    QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite "
-                        "FROM games g WHERE g.deleted=?";
-    QVariantList args{trash ? 1 : 0};
-    if (!query.isEmpty()) {
+    const bool fullText = fts_ && query.size() >= 3 && !query.contains('%') && !query.contains('_');
+    QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite ";
+    QVariantList args;
+    if (fullText) {
+        // FTS drives the lookup: ORDER BY must not make SQLite scan every recent game.
+        statement += "FROM games_fts CROSS JOIN games g ON g.id=games_fts.rowid WHERE games_fts MATCH ? AND "
+                     "g.deleted=?";
+        QString term = query;
+        term.replace('"', "\"\"");
+        args << '"' + term + '"' << (trash ? 1 : 0);
+    } else {
+        statement += "FROM games g WHERE g.deleted=?";
+        args << (trash ? 1 : 0);
+    }
+    if (!fullText && !query.isEmpty()) {
         statement += " AND (g.white LIKE ? OR g.black LIKE ? OR g.event LIKE ? OR g.eco LIKE ? OR "
                      "g.collection LIKE ? OR g.date LIKE ?)";
         for (int i = 0; i < 6; ++i)
@@ -275,13 +301,14 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (favorite)
         statement += " AND g.favorite=1";
     if (!position.isEmpty()) {
-        statement += " AND EXISTS(SELECT 1 FROM all_positions p WHERE p.game_id=g.id AND p.fen=?)";
+        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE fen=?)";
         args << s(positionKey(position.toStdString()));
     }
     for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
         if (!filters.value(key).toString().isEmpty()) {
-            statement += " AND g." + key + " LIKE ?";
-            args << "%" + filters[key].toString() + "%";
+            const bool exact = filters.value("exactNames").toBool();
+            statement += " AND g." + key + (exact ? "=?" : " LIKE ?");
+            args << (exact ? filters[key].toString() : "%" + filters[key].toString() + "%");
         }
     for (const auto &key : QStringList{"dateFrom", "dateTo"})
         if (!filters.value(key).toString().isEmpty()) {
@@ -300,7 +327,7 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         QString material = filters["material"].toString();
         material.remove(QRegularExpression("[^prnbqkPRNBQK]"));
         std::sort(material.begin(), material.end());
-        statement += " AND EXISTS(SELECT 1 FROM all_positions p WHERE p.game_id=g.id AND p.material=?)";
+        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE material=?)";
         args << material;
     }
     const QMap<QString, QString> order{{"date", "g.date DESC"},
@@ -325,18 +352,19 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
 QVariantMap Database::stats() const {
     QVariantMap stats;
     for (const auto &[key, query] : std::vector<std::pair<QString, QString>>{
-             {"games", "SELECT COUNT(*) FROM games WHERE deleted=0"},
-             {"favorites", "SELECT COUNT(*) FROM games WHERE favorite=1 AND deleted=0"},
+             {"games", "SELECT games FROM library_counts WHERE id=1"},
+             {"favorites", "SELECT favorites FROM library_counts WHERE id=1"},
              {"cards", "SELECT COUNT(*) FROM cards"},
              {"due", "SELECT COUNT(*) FROM cards WHERE due<=date('now','localtime')"},
              {"reviews", "SELECT COALESCE(SUM(reviews),0) FROM cards"},
-             {"todayReviews", "SELECT COUNT(*) FROM review_log WHERE date(reviewed)=date('now','localtime')"},
+             {"todayReviews", "SELECT COUNT(*) FROM review_log WHERE reviewed>=date('now','localtime') AND "
+                              "reviewed<date('now','localtime','+1 day')"},
              {"weekReviews",
-              "SELECT COUNT(*) FROM review_log WHERE date(reviewed)>=date('now','localtime','-6 days')"},
+              "SELECT COUNT(*) FROM review_log WHERE reviewed>=date('now','localtime','-6 days')"},
              {"successes", "SELECT COALESCE(SUM(successes),0) FROM cards"},
-             {"whiteWins", "SELECT COUNT(*) FROM games WHERE result='1-0' AND deleted=0"},
-             {"blackWins", "SELECT COUNT(*) FROM games WHERE result='0-1' AND deleted=0"},
-             {"draws", "SELECT COUNT(*) FROM games WHERE result='1/2-1/2' AND deleted=0"}}) {
+             {"whiteWins", "SELECT whiteWins FROM library_counts WHERE id=1"},
+             {"blackWins", "SELECT blackWins FROM library_counts WHERE id=1"},
+             {"draws", "SELECT draws FROM library_counts WHERE id=1"}}) {
         QSqlQuery q(db_);
         if (!q.exec(query))
             throw std::runtime_error(q.lastError().text().toStdString());
@@ -347,10 +375,8 @@ QVariantMap Database::stats() const {
 }
 QVariantList Database::explorer(const QString &position) const {
     QSqlQuery q(db_);
-    q.prepare("SELECT p.uci,p.san,COUNT(DISTINCT p.game_id),COUNT(DISTINCT CASE WHEN g.result='1-0' THEN "
-              "g.id END),COUNT(DISTINCT CASE WHEN g.result='1/2-1/2' THEN g.id END),COUNT(DISTINCT CASE WHEN "
-              "g.result='0-1' THEN g.id END) FROM positions p JOIN games g ON g.id=p.game_id WHERE p.fen=? "
-              "AND p.uci<>'' AND g.deleted=0 GROUP BY p.uci,p.san ORDER BY COUNT(DISTINCT p.game_id) DESC");
+    q.prepare("SELECT uci,san,count,white,draw,black FROM opening_stats WHERE fen=? AND count>0 ORDER BY "
+              "count DESC");
     q.addBindValue(s(positionKey(position.toStdString())));
     run(q);
     QVariantList out;

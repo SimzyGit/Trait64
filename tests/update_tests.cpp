@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
               "Numeric prerelease comparison");
         check(t64::Version::parse("1.2.0")->compare(*t64::Version::parse("1.2.0-rc.1")) > 0,
               "Stable follows prerelease");
-        for (auto text : {"1.2", "1.02.0", "1.2.0-beta.01", "1.2.0-dev..3", "garbage"})
+        for (auto text : {"1.2", "1.02.0", "1.2.0-beta.01", "1.2.0-dev..3", "1.2.0+bad..metadata", "garbage"})
             check(!t64::Version::parse(text), "Invalid version rejected");
         QJsonArray releases{release("v1.1.0", false), release("v1.2.0-beta.1", true),
                             release("v1.3.0-dev.3", true)};

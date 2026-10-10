@@ -13,9 +13,10 @@ void run(QSqlQuery &q) {
 } // namespace
 QVariantList Database::players() const {
     QSqlQuery q(db_);
-    q.prepare("SELECT name,COUNT(*),MAX(elo) FROM (SELECT white name,white_elo elo FROM games WHERE "
-              "deleted=0 UNION ALL SELECT black name,black_elo elo FROM games WHERE deleted=0) GROUP BY name "
-              "ORDER BY COUNT(*) DESC,name LIMIT 1000");
+    q.prepare(
+        "SELECT pc.name,pc.games,MAX(COALESCE((SELECT MAX(white_elo) FROM games WHERE deleted=0 AND "
+        "white=pc.name),0),COALESCE((SELECT MAX(black_elo) FROM games WHERE deleted=0 AND black=pc.name),0)) "
+        "FROM player_counts pc WHERE games>0 ORDER BY pc.games DESC,pc.name LIMIT 1000");
     run(q);
     QVariantList result;
     while (q.next())
@@ -25,7 +26,8 @@ QVariantList Database::players() const {
 QVariantMap Database::player(const QString &name) const {
     QSqlQuery q(db_);
     q.prepare("SELECT white,black,result,eco,date,white_elo,black_elo FROM games WHERE deleted=0 AND "
-              "(white=? OR black=?) ORDER BY date DESC,id DESC");
+              "id IN(SELECT id FROM games WHERE deleted=0 AND white=? UNION SELECT id FROM games WHERE "
+              "deleted=0 AND black=?) ORDER BY date DESC,id DESC");
     q.addBindValue(name);
     q.addBindValue(name);
     run(q);

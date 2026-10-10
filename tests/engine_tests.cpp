@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "comparison.h"
 #include "game.h"
 #include "uci.h"
 #include <QCoreApplication>
@@ -79,6 +80,30 @@ int main(int argc, char **argv) {
         t64::Game frcGame(frc.toStdString(), true);
         frcGame.play(0, best.last()[0].toString().toStdString());
         engine.shutdown();
+        t64::Comparison comparison;
+        QVariantMap profile{{"name", "Stockfish A"},
+                            {"enginePath", path},
+                            {"hash", 16},
+                            {"multiPV", 2},
+                            {"analysisDepth", 8}};
+        comparison.start({profile, profile}, start, "position fen " + start, false);
+        auto hasBoth = [&] {
+            const auto rows = comparison.rows();
+            return rows.size() == 2 && !rows[0].toMap()["lines"].toList().empty() &&
+                   !rows[1].toMap()["lines"].toList().empty();
+        };
+        check(waitFor(hasBoth), "Both UCI processes return independent analysis");
+        comparison.setPosition(fen, "position startpos moves e2e4", false);
+        check(comparison.rows()[0].toMap()["lines"].toList().empty(),
+              "Navigation clears old comparison immediately");
+        comparison.setPosition(start, "position startpos", false);
+        comparison.setPosition(fen, "position startpos moves e2e4", false);
+        check(waitFor(hasBoth), "Comparison follows rapid position changes");
+        for (const auto &row : comparison.rows())
+            for (const auto &line : row.toMap()["lines"].toList())
+                check(line.toMap()["fen"].toString() == fen, "No stale comparison PV");
+        comparison.stop();
+        check(!comparison.running(), "All comparison processes stopped");
         std::cout << "UCI handshake, MultiPV, cancellation, legal reply and shutdown passed\n";
         return 0;
     } catch (const std::exception &e) {

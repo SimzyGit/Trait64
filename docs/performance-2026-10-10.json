@@ -1,0 +1,30 @@
+{
+  "database_bytes": 1020379136,
+  "exact_player": {
+    "max_ms": 1.134689,
+    "median_ms": 0.880405
+  },
+  "fixture": "Synthetic metadata and one opening edge per game; not a full PGN/position corpus",
+  "games": 1000000,
+  "library_page": {
+    "max_ms": 9.905948,
+    "median_ms": 8.39231
+  },
+  "opening_tree": {
+    "max_ms": 0.057617,
+    "median_ms": 0.025648
+  },
+  "seed_ms": 119841,
+  "statistics": {
+    "max_ms": 0.275415,
+    "median_ms": 0.074483
+  },
+  "top_players": {
+    "max_ms": 4.732908,
+    "median_ms": 4.073295
+  },
+  "trigram_substring": {
+    "max_ms": 19.099755,
+    "median_ms": 17.404142
+  }
+}

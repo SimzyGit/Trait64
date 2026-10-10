@@ -182,6 +182,27 @@ int main(int argc, char **argv) {
             c.loadEngineProfile(0);
             check(c.preferences()["threads"].toInt() == 1, "Engine profile restores settings");
             if (QFileInfo(c.preferences()["enginePath"].toString()).isExecutable()) {
+                c.setPreference("hash", 16);
+                c.setPreference("analysisDepth", 8);
+                c.saveEngineProfile("Second test");
+                c.compareEngines({0, 1});
+                QElapsedTimer comparisonTimer;
+                comparisonTimer.start();
+                while (comparisonTimer.elapsed() < 7000) {
+                    const auto rows = c.comparison()->rows();
+                    if (rows.size() == 2 && !rows[0].toMap()["lines"].toList().empty() &&
+                        !rows[1].toMap()["lines"].toList().empty())
+                        break;
+                    QTest::qWait(20);
+                }
+                check(c.comparison()->running() &&
+                          !c.comparison()->rows().last().toMap()["lines"].toList().empty(),
+                      "Controller starts independent engine profiles");
+                auto *compareDialog = window->findChild<QObject *>("compareDialog");
+                QMetaObject::invokeMethod(compareDialog, "open");
+                QTest::qWait(80);
+                QMetaObject::invokeMethod(compareDialog, "close");
+                c.comparison()->stop();
                 c.analyseGame(100);
                 QElapsedTimer timer;
                 timer.start();
@@ -226,8 +247,8 @@ int main(int argc, char **argv) {
             c.stopPlaying();
             check(!c.state()["clockRunning"].toBool(), "Stopping game stops clock");
             // Exercise every new dialog including small window layout and keyboard capture.
-            for (const auto &name :
-                 QStringList{"appearanceDialog", "positionEditor", "reviewDialog", "settingsDialog"}) {
+            for (const auto &name : QStringList{"appearanceDialog", "positionEditor", "reviewDialog",
+                                                "settingsDialog", "updatesDialog", "compareDialog"}) {
                 QObject *dialog = window->findChild<QObject *>(name);
                 check(dialog, "Feature dialog exists");
                 QMetaObject::invokeMethod(dialog, "open");
@@ -248,6 +269,22 @@ int main(int argc, char **argv) {
             check(warnings.empty(), "New pages and dialogs have no QML warnings");
             c.switchTab(0);
             c.saveGame();
+            const auto backupFolder = c.updater()->beforeInstall();
+            check(QFileInfo::exists(backupFolder + "/session.json") &&
+                      QFileInfo::exists(backupFolder + "/preferences.json"),
+                  "Pre-update backup includes session and preferences");
+            {
+                t64::Database snapshot(backupFolder + "/library.sqlite");
+                check(snapshot.stats()["games"] == c.stats()["games"] && snapshot.integrity() == "ok",
+                      "Pre-update database backup is coherent and complete");
+            }
+            c.automaticBackup();
+            QElapsedTimer backupTimer;
+            backupTimer.start();
+            while (!c.preferences()["lastBackup"].toDateTime().isValid() && backupTimer.elapsed() < 5000)
+                QTest::qWait(20);
+            check(c.preferences()["lastBackup"].toDateTime().isValid(),
+                  "Background automatic backup completes");
         }
         {
             Controller c(dir.path() + "/features");
@@ -255,6 +292,22 @@ int main(int argc, char **argv) {
             check(c.state()["node"].toInt() == 2, "Active tab position recovered");
             check(c.preferences()["background"].toString() == "#243257", "Appearance survives restart");
             check(c.state()["arrows"].toList().size() == 2, "PGN arrows survive restart");
+        }
+        {
+            const auto recovery = dir.path() + "/corrupt";
+            QDir().mkpath(recovery);
+            QFile bad(recovery + "/session.json");
+            check(bad.open(QIODevice::WriteOnly), "Create truncated session fixture");
+            bad.write("{\"tabs\":[");
+            bad.close();
+            {
+                Controller recovered(recovery);
+            }
+            auto originals = QDir(recovery).entryList({"session.json.unreadable-*"}, QDir::Files);
+            check(originals.size() == 1, "Corrupt session preserved before fresh session is written");
+            QFile original(recovery + "/" + originals.first());
+            check(original.open(QIODevice::ReadOnly) && original.readAll() == "{\"tabs\":[",
+                  "Recovery preserves exact unreadable bytes");
         }
         std::cout << checks << " desktop interaction checks passed\n";
         return 0;
