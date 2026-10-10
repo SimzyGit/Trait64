@@ -8,8 +8,17 @@ trait64_stage="${trait64_build}/appimage"
 mkdir -p "${trait64_stage}/tools" "${trait64_stage}/AppDir"
 cd "${trait64_stage}/tools"
 # API asset IDs and hashes pin the exact reviewed build tools, even though upstream uses continuous tags.
-curl --fail --location --retry 3 --header 'Accept: application/octet-stream' https://api.github.com/repos/linuxdeploy/linuxdeploy/releases/assets/602438599 -o linuxdeploy-x86_64.AppImage
-curl --fail --location --retry 3 --header 'Accept: application/octet-stream' https://api.github.com/repos/linuxdeploy/linuxdeploy-plugin-qt/releases/assets/525032210 -o linuxdeploy-plugin-qt-x86_64.AppImage
+download_tool() {
+    local repository="$1" asset="$2" name="$3"
+    # Shared Actions IPs may exhaust the unauthenticated REST rate limit.
+    # The public download fallback is still required to match the pinned digest below.
+    curl --fail --location --retry 3 --header 'Accept: application/octet-stream' \
+        "https://api.github.com/repos/${repository}/releases/assets/${asset}" -o "${name}" || \
+    curl --fail --location --retry 3 \
+        "https://github.com/${repository}/releases/download/continuous/${name}" -o "${name}"
+}
+download_tool linuxdeploy/linuxdeploy 602438599 linuxdeploy-x86_64.AppImage
+download_tool linuxdeploy/linuxdeploy-plugin-qt 525032210 linuxdeploy-plugin-qt-x86_64.AppImage
 cat > SHA256SUMS <<'HASHES'
 8aea8da0f7f7039d2a2cecb14657d752a222a5e1d3825caeef186c82f751cdd1  linuxdeploy-x86_64.AppImage
 cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617  linuxdeploy-plugin-qt-x86_64.AppImage
