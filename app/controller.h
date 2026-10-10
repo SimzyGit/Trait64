@@ -2,6 +2,7 @@
 #pragma once
 #include "database.h"
 #include "uci.h"
+#include "updater.h"
 #include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QObject>
@@ -13,6 +14,7 @@
 
 class Controller : public QObject {
     Q_OBJECT
+    Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
     Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
     Q_PROPERTY(QVariantList notation READ notation NOTIFY changed)
@@ -46,6 +48,9 @@ class Controller : public QObject {
     bool busy() const { return busy_; }
     int taskProgress() const { return taskProgress_->load(); }
     Q_INVOKABLE void cancelTask() { cancelTask_->store(true); }
+    t64::Updater *updater() const { return updater_.get(); }
+    void startBackgroundServices();
+    Q_INVOKABLE void automaticBackup(bool force = true);
     bool smokeTest(QString *error);
     QVariantList tabs() const;
     QVariantList review() const { return review_; }
@@ -140,6 +145,10 @@ class Controller : public QObject {
         int count = 0, duplicates = 0;
         QString error, operation = "import";
     };
+    std::unique_ptr<t64::Updater> updater_;
+    QTimer backupTimer_;
+    QFutureWatcher<QString> backupWorker_;
+    void initReliability();
     QString dataPath_, sessionPath_;
     std::unique_ptr<t64::Database> db_;
     t64::Game game_, beforeTraining_;

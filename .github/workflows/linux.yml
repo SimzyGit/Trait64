@@ -1,52 +1,103 @@
-name: Linux build and tests
-
+name: Build, test and release Trait64
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: 'Version to publish, e.g. 0.3.0-beta.1 or 0.3.0; empty = development'
+        required: false
+        type: string
 permissions:
   contents: read
-
+concurrency:
+  group: trait64-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        env:
+          REQUESTED: ${{ inputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          from pathlib import Path
+          base=re.search(r'project\(Trait64 VERSION ([0-9.]+)',Path('CMakeLists.txt').read_text())[1]
+          version=os.environ['REQUESTED'] or (os.environ['REF_NAME'][1:] if os.environ['REF_TYPE']=='tag' else base+'-dev.'+os.environ['RUN_NUMBER'])
+          if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(beta|rc|dev)\.(0|[1-9][0-9]*))?',version):
+              raise SystemExit('Invalid release version')
+          publish=os.environ['EVENT_NAME']!='pull_request' and (os.environ['REF_TYPE']=='tag' or os.environ['REF_NAME']=='main')
+          # An ordinary main-branch commit is ALWAYS a development prerelease.
+          if os.environ['EVENT_NAME']=='push' and os.environ['REF_TYPE']!='tag' and '-dev.' not in version:
+              raise SystemExit('Stable/beta publication requires a tag or manual release')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write(f'version={version}\npublish={str(publish).lower()}\nprerelease={str("-" in version).lower()}\n')
+          PY
   linux:
+    needs: version
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - distribution: "debian:bookworm"
-            label: debian12-amd64
-          - distribution: "debian:trixie"
-            label: debian13-amd64
+          - distribution: 'debian:bookworm'
+            debian: '12'
+          - distribution: 'debian:trixie'
+            debian: '13'
     container: ${{ matrix.distribution }}
     steps:
-      - name: Install build and runtime dependencies
+      - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git file build-essential cmake ninja-build qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 fonts-dejavu-core stockfish
-          if apt-cache show qt6-svg-plugins >/dev/null 2>&1; then
-            apt-get install -y --no-install-recommends qt6-svg-plugins
-          fi
+          apt-get install -y --no-install-recommends ca-certificates git file curl python3 build-essential cmake ninja-build qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 qt6-wayland fonts-dejavu-core stockfish patchelf desktop-file-utils
+          if apt-cache show qt6-svg-plugins >/dev/null 2>&1; then apt-get install -y --no-install-recommends qt6-svg-plugins; fi
       - uses: actions/checkout@v4
-      - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-      - name: Compile
-        run: cmake --build build --parallel 2
+      - name: Configure and compile
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_RELEASE_VERSION="$RELEASE_VERSION"
+          cmake --build build --parallel 2
       - name: Test
         run: ctest --test-dir build --output-on-failure
-      - name: Package for this distribution
-        run: cd build && cpack -G DEB
-      - name: Verify installed package
+      - name: Package and test installed Debian package
+        env:
+          DEBIAN: ${{ matrix.debian }}
         run: |
-          apt-get install -y ./build/*.deb
+          cd build
+          cpack -G DEB
+          for file in trait64_*.deb; do mv "$file" "${file%_amd64.deb}_debian${DEBIAN}_amd64.deb"; done
+          apt-get install -y ./trait64_*.deb
           QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software trait64 --smoke-test
+      - name: Build and test AppImage
+        if: matrix.debian == '12'
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: bash packaging/appimage.sh "$PWD/build" "$RELEASE_VERSION"
+      - name: Collect corresponding runtime sources
+        if: matrix.debian == '12'
+        run: bash packaging/source-bundle.sh "$PWD/build"
       - uses: actions/upload-artifact@v4
         with:
-          name: Trait64-${{ matrix.label }}
-          path: build/*.deb
+          name: Trait64-debian${{ matrix.debian }}-amd64
+          path: |
+            build/*.deb
+            build/*.AppImage
+            build/Trait64-runtime-sources.tar
           retention-days: 30
-
   core-sanitizers:
     runs-on: ubuntu-24.04
     steps:
@@ -54,3 +105,36 @@ jobs:
       - run: cmake -S . -B build -DT64_BUILD_GUI=OFF -DT64_SANITIZERS=ON -DCMAKE_BUILD_TYPE=Debug
       - run: cmake --build build --parallel 2
       - run: ctest --test-dir build --output-on-failure
+  release:
+    needs: [version, linux, core-sanitizers]
+    if: needs.version.outputs.publish == 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
+      - name: Publish tested version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          directory=Path('packages')
+          files=sorted(p for p in directory.iterdir() if p.is_file())
+          (directory/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in files))
+          tag='v'+os.environ['RELEASE_VERSION']
+          notes=Path('release-notes.md')
+          notes.write_text('Trait64 '+os.environ['RELEASE_VERSION']+'\n\n'+Path('docs/RELEASE-NOTES.md').read_text())
+          command=['gh','release','create',tag,'--target',os.environ['GITHUB_SHA'],'--draft','--title','Trait64 '+os.environ['RELEASE_VERSION'],'--notes-file',str(notes)]
+          if os.environ['PRERELEASE']=='true':command.append('--prerelease')
+          subprocess.run(command,check=True)
+          subprocess.run(['gh','release','upload',tag,*map(str,directory.iterdir())],check=True)
+          subprocess.run(['gh','release','edit',tag,'--draft=false','--latest='+str(os.environ['PRERELEASE']!='true').lower()],check=True)
+          PY

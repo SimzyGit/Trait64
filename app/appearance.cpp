@@ -30,6 +30,8 @@ QVariantMap Controller::preferences() const {
                          {"legalMoves", true},
                          {"lastMove", true},
                          {"dailyGoal", 10},
+                         {"autoBackup", true},
+                         {"lastBackup", settings_.value("backup/last")},
                          {"engineProfiles", QVariantList()}};
     for (auto it = defaults.begin(); it != defaults.end(); ++it)
         it.value() = settings_.value(it.key(), it.value());
@@ -70,7 +72,8 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!ok)
                 throw std::runtime_error("Nombre invalide.");
             clean = std::clamp(n, limits[key].first, limits[key].second);
-        } else if (QStringList{"lightTheme", "coordinates", "legalMoves", "lastMove"}.contains(key))
+        } else if (QStringList{"lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
+                       key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
                      .contains(key)) {

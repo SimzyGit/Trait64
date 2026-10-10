@@ -131,10 +131,12 @@ Controller::Controller(const QString &path, QObject *parent)
         }
     }
     initFeatures();
+    initReliability();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    backupWorker_.waitForFinished();
     reviewer_.shutdown();
     cancelTask_->store(true);
     importer_.waitForFinished();

@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     QCoreApplication::setApplicationName("Trait64");
     QCoreApplication::setOrganizationName("Trait64");
-    QCoreApplication::setApplicationVersion("0.2.0");
+    QCoreApplication::setApplicationVersion(T64_VERSION);
     QQuickStyle::setStyle("Basic");
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
         data = temporary.path();
     QDir().mkpath(data);
     QLockFile lock(data + "/trait64.lock");
-    if (!lock.tryLock(0)) {
+    if (!lock.tryLock(app.arguments().contains("--wait-for-unlock") ? 10000 : 0)) {
         qCritical() << "Trait64 est déjà ouvert pour ce dossier de données.";
         return 2;
     }
@@ -46,6 +46,8 @@ int main(int argc, char *argv[]) {
         engine.load(QUrl("qrc:/ui/Main.qml"));
         if (engine.rootObjects().isEmpty())
             return 3;
+        if (!smoke)
+            controller.startBackgroundServices();
         if (smoke) {
             QString error;
             if (!controller.smokeTest(&error)) {

@@ -9,6 +9,8 @@ ApplicationWindow {
     minimumWidth: 960; minimumHeight: 640
     visible: true
     title: "Trait64 — " + controller.state.title + (controller.state.dirty ? " •" : "")
+    onClosing: function(close) { if(controller.updater.state.status==="installing") close.accepted=false }
+    Updates {id:updatesDialog;objectName:"updatesDialog";parent:Overlay.overlay;backend:controller.updater}
     property int page: 0
     property bool light: controller.preferences.lightTheme
     property color bg: controller.preferences.background
@@ -92,9 +94,10 @@ ApplicationWindow {
                     }
                 }
                 TButton {text:"Pièces & couleurs";Layout.fillWidth:true;onClicked:appearanceDialog.open()}
+                TButton {text:"Mises à jour";Layout.fillWidth:true;onClicked:updatesDialog.open()}
                 TButton {text:"Paramètres";Layout.fillWidth:true;Layout.topMargin:12;onClicked:settingsDialog.open()}
                 TButton {text:"Aide & raccourcis";Layout.fillWidth:true;onClicked:helpDialog.open()}
-                Label {text:"TRAIT64  0.2.0 · ALPHA";color:win.muted;font.pixelSize:9;font.letterSpacing:1;Layout.leftMargin:8;Layout.topMargin:10}
+                Label {text:"TRAIT64  "+controller.updater.state.current;color:win.muted;font.pixelSize:9;font.letterSpacing:1;Layout.leftMargin:8;Layout.topMargin:10}
             }
             }
         }
@@ -619,6 +622,8 @@ ApplicationWindow {
         ColumnLayout {anchors.fill:parent;spacing:18
             Label {text:"MOTEUR UCI LOCAL";font.pixelSize:10;font.letterSpacing:1.5;color:win.muted}
             RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {text:"Parcourir";onClicked:engineFileDialog.open()}}
+            CheckBox {text:"Sauvegardes automatiques (14 instantanés)";checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
+            TButton {text:"Créer une sauvegarde automatique maintenant";onClicked:controller.automaticBackup()}
             GridLayout {columns:4;columnSpacing:14;rowSpacing:10;Layout.fillWidth:true
                 Label {text:"Threads";color:win.muted} SpinBox {from:1;to:32;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
                 Label {text:"Mémoire (Mio)";color:win.muted} SpinBox {from:16;to:4096;stepSize:16;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
