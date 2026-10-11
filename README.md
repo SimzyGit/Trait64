@@ -1,9 +1,24 @@
 # Trait64
 
-Un atelier d’échecs libre, local et personnel pour **étudier, analyser, préparer et mémoriser**.
+**Atelier d’échecs libre, local et open source pour étudier, analyser, préparer et mémoriser.**
 
-**Version 0.3 en développement — application de bureau C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian.**
-Cette version ajoute les mises à jour GitHub, les sauvegardes automatiques, la comparaison de moteurs et les index de grandes bibliothèques. Elle ne constitue pas encore l’intégralité du catalogue de fonctionnalités imaginé pour Trait64. Le périmètre exact et la suite sont décrits dans [docs/ROADMAP.md](docs/ROADMAP.md).
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C.svg)
+![Qt 6](https://img.shields.io/badge/Qt-6-41CD52.svg)
+![Linux](https://img.shields.io/badge/platform-Linux-FCC624.svg)
+![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
+
+Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèque de parties, analyse UCI, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
+
+> **Version 0.3 en développement** — C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : les fonctions essentielles sont déjà utilisables, mais le périmètre prévu est plus large. Voir [docs/ROADMAP.md](docs/ROADMAP.md).
+
+### Principes du projet
+
+- **Local-first** : les parties, bases, analyses et préférences restent sur la machine de l’utilisateur.
+- **Libre et auditable** : code sous GNU AGPL v3 ou ultérieure et dépendances documentées.
+- **Orienté étude** : navigation PGN, variantes, commentaires, préparation, analyse moteur et entraînement dans un même flux de travail.
+- **Interopérable** : PGN et FEN restent au centre ; Trait64 évite l’enfermement dans un format propriétaire.
+- **Extensible** : architecture destinée à accueillir de nouveaux moteurs, formats, bases, outils de recherche et modules d’entraînement.
 
 L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
 
