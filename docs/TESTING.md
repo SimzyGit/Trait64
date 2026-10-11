@@ -35,3 +35,18 @@ cmake --build build --target database_benchmark --parallel 2
 ```
 
 Les mesures reproductibles et leurs limites sont dans [PERFORMANCE.md](PERFORMANCE.md). Les fichiers temporaires sont supprimés à la sortie du benchmark.
+
+
+### Refonte de l’interface — octobre 2026
+
+Les interactions de bureau cliquent sur les sept onglets à 960 × 640, vérifient l’échiquier et les outils de position au-dessus du pied de page, ainsi que la conservation de l’accent personnel lors d’un changement de thème. Les scénarios existants de clic/glisser, variantes, notes, sauvegarde, onglets, entraînement et dialogues sont conservés.
+
+Captures reproductibles sans toucher aux données utilisateur :
+
+```bash
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+T64_SCREENSHOT=/tmp/trait64.png T64_SCREENSHOT_WIDTH=1440 T64_SCREENSHOT_HEIGHT=940 \
+T64_SCREENSHOT_PAGE=0 ./build/trait64 --smoke-test
+```
+
+`T64_SCREENSHOT_PAGE=2` montre l’analyse ; `T64_SCREENSHOT_THEME=light` sélectionne le thème clair pour cette session temporaire. Les tailles contrôlées visuellement sont 1440 × 940, 1366 × 768 et 960 × 640.

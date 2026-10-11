@@ -24,6 +24,14 @@ void check(bool ok, const char *message) {
     if (!ok)
         throw std::runtime_error(message);
 }
+QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
+    if (parent->objectName() == name)
+        return parent;
+    for (auto *child : parent->childItems())
+        if (auto *found = visualItem(child, name))
+            return found;
+    return nullptr;
+}
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv);
     app.setOrganizationName("Trait64Tests");
@@ -255,17 +263,42 @@ int main(int argc, char **argv) {
                 QTest::qWait(30);
                 QMetaObject::invokeMethod(dialog, "close");
             }
-            window->resize(960, 720);
+            window->resize(960, 640);
             for (int page = 0; page < 7; ++page) {
-                window->setProperty("page", page);
+                auto *nav = visualItem(window->contentItem(), "sectionNav" + QString::number(page));
+                check(nav && nav->mapToScene(QPointF(nav->width(), nav->height())).x() <= window->width(),
+                      "Numbered navigation remains visible in a small window");
+                QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+                                  nav->mapToScene(QPointF(nav->width() / 2, nav->height() / 2)).toPoint());
                 QTest::qWait(20);
+                check(window->property("page").toInt() == page, "Navigation opens the requested section");
                 if (page == 2) {
                     auto *panel = window->findChild<QQuickItem *>("analysisPanel");
                     check(panel && panel->mapToScene(QPointF(panel->width(), panel->height())).x() <=
                                        window->width(),
                           "Analysis panel fits the smallest supported window");
+                    auto *board = window->findChild<QQuickItem *>("chessboard");
+                    check(board && board->width() >= 200 &&
+                              board->mapToScene(QPointF(board->width(), board->height())).y() <
+                                  window->height(),
+                          "Board remains usable at minimum window height");
+                    auto *actions = window->findChild<QQuickItem *>("positionActions");
+                    check(actions && actions->mapToScene(QPointF(actions->width(), actions->height())).y() <=
+                                         window->height() - 32,
+                          "Position tools fit above the footer");
                 }
             }
+            const auto savedBackground = c.preferences()["backgroundColor"];
+            c.setPreference("lightTheme", true);
+            c.setPreference("backgroundColor", "");
+            window->setProperty("page", 0);
+            QTest::qWait(30);
+            check(c.preferences()["accentColor"].toString() == "#a1442b", "Light default accent is readable");
+            c.setPreference("accentColor", "#315ac4");
+            c.setPreference("lightTheme", false);
+            check(c.preferences()["accentColor"].toString() == "#315ac4",
+                  "User accent survives theme changes");
+            c.setPreference("backgroundColor", savedBackground);
             check(warnings.empty(), "New pages and dialogs have no QML warnings");
             c.switchTab(0);
             c.saveGame();

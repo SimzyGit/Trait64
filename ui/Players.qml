@@ -8,7 +8,7 @@ ColumnLayout {
     property var profile: backend.playerProfile
     spacing:16
     RowLayout {Layout.fillWidth:true
-        Label {text:"Joueurs & préparation";font.pixelSize:28;font.bold:true}
+        Label {text:"Joueurs & préparation";font.family:"DejaVu Serif";font.pixelSize:30}
         Item {Layout.fillWidth:true}
         TextField {id:filter;placeholderText:"Rechercher un joueur";Layout.preferredWidth:240}
     }
@@ -25,7 +25,7 @@ ColumnLayout {
                 Label {text:root.profile.name?(root.profile.games+" parties · Elo récent : "+(root.profile.elo||"non renseigné")):"";color:root.p.muted;Layout.leftMargin:20}
                 RowLayout {visible:!!root.profile.name;Layout.fillWidth:true;Layout.leftMargin:20
                     Repeater {model:[{label:"Victoires",key:"wins"},{label:"Nulles",key:"draws"},{label:"Défaites",key:"losses"},{label:"Score",key:"score"}]
-                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;implicitHeight:98;color:root.p.panel;radius:8
+                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;implicitHeight:98;color:root.p.panel;radius:2
                             ColumnLayout {anchors.centerIn:parent;Label {text:Math.round(root.profile[modelData.key]||0)+(modelData.key==="score"?" %":"");font.pixelSize:25;font.bold:true} Label {text:modelData.label;color:root.p.muted;font.pixelSize:11}}
                         }
                     }
@@ -33,7 +33,7 @@ ColumnLayout {
                 Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+" avec les Blancs · "+(root.profile.blackGames||0)+" avec les Noirs · "+(root.profile.unfinished||0)+" inachevées";Layout.leftMargin:20;color:root.p.muted;font.pixelSize:11}
                 Label {text:"OUVERTURES JOUÉES";visible:!!root.profile.name;Layout.leftMargin:20;font.bold:true}
                 Repeater {model:root.profile.openings||[]
-                    delegate:Rectangle {required property var modelData;Layout.fillWidth:true;Layout.leftMargin:20;implicitHeight:40;color:root.p.panel;radius:5
+                    delegate:Rectangle {required property var modelData;Layout.fillWidth:true;Layout.leftMargin:20;implicitHeight:40;color:root.p.panel;radius:2
                         RowLayout {anchors.fill:parent;anchors.margins:10;Label {text:modelData.label;Layout.fillWidth:true} Label {text:modelData.count+" parties · "+(modelData.finished?Math.round(100*modelData.points/modelData.finished)+" %":"—");color:root.p.muted}}
                     }
                 }

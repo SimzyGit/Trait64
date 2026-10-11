@@ -62,8 +62,13 @@ int main(int argc, char *argv[]) {
             // Traverse every page so that QML delegates and lazy models are exercised.
             for (int i = 0; i < 7; ++i)
                 QTimer::singleShot(150 + i * 170, &app, [window, i] { window->setProperty("page", i); });
-            QTimer::singleShot(1500, &app, [window] {
-                window->setProperty("page", 2);
+            QTimer::singleShot(1500, &app, [window, &controller] {
+                const int page = qEnvironmentVariableIsSet("T64_SCREENSHOT_PAGE")
+                                     ? qEnvironmentVariableIntValue("T64_SCREENSHOT_PAGE")
+                                     : 2;
+                window->setProperty("page", qBound(0, page, 6));
+                if (qEnvironmentVariable("T64_SCREENSHOT_THEME") == "light")
+                    controller.setPreference("lightTheme", true);
                 const auto preview = qEnvironmentVariable("T64_PREVIEW");
                 if (!preview.isEmpty())
                     if (auto *dialog = window->findChild<QObject *>(preview + "Dialog"))

@@ -10,6 +10,14 @@ Application C++23/Qt6/QML, monolithe modulaire. Les fonctions 0.1/0.2 restent pr
 - `libs/engine/comparison.*`, `ui/CompareEngines.qml` : 2–4 processus, budgets partagés, PV associées à la FEN, navigation et insertion.
 - `packaging/` : AppImage, inventaire des bibliothèques et notices, sources Debian correspondantes distribuées à côté du binaire. Stockfish et les tablebases sont externes.
 
+## Interface du 11 octobre 2026
+
+`ui/Home.qml` contient l’accueil carnet et ses signaux vers Main. `ui/Main.qml` conserve les sept pages et leurs index, avec navigation numérotée en haut. `TButton` et `TTabButton` portent les contrôles communs. Les commandes de position sont dans le menu sous l’échiquier ; paramètres, mises à jour et aide dans le menu principal. Ne pas réintroduire la barre latérale sans décision de design.
+
+Les préférences sauvegardées priment sur les nouveaux défauts (palette Trait64, fond encre/papier, accent cuivre adapté à la luminance). Aucune migration n’est nécessaire. Le monogramme de lancement reste provisoire et inchangé.
+
+La capture `--smoke-test` accepte `T64_SCREENSHOT_PAGE=0..6` et `T64_SCREENSHOT_THEME=light` en plus de la taille et du chemin ; elle utilise des données temporaires. Le test de navigation recherche les délégués dans l’arbre visuel Qt Quick : ils ne sont pas nécessairement descendants QObject de la fenêtre.
+
 ## Prochaines étapes concrètes
 
 1. **Répertoires** : entités personnelles nom/camp, liens vers études et positions, choix principal/alternatives, couverture des réponses adverses, transpositions et lacunes. Migration 4 sauvegardée ; tests sur branches et transpositions avant interface. Ne pas confondre une collection de parties avec un répertoire complet.

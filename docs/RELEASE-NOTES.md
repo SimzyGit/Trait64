@@ -1,4 +1,12 @@
-## Nouveautés
+## Nouvelle interface Trait64
+
+- Navigation horizontale numérotée, accueil composé comme un carnet et aperçu réel de l’étude à reprendre.
+- Palette encre/papier/cuivre, titres à empattements, notation à chasse fixe, panneaux et boutons redessinés.
+- Plus de place pour l’échiquier ; commandes de position réunies sous le plateau ; carnet de coups et notes numérotés.
+- Neuvième palette « Trait64 » et accent adapté au thème clair/sombre ; couleurs et pièces personnelles conservées.
+- Navigation, échiquier et accès aux outils vérifiés à 960 × 640, avec tests de clics sur les sept sections.
+
+## Fonctions de la série 0.3 conservées
 
 - Vérification GitHub Releases en arrière-plan, canaux Stable/Bêta/Développement, notes de version, Mettre à jour/Plus tard/Ignorer.
 - Dépôt privé : accès par GitHub CLI activable, variable T64_GITHUB_TOKEN ou jeton de session non enregistré.

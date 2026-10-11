@@ -22,11 +22,11 @@ QVariantMap Controller::preferences() const {
                          {"coordinates", true},
                          {"pieceStyle", "cburnett"},
                          {"customPiecePath", ""},
-                         {"boardLight", "#dce4d3"},
-                         {"boardDark", "#718c7c"},
-                         {"boardHighlight", "#c9ba55"},
+                         {"boardLight", "#e9dfcb"},
+                         {"boardDark", "#71838c"},
+                         {"boardHighlight", "#d6a166"},
                          {"backgroundColor", ""},
-                         {"accentColor", "#a8d39c"},
+                         {"accentColor", "#ef997a"},
                          {"legalMoves", true},
                          {"lastMove", true},
                          {"dailyGoal", 10},
@@ -38,7 +38,7 @@ QVariantMap Controller::preferences() const {
     defaults["dataPath"] = dataPath_;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
-        bg = QColor(defaults["lightTheme"].toBool() ? "#f3f3ed" : "#121b18");
+        bg = QColor(defaults["lightTheme"].toBool() ? "#f3efe6" : "#171b21");
     auto linear = [](double x) { return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4); };
     const double luminance =
         .2126 * linear(bg.redF()) + .7152 * linear(bg.greenF()) + .0722 * linear(bg.blueF());
@@ -55,8 +55,10 @@ QVariantMap Controller::preferences() const {
     defaults["panel"] = blend(.045);
     defaults["raised"] = blend(.085);
     defaults["line"] = blend(.17);
-    defaults["foreground"] = light ? "#19221e" : "#f1f3f0";
-    defaults["muted"] = light ? "#4b5951" : "#bcc6bf";
+    defaults["foreground"] = light ? "#242930" : "#f1ede4";
+    defaults["muted"] = light ? "#565b63" : "#b6bac2";
+    if (!settings_.contains("accentColor"))
+        defaults["accentColor"] = light ? "#a1442b" : "#ef997a";
     return defaults;
 }
 void Controller::setPreference(const QString &key, const QVariant &value) {
@@ -106,10 +108,11 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
 }
 void Controller::applyBoardPreset(const QString &name) {
     static const QMap<QString, QStringList> presets{
-        {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},     {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},
-        {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},     {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}},
-        {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},      {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}},
-        {"Contraste", {"#ffffff", "#494949", "#e2ab31"}}, {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}}};
+        {"Trait64", {"#e9dfcb", "#71838c", "#d6a166"}}, {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
+        {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},   {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},
+        {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}}, {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},
+        {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}}, {"Contraste", {"#ffffff", "#494949", "#e2ab31"}},
+        {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}}};
     if (!presets.contains(name))
         return;
     const auto c = presets[name];

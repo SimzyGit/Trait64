@@ -26,11 +26,12 @@ ApplicationWindow {
     property var nav: ["Accueil", "Bibliothèque", "Analyse", "Ouvertures", "Entraînement", "Outils", "Joueurs"]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
-    palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: "#ffffff"
+    palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
     palette.placeholderText: muted
     color: bg
     font.family: "DejaVu Sans"
     font.pixelSize: 13
+    function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#171b21":"#ffffff"}
     property int libraryOffset:0
     property var advanced:({})
     function applyAdvanced(){var f=Object.assign({},advanced);f.offset=libraryOffset;controller.searchAdvanced(f)}
@@ -38,155 +39,78 @@ ApplicationWindow {
     function openExport(all) {exportAll=all;exportDialog.open()}
 
     header: Rectangle {
-        height: 72; color: bg
-        Rectangle {anchors.bottom: parent.bottom;width:parent.width;height:1;color:win.line}
-        RowLayout {
-            anchors.fill: parent;anchors.leftMargin:24;anchors.rightMargin:28;spacing:14
-            Rectangle {
-                width:38;height:38;radius:10;color:win.accent
-                Text {anchors.centerIn:parent;text:"T64";font.pixelSize:14;font.bold:true;color:"#18301e"}
+        height: 116; color: win.bg
+        ColumnLayout {
+            anchors.fill: parent; anchors.leftMargin: 32; anchors.rightMargin: 32; spacing: 0
+            RowLayout {
+                Layout.fillWidth: true; Layout.preferredHeight: 62; spacing: 18
+                Label {text: "Trait"; font.family: "DejaVu Serif"; font.pixelSize: 30; font.letterSpacing: -1.2}
+                Rectangle {width: 2; height: 29; rotation: 24; color: win.accent; Layout.leftMargin: -9; Layout.rightMargin: -9}
+                Label {text: "64"; font.family: "DejaVu Sans Mono"; font.pixelSize: 24; color: win.accent}
+                Label {text: "L’ATELIER DES ÉCHECS"; font.pixelSize: 9; font.letterSpacing: 2; color: win.muted; Layout.leftMargin: 18; visible: win.width >= 1100}
+                Item {Layout.fillWidth: true}
+                TButton {text: "Apparence"; flat: true; onClicked: appearanceDialog.open()}
+                TButton {text: "Commandes  /  Ctrl K"; onClicked: commands.open()}
+                TButton {id: appMenuButton; objectName: "appMenuButton"; text: "Menu  ≡"; flat: true; onClicked: appMenu.open()
+                    Menu {id: appMenu; y: appMenuButton.height
+                        MenuItem {text: "Paramètres"; onTriggered: settingsDialog.open()}
+                        MenuItem {text: "Pièces, échiquier et couleurs"; onTriggered: appearanceDialog.open()}
+                        MenuItem {text: "Mises à jour"; onTriggered: updatesDialog.open()}
+                        MenuSeparator {}
+                        MenuItem {text: "Aide & raccourcis"; onTriggered: helpDialog.open()}
+                    }
+                }
             }
-            Label {text:"Trait64";font.pixelSize:23;font.weight:Font.DemiBold;Layout.preferredWidth:143}
-            Rectangle {width:1;height:26;color:win.line}
-            Label {text:win.nav[win.page];font.pixelSize:14;color:win.muted;Layout.leftMargin:10}
-            Item {Layout.fillWidth:true}
-            Rectangle {width:8;height:8;radius:4;color:win.accent}
-            Label {text:"Sur votre ordinateur";color:win.muted;font.pixelSize:12}
-            TButton {text:"⌕  Commandes   Ctrl K";onClicked:commands.open();Layout.leftMargin:12}
-        }
-    }
-    Rectangle {anchors.fill:parent;color:win.bg}
-    RowLayout {
-        anchors.fill:parent;spacing:0
-        Rectangle {
-            Layout.preferredWidth:win.width<1200?190:214;Layout.fillHeight:true;color:win.bg
-            Rectangle {anchors.right:parent.right;height:parent.height;width:1;color:win.line}
-            ScrollView {
-                id:navScroll;anchors.fill:parent;anchors.margins:16;clip:true;contentWidth:availableWidth
-            ColumnLayout {
-                width:navScroll.availableWidth;height:Math.max(implicitHeight,navScroll.availableHeight);spacing:8
-                Label {text:"VOTRE ESPACE";color:win.muted;font.pixelSize:10;font.letterSpacing:2;Layout.topMargin:16;Layout.bottomMargin:16;Layout.leftMargin:12}
+            RowLayout {
+                Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
                 Repeater {
-                    model:win.nav
-                    delegate:ItemDelegate {
+                    model: win.nav
+                    delegate: Button {
+                        id: sectionNav
                         required property string modelData
                         required property int index
-                        Layout.fillWidth:true;implicitHeight:46
-                        text:modelData
-                        contentItem:RowLayout {
-                            spacing:13
-                            Label {text:["⌂","▤","♙","↗","◎","⚙","♟"][index];font.pixelSize:20;color:win.page===index?win.accent:win.muted;Layout.preferredWidth:24;horizontalAlignment:Text.AlignHCenter}
-                            Label {text:modelData;font.pixelSize:13;font.weight:win.page===index?Font.DemiBold:Font.Normal;color:win.page===index?win.fg:win.muted;Layout.fillWidth:true}
-                            Rectangle {width:4;height:19;radius:2;color:win.accent;visible:win.page===index}
+                        objectName: "sectionNav" + index
+                        Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.fillHeight: true
+                        hoverEnabled: true; text: modelData
+                        Accessible.name: modelData; Accessible.role: Accessible.PageTab
+                        Accessible.selected: win.page === index
+                        contentItem: RowLayout {
+                            spacing: 9
+                            Label {text: "0" + (index + 1); font.family: "DejaVu Sans Mono"; font.pixelSize: 10; color: win.page === index ? win.accent : win.muted}
+                            Label {text: modelData; font.pixelSize: win.width < 1100 ? 12 : 13; font.weight: win.page === index ? Font.DemiBold : Font.Normal; color: win.page === index ? win.fg : win.muted; Layout.fillWidth: true; elide: Text.ElideRight}
                         }
-                        background:Rectangle {radius:8;color:win.page===index?win.raised:(parent.hovered?win.panel:"transparent")}
-                        onClicked:win.page=index
+                        background: Rectangle {
+                            color: sectionNav.hovered || sectionNav.visualFocus ? win.panel : "transparent"
+                            Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: win.page === index ? 3 : 1; color: win.page === index ? win.accent : win.line}
+                        }
+                        onClicked: win.page = index
                     }
                 }
-                Item {Layout.fillHeight:true}
-                Rectangle {
-                    Layout.fillWidth:true;implicitHeight:104;radius:10;color:win.panel;border.color:win.line;visible:win.height>=850
-                    ColumnLayout {
-                        anchors.fill:parent;anchors.margins:14;spacing:6
-                        Label {text:"Le prochain bon coup";font.pixelSize:12;font.weight:Font.DemiBold}
-                        Label {text:"commence par une idée.";font.pixelSize:11;color:win.muted}
-                        Label {text:"LOCAL · LIBRE · PERSONNEL";font.pixelSize:8;font.letterSpacing:1.1;color:win.accent;Layout.topMargin:5}
-                    }
-                }
-                TButton {text:"Pièces & couleurs";Layout.fillWidth:true;onClicked:appearanceDialog.open()}
-                TButton {text:"Mises à jour";Layout.fillWidth:true;onClicked:updatesDialog.open()}
-                TButton {text:"Paramètres";Layout.fillWidth:true;Layout.topMargin:12;onClicked:settingsDialog.open()}
-                TButton {text:"Aide & raccourcis";Layout.fillWidth:true;onClicked:helpDialog.open()}
-                Label {text:"TRAIT64  "+controller.updater.state.current;color:win.muted;font.pixelSize:9;font.letterSpacing:1;Layout.leftMargin:8;Layout.topMargin:10}
-            }
             }
         }
+    }
+    Rectangle {anchors.fill: parent; color: win.bg}
+    RowLayout {
+        anchors.fill: parent; spacing: 0
         StackLayout {
-            id:pages
-            Layout.fillWidth:true;Layout.fillHeight:true;currentIndex:win.page
-            Layout.leftMargin:24;Layout.rightMargin:24;Layout.topMargin:24;Layout.bottomMargin:20
+            id: pages
+            Layout.fillWidth: true; Layout.fillHeight: true; currentIndex: win.page
+            Layout.leftMargin: 32; Layout.rightMargin: 32; Layout.topMargin: win.height < 820 ? 14 : 24; Layout.bottomMargin: 16
 
-            // HOME
-            ScrollView {
-                clip:true
-                contentWidth:availableWidth
-                ColumnLayout {
-                    width:pages.width-72;x:36;spacing:24
-                    Label {text:"L’ATELIER DES ÉCHECS";font.pixelSize:10;font.letterSpacing:2.3;color:win.accent;Layout.topMargin:38}
-                    Label {text:"Tout commence par un trait.";font.pixelSize:34;font.weight:Font.DemiBold;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                    Label {text:"Vos parties, vos idées, votre progression. Un espace à vous pour étudier les échecs.";color:win.muted;font.pixelSize:14;wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.topMargin:-10}
-                    RowLayout {
-                        spacing:10
-                        TButton {text:"+  Nouvelle étude";accent:true;onClicked:controller.newGame()}
-                        TButton {text:"Importer des parties";onClicked:importDialog.open()}
-                        TButton {text:"Reprendre l’échiquier  →";onClicked:win.page=2}
-                    }
-                    RowLayout {
-                        Layout.fillWidth:true;spacing:16;Layout.topMargin:12
-                        Repeater {
-                            model:[{name:"PARTIES",key:"games",note:"dans votre bibliothèque",target:1},{name:"FAVORIS",key:"favorites",note:"pour vos prochaines études",target:1},{name:"À RÉVISER",key:"due",note:"cartes prêtes aujourd’hui",target:4}]
-                            delegate:Rectangle {
-                                required property var modelData
-                                Layout.fillWidth:true;implicitHeight:146;radius:12;color:win.panel;border.color:win.line
-                                ColumnLayout {anchors.fill:parent;anchors.margins:21;spacing:8
-                                    Label {text:modelData.name;font.pixelSize:10;font.letterSpacing:1.5;color:win.muted}
-                                    Label {text:controller.stats[modelData.key]||0;font.pixelSize:37;font.weight:Font.DemiBold}
-                                    Label {text:modelData.note;font.pixelSize:11;color:win.muted}
-                                }
-                                MouseArea {anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:win.page=modelData.target}
-                            }
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth:true;spacing:22
-                        Rectangle {
-                            Layout.fillWidth:true;Layout.preferredWidth:600;implicitHeight:300;radius:12;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
-                                RowLayout {Label {text:"Votre bibliothèque";font.pixelSize:18;font.weight:Font.DemiBold} Item {Layout.fillWidth:true} TButton {text:"Tout voir  →";onClicked:win.page=1}}
-                                Label {visible:controller.games.length===0;text:"Votre première étude vous attend.";color:win.muted;Layout.topMargin:24}
-                                Label {visible:controller.games.length===0;text:"Importez un PGN ou découvrez les trois exemples inclus.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                                TButton {visible:controller.games.length===0;text:"Charger les exemples";onClicked:controller.loadExamples()}
-                                Repeater {model:3
-                                    delegate:ItemDelegate {
-                                        required property int index
-                                        property var modelData:controller.games[index]||({white:"",black:"",event:"",result:""})
-                                        visible:index<controller.games.length
-                                        Layout.fillWidth:true;implicitHeight:59
-                                        background:Rectangle {color:parent.hovered?win.raised:"transparent";radius:6}
-                                        contentItem:RowLayout {spacing:16
-                                            Label {text:"♙";font.pixelSize:26;color:win.accent}
-                                            ColumnLayout {Layout.fillWidth:true;spacing:4
-                                                Label {text:modelData.white+" — "+modelData.black;font.weight:Font.DemiBold;elide:Text.ElideRight;Layout.fillWidth:true}
-                                                Label {text:modelData.event;font.pixelSize:11;color:win.muted;elide:Text.ElideRight;Layout.fillWidth:true}
-                                            }
-                                            Label {text:modelData.result;color:win.muted}
-                                        }
-                                        onClicked:controller.loadGame(modelData.id)
-                                    }
-                                }
-                                Item {Layout.fillHeight:true}
-                            }
-                        }
-                        Rectangle {
-                            Layout.preferredWidth:285;implicitHeight:300;radius:12;color:win.raised;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:24;spacing:14
-                                Label {text:"DE L’IDÉE AU RÉFLEXE";font.pixelSize:9;font.letterSpacing:1.3;color:win.accent}
-                                Label {text:"Préparer.\nComprendre.\nRetenir.";font.pixelSize:25;lineHeight:1.2;font.weight:Font.DemiBold}
-                                Label {text:"Transformez une variante en carte et retrouvez-la avec la répétition espacée.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:12}
-                                Item {Layout.fillHeight:true}
-                                TButton {text:"Mon entraînement  →";Layout.fillWidth:true;onClicked:win.page=4}
-                            }
-                        }
-                    }
-                    Label {text:"Tout est conservé localement. Aucun compte nécessaire, aucune télémétrie.";color:win.muted;font.pixelSize:11;Layout.bottomMargin:30}
-                }
+            Home {
+                backend: controller
+                onNewStudy: controller.newGame()
+                onImportStudy: importDialog.open()
+                onResumeStudy: win.page = 2
+                onShowLibrary: win.page = 1
+                onShowTraining: win.page = 4
             }
 
             // LIBRARY
             ColumnLayout {
-                Layout.margins:28;spacing:16
+                Layout.margins:0;spacing:16
                 RowLayout {Layout.fillWidth:true
-                    ColumnLayout {spacing:6;Label {text:"Votre bibliothèque";font.pixelSize:28;font.weight:Font.DemiBold} Label {text:(controller.stats.games||0)+" parties · PGN, études et collections";color:win.muted}}
+                    ColumnLayout {spacing:6;Label {text:"Votre bibliothèque";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal} Label {text:(controller.stats.games||0)+" parties · PGN, études et collections";color:win.muted}}
                     Item {Layout.fillWidth:true}
                     TButton {text:"Exporter la bibliothèque";onClicked:win.openExport(true)}
                     TButton {text:"+  Importer";accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
@@ -216,7 +140,7 @@ ApplicationWindow {
                     ScrollBar.vertical:ScrollBar {}
                     delegate:Rectangle {
                         required property var modelData
-                        width:libraryList.width;height:72;radius:8;color:win.panel
+                        width:libraryList.width;height:72;radius:2;color:win.panel
                         RowLayout {anchors.fill:parent;anchors.margins:12;spacing:12
                             ColumnLayout {Layout.fillWidth:true;spacing:5
                                 Label {text:modelData.white+" — "+modelData.black;elide:Text.ElideRight;Layout.fillWidth:true;font.weight:Font.DemiBold}
@@ -246,11 +170,11 @@ ApplicationWindow {
 
             // ANALYSIS
             ColumnLayout {
-                Layout.margins:22;spacing:14
+                Layout.margins:0;spacing:win.height<820?8:14
                 RowLayout {Layout.fillWidth:true
-                    ColumnLayout {spacing:3
-                        Label {text:controller.state.training?"Retrouver la ligne":"L’atelier d’analyse";font.pixelSize:25;font.weight:Font.DemiBold}
-                        Label {text:controller.state.training?"Jouez les coups de votre répertoire · "+controller.state.trainingProgress:controller.state.title;color:win.muted;font.pixelSize:12}
+                    ColumnLayout {spacing:3;Layout.fillWidth:true
+                        Label {text:controller.state.training?"Retrouver la ligne":"Sur l’échiquier.";font.family:"DejaVu Serif";font.pixelSize:win.height<820?24:30}
+                        Label {visible:win.height>=820||controller.state.training;text:controller.state.training?"Jouez les coups de votre répertoire · "+controller.state.trainingProgress:controller.state.title;color:win.muted;font.pixelSize:12;elide:Text.ElideRight;Layout.fillWidth:true}
                     }
                     Item {Layout.fillWidth:true}
                     TButton {text:controller.state.training?"Quitter l’exercice":"Nouvelle étude";onClicked:controller.state.training?controller.finishTraining():controller.newGame()}
@@ -260,7 +184,7 @@ ApplicationWindow {
                 RowLayout {Layout.fillWidth:true
                     ListView {Layout.fillWidth:true;Layout.preferredHeight:36;orientation:ListView.Horizontal;model:controller.tabs;spacing:5;clip:true
                         delegate:RowLayout {required property var modelData;required property int index;spacing:0
-                            TButton {text:(modelData.dirty?"• ":"")+modelData.title;accent:modelData.active;implicitHeight:32;implicitWidth:Math.min(200,Math.max(120,text.length*7));onClicked:controller.switchTab(index)}
+                            TButton {text:(modelData.dirty?"• ":"")+modelData.title;accent:modelData.active;flat:!modelData.active;implicitHeight:32;implicitWidth:Math.min(260,Math.max(180,text.length*8+30));onClicked:controller.switchTab(index)}
                             TButton {text:"×";implicitWidth:27;implicitHeight:32;onClicked:controller.closeTab(index)}
                         }
                     }
@@ -273,46 +197,52 @@ ApplicationWindow {
                     Layout.fillWidth:true;Layout.fillHeight:true;orientation:Qt.Horizontal
                     handle:Rectangle {implicitWidth:12;color:"transparent";Rectangle {anchors.centerIn:parent;width:2;height:36;radius:1;color:win.line}}
                     ColumnLayout {
-                        SplitView.preferredWidth:Math.min(570,Math.max(360,analysisSplit.width-322));SplitView.minimumWidth:360;spacing:10
-                        RowLayout {Layout.fillWidth:true;Layout.leftMargin:2;Layout.rightMargin:2
-                            Label {text:controller.state.flipped?(controller.state.tags.White||"Blancs"):(controller.state.tags.Black||"Noirs");font.weight:Font.DemiBold}
+                        SplitView.preferredWidth:Math.min(700,Math.max(380,analysisSplit.width*.56));SplitView.minimumWidth:360;spacing:win.height<820?5:10
+                        RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
+                            Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.White||"Blancs"):(controller.state.tags.Black||"Noirs");font.weight:Font.DemiBold}
                             Item {Layout.fillWidth:true}
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):(controller.state.flipped?"BLANCS":"NOIRS");color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
                         }
                         Item {
-                            Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:220
-                            Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:Math.min(parent.width,parent.height);height:width;anchors.centerIn:parent}
+                            Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:200
+                            Rectangle {width:chessboard.width+12;height:width;anchors.centerIn:parent;color:"transparent";border.color:win.line}
+                            Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:Math.min(parent.width-12,parent.height-12);height:width;anchors.centerIn:parent}
                         }
-                        RowLayout {Layout.fillWidth:true;Layout.leftMargin:2;Layout.rightMargin:2
-                            Label {text:controller.state.flipped?(controller.state.tags.Black||"Noirs"):(controller.state.tags.White||"Blancs");font.weight:Font.DemiBold}
+                        RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
+                            Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.Black||"Noirs"):(controller.state.tags.White||"Blancs");font.weight:Font.DemiBold}
                             Item {Layout.fillWidth:true}
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):(controller.state.flipped?"NOIRS":"BLANCS");color:win.muted;font.pixelSize:9;font.letterSpacing:1.5}
                         }
-                        RowLayout {Layout.alignment:Qt.AlignHCenter;spacing:6
-                            TButton {text:"|◀";enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2)}
-                            TButton {text:"◀";enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-1)}
-                            TButton {text:"▶";enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(1)}
-                            TButton {text:"▶|";enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2)}
-                            TButton {text:"⇅  Retourner";onClicked:controller.flip()}
+                        RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,430))/2);Layout.rightMargin:Layout.leftMargin
+                            TButton {text:"|◀";implicitWidth:38;padding:6;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2);Accessible.name:"Début de la partie";ToolTip.visible:hovered;ToolTip.text:"Début"}
+                            TButton {text:"◀";implicitWidth:38;padding:6;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-1);Accessible.name:"Coup précédent";ToolTip.visible:hovered;ToolTip.text:"Coup précédent"}
+                            TButton {text:"▶";implicitWidth:38;padding:6;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(1);Accessible.name:"Coup suivant";ToolTip.visible:hovered;ToolTip.text:"Coup suivant"}
+                            TButton {text:"▶|";implicitWidth:38;padding:6;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2);Accessible.name:"Fin de la variante";ToolTip.visible:hovered;ToolTip.text:"Fin de la variante"}
+                            TButton {text:"⇅";implicitWidth:38;onClicked:controller.flip();Accessible.name:"Retourner l’échiquier";ToolTip.visible:hovered;ToolTip.text:"Retourner l’échiquier · F"}
+                            Item {Layout.fillWidth:true}
+                            TButton {id:positionActions;objectName:"positionActions";text:analysisSplit.width>1000?"Position  ⋯":"⋯";implicitWidth:analysisSplit.width>1000?110:38;visible:!controller.state.training;onClicked:positionMenu.open();Accessible.name:"Outils de la position"
+                                Menu {id:positionMenu;y:-height
+                                    MenuItem {text:"Éditer la position";onTriggered:positionEditor.open()}
+                                    MenuItem {text:"Copier la FEN";onTriggered:controller.copyText("fen")}
+                                    MenuItem {text:"Charger une FEN";onTriggered:fenDialog.open()}
+                                    MenuItem {text:"Exporter le diagramme";onTriggered:diagramDialog.open()}
+                                    MenuSeparator {}
+                                    MenuItem {text:controller.state.playing?"Arrêter la partie":"Jouer une partie";onTriggered:controller.state.playing?controller.stopPlaying():playDialog.open()}
+                                }
+                            }
+                            TButton {text:controller.state.playing?"Arrêter":"Jouer";visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
-                        Label {text:controller.state.clockResult||controller.state.status;color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:12;Layout.topMargin:4}
-                        RowLayout {Layout.fillWidth:true
-                            TextField {text:controller.state.fen;readOnly:true;font.pixelSize:10;Layout.fillWidth:true;selectByMouse:true}
-                            TButton {text:"FEN";onClicked:controller.copyText("fen");ToolTip.visible:hovered;ToolTip.text:"Copier la position FEN"}
-                        }
-                        RowLayout {Layout.fillWidth:true;visible:!controller.state.training
-                            TButton {text:"Éditer la position";Layout.fillWidth:true;onClicked:positionEditor.open()}
-                            TButton {text:controller.state.playing?"Arrêter la partie":"Jouer une partie";Layout.fillWidth:true;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
-                        }
+                        Label {text:controller.state.clockResult||controller.state.status;color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:11;Layout.topMargin:2}
                     }
                     ColumnLayout {
                         objectName:"analysisPanel"
                         SplitView.fillWidth:true;SplitView.minimumWidth:310;spacing:12
                         Rectangle {
-                            Layout.fillWidth:true;implicitHeight:controller.state.analysis?218:102;radius:10;color:win.panel;border.color:win.line
+                            Layout.fillWidth:true;implicitHeight:controller.state.analysis?(win.height<760?152:204):88;color:win.panel
+                            Rectangle {width:3;height:parent.height;color:win.accent}
                             ColumnLayout {anchors.fill:parent;anchors.margins:14;spacing:8
                                 RowLayout {Layout.fillWidth:true
-                                    Label {text:"ANALYSE MOTEUR";font.pixelSize:10;font.letterSpacing:1.1;color:win.muted}
+                                    Label {text:"01  /  ANALYSE MOTEUR";font.pixelSize:10;font.letterSpacing:1.1;color:win.muted}
                                     Item {Layout.fillWidth:true}
                                     TButton {text:controller.state.analysis?"Arrêter":"Analyser";accent:!controller.state.analysis;enabled:!controller.state.training;implicitHeight:30;onClicked:controller.toggleAnalysis()}
                                 }
@@ -334,11 +264,12 @@ ApplicationWindow {
                             }
                         }
                         Rectangle {
-                            Layout.fillWidth:true;Layout.fillHeight:true;radius:10;color:win.panel;border.color:win.line
+                            Layout.fillWidth:true;Layout.fillHeight:true;color:win.panel
+                            Rectangle {width:parent.width;height:1;color:win.line}
                             ColumnLayout {anchors.fill:parent;anchors.margins:12;spacing:7
                                 TabBar {id:notationTabs;Layout.fillWidth:true
-                                    TabButton {text:"Notation"}
-                                    TabButton {text:"Explorateur"}
+                                    TTabButton {text:"02  /  Carnet de coups";font.pixelSize:11}
+                                    TTabButton {text:"Explorateur";font.pixelSize:11}
                                 }
                                 StackLayout {
                                     Layout.fillWidth:true;Layout.fillHeight:true;currentIndex:notationTabs.currentIndex
@@ -346,9 +277,9 @@ ApplicationWindow {
                                         delegate:ItemDelegate {
                                             required property var modelData
                                             width:moveList.width;implicitHeight:modelData.comment?52:31
-                                            background:Rectangle {radius:5;color:modelData.active?win.raised:(parent.hovered?win.bg:"transparent");border.color:modelData.active?win.line:"transparent"}
+                                            background:Rectangle {color:modelData.active?win.raised:(parent.hovered?win.bg:"transparent");Rectangle {width:2;height:parent.height;color:win.accent;visible:modelData.active}}
                                             contentItem:ColumnLayout {spacing:1
-                                                Label {text:(modelData.depth>0?"↳  ":"")+modelData.text;Layout.leftMargin:Math.min(modelData.depth*16,80);font.weight:modelData.active?Font.Bold:Font.Normal;color:modelData.depth>0?win.muted:win.fg;font.pixelSize:12}
+                                                Label {text:(modelData.depth>0?"↳  ":"")+modelData.text;Layout.leftMargin:Math.min(modelData.depth*16,80);font.family:"DejaVu Sans Mono";font.weight:modelData.active?Font.Bold:Font.Normal;color:modelData.depth>0?win.muted:win.fg;font.pixelSize:12}
                                                 Label {visible:!!modelData.comment;text:modelData.comment;elide:Text.ElideRight;Layout.fillWidth:true;Layout.leftMargin:Math.min(modelData.depth*16,80);font.pixelSize:10;color:win.muted}
                                             }
                                             onClicked:controller.navigate(modelData.id)
@@ -366,8 +297,8 @@ ApplicationWindow {
                                     ComboBox {id:nagBox;model:["Annotation","! Bon coup","? Erreur","!! Excellent","?? Gaffe","!? Intéressant","?! Douteux"];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:11}
                                     TButton {text:"↑";enabled:controller.state.node>0;onClicked:controller.promote();ToolTip.visible:hovered;ToolTip.text:"Promouvoir en ligne principale"}
                                 }
-                                Label {text:"NOTE SUR LA POSITION";font.pixelSize:9;font.letterSpacing:1;color:win.muted;Layout.topMargin:6}
-                                ScrollView {Layout.fillWidth:true;Layout.preferredHeight:75
+                                Label {text:"03  /  NOTES DE POSITION";font.pixelSize:9;font.letterSpacing:1;color:win.muted;Layout.topMargin:6}
+                                ScrollView {Layout.fillWidth:true;Layout.preferredHeight:win.height<760?52:85
                                     TextArea {id:note;objectName:"positionNote";text:controller.state.comment;readOnly:controller.state.training;placeholderText:"Une idée, un plan, une question…";wrapMode:TextEdit.Wrap;font.pixelSize:12;selectByMouse:true
                                         onTextChanged:if(activeFocus&&text!==controller.state.comment)controller.setComment(text)
                                     }
@@ -380,8 +311,8 @@ ApplicationWindow {
 
             // OPENINGS
             ColumnLayout {
-                Layout.margins:32;spacing:20
-                Label {text:"Explorer vos ouvertures";font.pixelSize:28;font.weight:Font.DemiBold}
+                Layout.margins:0;spacing:20
+                Label {text:"Explorer vos ouvertures";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal}
                 Label {text:"Les suites jouées dans votre bibliothèque, depuis la position actuelle de l’échiquier.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                 RowLayout {TButton {text:"←  Reculer";enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:"Position initiale";onClicked:controller.step(-2)} TButton {text:"Voir l’échiquier";onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:"Créer une carte depuis ici";accent:true;onClicked:cardDialog.open()}}
                 Label {text:controller.state.fen;color:win.muted;font.family:"monospace";font.pixelSize:11;elide:Text.ElideRight;Layout.fillWidth:true}
@@ -390,7 +321,7 @@ ApplicationWindow {
                 ListView {id:openingList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:10;model:controller.openings
                     delegate:Rectangle {
                         required property var modelData
-                        width:openingList.width;height:62;radius:8;color:win.panel
+                        width:openingList.width;height:62;radius:2;color:win.panel
                         RowLayout {anchors.fill:parent;anchors.margins:12;spacing:18
                             TButton {text:modelData.san;Layout.preferredWidth:76;onClicked:controller.move(modelData.uci)}
                             Label {text:modelData.count;Layout.preferredWidth:66;font.weight:Font.DemiBold}
@@ -413,16 +344,16 @@ ApplicationWindow {
 
             // TRAINING
             ColumnLayout {
-                Layout.margins:32;spacing:20
+                Layout.margins:0;spacing:20
                 RowLayout {Layout.fillWidth:true
-                    ColumnLayout {spacing:6;Label {text:"Apprendre pour retrouver.";font.pixelSize:28;font.weight:Font.DemiBold} Label {text:"Vos propres lignes, avec des révisions espacées dans le temps.";color:win.muted}}
+                    ColumnLayout {spacing:6;Label {text:"Apprendre pour retrouver.";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal} Label {text:"Vos propres lignes, avec des révisions espacées dans le temps.";color:win.muted}}
                     Item {Layout.fillWidth:true}
                     TButton {text:"+  Créer une carte";accent:true;onClicked:cardDialog.open()}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:16
                     Repeater {model:[{title:"À réviser",key:"due"},{title:"Révisions effectuées",key:"reviews"},{title:"Réussites",key:"successes"}]
-                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;height:102;radius:10;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:modelData.title;color:win.muted;font.pixelSize:11} Label {text:controller.stats[modelData.key]||0;font.pixelSize:28;font.weight:Font.DemiBold}}
+                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;height:102;radius:2;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:modelData.title;color:win.muted;font.pixelSize:11} Label {text:controller.stats[modelData.key]||0;font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal}}
                         }
                     }
                 }
@@ -434,7 +365,7 @@ ApplicationWindow {
                 ProgressBar {Layout.fillWidth:true;from:0;to:controller.preferences.dailyGoal;value:controller.stats.todayReviews||0}
                 Label {text:"MES CARTES";font.pixelSize:10;color:win.muted;font.letterSpacing:1.5;Layout.topMargin:8}
                 ListView {id:trainingList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:8;model:controller.cards;ScrollBar.vertical:ScrollBar {}
-                    delegate:Rectangle {required property var modelData;width:trainingList.width;height:80;radius:10;color:win.panel
+                    delegate:Rectangle {required property var modelData;width:trainingList.width;height:80;radius:2;color:win.panel
                         RowLayout {anchors.fill:parent;anchors.margins:16;spacing:16
                             Label {text:"◎";font.pixelSize:28;color:win.accent}
                             ColumnLayout {Layout.fillWidth:true;spacing:6
@@ -455,11 +386,11 @@ ApplicationWindow {
 
             // TOOLS
             ScrollView {contentWidth:availableWidth;clip:true
-                ColumnLayout {width:pages.width-64;x:32;spacing:20
-                    Label {text:"La boîte à outils";font.pixelSize:28;font.weight:Font.DemiBold;Layout.topMargin:32}
+                ColumnLayout {width:pages.width;spacing:20
+                    Label {text:"La boîte à outils";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal;Layout.topMargin:0}
                     Label {text:"Importer, sauvegarder, vérifier. Gardez la main sur vos données.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                     GridLayout {columns:2;columnSpacing:18;rowSpacing:18;Layout.fillWidth:true
-                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:12;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:2;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:"PGN & positions";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Ouvrir un fichier ou coller une partie et ses variantes.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -467,7 +398,7 @@ ApplicationWindow {
                                 RowLayout {TButton {text:"Coller un PGN";onClicked:pgnDialog.open()} TButton {text:"Charger une FEN";onClicked:fenDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:12;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:2;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:"Sauvegarde complète";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Parties, favoris, collections et cartes dans un fichier SQLite.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -475,7 +406,7 @@ ApplicationWindow {
                                 RowLayout {TButton {text:"Sauvegarder";onClicked:backupDialog.open()} TButton {text:"Ouvrir une base";onClicked:openDatabaseDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:12;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:2;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:"Intégrité & diagnostic";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -483,7 +414,7 @@ ApplicationWindow {
                                 RowLayout {TButton {text:"Vérifier la base";onClicked:controller.verifyDatabase()} TButton {text:"Réindexer";enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:12;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:2;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:"Fichiers & exemples";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Accédez aux fichiers locaux ou chargez les études de découverte.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -492,7 +423,7 @@ ApplicationWindow {
                             }
                         }
                     }
-                    Rectangle {Layout.fillWidth:true;implicitHeight:120;radius:10;color:win.raised
+                    Rectangle {Layout.fillWidth:true;implicitHeight:120;radius:2;color:win.raised
                         ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:10
                             Label {text:"Trait64 est un logiciel libre.";font.pixelSize:17;font.weight:Font.DemiBold}
                             Label {text:"C++23 · Qt6 · chess-library · moteurs UCI externes. Code sous AGPL-3.0-or-later.\nCette version alpha propose les outils locaux essentiels ; le catalogue complet reste en développement.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:12}
@@ -501,16 +432,18 @@ ApplicationWindow {
                     Item {height:20}
                 }
             }
-            Players {backend:controller;Layout.margins:24}
+            Players {backend:controller;Layout.margins:0}
         }
     }
     footer:Rectangle {
-        height:29;color:win.panel
+        height:32;color:win.bg
+        Rectangle {width:parent.width;height:1;color:win.line}
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
             Label {text:controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
             Item {Layout.fillWidth:true}
             TButton {visible:controller.busy;text:"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
-            Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted}
+            Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted;visible:win.width>=1100}
+            TButton {text:"Trait64 / "+controller.updater.state.current;flat:true;implicitHeight:26;font.pixelSize:10;onClicked:updatesDialog.open();ToolTip.visible:hovered;ToolTip.text:"Versions et mises à jour"}
         }
     }
 
@@ -520,8 +453,8 @@ ApplicationWindow {
         function onPromotionNeeded(prefix){win.promotionPrefix=prefix;promotionDialog.open()}
         function onShowAnalysis(){win.page=2}
     }
-    Popup {id:toast;property bool error:false;x:Math.max(230,(win.width-width)/2);y:win.height-height-64;width:Math.min(760,win.width-280);padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
-        background:Rectangle {color:toast.error?"#633c37":win.raised;border.color:toast.error?"#a86559":win.line;radius:10}
+    Popup {id:toast;property bool error:false;x:(win.width-width)/2;y:win.height-height-64;width:Math.min(760,win.width-280);padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
+        background:Rectangle {color:toast.error?"#633c37":win.raised;border.color:toast.error?"#a86559":win.line;radius:2}
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
@@ -578,9 +511,11 @@ ApplicationWindow {
             }
         }
     }
-    Menu {id:analysisMenu;x:win.width-width-30;y:125
+    Menu {id:analysisMenu;x:win.width-width-32;y:172
         MenuItem {text:"Comparer plusieurs moteurs";onTriggered:compareDialog.open()}
         MenuItem {text:"Éditer la position";onTriggered:positionEditor.open()}
+        MenuItem {text:"Copier la position FEN";onTriggered:controller.copyText("fen")}
+        MenuItem {text:controller.state.playing?"Arrêter la partie":"Jouer une partie";onTriggered:controller.state.playing?controller.stopPlaying():playDialog.open()}
         MenuItem {text:"Nouvelle partie Chess960";onTriggered:chess960Dialog.open()}
         MenuItem {text:"Dupliquer l’étude";onTriggered:controller.duplicateStudy()}
         MenuItem {text:"Identifier et renseigner l’ouverture";onTriggered:controller.identifyOpening()}
@@ -689,7 +624,7 @@ ApplicationWindow {
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
-    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!appMenu.visible&&!analysisMenu.visible&&!positionMenu.visible}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
     Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}

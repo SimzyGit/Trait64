@@ -27,9 +27,9 @@ Dialog {
                     delegate:Button {
                         required property var modelData
                         width:122;height:106
-                        background:Rectangle {color:root.backend.preferences.panel;radius:8;border.width:root.backend.preferences.pieceStyle===modelData.key?2:1;border.color:root.backend.preferences.pieceStyle===modelData.key?root.backend.preferences.accentColor:root.backend.preferences.line}
+                        background:Rectangle {color:root.backend.preferences.panel;radius:2;border.width:root.backend.preferences.pieceStyle===modelData.key?2:1;border.color:root.backend.preferences.pieceStyle===modelData.key?root.backend.preferences.accentColor:root.backend.preferences.line}
                         contentItem:ColumnLayout {
-                            Rectangle {Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:96;Layout.preferredHeight:52;color:root.backend.preferences.boardLight;radius:4
+                            Rectangle {Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:96;Layout.preferredHeight:52;color:root.backend.preferences.boardLight;radius:1
                                 Row {anchors.centerIn:parent;Piece {code:"wN";pieceStyle:modelData.key;width:45;height:49} Piece {code:"bQ";pieceStyle:modelData.key;width:45;height:49}}
                             }
                             Label {text:modelData.label;Layout.alignment:Qt.AlignHCenter}
@@ -44,7 +44,7 @@ Dialog {
             }
             Label {text:"PALETTES DE L’ÉCHIQUIER";font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
-                Repeater {model:["Sauge","Noyer","Océan","Lavande","Rose","Ardoise","Contraste","Sable"]
+                Repeater {model:["Trait64","Sauge","Noyer","Océan","Lavande","Rose","Ardoise","Contraste","Sable"]
                     delegate:TButton {required property string modelData;text:modelData;onClicked:root.backend.applyBoardPreset(modelData)}
                 }
             }

@@ -5,6 +5,8 @@ Un atelier d’échecs libre, local et personnel pour **étudier, analyser, pré
 **Version 0.3 en développement — application de bureau C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian.**
 Cette version ajoute les mises à jour GitHub, les sauvegardes automatiques, la comparaison de moteurs et les index de grandes bibliothèques. Elle ne constitue pas encore l’intégralité du catalogue de fonctionnalités imaginé pour Trait64. Le périmètre exact et la suite sont décrits dans [docs/ROADMAP.md](docs/ROADMAP.md).
 
+L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
+
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
 ## Installer sur ton PC
@@ -14,7 +16,7 @@ Les [versions publiées](https://github.com/feuvrierbernardinisimhon-png/Trait64
 - **AppImage** : télécharge le fichier `.AppImage`, rends-le exécutable dans ses propriétés, puis ouvre-le. Si FUSE est absent, utilise `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage`. Stockfish reste un moteur externe : `sudo apt install stockfish`.
 - **Paquet Debian** : choisis `debian12` ou `debian13` selon `/etc/debian_version`, puis installe le fichier avec `sudo apt install ./nom-du-fichier.deb`. Les dépendances et le menu sont installés automatiquement.
 
-Après cette première installation, ouvre **Mises à jour**. Pour recevoir les préversions actuellement publiées, choisis **Développement** et configure l’accès GitHub privé. Le canal Stable ne reçoit que les véritables Releases stables. Une modification du code ne déclenche jamais de mise à jour stable. Voir [docs/UPDATES.md](docs/UPDATES.md).
+Après cette première installation, ouvre **Menu → Mises à jour**. Pour recevoir les préversions actuellement publiées, choisis **Développement** et configure l’accès GitHub privé. Le canal Stable ne reçoit que les véritables Releases stables. Une modification du code ne déclenche jamais de mise à jour stable. Voir [docs/UPDATES.md](docs/UPDATES.md).
 
 ### Compiler et installer depuis les sources
 
@@ -40,7 +42,7 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 
 ## Ce qui fonctionne
 
-- **Apparence** : cinq styles de pièces (Classique, Merida, Spatial, Pixel, Unicode), import de vos douze SVG, huit palettes d’échiquier, couleurs personnelles des cases et du fond, thème clair/sombre, coordonnées et repères réglables. Tous les choix sont mémorisés.
+- **Apparence** : cinq styles de pièces (Classique, Merida, Spatial, Pixel, Unicode), import de vos douze SVG, neuf palettes d’échiquier, couleurs personnelles des cases et du fond, thème clair/sombre, coordonnées et repères réglables. Tous les choix sont mémorisés.
 - **Échiquier** : clic/glisser, coups légaux, promotion au choix, échecs classiques et Chess960 (960 positions numérotées), éditeur graphique de position, inversion, flèches et cercles persistants dans le PGN.
 - **Études** : arbre de variantes, promotion/suppression de branches, commentaires, NAG, métadonnées, annuler/rétablir, jusqu’à 16 onglets récupérés au redémarrage, duplication et fusion de deux études de même racine.
 - **Fichiers** : PGN multijeux avec variantes, FEN, import/export EPD classique, conteneur T64 expérimental, diagramme PNG avec votre apparence et annotations, étude PDF avec diagramme et notation. L’import PGN depuis un fichier travaille partie par partie, en arrière-plan, avec progression et annulation transactionnelle. L’export PGN de bibliothèque écrit aussi partie par partie.
@@ -56,11 +58,11 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 
 ## Premiers pas
 
-Depuis l’accueil, **Charger les exemples**, puis ouvre une partie dans la bibliothèque. Parcours les coups avec les flèches. Reviens en arrière et joue un autre coup pour créer une variante.
+Depuis l’accueil vide, **Découvrir les parties d’exemple**, puis ouvre une partie dans la bibliothèque. Parcours les coups avec les flèches. Reviens en arrière et joue un autre coup pour créer une variante.
 
-Dans **Paramètres**, le chemin Stockfish est détecté si possible (souvent `/usr/games/stockfish`). Clique **Démarrer / appliquer**, puis **Analyser** dans l’atelier. L’analyse utilise le niveau maximal ; le réglage de force concerne le jeu contre le moteur.
+Dans **Menu → Paramètres**, le chemin Stockfish est détecté si possible (souvent `/usr/games/stockfish`). Clique **Démarrer / appliquer**, puis **Analyser** dans l’atelier. L’analyse utilise le niveau maximal ; le réglage de force concerne le jeu contre le moteur.
 
-Le bouton **Pièces & couleurs** personnalise l’échiquier et le fond. Dans l’atelier, **Bilan** analyse la ligne principale ; les seuils de classement sont des repères simples, pas une mesure certifiée du niveau de jeu. Les fichiers Syzygy sont à fournir séparément.
+Le bouton **Apparence** personnalise l’échiquier et le fond. Dans l’atelier, **Bilan** analyse la ligne principale ; les seuils de classement sont des repères simples, pas une mesure certifiée du niveau de jeu. Les fichiers Syzygy sont à fournir séparément.
 
 Pour mémoriser une ligne, place-toi **avant** son premier coup, puis **Créer une carte depuis ici**. L’entraînement reprend au maximum 40 demi-coups de la continuation principale. Il vérifie la ligne choisie, et non toutes les solutions équivalentes d’un problème tactique.
 
@@ -115,7 +117,7 @@ Import PGN depuis un fichier : pas de plafond global de 64 Mio, mais **64 Mio pa
 
 La recherche de positions inclut les variantes ; l’explorateur statistique utilise les lignes principales. Le bilan analyse uniquement la ligne principale : seuils fixes de 50/100/250 centipions pour imprécision/erreur/gaffe, dépendants du moteur et du budget choisi. La création de cartes depuis ce bilan concerne les échecs classiques et conserve une ligne de solution, sans reconnaître toutes les solutions équivalentes. Les résultats du bilan restent en mémoire ; **Annoter l’étude** enregistre les évaluations dans le PGN.
 
-Pas encore : comparaison simultanée de moteurs, moteur contre moteur, pendules à plusieurs périodes, Polyglot/SCID/ChessBase, suivi de couverture d’un répertoire, organisation de tournois, synchronisation, plugins, imports distants, format T64 compact final, AppImage/Flatpak et validation Windows/macOS. Le monogramme T64 reste provisoire.
+Pas encore : moteur contre moteur, pendules à plusieurs périodes, Polyglot/SCID/ChessBase, suivi de couverture d’un répertoire, organisation de tournois, synchronisation, plugins, imports distants, format T64 compact final, Flatpak et validation Windows/macOS. Le monogramme T64 reste provisoire.
 
 ## Licence et composants
 
