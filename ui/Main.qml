@@ -584,6 +584,7 @@ ApplicationWindow {
             RowLayout {TButton {text:"Démarrer / appliquer";accent:true;onClicked:controller.startEngine()} Label {text:controller.engineStatus;elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}}
             Rectangle {Layout.fillWidth:true;height:1;color:win.line}
             RowLayout {CheckBox {text:"Thème clair";checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} CheckBox {text:"Coordonnées de l’échiquier";checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
+            EngineOptions {backend:controller}
             Label {text:"Vos données : "+controller.preferences.dataPath;wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:10}
         }
     }

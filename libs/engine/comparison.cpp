@@ -82,8 +82,10 @@ void Comparison::start(const QVariantList &profiles, const QString &fen, const Q
                     scheduleChanged();
                 });
         slots_.push_back(std::move(slot));
+        auto options = p["uciOptions"].toMap();
+        options["UCI_LimitStrength"] = false;
         s->engine->start(p["enginePath"].toString(), threads, hash, p.value("multiPV", 3).toInt(), 20,
-                         p["syzygyPath"].toString());
+                         p["syzygyPath"].toString(), options);
     }
     fen_.clear();
     setPosition(fen, position, chess960);

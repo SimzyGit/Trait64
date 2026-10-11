@@ -65,6 +65,7 @@ Controller::Controller(const QString &path, QObject *parent)
     analysisTimer_.setSingleShot(true);
     analysisTimer_.setInterval(180);
     connect(&analysisTimer_, &QTimer::timeout, this, &Controller::requestEngine);
+    connect(&engine_, &t64::Uci::optionsChanged, this, &Controller::engineChanged);
     connect(&engine_, &t64::Uci::status, this, [this](const QString &v) {
         engineStatus_ = v;
         emit engineChanged();
@@ -845,10 +846,13 @@ void Controller::copyText(const QString &what) {
     emit message(what.toUpper() + " copié.");
 }
 void Controller::startEngine() {
+    auto options = settings_.value("uciOptions").toMap();
+    if (!playing_)
+        options["UCI_LimitStrength"] = false;
     engine_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
                   settings_.value("hash", 128).toInt(), settings_.value("multiPV", 3).toInt(),
                   playing_ ? settings_.value("skill", 12).toInt() : 20,
-                  settings_.value("syzygyPath").toString());
+                  settings_.value("syzygyPath").toString(), options);
     if (analysis_ || playing_)
         requestEngine();
 }

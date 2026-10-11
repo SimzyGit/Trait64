@@ -13,7 +13,12 @@ class Uci : public QObject {
     explicit Uci(QObject *parent = nullptr);
     ~Uci() override;
     void start(const QString &executable, int threads = 1, int hash = 128, int multiPV = 3, int skill = 20,
-               const QString &syzygyPath = {});
+               const QString &syzygyPath = {}, const QVariantMap &customOptions = {});
+    QVariantList options() const { return descriptors_; }
+    QString executable() const { return process_.program(); }
+    static QVariantMap parseOption(const QString &line);
+    static QString optionValue(const QVariantMap &descriptor, const QVariant &value);
+    bool pressOption(const QString &name);
     void analyse(const QString &fen, const QString &positionCommand, bool play = false,
                  int milliseconds = 800, int depth = 24, bool chess960 = false);
     void stop();
@@ -26,6 +31,7 @@ class Uci : public QObject {
     void bestMove(const QString &uci, const QString &fen);
     void completed(const QString &fen, const QVariantList &lines);
     void failed(const QString &reason);
+    void optionsChanged();
 
   private:
     enum State { Off, Handshake, WaitingReady, Ready, Searching, Stopping } state_ = Off;
@@ -39,6 +45,8 @@ class Uci : public QObject {
     int threads_ = 1, hash_ = 128, multiPV_ = 3, skill_ = 20, moveTime_ = 800;
     QMap<int, QVariantMap> variations_, exactVariations_;
     QSet<QString> options_;
+    QVariantList descriptors_;
+    QVariantMap customOptions_;
     void command(const QString &text);
     void consume();
     void parse(const QString &line);

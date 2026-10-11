@@ -11,6 +11,7 @@
 
 QVariantMap Controller::preferences() const {
     QVariantMap defaults{{"enginePath", ""},
+                         {"uciOptions", QVariantMap()},
                          {"threads", 1},
                          {"hash", 128},
                          {"multiPV", 3},
@@ -100,7 +101,13 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 throw std::runtime_error("Chemin invalide.");
         } else
             return;
+        if (key == "enginePath" && settings_.value(key) != clean) {
+            settings_.setValue("uciOptions", QVariantMap());
+            emit engineChanged();
+        }
         settings_.setValue(key, clean);
+        if (key == "enginePath")
+            emit engineChanged();
         emit preferencesChanged();
     } catch (const std::exception &e) {
         fail(e);

@@ -6,6 +6,76 @@
 #include <algorithm>
 
 namespace t64 {
+QVariantMap Uci::parseOption(const QString &line) {
+    if (line.size() > 8192 || line.contains('\n') || line.contains('\r') || line.contains(QChar(0)))
+        return {};
+    static const QRegularExpression header(
+        "^option name (.+?) type (check|spin|combo|string|button)(?: (.*))?$");
+    const auto match = header.match(line);
+    if (!match.hasMatch())
+        return {};
+    QVariantMap option{{"name", match.captured(1)}, {"type", match.captured(2)}};
+    static const QRegularExpression fields(
+        "(?:^| )(default|min|max|var) (.*?)(?= (?:default|min|max|var) |$)");
+    auto it = fields.globalMatch(match.captured(3));
+    QStringList choices;
+    while (it.hasNext()) {
+        auto field = it.next();
+        auto value = field.captured(2);
+        if (value == "<empty>")
+            value.clear();
+        if (field.captured(1) == "var")
+            choices << value;
+        else
+            option[field.captured(1)] = value;
+    }
+    option["choices"] = choices;
+    return option;
+}
+QString Uci::optionValue(const QVariantMap &option, const QVariant &value) {
+    const auto text = value.toString();
+    auto invalid = [] { throw std::runtime_error("Valeur UCI invalide ou hors limites."); };
+    if (text.size() > 4096 || text.contains('\n') || text.contains('\r') || text.contains(QChar(0)))
+        invalid();
+    const auto type = option["type"].toString();
+    if (type == "check") {
+        if (text == "true" || text == "1")
+            return "true";
+        if (text == "false" || text == "0")
+            return "false";
+        invalid();
+    } else if (type == "spin") {
+        bool ok, minOk, maxOk;
+        const auto number = text.toLongLong(&ok);
+        const auto minimum = option["min"].toLongLong(&minOk);
+        const auto maximum = option["max"].toLongLong(&maxOk);
+        if (!ok || !minOk || !maxOk || minimum > maximum || number < minimum || number > maximum)
+            invalid();
+        return QString::number(number);
+    } else if (type == "combo") {
+        if (!option["choices"].toStringList().contains(text))
+            invalid();
+        return text;
+    } else if (type == "string")
+        return text.isEmpty() ? "<empty>" : text;
+    invalid();
+    return {};
+}
+bool Uci::pressOption(const QString &name) {
+    if (state_ != Ready)
+        return false;
+    for (const auto &value : descriptors_) {
+        auto option = value.toMap();
+        if (option["name"] == name && option["type"] == "button") {
+            command("setoption name " + name);
+            state_ = WaitingReady;
+            command("isready");
+            timeout_.start(5000);
+            return true;
+        }
+    }
+    return false;
+}
 Uci::Uci(QObject *parent) : QObject(parent) {
     timeout_.setSingleShot(true);
     connect(&timeout_, &QTimer::timeout, this, [this] {
@@ -43,8 +113,12 @@ void Uci::command(const QString &text) {
         process_.write(text.toUtf8() + '\n');
 }
 void Uci::start(const QString &executable, int threads, int hash, int multiPV, int skill,
-                const QString &syzygyPath) {
+                const QString &syzygyPath, const QVariantMap &customOptions) {
     shutdown();
+    descriptors_.clear();
+    options_.clear();
+    emit optionsChanged();
+    customOptions_ = customOptions;
     threads_ = std::clamp(threads, 1, 32);
     hash_ = std::clamp(hash, 16, 4096);
     multiPV_ = std::clamp(multiPV, 1, 5);
@@ -64,6 +138,7 @@ void Uci::start(const QString &executable, int threads, int hash, int multiPV, i
     state_ = Handshake;
     emit status("Connexion au moteur…");
     process_.setProgram(executable);
+    process_.setWorkingDirectory(QFileInfo(executable).absolutePath());
     process_.setArguments({});
     process_.start();
 }
@@ -161,7 +236,13 @@ void Uci::parse(const QString &line) {
         return;
     }
     if (line.startsWith("option name ")) {
-        options_.insert(line.mid(12).section(" type ", 0, 0));
+        const auto option = parseOption(line);
+        const auto name = option["name"].toString();
+        if (state_ == Handshake && !option.isEmpty() && descriptors_.size() < 256 &&
+            !options_.contains(name)) {
+            options_.insert(name);
+            descriptors_ << option;
+        }
         return;
     }
     if (line == "uciok" && state_ == Handshake) {
@@ -171,6 +252,22 @@ void Uci::parse(const QString &line) {
                 command("setoption name " + pair.first + " value " + QString::number(pair.second));
         if (options_.contains("SyzygyPath") && !syzygyPath_.isEmpty())
             command("setoption name SyzygyPath value " + syzygyPath_);
+        const QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
+        for (const auto &value : descriptors_) {
+            const auto option = value.toMap();
+            const auto name = option["name"].toString();
+            if (!managed.contains(name) && customOptions_.contains(name)) {
+                try {
+                    command("setoption name " + name + " value " + optionValue(option, customOptions_[name]));
+                } catch (const std::exception &e) {
+                    shutdown();
+                    emit failed(name + " : " + QString::fromUtf8(e.what()));
+                    emit status(name + " : " + QString::fromUtf8(e.what()));
+                    return;
+                }
+            }
+        }
+        emit optionsChanged();
         state_ = WaitingReady;
         command("isready");
         timeout_.start(5000);

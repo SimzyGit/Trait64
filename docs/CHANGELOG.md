@@ -1,5 +1,12 @@
 # Changements
 
+## En développement — moteurs et bases
+
+- Options UCI découvertes au handshake et contrôlées selon leurs types et limites.
+- Réglages propres à chaque profil, y compris les options du moteur ; les analyses désactivent la réduction de force.
+- Répertoire de travail du moteur adapté aux réseaux NNUE et livres locaux.
+- Interface existante conservée.
+
 ## 0.3 — préversions de développement
 
 Refonte de l’interface : navigation supérieure numérotée, accueil « carnet » avec position réelle, identité encre/papier/cuivre, typographie serif et notation monospace. Palette Trait64 ajoutée sans écraser les choix personnels. Commandes de l’échiquier regroupées et clavier désactivé pendant les menus ; focus visible des boutons. Géométrie et navigation testées à 960 × 640. Aucun changement de schéma ou de données pour cette refonte.

@@ -190,9 +190,23 @@ int main(int argc, char **argv) {
             c.loadEngineProfile(0);
             check(c.preferences()["threads"].toInt() == 1, "Engine profile restores settings");
             if (QFileInfo(c.preferences()["enginePath"].toString()).isExecutable()) {
+                QElapsedTimer optionsTimer;
+                optionsTimer.start();
+                while (c.engineOptions().isEmpty() && optionsTimer.elapsed() < 5000)
+                    QTest::qWait(20);
+                check(!c.engineOptions().isEmpty(), "Controller exposes UCI options");
+                c.setEngineOption("UCI_Elo", 1500);
+                c.saveEngineProfile("Test");
+                c.setEngineOption("UCI_Elo", 2000);
                 c.setPreference("hash", 16);
                 c.setPreference("analysisDepth", 8);
                 c.saveEngineProfile("Second test");
+                c.loadEngineProfile(0);
+                check(c.preferences()["uciOptions"].toMap()["UCI_Elo"].toInt() == 1500,
+                      "First profile preserves custom option");
+                c.loadEngineProfile(1);
+                check(c.preferences()["uciOptions"].toMap()["UCI_Elo"].toInt() == 2000,
+                      "Second profile has independent custom option");
                 c.compareEngines({0, 1});
                 QElapsedTimer comparisonTimer;
                 comparisonTimer.start();

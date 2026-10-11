@@ -24,6 +24,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
+    Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
@@ -44,6 +45,12 @@ class Controller : public QObject {
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
     QVariantList cards() const { return cards_; }
+    QVariantList engineOptions() const {
+        return settings_.value("enginePath").toString() == engine_.executable() ? engine_.options()
+                                                                                : QVariantList();
+    }
+    Q_INVOKABLE void setEngineOption(const QString &name, const QVariant &value);
+    Q_INVOKABLE void pressEngineOption(const QString &name);
     QVariantList engineLines() const { return engineLines_; }
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;

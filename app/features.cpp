@@ -440,7 +440,7 @@ void Controller::saveEngineProfile(const QString &name) {
     auto list = settings_.value("engineProfiles").toList();
     QVariantMap p{{"name", name.trimmed().left(80)}};
     for (const auto &k : QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "moveTime",
-                                     "analysisDepth", "syzygyPath"})
+                                     "analysisDepth", "syzygyPath", "uciOptions"})
         p[k] = preferences()[k];
     for (int i = 0; i < list.size(); ++i)
         if (list[i].toMap()["name"] == p["name"]) {
@@ -502,8 +502,10 @@ void Controller::loadEngineProfile(int index) {
         return;
     auto p = list[index].toMap();
     for (auto it = p.begin(); it != p.end(); ++it)
-        if (it.key() != "name")
+        if (it.key() != "name" && it.key() != "uciOptions")
             setPreference(it.key(), it.value());
+    settings_.setValue("uciOptions", p.value("uciOptions", QVariantMap()));
+    emit preferencesChanged();
     startEngine();
 }
 void Controller::removeEngineProfile(int index) {
@@ -535,8 +537,11 @@ void Controller::analyseGame(int milliseconds) {
     reviewIndex_ = 0;
     reviewMilliseconds_ = std::clamp(milliseconds, 100, 10000);
     reviewing_ = true;
+    auto options = settings_.value("uciOptions").toMap();
+    options["UCI_LimitStrength"] = false;
     reviewer_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
-                    settings_.value("hash", 128).toInt(), 1, 20, settings_.value("syzygyPath").toString());
+                    settings_.value("hash", 128).toInt(), 1, 20, settings_.value("syzygyPath").toString(),
+                    options);
     if (reviewing_)
         requestReviewPosition();
     emit reviewChanged();
@@ -944,4 +949,29 @@ void Controller::exportDiagram(const QString &url) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+
+void Controller::setEngineOption(const QString &name, const QVariant &value) {
+    try {
+        const QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
+        need(!managed.contains(name), "Utilisez les réglages principaux pour cette option.");
+        for (const auto &row : engineOptions()) {
+            const auto option = row.toMap();
+            if (option["name"] != name)
+                continue;
+            const auto clean = t64::Uci::optionValue(option, value);
+            auto values = settings_.value("uciOptions").toMap();
+            values[name] = clean == "<empty>" ? QString() : clean;
+            settings_.setValue("uciOptions", values);
+            emit preferencesChanged();
+            return;
+        }
+        need(false, "Démarrez ce moteur pour lire ses options UCI.");
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::pressEngineOption(const QString &name) {
+    if (!engine_.pressOption(name))
+        emit message("Arrêtez l’analyse avant cette commande UCI.", true);
 }

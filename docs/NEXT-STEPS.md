@@ -40,3 +40,7 @@ Stockfish doit être installé pour ne pas ignorer la suite moteur. Tests sans i
 Les outils AppImage sont épinglés par empreinte. Si une release continue amont remplace ses assets, actualiser les identifiants et SHA-256 après vérification des sources ; ne jamais désactiver le contrôle pour faire passer la CI. Le téléchargement des sources LGPL/GPL embarquées fait partie de la publication.
 
 Pour les 0.1/0.2 déjà installées, amorçage manuel obligatoire : elles ne possèdent pas le module de mise à jour. Le dépôt privé nécessite le compte GitHub de l’utilisateur ; ne jamais intégrer de jeton au programme.
+
+## Lot en cours — 11 octobre 2026
+
+Options UCI terminées dans `libs/engine/uci.*`, contrôleur et `ui/EngineOptions.qml`. Six suites locales passent, dont les profils indépendants et les valeurs invalides. Suite immédiate : catalogue de moteurs vérifiés et bases nommées (migration 4), puis filtres avancés. Aucune estimation Elo artificielle dans les bilans.
