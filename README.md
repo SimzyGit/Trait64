@@ -7,8 +7,13 @@
 ![Qt 6](https://img.shields.io/badge/Qt-6-41CD52.svg)
 ![Linux](https://img.shields.io/badge/platform-Linux-FCC624.svg)
 ![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
+[![Linux CI](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml)
+
+[**Fonctionnalités**](#ce-qui-fonctionne) · [**Comparaison**](#comparaison-avec-des-logiciels-similaires) · [**Roadmap**](docs/ROADMAP.md) · [**Releases**](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) · [**Compilation**](#compiler-sans-linstallateur)
 
 Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèque de parties, analyse UCI, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
+
+**English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, SQLite chess databases, UCI/Stockfish engine analysis, MultiPV, Chess960, opening preparation, position search, game annotation and chess training** in one offline-capable application.
 
 > **Version 0.3 en développement** — C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : les fonctions essentielles sont déjà utilisables, mais le périmètre prévu est plus large. Voir [docs/ROADMAP.md](docs/ROADMAP.md).
 
@@ -19,6 +24,10 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 - **Orienté étude** : navigation PGN, variantes, commentaires, préparation, analyse moteur et entraînement dans un même flux de travail.
 - **Interopérable** : PGN et FEN restent au centre ; Trait64 évite l’enfermement dans un format propriétaire.
 - **Extensible** : architecture destinée à accueillir de nouveaux moteurs, formats, bases, outils de recherche et modules d’entraînement.
+
+### À qui s’adresse Trait64 ?
+
+Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leurs parties**, construire une **base de données d’échecs locale**, travailler leurs **ouvertures**, comparer plusieurs **moteurs UCI** comme Stockfish, rechercher des positions et conserver leurs études sans dépendre d’un service cloud. Le projet privilégie Linux aujourd’hui, tout en gardant une architecture portable pour de futures versions Windows et macOS.
 
 L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
 
