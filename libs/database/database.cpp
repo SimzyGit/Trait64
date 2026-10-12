@@ -47,7 +47,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 3, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 4, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -113,6 +113,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
             }
         }
         upgradeV3(v);
+        upgradeV4(v);
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
@@ -294,6 +295,41 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         for (int i = 0; i < 6; ++i)
             args << "%" + query + "%";
     }
+    if (filters.value("sourceId").toLongLong() > 0) {
+        statement += " AND g.id IN(SELECT game_id FROM source_games WHERE source_id=?)";
+        args << filters["sourceId"].toLongLong();
+    }
+    if (!filters.value("player").toString().isEmpty()) {
+        const auto name = filters["player"].toString();
+        const auto colour = filters["colour"].toString();
+        const bool exact = filters["exactNames"].toBool();
+        const auto op = exact ? "=?" : " LIKE ?";
+        if (colour == "white" || colour == "black") {
+            statement += " AND g." + colour + op;
+            args << (exact ? name : "%" + name + "%");
+        } else {
+            statement += " AND (g.white" + QString(op) + " OR g.black" + op + ")";
+            args << (exact ? name : "%" + name + "%") << (exact ? name : "%" + name + "%");
+        }
+    }
+    const auto codes = filters.value("openingCodes").toStringList();
+    if (filters.value("openingRequested").toBool()) {
+        QStringList placeholders;
+        for (const auto &code : codes) {
+            placeholders << "?";
+            args << code;
+        }
+        statement += codes.empty() ? " AND 0" : " AND g.eco IN(" + placeholders.join(',') + ")";
+    }
+    for (const auto &bound : QStringList{"ecoFrom", "ecoTo"}) {
+        const auto code = filters.value(bound).toString().trimmed().toUpper();
+        if (!code.isEmpty()) {
+            check(QRegularExpression("^[A-E][0-9]{2}$").match(code).hasMatch(),
+                  "Code ECO invalide (A00 à E99).");
+            statement += bound == "ecoFrom" ? " AND g.eco>=?" : " AND g.eco<=?";
+            args << code;
+        }
+    }
     if (!result.isEmpty()) {
         statement += " AND g.result=?";
         args << result;
@@ -318,6 +354,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (filters.value("minElo").toInt() > 0) {
         statement += " AND g.white_elo>=? AND g.black_elo>=?";
         args << filters["minElo"] << filters["minElo"];
+    }
+    if (filters.value("maxElo").toInt() > 0) {
+        statement += " AND g.white_elo<=? AND g.black_elo<=? AND g.white_elo>0 AND g.black_elo>0";
+        args << filters["maxElo"] << filters["maxElo"];
     }
     if (filters.value("maxPlies").toInt() > 0) {
         statement += " AND g.plies<=?";

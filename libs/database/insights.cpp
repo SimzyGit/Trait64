@@ -125,7 +125,8 @@ int Database::rebuildIndexes(const std::function<bool(int)> &progress) {
 
 #include <fstream>
 namespace t64 {
-int Database::importPgnFile(const QString &path, const std::function<bool(int)> &progress) {
+int Database::importPgnFile(const QString &path, const std::function<bool(int)> &progress,
+                            const QVariantMap &source) {
     std::ifstream input(path.toStdString(), std::ios::binary);
     if (!input)
         throw std::runtime_error("Impossible de lire le PGN.");
@@ -133,16 +134,19 @@ int Database::importPgnFile(const QString &path, const std::function<bool(int)> 
     int processed = 0;
     sql("SAVEPOINT stream_import");
     try {
+        const auto sourceId = registerSource(source);
         readPgn(input, [&](Game &&game) {
-            if (!progress(processed))
+            if (progress && !progress(processed))
                 throw std::runtime_error("Import interrompu : aucune partie ajoutée.");
-            save(game);
+            linkSource(sourceId, save(game));
             ++processed;
         });
         if (!processed)
             throw std::runtime_error("Aucune partie trouvée.");
-        if (!progress(processed))
+        if (progress && !progress(processed))
             throw std::runtime_error("Import interrompu : aucune partie ajoutée.");
+        recordImport(sourceId, path, source.value("sha256", QString("")).toString(), processed,
+                     stats()["games"].toInt() - before);
         sql("RELEASE stream_import");
     } catch (...) {
         sql("ROLLBACK TO stream_import");

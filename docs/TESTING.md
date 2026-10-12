@@ -50,3 +50,11 @@ T64_SCREENSHOT_PAGE=0 ./build/trait64 --smoke-test
 ```
 
 `T64_SCREENSHOT_PAGE=2` montre l’analyse ; `T64_SCREENSHOT_THEME=light` sélectionne le thème clair pour cette session temporaire. Les tailles contrôlées visuellement sont 1440 × 940, 1366 × 768 et 960 × 640.
+
+## Catalogue et sources — 12 octobre 2026
+
+Sept suites : core, content, updates, storage, engine, desktop_smoke, desktop_interactions. Local : 7/7, environ 12 s. Le test content couvre hôtes/HTTPS, empreinte, annulation, archive ZIP, traversée de chemins, liens, réponses HTML, permissions et catalogue hors ligne. Storage couvre migration ancienne, dédoublonnage entre sources, appartenance multiple, annulation transactionnelle, export et compteurs après corbeille/restauration. Les dialogues catalogue et recherche sont ouverts dans le test Qt, qui échoue sur les avertissements QML.
+
+Tests supplémentaires effectués avec les archives officielles réellement téléchargées (empreintes du catalogue) : Stockfish 19, Arasan 26, PlentyChess 8 ; chaque moteur démarre via UCI et retourne un coup légal. Steinitz.zip et WorldChamp2024.pgn sont extraits/parsés. `T64_CONTENT_FIXTURES=/dossier ./build/content_tests` répète ces tests si les fichiers y sont déjà présents. `T64_CONTENT_NETWORK=1 ./build/content_tests` teste volontairement un vrai téléchargement HTTPS PGN Mentor et la suppression du fichier extrait ; ce test réseau est exclu des tests hors ligne par défaut.
+
+La compilation graphique nécessite désormais `libarchive-dev`. Aucun test local ne constitue une installation sur le PC Voyager de l’utilisateur.

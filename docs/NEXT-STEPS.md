@@ -41,6 +41,14 @@ Les outils AppImage sont épinglés par empreinte. Si une release continue amont
 
 Pour les 0.1/0.2 déjà installées, amorçage manuel obligatoire : elles ne possèdent pas le module de mise à jour. Le dépôt privé nécessite le compte GitHub de l’utilisateur ; ne jamais intégrer de jeton au programme.
 
-## Lot en cours — 11 octobre 2026
+## Point de reprise — 12 octobre 2026
 
-Options UCI terminées dans `libs/engine/uci.*`, contrôleur et `ui/EngineOptions.qml`. Six suites locales passent, dont les profils indépendants et les valeurs invalides. Suite immédiate : catalogue de moteurs vérifiés et bases nommées (migration 4), puis filtres avancés. Aucune estimation Elo artificielle dans les bilans.
+Dernière tâche achevée : profils UCI indépendants puis catalogue moteurs/bases, migration 4 et filtres combinés. Branche `feat/engine-catalog-databases` ; `main` conserve les modifications de présentation ajoutées séparément par l’utilisateur. Ne pas repartir de l’ancienne copie locale 759c3dc.
+
+Fichiers : `libs/content/{content,package}.*`, `assets/content/`, `app/content.cpp`, `ui/Downloads.qml`, `libs/database/sources.cpp`, contrôleur et Main. Les sept suites locales passent. Vérification supplémentaire des trois paquets moteurs officiels par empreinte, extraction, handshake et coup légal ; deux PGN réels parsés ; téléchargement HTTPS réel PGN Mentor via Qt et suppression locale réussis. Aucun de ces binaires n’est incorporé au dépôt.
+
+Tâche suivante : recherche SQL réellement annulable en arrière-plan, pagination par curseur, puis import reprenable. Les recherches actuelles et l’export restent synchrones ; la pagination utilise encore OFFSET. Les futurs modèles Qt incrémentaux et les benchmarks sur 1/2/5/10 millions de parties réelles restent à faire. Le tableau détaillé de toutes les demandes est dans ROADMAP.
+
+Précautions : PlentyChess 8 exige glibc 2.38 (donc téléchargement désactivé sur Debian 12) ; Stockfish 19 et Arasan 26 ont d’autres minima explicités au catalogue. Le catalogue est livré avec l’application, pas remplacé depuis une URL non vérifiée. Les anciennes versions et profils sont conservés lors d’une mise à jour de moteur ; la gestion de toutes les versions historiques pourra être étendue. Les cartes SRS actuelles et les bilans ne sont pas des répertoires complets et ne fournissent aucune estimation Elo artificielle.
+
+Tests à poursuivre : CI Debian 12/13 après ajout de libarchive-dev, restauration depuis v3 réelle, navigation et annulation sur corpus volumineux, réseau interrompu. Ne pas modifier les sources C++/CMake pendant une compilation locale ; utiliser un seul processus compilateur dans cet environnement.

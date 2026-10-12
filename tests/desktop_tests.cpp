@@ -119,6 +119,14 @@ int main(int argc, char **argv) {
                 window->setProperty("page", i);
                 QTest::qWait(20);
             }
+            for (const auto *name : {"downloadsDialog", "advancedDialog", "settingsDialog"}) {
+                auto *dialog = window->findChild<QObject *>(name);
+                check(dialog != nullptr, "New feature dialog exists");
+                QMetaObject::invokeMethod(dialog, "open");
+                QTest::qWait(80);
+                QMetaObject::invokeMethod(dialog, "close");
+                QTest::qWait(10);
+            }
             check(warnings.empty(), "QML warnings encountered");
         }
         {

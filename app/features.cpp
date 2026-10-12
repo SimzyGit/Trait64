@@ -373,7 +373,7 @@ void Controller::mergeGame(qint64 id) {
     }
 }
 void Controller::searchAdvanced(const QVariantMap &filters) {
-    advancedFilters_ = filters;
+    advancedFilters_ = openingFilters(filters);
     refreshLibrary();
 }
 void Controller::inspectPlayer(const QString &name) {
@@ -447,8 +447,8 @@ void Controller::saveEngineProfile(const QString &name) {
             list.removeAt(i);
             break;
         }
-    if (list.size() >= 20) {
-        emit message("20 profils maximum.", true);
+    if (list.size() >= 100) {
+        emit message("100 profils maximum.", true);
         return;
     }
     list << p;

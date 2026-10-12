@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "comparison.h"
+#include "content.h"
 #include "database.h"
 #include "uci.h"
 #include "updater.h"
@@ -15,6 +16,9 @@
 
 class Controller : public QObject {
     Q_OBJECT
+    Q_PROPERTY(t64::Content *content READ content CONSTANT)
+    Q_PROPERTY(QVariantList sources READ sources NOTIFY libraryChanged)
+    Q_PROPERTY(QVariantList importHistory READ importHistory NOTIFY libraryChanged)
     Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
@@ -38,6 +42,12 @@ class Controller : public QObject {
   public:
     explicit Controller(const QString &dataPath, QObject *parent = nullptr);
     ~Controller() override;
+    t64::Content *content() const { return content_.get(); }
+    QVariantList sources() const { return sources_; }
+    QVariantList importHistory() const { return importHistory_; }
+    Q_INVOKABLE void exportSource(const QString &url, qint64 source);
+    Q_INVOKABLE void searchLibrary(const QString &query, const QString &result, bool favorite, bool position,
+                                   bool trash, const QVariantMap &filters);
     QVariantMap state() const { return state_; }
     QVariantList squares() const { return squares_; }
     QVariantList notation() const { return notation_; }
@@ -153,6 +163,11 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
+    std::unique_ptr<t64::Content> content_;
+    QVariantList sources_, importHistory_;
+    void initContent();
+    void importSourceFile(const QString &url, const QVariantMap &source);
+    QVariantMap openingFilters(const QVariantMap &filters) const;
     struct ImportResult {
         int count = 0, duplicates = 0;
         QString error, operation = "import";

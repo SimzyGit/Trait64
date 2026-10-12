@@ -104,6 +104,12 @@ Controller::Controller(const QString &path, QObject *parent)
         taskPoll_.stop();
         emit busyChanged();
         const auto r = importer_.result();
+        if (r.operation == "source" && content_)
+            content_->reportImport(r.error.isEmpty()
+                                       ? QString("Base importée : %1 nouvelles parties, %2 déjà présentes.")
+                                             .arg(r.count)
+                                             .arg(r.duplicates)
+                                       : r.error);
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())
@@ -143,6 +149,7 @@ Controller::Controller(const QString &path, QObject *parent)
     }
     initFeatures();
     initReliability();
+    initContent();
     refreshLibrary();
     refresh();
 }
@@ -170,6 +177,8 @@ void Controller::refreshLibrary() {
         stats_ = db_->stats();
         cards_ = db_->cards();
         players_ = db_->players();
+        sources_ = db_->sources();
+        importHistory_ = db_->importHistory();
         emit libraryChanged();
     } catch (const std::exception &e) {
         fail(e);
@@ -445,6 +454,9 @@ void Controller::importText(const QString &text) {
     importBytes(text.toUtf8());
 }
 void Controller::importFile(const QString &url) {
+    importSourceFile(url, {});
+}
+void Controller::importSourceFile(const QString &url, const QVariantMap &source) {
     try {
         require(!busy_, "Un traitement est déjà en cours.");
         const auto path = localPath(url);
@@ -460,14 +472,18 @@ void Controller::importFile(const QString &url) {
             const auto databasePath = db_->path();
             const auto canceled = cancelTask_;
             const auto progress = taskProgress_;
-            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress] {
+            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress, source] {
                 ImportResult r;
+                r.operation = source.isEmpty() ? "import" : "source";
                 try {
                     t64::Database db(databasePath);
-                    r.count = db.importPgnFile(path, [&](int n) {
-                        progress->store(n);
-                        return !canceled->load();
-                    });
+                    r.count = db.importPgnFile(
+                        path,
+                        [&](int n) {
+                            progress->store(n);
+                            return !canceled->load();
+                        },
+                        source);
                     r.duplicates = progress->load() - r.count;
                 } catch (const std::exception &e) {
                     r.error = QString::fromUtf8(e.what());

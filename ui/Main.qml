@@ -34,8 +34,8 @@ ApplicationWindow {
     function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#171b21":"#ffffff"}
     property int libraryOffset:0
     property var advanced:({})
-    function applyAdvanced(){var f=Object.assign({},advanced);f.offset=libraryOffset;controller.searchAdvanced(f)}
-    function filterLibrary() {libraryOffset=0;applyAdvanced();controller.search(searchField.text, resultBox.currentIndex===0 ? "" : resultBox.currentText, favoriteCheck.checked, positionCheck.checked, trashCheck.checked)}
+    function applyAdvanced(){var f=Object.assign({},advanced);f.offset=libraryOffset;f.sourceId=baseBox.currentIndex>0?baseBox.currentValue:0;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
+    function filterLibrary() {libraryOffset=0;applyAdvanced()}
     function openExport(all) {exportAll=all;exportDialog.open()}
 
     header: Rectangle {
@@ -53,6 +53,7 @@ ApplicationWindow {
                 TButton {text: "Commandes  /  Ctrl K"; onClicked: commands.open()}
                 TButton {id: appMenuButton; objectName: "appMenuButton"; text: "Menu  ≡"; flat: true; onClicked: appMenu.open()
                     Menu {id: appMenu; y: appMenuButton.height
+                        MenuItem {text: "Moteurs et bases à télécharger"; onTriggered: downloadsDialog.open()}
                         MenuItem {text: "Paramètres"; onTriggered: settingsDialog.open()}
                         MenuItem {text: "Pièces, échiquier et couleurs"; onTriggered: appearanceDialog.open()}
                         MenuItem {text: "Mises à jour"; onTriggered: updatesDialog.open()}
@@ -112,8 +113,14 @@ ApplicationWindow {
                 RowLayout {Layout.fillWidth:true
                     ColumnLayout {spacing:6;Label {text:"Votre bibliothèque";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal} Label {text:(controller.stats.games||0)+" parties · PGN, études et collections";color:win.muted}}
                     Item {Layout.fillWidth:true}
+                    TButton {text:"Téléchargements";onClicked:downloadsDialog.open()}
                     TButton {text:"Exporter la bibliothèque";onClicked:win.openExport(true)}
                     TButton {text:"+  Importer";accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
+                }
+                RowLayout {Layout.fillWidth:true;spacing:10
+                    ComboBox {id:baseBox;objectName:"baseSelector";Layout.preferredWidth:260;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:win.filterLibrary()}
+                    TButton {text:"Exporter cette base";enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
+                    Item {Layout.fillWidth:true}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
                     TextField {id:searchField;placeholderText:"Rechercher un joueur, une ouverture, un tournoi…";Layout.fillWidth:true;onTextChanged:searchTimer.restart()}
@@ -458,6 +465,8 @@ ApplicationWindow {
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
+    Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}
+    Native.FileDialog {id:sourceExportDialog;title:"Exporter cette base en PGN";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
     Native.FileDialog {id:importDialog;title:"Importer des parties";nameFilters:["Parties et positions (*.pgn *.t64 *.epd *.fen)","Tous les fichiers (*)"];onAccepted:controller.importFile(selectedFile.toString())}
     Native.FileDialog {id:exportDialog;title:"Exporter en PGN ou archive T64 expérimentale";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)","Position EPD (*.epd)","Archive T64 expérimentale (*.t64)"];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
     Native.FileDialog {id:backupDialog;title:"Créer une sauvegarde complète";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"sqlite";nameFilters:["Bibliothèque Trait64 (*.sqlite)"];onAccepted:controller.backup(selectedFile.toString())}
@@ -584,6 +593,7 @@ ApplicationWindow {
             RowLayout {TButton {text:"Démarrer / appliquer";accent:true;onClicked:controller.startEngine()} Label {text:controller.engineStatus;elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}}
             Rectangle {Layout.fillWidth:true;height:1;color:win.line}
             RowLayout {CheckBox {text:"Thème clair";checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} CheckBox {text:"Coordonnées de l’échiquier";checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
+            TButton {text:"Télécharger d’autres moteurs";onClicked:{settingsDialog.close();downloadsDialog.open()}}
             EngineOptions {backend:controller}
             Label {text:"Vos données : "+controller.preferences.dataPath;wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:10}
         }
@@ -597,22 +607,27 @@ ApplicationWindow {
             Label {text:"Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.";wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:11;color:win.muted}
         }
     }
-    Dialog {id:advancedDialog;title:"Recherche avancée";anchors.centerIn:parent;width:600;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        GridLayout {anchors.fill:parent;columns:2;columnSpacing:12;rowSpacing:10
-            Repeater {model:[{key:"white",label:"Blancs"},{key:"black",label:"Noirs"},{key:"event",label:"Événement"},{key:"eco",label:"Code ECO"},{key:"collection",label:"Collection"},{key:"dateFrom",label:"À partir de (AAAA.MM.JJ)"},{key:"dateTo",label:"Jusqu’au (AAAA.MM.JJ)"},{key:"material",label:"Matériel exact (ex. KRkrp)"}]
+    Dialog {id:advancedDialog;objectName:"advancedDialog";title:"Recherche avancée";anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        property var draft:({})
+        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=Math.max(0,["updated","date","players","elo","length"].indexOf(draft.sort||"updated"));colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""))}
+        ScrollView {anchors.fill:parent;contentWidth:availableWidth;clip:true
+        GridLayout {width:parent.width;columns:2;columnSpacing:12;rowSpacing:10
+            Repeater {model:[{key:"player",label:"Joueur (selon la couleur ci-dessous)"},{key:"openingName",label:"Ouverture : Française, Najdorf… → ECO"},{key:"white",label:"Blancs"},{key:"black",label:"Noirs"},{key:"event",label:"Tournoi / événement"},{key:"eco",label:"Code ECO ou fragment"},{key:"ecoFrom",label:"ECO de (ex. B20)"},{key:"ecoTo",label:"ECO à (ex. B99)"},{key:"collection",label:"Collection personnelle"},{key:"material",label:"Matériel exact (ex. KRkrp)"},{key:"dateFrom",label:"À partir de (AAAA.MM.JJ)"},{key:"dateTo",label:"Jusqu’au (AAAA.MM.JJ)"}]
                 delegate:ColumnLayout {required property var modelData;Layout.fillWidth:true
                     Label {text:modelData.label;font.pixelSize:11}
-                    TextField {Layout.fillWidth:true;text:win.advanced[modelData.key]||"";onTextEdited:win.advanced[modelData.key]=text}
+                    TextField {Layout.fillWidth:true;text:advancedDialog.draft[modelData.key]||"";onTextEdited:advancedDialog.draft[modelData.key]=text}
                 }
             }
+            Label {text:"Couleur du joueur"} ComboBox {id:colourFilter;model:["Les deux couleurs","Blancs","Noirs"]}
             Label {text:"Elo minimal des deux joueurs"} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:"Elo maximal (0 = sans limite)"} SpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}
             Label {text:"Demi-coups maximum (0 = tous)"} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
-            CheckBox {text:"Correspondance exacte des champs texte";checked:win.advanced.exactNames||false;Layout.columnSpan:2;onToggled:win.advanced.exactNames=checked}
+            CheckBox {text:"Correspondance exacte des champs texte";checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
             Label {text:"Trier par"} ComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
-            Label {text:"Le matériel et les positions sont recherchés dans toutes les variantes. P = pion, N = cavalier, B = fou, R = tour, Q = dame, K = roi ; minuscules pour les Noirs.";wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:10;color:win.muted}
-            TButton {text:"Effacer les filtres";onClicked:{win.advanced={};minElo.value=0;maxPlies.value=0;sortBy.currentIndex=0;win.libraryOffset=0;win.applyAdvanced();advancedDialog.close()}}
-        }
-        onAccepted:{win.advanced.minElo=minElo.value;win.advanced.maxPlies=maxPlies.value;win.advanced.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.libraryOffset=0;win.applyAdvanced()}
+            Label {text:"Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.";wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:10;color:win.muted}
+            TButton {text:"Effacer les filtres";onClicked:{win.advanced={};win.libraryOffset=0;win.applyAdvanced();advancedDialog.close()}}
+        }}
+        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.advanced=Object.assign({},draft);win.libraryOffset=0;win.applyAdvanced()}
     }
     Dialog {id:commands;title:"Commandes rapides";anchors.centerIn:parent;width:510;modal:true
         ColumnLayout {anchors.fill:parent;spacing:8
@@ -625,7 +640,7 @@ ApplicationWindow {
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
-    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!appMenu.visible&&!analysisMenu.visible&&!positionMenu.visible}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!appMenu.visible&&!analysisMenu.visible&&!positionMenu.visible}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
     Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}

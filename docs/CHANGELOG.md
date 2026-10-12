@@ -5,6 +5,10 @@
 - Options UCI découvertes au handshake et contrôlées selon leurs types et limites.
 - Réglages propres à chaque profil, y compris les options du moteur ; les analyses désactivent la réduction de force.
 - Répertoire de travail du moteur adapté aux réseaux NNUE et livres locaux.
+- Catalogue de trois moteurs externes vérifiés (Stockfish, Arasan, PlentyChess), compatible avec le système détecté, progression/annulation et extraction protégée. Pas de lancement automatique.
+- 42 collections PGN à la demande : champions, championnes disponibles, matchs historiques et ouvertures. Source et conditions explicites.
+- Migration 4 sauvegardée : bases nommées, appartenance multiple sans doublons exacts, compteurs transactionnels, historique des imports et export PGN d’une base.
+- Filtres combinant base, ouverture par nom/ECO, plage ECO, joueur/couleur, date, tournoi, Elo, matériel et position. Annuler une recherche avancée ne modifie plus les filtres actifs.
 - Interface existante conservée.
 
 ## 0.3 — préversions de développement

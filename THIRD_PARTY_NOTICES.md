@@ -39,3 +39,15 @@ Notices amont conservées dans `assets/pieces/LICHESS-COPYING.md`. Textes des li
 SQLite est utilisé par le greffon Qt SQL système (https://sqlite.org/). Le style Unicode utilise la police système DejaVu Sans installée séparément (https://dejavu-fonts.github.io/). Aucune police n’est copiée dans le dépôt. Le greffon SVG de Qt est une dépendance système.
 
 Les exemples PGN sont des lignes pédagogiques écrites pour ce projet. Aucune base propriétaire ChessBase ni aucun actif de marque En Croissant n’est incorporé. Les ressources libres citées ci-dessus n’impliquent aucune affiliation à leurs auteurs ni à Lichess.
+
+## Extraction des téléchargements
+
+[libarchive](https://www.libarchive.org/) est une bibliothèque système liée dynamiquement, sous licence BSD. Trait64 utilise son API de lecture ZIP/tar/gzip et impose en plus des plafonds, une extraction dans un dossier provisoire et le rejet des chemins sortants, liens et fichiers spéciaux. Les avis et sources des bibliothèques embarquées dans l’AppImage sont collectés par le pipeline existant.
+
+## Moteurs proposés dans le catalogue
+
+Les exécutables restent des téléchargements externes depuis les publications officielles : Stockfish 19 (GPL-3.0), Arasan 26.0 (MIT avec composants Syzygy BSD), PlentyChess 8.0.0 (GPL-3.0). Les URLs de code source et les empreintes figurent dans `assets/content/catalog.json`. Les licences fournies dans les archives sont conservées. Le texte GPL-3.0 de PlentyChess est conservé dans `assets/content/PlentyChess-LICENSE.txt` car sa publication Linux générique est un binaire seul. Aucun exécutable n’est incorporé au dépôt. Un SHA-256 épinglé assure la correspondance avec le fichier examiné ; il n’est pas une signature indépendante du mainteneur.
+
+## Sources de parties à la demande
+
+[PGN Mentor](https://www.pgnmentor.com/files.html) propose des collections de joueurs, ouvertures et événements en téléchargement gratuit. Ce constat ne vaut pas licence ouverte de redistribution : les conditions et cette limite sont affichées dans le catalogue. Les fichiers sont téléchargés directement chez ce fournisseur sur demande ; ils ne sont pas redistribués dans Trait64, ni placés sous la licence AGPL du logiciel. Source et empreinte reçue sont conservées dans les reçus locaux et l’historique d’import.
