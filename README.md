@@ -11,11 +11,11 @@
 
 [**Fonctionnalités**](#ce-qui-fonctionne) · [**Comparaison**](#comparaison-avec-des-logiciels-similaires) · [**Roadmap**](docs/ROADMAP.md) · [**Releases**](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) · [**Compilation**](#compiler-sans-linstallateur)
 
-Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèque de parties, analyse UCI, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
+Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèques de parties, moteurs UCI, analyse, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
 
-**English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, SQLite chess databases, UCI/Stockfish engine analysis, MultiPV, Chess960, opening preparation, position search, game annotation and chess training** in one offline-capable application.
+**English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Version 0.3 en développement** — C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : les fonctions essentielles sont déjà utilisables, mais le périmètre prévu est plus large. Voir [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Série 0.3 en développement — dernière préversion validée : 0.3.0-dev.23.** C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : de nombreuses fonctions sont déjà utilisables, mais le périmètre prévu reste plus large. Voir [les Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) et [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ### Principes du projet
 
@@ -30,6 +30,20 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leurs parties**, construire une **base de données d’échecs locale**, travailler leurs **ouvertures**, comparer plusieurs **moteurs UCI** comme Stockfish, rechercher des positions et conserver leurs études sans dépendre d’un service cloud. Le projet privilégie Linux aujourd’hui, tout en gardant une architecture portable pour de futures versions Windows et macOS.
 
 L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
+
+## Nouveautés récentes — série 0.3
+
+La dernière étape rapproche Trait64 d’un véritable environnement de travail multi-moteurs et multi-bases :
+
+- **Moteurs téléchargeables et vérifiés** : Stockfish 19, Arasan 26 et PlentyChess 8, avec contrôle de compatibilité, SHA-256, progression et annulation.
+- **Profils UCI indépendants** : plusieurs réglages par moteur, avec Threads, Hash, MultiPV, Syzygy et options découvertes directement depuis le handshake UCI.
+- **42 collections PGN optionnelles** : champions du monde, championnes disponibles, matchs historiques et ouvertures, téléchargées depuis leur source sans être incorporées au dépôt.
+- **Bases nommées** : historique des imports, export d’une base choisie et rattachement d’une même partie à plusieurs bases sans duplication.
+- **Recherche avancée combinée** : base, joueur et couleur, ouverture/ECO, date, Elo, tournoi, résultat, favoris, matériel et position.
+- **Recherche asynchrone et annulable** : interrogation SQLite en arrière-plan, pages de 200 résultats par curseur et protection contre les réponses périmées.
+- **SQLite schéma 4** : migration sauvegardée et conservation des données existantes.
+
+➡️ [Guide moteurs, bases et recherches](docs/ENGINES-DATABASES.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
@@ -79,7 +93,7 @@ Sources de référence pour cette comparaison : [ChessBase 18](https://shop.ches
 
 Les [versions publiées](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) contiennent une **AppImage x86_64** (Debian 12/13, glibc ≥ 2.36) et deux paquets **.deb**, un pour chaque version de Debian. Le dépôt est privé : connecte-toi à ton compte GitHub pour télécharger les fichiers.
 
-- **AppImage** : télécharge le fichier `.AppImage`, rends-le exécutable dans ses propriétés, puis ouvre-le. Si FUSE est absent, utilise `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage`. Stockfish reste un moteur externe : `sudo apt install stockfish`.
+- **AppImage** : télécharge le fichier `.AppImage`, rends-le exécutable dans ses propriétés, puis ouvre-le. Si FUSE est absent, utilise `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage`. Aucun moteur n’est embarqué dans Trait64 : tu peux installer Stockfish depuis Debian (`sudo apt install stockfish`) ou télécharger Stockfish, Arasan ou PlentyChess depuis **Bibliothèque → Téléchargements → Moteurs**.
 - **Paquet Debian** : choisis `debian12` ou `debian13` selon `/etc/debian_version`, puis installe le fichier avec `sudo apt install ./nom-du-fichier.deb`. Les dépendances et le menu sont installés automatiquement.
 
 Après cette première installation, ouvre **Menu → Mises à jour**. Pour recevoir les préversions actuellement publiées, choisis **Développement** et configure l’accès GitHub privé. Le canal Stable ne reçoit que les véritables Releases stables. Une modification du code ne déclenche jamais de mise à jour stable. Voir [docs/UPDATES.md](docs/UPDATES.md).
@@ -127,7 +141,7 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 
 Depuis l’accueil vide, **Découvrir les parties d’exemple**, puis ouvre une partie dans la bibliothèque. Parcours les coups avec les flèches. Reviens en arrière et joue un autre coup pour créer une variante.
 
-Dans **Menu → Paramètres**, le chemin Stockfish est détecté si possible (souvent `/usr/games/stockfish`). Clique **Démarrer / appliquer**, puis **Analyser** dans l’atelier. L’analyse utilise le niveau maximal ; le réglage de force concerne le jeu contre le moteur.
+Dans **Bibliothèque → Téléchargements → Moteurs**, tu peux installer un moteur vérifié, ou sélectionner un moteur UCI déjà présent sur le système depuis **Menu → Paramètres**. Stockfish installé par Debian est souvent détecté dans `/usr/games/stockfish`. Charge ou crée ensuite un profil, clique **Démarrer / appliquer**, puis **Analyser** dans l’atelier. L’analyse utilise toute la force du moteur ; la limitation de force concerne le jeu.
 
 Le bouton **Apparence** personnalise l’échiquier et le fond. Dans l’atelier, **Bilan** analyse la ligne principale ; les seuils de classement sont des repères simples, pas une mesure certifiée du niveau de jeu. Les fichiers Syzygy sont à fournir séparément.
 
@@ -190,4 +204,4 @@ Pas encore : moteur contre moteur, pendules à plusieurs périodes, Polyglot/SCI
 
 Code Trait64 : **GNU AGPL v3 ou ultérieure**. [LICENSE](LICENSE) et [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Le nom et l’identité visuelle restent distincts de la licence du code ; voir [TRADEMARKS.md](TRADEMARKS.md).
 
-Trait64 réutilise `chess-library` sous MIT. Qt est lié dynamiquement depuis les paquets système ; Stockfish s’exécute séparément. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire. Les programmes moteurs sélectionnés s’exécutent avec les droits de l’utilisateur : choisis des exécutables de confiance.
+Trait64 réutilise `chess-library` sous MIT. Qt est lié dynamiquement depuis les paquets système. Les moteurs UCI restent des programmes séparés : le catalogue peut télécharger des versions vérifiées de Stockfish, Arasan et PlentyChess, mais aucun moteur n’est incorporé au binaire Trait64. Les collections PGN restent également des téléchargements provenant de leurs sources. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire pour l’usage local. Les programmes moteurs sélectionnés s’exécutent avec les droits de l’utilisateur : choisis des exécutables de confiance.
