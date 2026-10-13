@@ -150,10 +150,16 @@ Controller::Controller(const QString &path, QObject *parent)
     initFeatures();
     initReliability();
     initContent();
+    initLibrarySearch();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    searchEnabled_ = false;
+    disconnect(&searchWorker_, nullptr, this, nullptr);
+    if (cancelSearch_)
+        cancelSearch_->store(true);
+    searchWorker_.waitForFinished();
     comparison_.stop();
     backupWorker_.waitForFinished();
     reviewer_.shutdown();
@@ -171,15 +177,17 @@ void Controller::fail(const std::exception &e) {
 }
 void Controller::refreshLibrary() {
     try {
-        games_ = db_->search(query_, resultFilter_, favoritesOnly_,
-                             positionFilter_ ? s(game_.nodes[node_].fen) : QString(), trashFilter_,
-                             advancedFilters_);
         stats_ = db_->stats();
         cards_ = db_->cards();
         players_ = db_->players();
-        sources_ = db_->sources();
-        importHistory_ = db_->importHistory();
+        const auto sources = db_->sources(), history = db_->importHistory();
+        if (sources != sources_ || history != importHistory_) {
+            sources_ = sources;
+            importHistory_ = history;
+            emit sourcesChanged();
+        }
         emit libraryChanged();
+        requestLibrarySearch();
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -332,8 +340,8 @@ void Controller::refresh(bool content) {
     }
     detectOpening();
     emit changed();
-    if (positionFilter_)
-        refreshLibrary();
+    if (positionFilter_ && previousFen != s(current.fen))
+        requestLibrarySearch();
     if ((analysis_ || playing_) && !cardId_ && previousFen != s(current.fen))
         analysisTimer_.start();
     if (!cardId_)
@@ -602,6 +610,8 @@ void Controller::openBackup(const QString &url) {
         for (auto &v : redo_)
             v.id = 0;
         writeSession();
+        advancedFilters_.clear();
+        emit libraryOpened();
         refreshLibrary();
         refresh();
         emit message("Bibliothèque ouverte : " + QFileInfo(path).fileName());
@@ -828,7 +838,7 @@ void Controller::search(const QString &query, const QString &result, bool favori
     favoritesOnly_ = favorite;
     positionFilter_ = position;
     trashFilter_ = trash;
-    refreshLibrary();
+    requestLibrarySearch();
 }
 void Controller::favorite(qint64 id, bool value) {
     try {

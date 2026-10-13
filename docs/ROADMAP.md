@@ -8,7 +8,7 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Échiquier | Chess960, 960 départs numérotés, éditeur graphique FEN, flèches/cercles persistants | Autres variantes |
 | Études | 16 onglets restaurables, annuler/rétablir, duplication, fusion d’arbres, diagramme PNG, étude PDF | Chapitres, références et documents attachés, mise en page avancée |
 | Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
-| Bibliothèque | Schéma 4, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres exacts, pagination, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, import par lots reprenable, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
+| Bibliothèque | Schéma 4, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, import par lots reprenable, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
 | Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur et Syzygy | Analyse des branches, budgets adaptatifs, interface de tablebases dédiée |
 | Ouvertures | Dictionnaire ECO CC0 embarqué, balises depuis une position, fusion d’études | Couverture/lacunes de répertoire, nouveautés, livres d’ouverture |
 | Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, objectif | Solutions équivalentes, cours de finales, agenda détaillé, certification tactique |
@@ -41,8 +41,8 @@ Implémente :
 - [ ] Une progression détaillée des importations.
 - [ ] L'indexation progressive des positions.
 - [ ] Des index persistants réutilisables.
-- [ ] Des recherches annulables en arrière-plan.
-- [ ] Une pagination efficace par curseur.
+- [x] Des recherches annulables en arrière-plan.
+- [x] Une pagination efficace par curseur.
 - [ ] Des modèles Qt incrémentaux.
 - [ ] Le chargement paresseux des parties.
 - [ ] L'optimisation des requêtes SQLite.

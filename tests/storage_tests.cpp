@@ -3,10 +3,12 @@
 #include "database.h"
 #include <QBuffer>
 #include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QSqlQuery>
 #include <QTemporaryDir>
 #include <iostream>
+#include <thread>
 int checks = 0;
 void check(bool ok, const char *text) {
     ++checks;
@@ -290,6 +292,85 @@ int main(int argc, char **argv) {
             check(sources.sources().size() == 2 && sources.importHistory().size() == 2 &&
                       sources.integrity() == "ok",
                   "Cancelled import rolls back memberships and history");
+        }
+        {
+            t64::Database pages(dir.path() + "/pages.sqlite");
+            for (int i = 0; i < 47; ++i) {
+                t64::Game g;
+                g.tags["Event"] = "Page fixture " + std::to_string(i);
+                g.tags["White"] = i % 3 ? "Alice" : "Bob";
+                g.tags["Black"] = i % 4 ? "Rival" : "Opponent";
+                g.tags["Date"] = i % 2 ? "2026.10.10" : "2025.01.01";
+                if (i % 5 == 0)
+                    for (const auto *name : {"White", "Black", "Date"})
+                        g.tags.erase(name);
+                g.tags["WhiteElo"] = std::to_string(1800 + 100 * (i % 4));
+                g.tags["BlackElo"] = "2000";
+                pages.save(g);
+            }
+            {
+                auto writer = QSqlDatabase::addDatabase("QSQLITE", "nullable-sort-fixture");
+                writer.setDatabaseName(pages.path());
+                check(writer.open(), "Open nullable metadata fixture");
+                {
+                    QSqlQuery q(writer);
+                    check(q.exec("UPDATE games SET white_elo=NULL,black_elo=NULL,plies=NULL WHERE id%11=0"),
+                          "Legacy null rating and length fixture");
+                    check(q.exec("UPDATE games SET updated='2025-01-01T00:00:00Z' WHERE id<=25"),
+                          "Cursor pages cross groups of equal timestamps");
+                }
+                writer.close();
+            }
+            QSqlDatabase::removeDatabase("nullable-sort-fixture");
+            for (const auto &sort : QStringList{"updated", "date", "players", "elo", "length"}) {
+                const auto expected = pages.search({}, {}, false, {}, false, {{"sort", sort}});
+                QVariantList actual;
+                QVariantMap filters{{"sort", sort}, {"limit", 3}};
+                for (int page = 0; page < 30; ++page) {
+                    auto rows = pages.search({}, {}, false, {}, false, filters);
+                    if (rows.empty())
+                        break;
+                    actual += rows;
+                    filters["cursor"] = rows.last().toMap();
+                }
+                check(actual == expected && actual.size() == 47,
+                      "Cursor pages preserve every row, ties and nulls for every sort");
+            }
+            rejects([&] { pages.search({}, {}, false, {}, false, {{"cursor", QVariantMap{{"id", 1}}}}); });
+            auto canceled = std::make_shared<std::atomic_bool>(true);
+            rejects([&] { pages.search({}, {}, false, {}, false, {}, canceled); });
+            check(pages.search().size() == 47, "Canceled search leaves connection usable");
+        }
+        {
+            // Virtual repetition makes the query expensive without storing millions
+            // of games or relying on machine speed to hit the cancellation window.
+            t64::Database slow(dir.path() + "/cancel.sqlite");
+            slow.save(t64::Game());
+            {
+                auto writer = QSqlDatabase::addDatabase("QSQLITE", "slow-query-fixture");
+                writer.setDatabaseName(slow.path());
+                check(writer.open(), "Open cancellation fixture");
+                {
+                    QSqlQuery q(writer);
+                    check(q.exec("ALTER TABLE games RENAME TO seed_games"), "Rename cancellation seed");
+                    check(q.exec("CREATE VIEW games AS WITH RECURSIVE n(value) AS (SELECT 1 UNION ALL "
+                                 "SELECT value+1 FROM n WHERE value<100000000) "
+                                 "SELECT g.* FROM n CROSS JOIN seed_games g"),
+                          "Create virtual slow search");
+                }
+                writer.close();
+            }
+            QSqlDatabase::removeDatabase("slow-query-fixture");
+            auto canceled = std::make_shared<std::atomic_bool>(false);
+            QElapsedTimer timer;
+            timer.start();
+            std::jthread canceler([canceled] {
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                canceled->store(true);
+            });
+            rejects([&] { slow.search({}, {}, false, {}, false, {}, canceled); });
+            check(canceled->load() && timer.elapsed() < 3000, "SQLite stops an executing search promptly");
+            check(slow.stats()["games"].toInt() == 1, "Progress callback removed after interruption");
         }
         std::cout << checks << " storage checks passed\n";
         return 0;

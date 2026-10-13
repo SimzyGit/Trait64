@@ -27,7 +27,7 @@ Dialog {
         spacing: 10
         RowLayout {
             Layout.fillWidth: true
-            ComboBox { id: category; model: ["Moteurs", "Champions du monde", "Championnes du monde", "Histoire", "Ouvertures", "Historique des imports"]; Layout.preferredWidth: 245 }
+            ComboBox { id: category; objectName:"contentCategory"; model: ["Moteurs", "Champions du monde", "Championnes du monde", "Histoire", "Ouvertures", "Historique des imports"]; Layout.preferredWidth: 245 }
             TextField { id: search; Layout.fillWidth: true; placeholderText: "Chercher dans le catalogue…"; visible: category.currentIndex < 5 }
             TButton {text: "Profils moteurs"; onClicked: {root.close(); root.configureEngines()} }
         }
@@ -36,7 +36,7 @@ Dialog {
             text: "Téléchargements à la demande. Les moteurs sont vérifiés avant installation et ne démarrent pas automatiquement. Les bases importées sont utilisables hors ligne."
         }
         ListView {
-            id: list
+            id: list; objectName:"contentList"
             Layout.fillWidth: true; Layout.fillHeight: true
             clip: true; spacing: 8; visible: category.currentIndex < 5
             model: root.manager.catalog.filter(function(item) { return item.category === category.currentText && (item.title + " " + item.description).toLowerCase().indexOf(search.text.toLowerCase()) >= 0 })
@@ -68,10 +68,13 @@ Dialog {
                             onClicked: root.manager.install(modelData.id)
                         }
                         TButton {
-                            text: modelData.kind === "engine" ? "Ajouter un profil" : "Importer le PGN local"
+                            text: modelData.kind === "engine" ? "Ouvrir les profils" : "Importer le PGN local"
                             visible: modelData.installed
                             enabled: !root.manager.busy && !root.backend.busy
-                            onClicked: root.manager.useInstalled(modelData.id)
+                            onClicked: {
+                                root.manager.useInstalled(modelData.id)
+                                if (modelData.kind === "engine") {root.close(); root.configureEngines()}
+                            }
                         }
                         TButton {text: "Source et conditions"; onClicked: Qt.openUrlExternally(modelData.source)}
                         TButton {

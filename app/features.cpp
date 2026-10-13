@@ -374,7 +374,7 @@ void Controller::mergeGame(qint64 id) {
 }
 void Controller::searchAdvanced(const QVariantMap &filters) {
     advancedFilters_ = openingFilters(filters);
-    refreshLibrary();
+    requestLibrarySearch();
 }
 void Controller::inspectPlayer(const QString &name) {
     try {

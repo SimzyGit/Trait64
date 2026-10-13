@@ -10,10 +10,12 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QSaveFile>
+#include <QSqlDriver>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
 #include <algorithm>
+#include <sqlite3.h>
 #include <stdexcept>
 
 namespace t64 {
@@ -33,6 +35,33 @@ QString tag(const Game &g, const char *name) {
     const auto it = g.tags.find(name);
     return it == g.tags.end() ? QString() : s(it->second);
 }
+// The Qt SQL connection and its progress handler stay on the querying thread.
+// Only the shared atomic flag is written from the GUI thread.
+class QueryCancellation {
+  public:
+    QueryCancellation(const QSqlDatabase &db, const std::shared_ptr<std::atomic_bool> &canceled) {
+        if (!canceled)
+            return;
+        check(!canceled->load(), "Recherche annulée.");
+        auto native = db.driver()->handle();
+        check(native.isValid() && QByteArray(native.typeName()) == "sqlite3*",
+              "Le pilote SQLite ne permet pas d’annuler la recherche.");
+        handle_ = *static_cast<sqlite3 **>(native.data());
+        check(handle_ != nullptr, "Connexion SQLite fermée.");
+        sqlite3_progress_handler(
+            handle_, 1000, [](void *flag) { return static_cast<std::atomic_bool *>(flag)->load() ? 1 : 0; },
+            canceled.get());
+    }
+    ~QueryCancellation() {
+        if (handle_)
+            sqlite3_progress_handler(handle_, 0, nullptr, nullptr);
+    }
+    QueryCancellation(const QueryCancellation &) = delete;
+    QueryCancellation &operator=(const QueryCancellation &) = delete;
+
+  private:
+    sqlite3 *handle_ = nullptr;
+};
 } // namespace
 Database::Database(const QString &path) : connection_(QUuid::createUuid().toString()), path_(path) {
     try {
@@ -274,9 +303,12 @@ Game Database::load(qint64 id) const {
     return std::move(games[0]);
 }
 QVariantList Database::search(const QString &query, const QString &result, bool favorite,
-                              const QString &position, bool trash, const QVariantMap &filters) const {
+                              const QString &position, bool trash, const QVariantMap &filters,
+                              const std::shared_ptr<std::atomic_bool> &canceled) const {
+    const QueryCancellation cancellation(db_, canceled);
     const bool fullText = fts_ && query.size() >= 3 && !query.contains('%') && !query.contains('_');
-    QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite ";
+    QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite,"
+                        "g.updated,(g.white_elo+g.black_elo),g.plies ";
     QVariantList args;
     if (fullText) {
         // FTS drives the lookup: ORDER BY must not make SQLite scan every recent game.
@@ -370,13 +402,80 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE material=?)";
         args << material;
     }
-    const QMap<QString, QString> order{{"date", "g.date DESC"},
-                                       {"players", "g.white,g.black"},
-                                       {"elo", "(g.white_elo+g.black_elo) DESC"},
-                                       {"length", "g.plies ASC"}};
-    statement += " ORDER BY " + order.value(filters.value("sort").toString(), "g.updated DESC") +
-                 ",g.id DESC LIMIT 1000 OFFSET ?";
-    args << std::max(0, filters.value("offset").toInt());
+    struct SortField {
+        QString column, key;
+        bool ascending;
+    };
+    const auto sort = filters.value("sort").toString();
+    QList<SortField> order;
+    if (sort == "date")
+        order = {{"g.date", "date", false}};
+    else if (sort == "players")
+        order = {{"g.white", "white", true}, {"g.black", "black", true}};
+    else if (sort == "elo")
+        order = {{"(g.white_elo+g.black_elo)", "rating", false}};
+    else if (sort == "length")
+        order = {{"g.plies", "plies", true}};
+    else
+        order = {{"g.updated", "updated", false}};
+    order << SortField{"g.id", "id", false};
+    const auto cursor = filters.value("cursor").toMap();
+    const bool recentCursor = !cursor.isEmpty() && order[0].key == "updated";
+    if (!cursor.isEmpty()) {
+        for (const auto &field : order)
+            check(cursor.contains(field.key), "Curseur de recherche incomplet.");
+        if (!recentCursor) {
+            // Match SQLite's NULL ordering and use id as a stable tie-breaker.
+            QStringList alternatives;
+            for (int i = 0; i < order.size(); ++i) {
+                QStringList terms;
+                for (int j = 0; j < i; ++j) {
+                    terms << order[j].column + " IS ?";
+                    args << cursor[order[j].key];
+                }
+                const auto &field = order[i];
+                const auto value = cursor[field.key];
+                if (value.isNull())
+                    terms << (field.ascending ? field.column + " IS NOT NULL" : "0");
+                else {
+                    terms << (field.ascending ? field.column + ">?"
+                                              : "(" + field.column + "<? OR " + field.column + " IS NULL)");
+                    args << value;
+                }
+                alternatives << "(" + terms.join(" AND ") + ")";
+            }
+            statement += " AND (" + alternatives.join(" OR ") + ")";
+        }
+    }
+    QStringList ordering;
+    for (const auto &field : order)
+        ordering << field.column + (field.ascending ? " ASC" : " DESC");
+    const auto orderedLimit = " ORDER BY " + ordering.join(',') + " LIMIT ?";
+    const int limit = std::clamp(filters.value("limit", 1000).toInt(), 1, 1001);
+    if (recentCursor) {
+        // SQLite may seek on updated only for the row-value comparison
+        // (updated,id)<(?,?). Large imports often share a timestamp. Two
+        // disjoint, bounded ranges explicitly seek on updated+id and merge
+        // at most 2*limit rows without scanning all earlier ties.
+        const auto base = statement;
+        const auto baseArgs = args;
+        statement = "SELECT * FROM (" + base + " AND g.updated=? AND g.id<?" + orderedLimit +
+                    ") "
+                    "UNION ALL SELECT * FROM (" +
+                    base + " AND g.updated<?" + orderedLimit +
+                    ") "
+                    "ORDER BY updated DESC,id DESC LIMIT ?";
+        args << cursor["updated"] << cursor["id"] << limit;
+        args += baseArgs;
+        args << cursor["updated"] << limit << limit;
+    } else {
+        statement += orderedLimit;
+        args << limit;
+    }
+    if (cursor.isEmpty() && filters.value("offset").toInt() > 0) {
+        statement += " OFFSET ?";
+        args << filters["offset"].toInt();
+    }
     QSqlQuery q(db_);
     q.prepare(statement);
     for (const auto &a : args)
@@ -384,9 +483,12 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     run(q);
     QVariantList rows;
     while (q.next())
-        rows << QVariantMap{{"id", q.value(0)},    {"white", q.value(1)},      {"black", q.value(2)},
-                            {"event", q.value(3)}, {"date", q.value(4)},       {"result", q.value(5)},
-                            {"eco", q.value(6)},   {"collection", q.value(7)}, {"favorite", q.value(8)}};
+        rows << QVariantMap{{"id", q.value(0)},      {"white", q.value(1)},      {"black", q.value(2)},
+                            {"event", q.value(3)},   {"date", q.value(4)},       {"result", q.value(5)},
+                            {"eco", q.value(6)},     {"collection", q.value(7)}, {"favorite", q.value(8)},
+                            {"updated", q.value(9)}, {"rating", q.value(10)},    {"plies", q.value(11)}};
+    check(!q.lastError().isValid(), q.lastError().text());
+    check(!canceled || !canceled->load(), "Recherche annulée.");
     return rows;
 }
 QVariantMap Database::stats() const {

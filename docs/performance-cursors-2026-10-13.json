@@ -1,0 +1,41 @@
+{
+  "database_bytes": 1097678848,
+  "deep_cursor_200": {
+    "max_ms": 2.97995,
+    "median_ms": 2.47513
+  },
+  "deep_offset_200": {
+    "max_ms": 56.298294,
+    "median_ms": 52.58964
+  },
+  "exact_player": {
+    "max_ms": 1.51347,
+    "median_ms": 1.212263
+  },
+  "fixture": "Synthetic metadata and one opening edge per game; not a full PGN/position corpus",
+  "games": 1000000,
+  "library_page": {
+    "max_ms": 11.939542,
+    "median_ms": 11.468822
+  },
+  "opening_tree": {
+    "max_ms": 0.061832,
+    "median_ms": 0.026569
+  },
+  "seed_ms": 128108,
+  "statistics": {
+    "max_ms": 0.299796,
+    "median_ms": 0.074281
+  },
+  "top_players": {
+    "max_ms": 4.515653,
+    "median_ms": 3.96177
+  },
+  "trigram_substring": {
+    "max_ms": 18.882053,
+    "median_ms": 17.450185
+  },
+  "process_peak_rss_kib": 14300,
+  "process_seconds": 129.227,
+  "build": "Debug GCC 13.3 Qt 6.4.2 SQLite 3.45.1, Linux x86_64, shared environment"
+}

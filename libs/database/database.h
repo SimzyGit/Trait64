@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QVariantList>
 #include <QVariantMap>
+#include <atomic>
+#include <memory>
 
 namespace t64 {
 class Database {
@@ -22,8 +24,8 @@ class Database {
     void exportSource(QIODevice &output, qint64 source) const;
     Game load(qint64 id) const;
     QVariantList search(const QString &query = {}, const QString &result = {}, bool favorite = false,
-                        const QString &position = {}, bool trash = false,
-                        const QVariantMap &filters = {}) const;
+                        const QString &position = {}, bool trash = false, const QVariantMap &filters = {},
+                        const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantMap stats() const;
     QVariantList explorer(const QString &position) const;
     void favorite(qint64 id, bool value);

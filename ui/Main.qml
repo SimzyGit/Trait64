@@ -32,10 +32,11 @@ ApplicationWindow {
     font.family: "DejaVu Sans"
     font.pixelSize: 13
     function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#171b21":"#ffffff"}
-    property int libraryOffset:0
+    property double selectedBaseId:0
     property var advanced:({})
-    function applyAdvanced(){var f=Object.assign({},advanced);f.offset=libraryOffset;f.sourceId=baseBox.currentIndex>0?baseBox.currentValue:0;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
-    function filterLibrary() {libraryOffset=0;applyAdvanced()}
+    function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
+    function filterLibrary() {applyAdvanced()}
+    Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
 
     header: Rectangle {
@@ -118,20 +119,21 @@ ApplicationWindow {
                     TButton {text:"+  Importer";accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
-                    ComboBox {id:baseBox;objectName:"baseSelector";Layout.preferredWidth:260;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:win.filterLibrary()}
+                    ComboBox {id:baseBox;objectName:"baseSelector";Layout.preferredWidth:260;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:{currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}}
                     TButton {text:"Exporter cette base";enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
                     Item {Layout.fillWidth:true}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
-                    TextField {id:searchField;placeholderText:"Rechercher un joueur, une ouverture, un tournoi…";Layout.fillWidth:true;onTextChanged:searchTimer.restart()}
+                    TextField {id:searchField;objectName:"librarySearch";placeholderText:"Rechercher un joueur, un code ECO, un tournoi…";Layout.fillWidth:true;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
                     ComboBox {id:resultBox;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:155}
                 }
-                RowLayout {spacing:14
+                RowLayout {Layout.fillWidth:true;spacing:14
                     CheckBox {id:favoriteCheck;text:"Favoris";onToggled:win.filterLibrary()}
                     CheckBox {id:positionCheck;text:"Position de l’échiquier";onToggled:win.filterLibrary()}
                     CheckBox {id:trashCheck;text:"Corbeille";onToggled:win.filterLibrary()}
                     Item {Layout.fillWidth:true}
-                    Label {text:controller.busy?"Import en cours…":controller.games.length+" résultat(s) affiché(s)";color:win.muted;font.pixelSize:11}
+                    TButton {text:"Annuler la recherche";visible:controller.librarySearching;onClicked:controller.cancelLibrarySearch()}
+                    Label {text:controller.busy?"Import en cours…":controller.librarySearchStatus;color:win.muted;font.pixelSize:11;Layout.fillWidth:true;Layout.minimumWidth:70;elide:Text.ElideRight;horizontalAlignment:Text.AlignRight}
                 }
                 Rectangle {Layout.fillWidth:true;height:37;color:win.raised;radius:6
                     RowLayout {anchors.fill:parent;anchors.leftMargin:18;anchors.rightMargin:18
@@ -143,7 +145,7 @@ ApplicationWindow {
                     }
                 }
                 ListView {
-                    id:libraryList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:controller.games
+                    id:libraryList;objectName:"libraryResults";Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
                     ScrollBar.vertical:ScrollBar {}
                     delegate:Rectangle {
                         required property var modelData
@@ -164,14 +166,14 @@ ApplicationWindow {
                             TButton {text:"⋮";implicitWidth:28;onClicked:{win.selectedGame=modelData.id;collectionField.text=modelData.collection||"";gameMenu.open()}}
                         }
                     }
-                    Label {anchors.centerIn:parent;visible:controller.games.length===0;text:trashCheck.checked?"La corbeille est vide.":"Aucune partie. Importez un PGN pour commencer.";color:win.muted}
+                    Label {anchors.centerIn:parent;visible:controller.games.length===0;text:controller.librarySearching?"Recherche…":controller.librarySearchStatus==="Recherche annulée."?controller.librarySearchStatus:controller.librarySearchStatus==="Recherche impossible."?controller.librarySearchStatus:"Aucune partie ne correspond aux filtres.";color:win.muted}
                 }
                 RowLayout {Layout.fillWidth:true
                     TButton {text:"Recherche avancée";onClicked:advancedDialog.open()}
                     TButton {text:"Doublons de coups";onClicked:controller.findDuplicates()}
                     Item {Layout.fillWidth:true}
-                    TButton {text:"Page précédente";enabled:win.libraryOffset>0;onClicked:{win.libraryOffset=Math.max(0,win.libraryOffset-1000);win.applyAdvanced()}}
-                    TButton {text:"Page suivante";enabled:controller.games.length===1000;onClicked:{win.libraryOffset+=1000;win.applyAdvanced()}}
+                    TButton {text:"Page précédente";objectName:"previousLibraryPage";enabled:!controller.librarySearching&&controller.libraryPage>1;onClicked:controller.previousLibraryPage()}
+                    TButton {text:"Page suivante";objectName:"nextLibraryPage";enabled:!controller.librarySearching&&controller.libraryHasNext;onClicked:controller.nextLibraryPage()}
                 }
             }
 
@@ -625,9 +627,9 @@ ApplicationWindow {
             CheckBox {text:"Correspondance exacte des champs texte";checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
             Label {text:"Trier par"} ComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
             Label {text:"Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.";wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:10;color:win.muted}
-            TButton {text:"Effacer les filtres";onClicked:{win.advanced={};win.libraryOffset=0;win.applyAdvanced();advancedDialog.close()}}
+            TButton {text:"Effacer les filtres";onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
         }}
-        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.advanced=Object.assign({},draft);win.libraryOffset=0;win.applyAdvanced()}
+        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.advanced=Object.assign({},draft);win.applyAdvanced()}
     }
     Dialog {id:commands;title:"Commandes rapides";anchors.centerIn:parent;width:510;modal:true
         ColumnLayout {anchors.fill:parent;spacing:8

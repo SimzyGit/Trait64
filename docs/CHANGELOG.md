@@ -1,5 +1,12 @@
 # Changements
 
+## Recherche asynchrone — 12 octobre 2026
+
+- Recherches SQL en arrière-plan, annulables au niveau SQLite ; seule la dernière demande peut alimenter la liste.
+- Pages de 200 résultats par curseur, retour à la page précédente, absence de page suivante fictive ; ordre stable avec égalités et valeurs absentes.
+- Les familles d’ouvertures ne capturent plus les variantes homonymes d’une autre famille (ex. Franco-Sicilienne). Les filtres de base et d’ouverture restent actifs pendant la navigation. Les erreurs de recherche sont affichées sans conserver des résultats trompeurs.
+- Dépendance de compilation `libsqlite3-dev` ajoutée à l’installation et à la CI Debian.
+
 ## En développement — moteurs et bases
 
 - Options UCI découvertes au handshake et contrôlées selon leurs types et limites.

@@ -61,7 +61,7 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Chess960 | ✅ | ◐ | ◐ | ✅ |
 | Jeu contre un moteur | ✅ | ✅ | ✅ | ✅ |
 | Tournois moteur contre moteur | ❌ Prévu | ✅ Selon outils associés | ✅ | ❌ / non central |
-| Bases téléchargeables intégrées | ❌ Prévu | ✅ Écosystème ChessBase | ◐ Import manuel / ressources | ✅ Gestionnaire intégré |
+| Bases téléchargeables intégrées | ✅ 42 collections | ✅ Écosystème ChessBase | ◐ Import manuel / ressources | ✅ Gestionnaire intégré |
 | Import direct Lichess / Chess.com | ❌ Prévu | ✅ | ◐ | ✅ |
 | Cloud requis pour l’usage principal | ❌ | ❌ mais services cloud intégrés | ❌ | ❌ |
 | Sauvegardes automatiques locales | ✅ | ◐ | ◐ | ◐ |
@@ -112,7 +112,8 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 - **Échiquier** : clic/glisser, coups légaux, promotion au choix, échecs classiques et Chess960 (960 positions numérotées), éditeur graphique de position, inversion, flèches et cercles persistants dans le PGN.
 - **Études** : arbre de variantes, promotion/suppression de branches, commentaires, NAG, métadonnées, annuler/rétablir, jusqu’à 16 onglets récupérés au redémarrage, duplication et fusion de deux études de même racine.
 - **Fichiers** : PGN multijeux avec variantes, FEN, import/export EPD classique, conteneur T64 expérimental, diagramme PNG avec votre apparence et annotations, étude PDF avec diagramme et notation. L’import PGN depuis un fichier travaille partie par partie, en arrière-plan, avec progression et annulation transactionnelle. L’export PGN de bibliothèque écrit aussi partie par partie.
-- **Bibliothèque** : SQLite schéma 3, recherche de fragments indexée FTS5 (si disponible), statistiques et arbres d’ouvertures actualisés à chaque écriture, filtres exacts indexés, recherche par joueur/événement/ECO/date/Elo/collection/résultat, matériel et positions incluant les variantes ; favoris, corbeille restaurable, pagination, détection des doublons de ligne principale, réindexation annulable. Fiches joueurs, scores et ouvertures issues de votre base.
+- **Bibliothèque** : SQLite schéma 4, bases nommées et historique, recherche de fragments indexée FTS5 (si disponible), statistiques et arbres d’ouvertures actualisés à chaque écriture, filtres exacts indexés, recherche par joueur/événement/ECO/date/Elo/collection/résultat, matériel et positions incluant les variantes ; favoris, corbeille restaurable, recherche annulable en arrière-plan et pages par curseur, détection des doublons de ligne principale, réindexation annulable. Fiches joueurs, scores et ouvertures issues de votre base.
+- **Moteurs et bases à télécharger** : trois moteurs vérifiés (Stockfish, Arasan, PlentyChess) et 42 collections PGN, dont les champions classiques, des championnes, matchs historiques et ouvertures. Paramètres UCI indépendants par profil ; filtres combinés par base et ouverture. [Mode d’emploi](docs/ENGINES-DATABASES.md).
 - **Analyse** : moteur UCI local, comparaison simultanée de 2 à 4 profils avec budgets CPU/hash partagés, MultiPV, insertion d’une ligne, profils de réglages, limite de profondeur, chemin Syzygy transmis aux moteurs compatibles. Bilan automatique de la ligne principale avec graphe, pertes en centipions, annotations et création de cartes depuis les erreurs.
 - **Jeu local** : contre un moteur ou à deux sur le même ordinateur, camp/force/réflexion réglables, pendule avec incrément, abandon et réclamation de nulle.
 - **Ouvertures** : explorateur des lignes principales de vos parties, résultats statistiques, reconnaissance ECO hors ligne à partir de 3 865 positions nommées et attribution des balises à l’étude.
@@ -148,7 +149,7 @@ Pour mémoriser une ligne, place-toi **avant** son premier coup, puis **Créer u
 
 ## Données et formats
 
-Par défaut sur Linux : `~/.local/share/Trait64/Trait64/` (ou le dossier XDG équivalent). Le chemin effectif est affiché dans **Paramètres**. La bibliothèque est `library.sqlite` ; `session.json` contient les onglets et leurs positions actives. Les migrations créent d’abord une copie `.before-v2-….sqlite` ou `.before-v3-….sqlite` à côté de la base. Le schéma 3 construit ses index lors de la première ouverture : cela peut prendre du temps sur un grand corpus. Une ancienne version du logiciel ne doit pas ouvrir une base déjà migrée. Les paramètres sont enregistrés dans le dossier de configuration Qt de l’utilisateur.
+Par défaut sur Linux : `~/.local/share/Trait64/Trait64/` (ou le dossier XDG équivalent). Le chemin effectif est affiché dans **Paramètres**. La bibliothèque est `library.sqlite` ; `session.json` contient les onglets et leurs positions actives. Les migrations créent d’abord une copie `.before-v2-….sqlite` ou `.before-v3-….sqlite` / `.before-v4-….sqlite` à côté de la base. Le schéma 3 construit ses index lors de la première ouverture : cela peut prendre du temps sur un grand corpus. Une ancienne version du logiciel ne doit pas ouvrir une base déjà migrée. Les paramètres sont enregistrés dans le dossier de configuration Qt de l’utilisateur.
 
 Utilise **Outils → Sauvegarder** pour une copie cohérente de la bibliothèque, entraînements inclus. **Ouvrir une base** ouvre une sauvegarde séparément sans écraser la base principale. Au lancement suivant, la base principale redevient active ; une étude venant d’une autre base conserve son contenu dans la session sans réutiliser son identifiant dans la mauvaise base.
 
@@ -156,7 +157,7 @@ PGN est le format d’échange recommandé. Le conteneur `.t64` livré est le **
 
 ## Compiler sans l’installateur
 
-Avec les dépendances Qt6 et CMake installées :
+Avec les dépendances Qt6, CMake, `libarchive-dev` et `libsqlite3-dev` installées :
 
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release

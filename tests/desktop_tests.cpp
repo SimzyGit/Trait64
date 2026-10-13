@@ -124,6 +124,15 @@ int main(int argc, char **argv) {
                 check(dialog != nullptr, "New feature dialog exists");
                 QMetaObject::invokeMethod(dialog, "open");
                 QTest::qWait(80);
+                if (QString(name) == "downloadsDialog") {
+                    auto *category = dialog->findChild<QObject *>("contentCategory");
+                    auto *list = dialog->findChild<QObject *>("contentList");
+                    check(category && list, "Catalogue category controls exist");
+                    category->setProperty("currentIndex", 1);
+                    QTest::qWait(30);
+                    check(list->property("count").toInt() == 22, "All listed world champions are selectable");
+                    category->setProperty("currentIndex", 0);
+                }
                 QMetaObject::invokeMethod(dialog, "close");
                 QTest::qWait(10);
             }
@@ -347,6 +356,82 @@ int main(int argc, char **argv) {
             check(c.state()["node"].toInt() == 2, "Active tab position recovered");
             check(c.preferences()["background"].toString() == "#243257", "Appearance survives restart");
             check(c.state()["arrows"].toList().size() == 2, "PGN arrows survive restart");
+        }
+        {
+            Controller c(dir.path() + "/search");
+            QSignalSpy errors(&c, &Controller::message);
+            const auto pgn = dir.path() + "/search.pgn";
+            QFile fixture(pgn);
+            check(fixture.open(QIODevice::WriteOnly), "Open paginated PGN fixture");
+            for (int i = 0; i < 405; ++i)
+                fixture.write(QString("[Event \"Fixture %1\"]\n[White \"Alice\"]\n[Black \"Rival\"]\n"
+                                      "[ECO \"%2\"]\n\n1.e4 %3 *\n\n")
+                                  .arg(i)
+                                  .arg(i % 2 ? "C00" : "B90")
+                                  .arg(i % 2 ? "e6" : "c5")
+                                  .toUtf8());
+            fixture.close();
+            emit c.content()->ready(pgn, {{"id", "local-fixture"}, {"title", "Search base"}});
+            auto waitSearch = [&] {
+                check(QTest::qWaitFor([&] { return !c.busy() && !c.librarySearching(); }, 5000),
+                      "Background search finishes");
+            };
+            waitSearch();
+            check(c.sources().size() == 1 && c.importHistory().size() == 1 &&
+                      c.stats()["games"].toInt() == 405,
+                  "Downloaded source enters real import pipeline");
+            const auto sourceId = c.sources().first().toMap()["id"];
+            c.searchLibrary({}, {}, false, false, false, {{"sourceId", sourceId}});
+            waitSearch();
+            const auto first = c.games();
+            check(first.size() == 200 && c.libraryHasNext() && c.libraryPage() == 1,
+                  "Library starts with one bounded page");
+            c.nextLibraryPage();
+            waitSearch();
+            const auto second = c.games();
+            check(second.size() == 200 && c.libraryHasNext() && c.libraryPage() == 2 &&
+                      second.first().toMap()["id"] != first.first().toMap()["id"],
+                  "Next cursor page");
+            c.nextLibraryPage();
+            waitSearch();
+            check(c.games().size() == 5 && !c.libraryHasNext() && c.libraryPage() == 3,
+                  "Last page has no phantom next page");
+            c.previousLibraryPage();
+            waitSearch();
+            check(c.games() == second, "Previous page restores its exact cursor");
+            for (int i = 0; i < 25; ++i)
+                c.searchLibrary("missing " + QString::number(i), {}, false, false, false, {});
+            c.searchLibrary("Alice", {}, false, false, false,
+                            {{"sourceId", sourceId},
+                             {"openingName", "sicilienne"},
+                             {"player", "Rival"},
+                             {"colour", "black"}});
+            waitSearch();
+            check(c.games().size() == 200 && c.libraryHasNext() && c.libraryPage() == 1,
+                  "Only the latest rapid combined search is displayed");
+            for (const auto &row : c.games())
+                check(row.toMap()["eco"] == "B90", "French opening alias limits ECO family");
+            c.nextLibraryPage();
+            waitSearch();
+            check(c.games().size() == 3 && !c.libraryHasNext(), "Opening filter survives pagination");
+            c.searchLibrary("Alice", {}, false, false, false, {});
+            c.cancelLibrarySearch();
+            QTest::qWait(80);
+            check(!c.librarySearching() && c.games().empty() && !c.libraryHasNext(),
+                  "Canceled result cannot repopulate the library");
+            c.searchLibrary("Fixture 404", {}, false, false, false, {});
+            waitSearch();
+            check(c.games().size() == 1, "A new search works after cancellation");
+            c.searchAdvanced({{"ecoFrom", "invalid"}});
+            waitSearch();
+            check(c.games().empty() && c.librarySearchStatus() == "Recherche impossible.",
+                  "Worker error clears stale rows and reaches the user");
+            c.searchLibrary({}, {}, false, false, false, {{"openingName", "française"}});
+            waitSearch();
+            check(c.games().size() == 200 && c.games().first().toMap()["eco"] == "C00",
+                  "Search recovers after an invalid filter");
+            // Destruction also cancels and joins any outstanding worker.
+            c.searchLibrary("Rival", {}, false, false, false, {});
         }
         {
             const auto recovery = dir.path() + "/corrupt";

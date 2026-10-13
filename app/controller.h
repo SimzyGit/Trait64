@@ -17,8 +17,12 @@
 class Controller : public QObject {
     Q_OBJECT
     Q_PROPERTY(t64::Content *content READ content CONSTANT)
-    Q_PROPERTY(QVariantList sources READ sources NOTIFY libraryChanged)
-    Q_PROPERTY(QVariantList importHistory READ importHistory NOTIFY libraryChanged)
+    Q_PROPERTY(QVariantList sources READ sources NOTIFY sourcesChanged)
+    Q_PROPERTY(QVariantList importHistory READ importHistory NOTIFY sourcesChanged)
+    Q_PROPERTY(bool librarySearching READ librarySearching NOTIFY searchChanged)
+    Q_PROPERTY(bool libraryHasNext READ libraryHasNext NOTIFY searchChanged)
+    Q_PROPERTY(int libraryPage READ libraryPage NOTIFY searchChanged)
+    Q_PROPERTY(QString librarySearchStatus READ librarySearchStatus NOTIFY searchChanged)
     Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
@@ -45,6 +49,13 @@ class Controller : public QObject {
     t64::Content *content() const { return content_.get(); }
     QVariantList sources() const { return sources_; }
     QVariantList importHistory() const { return importHistory_; }
+    bool librarySearching() const { return librarySearching_; }
+    bool libraryHasNext() const { return libraryHasNext_; }
+    int libraryPage() const { return int(searchCursors_.size()) + 1; }
+    QString librarySearchStatus() const { return librarySearchStatus_; }
+    Q_INVOKABLE void cancelLibrarySearch();
+    Q_INVOKABLE void nextLibraryPage();
+    Q_INVOKABLE void previousLibraryPage();
     Q_INVOKABLE void exportSource(const QString &url, qint64 source);
     Q_INVOKABLE void searchLibrary(const QString &query, const QString &result, bool favorite, bool position,
                                    bool trash, const QVariantMap &filters);
@@ -154,6 +165,9 @@ class Controller : public QObject {
   signals:
     void changed();
     void libraryChanged();
+    void sourcesChanged();
+    void searchChanged();
+    void libraryOpened();
     void engineChanged();
     void preferencesChanged();
     void busyChanged();
@@ -163,6 +177,23 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
+    struct SearchResult {
+        QVariantList rows;
+        QString error;
+        quint64 generation = 0;
+    };
+    static constexpr int libraryPageSize = 200;
+    QFutureWatcher<SearchResult> searchWorker_;
+    std::shared_ptr<std::atomic_bool> cancelSearch_;
+    quint64 searchGeneration_ = 0;
+    bool searchActive_ = false, searchPending_ = false, searchEnabled_ = false;
+    bool librarySearching_ = false, libraryHasNext_ = false;
+    QString librarySearchStatus_;
+    QVariantMap searchCursor_;
+    QList<QVariantMap> searchCursors_;
+    void initLibrarySearch();
+    void requestLibrarySearch(bool resetPage = true);
+    void startLibrarySearch();
     std::unique_ptr<t64::Content> content_;
     QVariantList sources_, importHistory_;
     void initContent();

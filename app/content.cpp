@@ -81,6 +81,9 @@ QVariantMap Controller::openingFilters(const QVariantMap &filters) const {
                                          {"nimzo-indienne", "nimzo-indian"},
                                          {"catalane", "catalan"},
                                          {"slave", "slav"}};
+    bool family = aliases.contains(name);
+    for (const auto &english : aliases)
+        family = family || name == english || name == english + " defense" || name == english + " defence";
     name = aliases.value(name, name);
     QSet<QString> codes;
     for (const auto *family : {"a", "b", "c", "d", "e"}) {
@@ -89,7 +92,11 @@ QVariantMap Controller::openingFilters(const QVariantMap &filters) const {
             continue;
         while (!file.atEnd()) {
             const auto columns = QString::fromUtf8(file.readLine()).split('\t');
-            if (columns.size() >= 2 && columns[1].contains(name, Qt::CaseInsensitive))
+            // A family belongs at the start of the name: "Franco-Sicilian"
+            // is a French line, not the Sicilian family. Variant fragments
+            // (e.g. Najdorf) still search anywhere in the complete name.
+            if (columns.size() >= 2 && (family ? columns[1].startsWith(name, Qt::CaseInsensitive)
+                                               : columns[1].contains(name, Qt::CaseInsensitive)))
                 codes.insert(columns[0]);
         }
     }
@@ -105,5 +112,5 @@ void Controller::searchLibrary(const QString &query, const QString &result, bool
     positionFilter_ = position;
     trashFilter_ = trash;
     advancedFilters_ = openingFilters(filters);
-    refreshLibrary();
+    requestLibrarySearch();
 }
