@@ -52,3 +52,13 @@ Tâche suivante : import reprenable, puis véritables répertoires nommés (camp
 Précautions : PlentyChess 8 exige glibc 2.38 (donc téléchargement désactivé sur Debian 12) ; Stockfish 19 et Arasan 26 ont d’autres minima explicités au catalogue. Le catalogue est livré avec l’application, pas remplacé depuis une URL non vérifiée. Les anciennes versions et profils sont conservés lors d’une mise à jour de moteur ; la gestion de toutes les versions historiques pourra être étendue. Les cartes SRS actuelles et les bilans ne sont pas des répertoires complets et ne fournissent aucune estimation Elo artificielle.
 
 Tests à poursuivre : CI Debian 12/13 après ajout de libarchive-dev/libsqlite3-dev et de la recherche asynchrone ; restauration depuis v3 réelle, navigation et annulation sur corpus volumineux, réseau interrompu. Ne pas modifier les sources C++/CMake pendant une compilation locale ; utiliser un seul processus compilateur dans cet environnement.
+
+## Reprise du 13 octobre — imports reprenables
+
+La version de départ publiée est `v0.3.0-dev.23` (PR #2, main ac22be2), validée par la CI Debian 12/13 et les paquets. Une modification du README a été faite séparément après cette publication : la conserver à la fusion.
+
+Branche active : `feat/resumable-imports-repertoires`. Le premier lot est terminé localement : migration 5, lecture PGN avec points de reprise en octets, import par transactions de 250 parties, SHA-256 complet avant chaque reprise, verrou interprocessus, pause/reprise/fichier déplacé et gestionnaire QML. Les parties restent conservées lorsqu’une tâche est retirée. L’import classique garde son annulation intégrale.
+
+Validation locale : 8/8 suites, dont arrêt réel d’un processus au milieu d’un lot, récupération après réouverture et interactions de l’interface, 13,63 s. Pas de qualification sur plusieurs millions de parties PGN réelles. Fichiers nouveaux : `libs/database/imports.cpp`, `app/imports.cpp`, `ui/Imports.qml`, `tests/import_tests.cpp`.
+
+Étape suivante en cours : répertoires nommés, coups regroupés par position et transpositions, export PGN, entraînement de positions acceptant plusieurs réponses du répertoire et calendrier de révision. Puis couverture/préparation et explications vérifiables ; aucune estimation de niveau Elo artificielle.

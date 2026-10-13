@@ -9,6 +9,10 @@
 #include <memory>
 
 namespace t64 {
+struct ImportProgress {
+    qint64 job = 0, bytes = 0, total = 0, processed = 0, added = 0, committed = 0, committedBytes = 0;
+    bool verifying = true;
+};
 class Database {
   public:
     explicit Database(const QString &path);
@@ -21,6 +25,12 @@ class Database {
                       const QVariantMap &source = {});
     QVariantList sources() const;
     QVariantList importHistory() const;
+    qint64 createImportJob(const QString &path, const QVariantMap &source = {});
+    QVariantMap runImportJob(qint64 id, const std::function<bool(const ImportProgress &)> &progress = {},
+                             const QString &replacement = {}, int batchSize = 250);
+    QVariantList importJobs() const;
+    QVariantMap importJob(qint64 id) const;
+    void forgetImportJob(qint64 id);
     void exportSource(QIODevice &output, qint64 source) const;
     Game load(qint64 id) const;
     QVariantList search(const QString &query = {}, const QString &result = {}, bool favorite = false,
@@ -50,6 +60,7 @@ class Database {
     bool enhanced_ = false, fts_ = false;
     void upgradeV3(int originalVersion);
     void upgradeV4(int originalVersion);
+    void upgradeV5(int originalVersion);
     qint64 registerSource(const QVariantMap &source);
     void linkSource(qint64 source, qint64 game);
     void recordImport(qint64 source, const QString &file, const QString &digest, int processed, int added);

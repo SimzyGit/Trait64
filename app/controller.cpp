@@ -101,6 +101,7 @@ Controller::Controller(const QString &path, QObject *parent)
     });
     connect(&importer_, &QFutureWatcher<ImportResult>::finished, this, [this] {
         busy_ = false;
+        resumableImport_ = false;
         taskPoll_.stop();
         emit busyChanged();
         const auto r = importer_.result();
@@ -116,6 +117,11 @@ Controller::Controller(const QString &path, QObject *parent)
             emit message(r.error, true);
         else if (r.operation == "reindex")
             emit message(QString("Index reconstruits pour %1 partie(s).").arg(r.count));
+        else if (r.operation == "resumable")
+            emit message(QString("Import %1 : %2 parties validées, dont %3 nouvelles.")
+                             .arg(r.job["status"] == "completed" ? "terminé" : "en pause")
+                             .arg(r.job["processed"].toLongLong())
+                             .arg(r.job["added"].toLongLong()));
         else
             emit message(
                 QString("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
@@ -180,6 +186,11 @@ void Controller::refreshLibrary() {
         stats_ = db_->stats();
         cards_ = db_->cards();
         players_ = db_->players();
+        const auto jobs = db_->importJobs();
+        if (jobs != importJobs_) {
+            importJobs_ = jobs;
+            emit importsChanged();
+        }
         const auto sources = db_->sources(), history = db_->importHistory();
         if (sources != sources_ || history != importHistory_) {
             sources_ = sources;

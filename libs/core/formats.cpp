@@ -167,36 +167,44 @@ std::string exportEpd(const Game &game, int node) {
 
 namespace t64 {
 void readPgn(std::istream &input, const std::function<void(Game &&)> &consume) {
+    readPgnRecords(input, [&](Game &&game, uint64_t) { consume(std::move(game)); });
+}
+void readPgnRecords(std::istream &input, const std::function<void(Game &&, uint64_t)> &consume,
+                    const std::function<void(uint64_t)> &progress) {
     std::string buffer, token;
     bool header = false, quoted = false, escaped = false, brace = false, lineComment = false, moves = false,
          lineStart = true;
     int depth = 0;
-    auto flush = [&] {
+    uint64_t bytes = 0;
+    auto flush = [&](uint64_t nextOffset) {
         if (buffer.find_first_not_of(" \t\r\n") == std::string::npos) {
             buffer.clear();
             return;
         }
         auto games = parsePgn(buffer, 1);
         if (!games.empty())
-            consume(std::move(games[0]));
+            consume(std::move(games[0]), nextOffset);
         buffer.clear();
         token.clear();
         moves = false;
     };
     char c;
     while (input.get(c)) {
+        ++bytes;
+        if (progress && bytes % 65536 == 0)
+            progress(bytes);
         if (!quoted && !brace && !lineComment && !header) {
             bool delim = std::isspace(static_cast<unsigned char>(c)) ||
                          std::string("{}();[]").find(c) != std::string::npos;
             if (delim && !token.empty()) {
                 if (!depth && (token == "1-0" || token == "0-1" || token == "1/2-1/2" || token == "*"))
-                    flush();
+                    flush(bytes - 1);
                 else
                     moves = true;
                 token.clear();
             }
             if (c == '[' && moves && depth == 0)
-                flush();
+                flush(bytes - 1);
         }
         buffer += c;
         if (buffer.size() > 64 * 1024 * 1024)
@@ -238,6 +246,6 @@ void readPgn(std::istream &input, const std::function<void(Game &&)> &consume) {
     }
     if (input.bad())
         throw std::runtime_error("Erreur de lecture du PGN.");
-    flush();
+    flush(bytes);
 }
 } // namespace t64

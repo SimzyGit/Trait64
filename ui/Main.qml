@@ -54,6 +54,7 @@ ApplicationWindow {
                 TButton {text: "Commandes  /  Ctrl K"; onClicked: commands.open()}
                 TButton {id: appMenuButton; objectName: "appMenuButton"; text: "Menu  ≡"; flat: true; onClicked: appMenu.open()
                     Menu {id: appMenu; y: appMenuButton.height
+                        MenuItem {text: "Imports PGN reprenables"; onTriggered: importsDialog.open()}
                         MenuItem {text: "Moteurs et bases à télécharger"; onTriggered: downloadsDialog.open()}
                         MenuItem {text: "Paramètres"; onTriggered: settingsDialog.open()}
                         MenuItem {text: "Pièces, échiquier et couleurs"; onTriggered: appearanceDialog.open()}
@@ -120,6 +121,7 @@ ApplicationWindow {
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
                     ComboBox {id:baseBox;objectName:"baseSelector";Layout.preferredWidth:260;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:{currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}}
+                    TButton {text:"Imports reprenables";objectName:"showImports";onClicked:importsDialog.open()}
                     TButton {text:"Exporter cette base";enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
                     Item {Layout.fillWidth:true}
                 }
@@ -450,7 +452,7 @@ ApplicationWindow {
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
             Label {text:controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
             Item {Layout.fillWidth:true}
-            TButton {visible:controller.busy;text:"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
+            TButton {visible:controller.busy;text:controller.resumableImport?"Mettre en pause":"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
             Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted;visible:win.width>=1100}
             TButton {text:"Trait64 / "+controller.updater.state.current;flat:true;implicitHeight:26;font.pixelSize:10;onClicked:updatesDialog.open();ToolTip.visible:hovered;ToolTip.text:"Versions et mises à jour"}
         }
@@ -467,6 +469,7 @@ ApplicationWindow {
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
+    Imports {id:importsDialog;objectName:"importsDialog";backend:controller}
     Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}
     Native.FileDialog {id:sourceExportDialog;title:"Exporter cette base en PGN";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
     Native.FileDialog {id:importDialog;title:"Importer des parties";nameFilters:["Parties et positions (*.pgn *.t64 *.epd *.fen)","Tous les fichiers (*)"];onAccepted:controller.importFile(selectedFile.toString())}

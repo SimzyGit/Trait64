@@ -1,20 +1,21 @@
 # Vérification 0.3
 
-`ctest --test-dir build --output-on-failure` exécute sept suites :
+`ctest --test-dir build --output-on-failure` exécute huit suites :
 
 | Suite | Scénarios vérifiés |
 |---|---|
 | `core` | Perft initiale profondeur 4 = 197281, Kiwipete profondeur 3 = 97862, finale profondeur 4 = 43238 ; coups spéciaux, répétition et mat ; 960 départs distincts, roque Chess960 avec roi immobile, PGN variante ; arbre PGN et lecture en flux, commentaires/RAV imbriqués, round trip, fusion idempotente, EPD et rejets d’entrées invalides |
 | `content` | Catalogue hors ligne, HTTPS/hôtes, SHA-256, annulation, extraction bornée, chemins et liens dangereux, permissions et reçus |
 | `updates` | SemVer, canaux, préversions/drafts, ignorance, absence de digest, hôtes trompeurs, absence de fuite du jeton sur redirection, erreur réseau/JSON, annulation, empreinte incorrecte, installation atomique, ancien binaire conservé et sauvegarde échouée bloquante |
-| `storage` | Import/dédoublonnage, mise à jour stable, filtres SQL, positions de variantes/matériel/Elo, joueurs, corbeille, révisions quotidiennes, sauvegarde ; migration version 1 → 4, recherche FTS5/exacte, agrégats cohérents après édition/répétition/corbeille/restauration/réindexation et suppression en cascade ; import en flux annulé sans résultat partiel ; export en flux et protection des chemins ; récupération T64 après troncature/écriture déchirée |
+| `storage` | Import/dédoublonnage, mise à jour stable, filtres SQL, positions de variantes/matériel/Elo, joueurs, corbeille, révisions quotidiennes, sauvegarde ; migration version 1 → 5, recherche FTS5/exacte, agrégats cohérents après édition/répétition/corbeille/restauration/réindexation et suppression en cascade ; import en flux annulé sans résultat partiel ; export en flux et protection des chemins ; récupération T64 après troncature/écriture déchirée |
+| `resumable_import` | Pause avec rollback du lot incomplet, reprise à l’octet après réouverture, empreinte et fichier déplacé, doublons, historique unique, verrou concurrent, PGN invalide/vide, arrêt réel du processus pendant une transaction et récupération du verrou et des index |
 | `engine` | Véritable Stockfish : handshake, MultiPV, annulation/remplacement, exclusion des anciens bestmove, conservation du dernier score exact, résultats de recherche terminée, coup Chess960 légal, comparaison de deux vrais processus avec changements rapides de position, fermeture |
 | `desktop_smoke` | Chargement et rendu des 7 espaces, enregistrement/réouverture, aucune alerte QML ; dossier temporaire isolé |
 | `desktop_interactions` | Événements QtTest clic/glisser, notes et navigation, sauvegarde et entraînement, 48 SVG, styles/couleurs, annuler/rétablir, onglets et session, flèches PGN, profils moteur, bilan et annulation, ECO, exports PDF/PNG, roque 960, pendule/incrément, dialogues et géométrie à 960 × 720, comparaison UCI avec lignes réelles dans QML, sauvegarde pré-mise à jour et automatique, préservation des octets d’une session illisible |
 
 Le test moteur est **skipped**, pas réussi, si Stockfish est absent. Les tests GUI utilisent `QT_QPA_PLATFORM=offscreen` et `QT_QUICK_BACKEND=software`. Ils ne remplacent pas un essai sur le GPU et l’écran du PC cible. Le cœur compile sans Qt avec `-DT64_BUILD_GUI=OFF`. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
 
-La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les sept suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
+La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les huit suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
 
 Vérification historique avant catalogue : **6 suites sur 6 réussies** ; les vérifications du lot actuel sont détaillées plus bas. Le redimensionnement après sauvegarde, les dialogues et les captures 960 × 720 sont vérifiés. La chaîne GitHub complète a effectivement publié `v0.3.0-dev.6` ; consulter les exécutions suivantes pour la version finale enrichie.
 
@@ -67,3 +68,5 @@ Nouveaux scénarios : toutes les pages comparées à une requête complète pour
 Le scénario bureau importe 405 PGN légaux dans une base nommée, parcourt 200/200/5 résultats, revient en arrière, remplace 25 demandes successives, combine base/joueur/couleur/ouverture française, annule et relance, puis récupère après filtre invalide. Le catalogue doit afficher les 22 champions (classiques et titres FIDE séparés).
 
 Le 13 octobre : benchmark du schéma 4 sur un million de lignes synthétiques, avec comparaison du contenu et du temps des pages par curseur/OFFSET après 900 000 résultats. Protocole, pic RSS du processus et données brutes dans PERFORMANCE.
+
+Ajouts du 13 octobre : points de reprise PGN vérifiés avec CRLF, UTF-8, variantes et résultats absents ; interactions du gestionnaire d’imports, pause et reprise après destruction du contrôleur, actualisation des bases et absence d’erreurs QML. Validation locale du lot : 8/8 suites réussies, 13,63 s. La CI Debian de cette étape reste à exécuter avant publication.

@@ -132,6 +132,25 @@ int main() {
         int count = 0;
         t64::readPgn(comments, [&](t64::Game &&) { ++count; });
         check(count == 2, "PGN stream ignores result tokens inside comments");
+        // Every reported byte boundary can be used to seek and parse the exact remainder.
+        for (const auto &pgn : {text, std::string("1.e4 *\r\n\r\n[Event \"Été\"]\r\n1.d4 *"),
+                                std::string("1.e4\n[Event \"No result\"]\n1.c4 e5 *\n\n")}) {
+            std::istringstream input(pgn);
+            std::vector<std::string> records;
+            std::vector<uint64_t> offsets;
+            t64::readPgnRecords(input, [&](t64::Game &&game, uint64_t offset) {
+                records.push_back(game.pgn());
+                offsets.push_back(offset);
+            });
+            for (size_t i = 0; i < offsets.size(); ++i) {
+                std::istringstream resumed(pgn);
+                resumed.seekg(offsets[i]);
+                std::vector<std::string> remainder;
+                t64::readPgn(resumed, [&](t64::Game &&game) { remainder.push_back(game.pgn()); });
+                check(remainder == std::vector<std::string>(records.begin() + i + 1, records.end()),
+                      "Record offsets preserve remaining games, UTF-8, CRLF and missing results");
+            }
+        }
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

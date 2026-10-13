@@ -434,6 +434,52 @@ int main(int argc, char **argv) {
             c.searchLibrary("Rival", {}, false, false, false, {});
         }
         {
+            const auto folder = dir.path() + "/imports";
+            QDir().mkpath(folder);
+            const auto pgn = folder + "/local.pgn";
+            QFile source(pgn);
+            check(source.open(QIODevice::WriteOnly), "Create resumable GUI fixture");
+            for (int i = 0; i < 15; ++i)
+                source.write(QByteArray("[Event \"Resume ") + QByteArray::number(i) + "\"]\n1.e4 e5 *\n");
+            source.close();
+            auto waitImport = [](Controller &c) {
+                QElapsedTimer timeout;
+                timeout.start();
+                while (c.busy() && timeout.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(!c.busy(), "Import worker completed");
+            };
+            qint64 job = 0;
+            {
+                Controller c(folder);
+                c.importResumable(pgn);
+                check(c.resumableImport(), "Resumable worker state exposed");
+                c.cancelTask();
+                waitImport(c);
+                job = c.importJobs().first().toMap()["id"].toLongLong();
+                check(c.importJobs().first().toMap()["status"] == "paused", "GUI pauses import");
+            }
+            Controller c(folder);
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            QSignalSpy warnings(&engine, &QQmlEngine::warnings);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            check(!engine.rootObjects().empty(), "Import QML loads");
+            auto *dialog = engine.rootObjects().first()->findChild<QObject *>("importsDialog");
+            check(dialog && QMetaObject::invokeMethod(dialog, "open"), "Import manager opens");
+            c.resumeImport(job);
+            waitImport(c);
+            QTest::qWait(30);
+            check(c.importJobs().first().toMap()["status"] == "completed" &&
+                      c.stats()["games"].toInt() == 15 && c.sources().first().toMap()["games"].toInt() == 15,
+                  "GUI resumes persistent job and refreshes source/game lists");
+            check(c.importProgress()["job"].toLongLong() == job, "Detailed progress belongs to current job");
+            check(warnings.empty(), "Import dialog has no QML binding errors");
+            c.forgetImport(job);
+            check(c.importJobs().empty() && c.stats()["games"].toInt() == 15,
+                  "GUI removes checkpoint without deleting games");
+        }
+        {
             const auto recovery = dir.path() + "/corrupt";
             QDir().mkpath(recovery);
             QFile bad(recovery + "/session.json");

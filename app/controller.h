@@ -13,12 +13,16 @@
 #include <atomic>
 #include <deque>
 #include <memory>
+#include <mutex>
 
 class Controller : public QObject {
     Q_OBJECT
     Q_PROPERTY(t64::Content *content READ content CONSTANT)
     Q_PROPERTY(QVariantList sources READ sources NOTIFY sourcesChanged)
     Q_PROPERTY(QVariantList importHistory READ importHistory NOTIFY sourcesChanged)
+    Q_PROPERTY(QVariantList importJobs READ importJobs NOTIFY importsChanged)
+    Q_PROPERTY(QVariantMap importProgress READ importProgress NOTIFY busyChanged)
+    Q_PROPERTY(bool resumableImport READ resumableImport NOTIFY busyChanged)
     Q_PROPERTY(bool librarySearching READ librarySearching NOTIFY searchChanged)
     Q_PROPERTY(bool libraryHasNext READ libraryHasNext NOTIFY searchChanged)
     Q_PROPERTY(int libraryPage READ libraryPage NOTIFY searchChanged)
@@ -49,6 +53,12 @@ class Controller : public QObject {
     t64::Content *content() const { return content_.get(); }
     QVariantList sources() const { return sources_; }
     QVariantList importHistory() const { return importHistory_; }
+    QVariantList importJobs() const { return importJobs_; }
+    QVariantMap importProgress() const;
+    bool resumableImport() const { return busy_ && resumableImport_; }
+    Q_INVOKABLE void importResumable(const QString &url);
+    Q_INVOKABLE void resumeImport(qint64 id, const QString &replacement = {});
+    Q_INVOKABLE void forgetImport(qint64 id);
     bool librarySearching() const { return librarySearching_; }
     bool libraryHasNext() const { return libraryHasNext_; }
     int libraryPage() const { return int(searchCursors_.size()) + 1; }
@@ -166,6 +176,7 @@ class Controller : public QObject {
     void changed();
     void libraryChanged();
     void sourcesChanged();
+    void importsChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -202,7 +213,16 @@ class Controller : public QObject {
     struct ImportResult {
         int count = 0, duplicates = 0;
         QString error, operation = "import";
+        QVariantMap job;
     };
+    struct ImportView {
+        std::mutex mutex;
+        t64::ImportProgress progress;
+        qint64 elapsed = 0, startBytes = 0;
+    };
+    bool resumableImport_ = false;
+    QVariantList importJobs_;
+    std::shared_ptr<ImportView> importView_ = std::make_shared<ImportView>();
     std::unique_ptr<t64::Updater> updater_;
     QTimer backupTimer_;
     QFutureWatcher<QString> backupWorker_;

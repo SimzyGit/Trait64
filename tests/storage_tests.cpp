@@ -150,8 +150,8 @@ int main(int argc, char **argv) {
             for (const auto &object : extra)
                 check(q.exec("DROP " + object.second + " " + object.first), "Remove v3 fixture object");
             for (const auto &table :
-                 QStringList{"source_games", "sources", "import_history", "games_fts", "library_counts",
-                             "player_counts", "opening_edges", "opening_stats"})
+                 QStringList{"import_jobs", "source_games", "sources", "import_history", "games_fts",
+                             "library_counts", "player_counts", "opening_edges", "opening_stats"})
                 check(q.exec("DROP TABLE IF EXISTS " + table), "Remove v3 table");
 
             for (const auto &sql :

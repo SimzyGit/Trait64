@@ -76,7 +76,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 4, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 5, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -143,6 +143,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         }
         upgradeV3(v);
         upgradeV4(v);
+        upgradeV5(v);
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
