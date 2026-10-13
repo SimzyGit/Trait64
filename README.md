@@ -15,7 +15,7 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 
 **English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Série 0.3 en développement — dernière préversion validée : 0.3.0-dev.23.** C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : de nombreuses fonctions sont déjà utilisables, mais le périmètre prévu reste plus large. Voir [les Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) et [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Série 0.3 en développement.** C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : de nombreuses fonctions sont déjà utilisables, mais le périmètre prévu reste plus large. La dernière préversion validée est toujours disponible dans [les Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases). Voir aussi [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ### Principes du projet
 
