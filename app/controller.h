@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "comparison.h"
+#include "content.h"
 #include "database.h"
 #include "uci.h"
 #include "updater.h"
@@ -15,6 +16,13 @@
 
 class Controller : public QObject {
     Q_OBJECT
+    Q_PROPERTY(t64::Content *content READ content CONSTANT)
+    Q_PROPERTY(QVariantList sources READ sources NOTIFY sourcesChanged)
+    Q_PROPERTY(QVariantList importHistory READ importHistory NOTIFY sourcesChanged)
+    Q_PROPERTY(bool librarySearching READ librarySearching NOTIFY searchChanged)
+    Q_PROPERTY(bool libraryHasNext READ libraryHasNext NOTIFY searchChanged)
+    Q_PROPERTY(int libraryPage READ libraryPage NOTIFY searchChanged)
+    Q_PROPERTY(QString librarySearchStatus READ librarySearchStatus NOTIFY searchChanged)
     Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
@@ -24,6 +32,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
+    Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
@@ -37,6 +46,19 @@ class Controller : public QObject {
   public:
     explicit Controller(const QString &dataPath, QObject *parent = nullptr);
     ~Controller() override;
+    t64::Content *content() const { return content_.get(); }
+    QVariantList sources() const { return sources_; }
+    QVariantList importHistory() const { return importHistory_; }
+    bool librarySearching() const { return librarySearching_; }
+    bool libraryHasNext() const { return libraryHasNext_; }
+    int libraryPage() const { return int(searchCursors_.size()) + 1; }
+    QString librarySearchStatus() const { return librarySearchStatus_; }
+    Q_INVOKABLE void cancelLibrarySearch();
+    Q_INVOKABLE void nextLibraryPage();
+    Q_INVOKABLE void previousLibraryPage();
+    Q_INVOKABLE void exportSource(const QString &url, qint64 source);
+    Q_INVOKABLE void searchLibrary(const QString &query, const QString &result, bool favorite, bool position,
+                                   bool trash, const QVariantMap &filters);
     QVariantMap state() const { return state_; }
     QVariantList squares() const { return squares_; }
     QVariantList notation() const { return notation_; }
@@ -44,6 +66,12 @@ class Controller : public QObject {
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
     QVariantList cards() const { return cards_; }
+    QVariantList engineOptions() const {
+        return settings_.value("enginePath").toString() == engine_.executable() ? engine_.options()
+                                                                                : QVariantList();
+    }
+    Q_INVOKABLE void setEngineOption(const QString &name, const QVariant &value);
+    Q_INVOKABLE void pressEngineOption(const QString &name);
     QVariantList engineLines() const { return engineLines_; }
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;
@@ -137,6 +165,9 @@ class Controller : public QObject {
   signals:
     void changed();
     void libraryChanged();
+    void sourcesChanged();
+    void searchChanged();
+    void libraryOpened();
     void engineChanged();
     void preferencesChanged();
     void busyChanged();
@@ -146,6 +177,28 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
+    struct SearchResult {
+        QVariantList rows;
+        QString error;
+        quint64 generation = 0;
+    };
+    static constexpr int libraryPageSize = 200;
+    QFutureWatcher<SearchResult> searchWorker_;
+    std::shared_ptr<std::atomic_bool> cancelSearch_;
+    quint64 searchGeneration_ = 0;
+    bool searchActive_ = false, searchPending_ = false, searchEnabled_ = false;
+    bool librarySearching_ = false, libraryHasNext_ = false;
+    QString librarySearchStatus_;
+    QVariantMap searchCursor_;
+    QList<QVariantMap> searchCursors_;
+    void initLibrarySearch();
+    void requestLibrarySearch(bool resetPage = true);
+    void startLibrarySearch();
+    std::unique_ptr<t64::Content> content_;
+    QVariantList sources_, importHistory_;
+    void initContent();
+    void importSourceFile(const QString &url, const QVariantMap &source);
+    QVariantMap openingFilters(const QVariantMap &filters) const;
     struct ImportResult {
         int count = 0, duplicates = 0;
         QString error, operation = "import";

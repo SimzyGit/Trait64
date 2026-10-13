@@ -65,6 +65,7 @@ Controller::Controller(const QString &path, QObject *parent)
     analysisTimer_.setSingleShot(true);
     analysisTimer_.setInterval(180);
     connect(&analysisTimer_, &QTimer::timeout, this, &Controller::requestEngine);
+    connect(&engine_, &t64::Uci::optionsChanged, this, &Controller::engineChanged);
     connect(&engine_, &t64::Uci::status, this, [this](const QString &v) {
         engineStatus_ = v;
         emit engineChanged();
@@ -103,6 +104,12 @@ Controller::Controller(const QString &path, QObject *parent)
         taskPoll_.stop();
         emit busyChanged();
         const auto r = importer_.result();
+        if (r.operation == "source" && content_)
+            content_->reportImport(r.error.isEmpty()
+                                       ? QString("Base importée : %1 nouvelles parties, %2 déjà présentes.")
+                                             .arg(r.count)
+                                             .arg(r.duplicates)
+                                       : r.error);
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())
@@ -142,10 +149,17 @@ Controller::Controller(const QString &path, QObject *parent)
     }
     initFeatures();
     initReliability();
+    initContent();
+    initLibrarySearch();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    searchEnabled_ = false;
+    disconnect(&searchWorker_, nullptr, this, nullptr);
+    if (cancelSearch_)
+        cancelSearch_->store(true);
+    searchWorker_.waitForFinished();
     comparison_.stop();
     backupWorker_.waitForFinished();
     reviewer_.shutdown();
@@ -163,13 +177,17 @@ void Controller::fail(const std::exception &e) {
 }
 void Controller::refreshLibrary() {
     try {
-        games_ = db_->search(query_, resultFilter_, favoritesOnly_,
-                             positionFilter_ ? s(game_.nodes[node_].fen) : QString(), trashFilter_,
-                             advancedFilters_);
         stats_ = db_->stats();
         cards_ = db_->cards();
         players_ = db_->players();
+        const auto sources = db_->sources(), history = db_->importHistory();
+        if (sources != sources_ || history != importHistory_) {
+            sources_ = sources;
+            importHistory_ = history;
+            emit sourcesChanged();
+        }
         emit libraryChanged();
+        requestLibrarySearch();
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -322,8 +340,8 @@ void Controller::refresh(bool content) {
     }
     detectOpening();
     emit changed();
-    if (positionFilter_)
-        refreshLibrary();
+    if (positionFilter_ && previousFen != s(current.fen))
+        requestLibrarySearch();
     if ((analysis_ || playing_) && !cardId_ && previousFen != s(current.fen))
         analysisTimer_.start();
     if (!cardId_)
@@ -444,6 +462,9 @@ void Controller::importText(const QString &text) {
     importBytes(text.toUtf8());
 }
 void Controller::importFile(const QString &url) {
+    importSourceFile(url, {});
+}
+void Controller::importSourceFile(const QString &url, const QVariantMap &source) {
     try {
         require(!busy_, "Un traitement est déjà en cours.");
         const auto path = localPath(url);
@@ -459,14 +480,18 @@ void Controller::importFile(const QString &url) {
             const auto databasePath = db_->path();
             const auto canceled = cancelTask_;
             const auto progress = taskProgress_;
-            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress] {
+            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress, source] {
                 ImportResult r;
+                r.operation = source.isEmpty() ? "import" : "source";
                 try {
                     t64::Database db(databasePath);
-                    r.count = db.importPgnFile(path, [&](int n) {
-                        progress->store(n);
-                        return !canceled->load();
-                    });
+                    r.count = db.importPgnFile(
+                        path,
+                        [&](int n) {
+                            progress->store(n);
+                            return !canceled->load();
+                        },
+                        source);
                     r.duplicates = progress->load() - r.count;
                 } catch (const std::exception &e) {
                     r.error = QString::fromUtf8(e.what());
@@ -585,6 +610,8 @@ void Controller::openBackup(const QString &url) {
         for (auto &v : redo_)
             v.id = 0;
         writeSession();
+        advancedFilters_.clear();
+        emit libraryOpened();
         refreshLibrary();
         refresh();
         emit message("Bibliothèque ouverte : " + QFileInfo(path).fileName());
@@ -811,7 +838,7 @@ void Controller::search(const QString &query, const QString &result, bool favori
     favoritesOnly_ = favorite;
     positionFilter_ = position;
     trashFilter_ = trash;
-    refreshLibrary();
+    requestLibrarySearch();
 }
 void Controller::favorite(qint64 id, bool value) {
     try {
@@ -845,10 +872,13 @@ void Controller::copyText(const QString &what) {
     emit message(what.toUpper() + " copié.");
 }
 void Controller::startEngine() {
+    auto options = settings_.value("uciOptions").toMap();
+    if (!playing_)
+        options["UCI_LimitStrength"] = false;
     engine_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
                   settings_.value("hash", 128).toInt(), settings_.value("multiPV", 3).toInt(),
                   playing_ ? settings_.value("skill", 12).toInt() : 20,
-                  settings_.value("syzygyPath").toString());
+                  settings_.value("syzygyPath").toString(), options);
     if (analysis_ || playing_)
         requestEngine();
 }

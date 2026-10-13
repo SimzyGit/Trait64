@@ -1,12 +1,13 @@
 # Architecture de la version 0.3
 
-Monolithe modulaire de bureau, sans serveur. Le module facultatif de mises à jour est le seul client réseau intégré ; les fonctions d’échecs restent locales.
+Monolithe modulaire de bureau, sans serveur. Les mises à jour et le catalogue de téléchargements utilisent le réseau à la demande ; les fonctions d’échecs restent locales.
 
 | Module | Rôle |
 |---|---|
 | `libs/core` | C++ standard sans Qt : FEN, règles classiques/Chess960, arbre, PGN et lecture en flux, EPD, fusion, perft |
-| `libs/database` | Qt SQL : SQLite schéma 3, transactions, index, statistiques joueurs/entraînements, sauvegarde ; archive expérimentale |
+| `libs/database` | Qt SQL : SQLite schéma 4, transactions, index, statistiques joueurs/entraînements, sauvegarde ; archive expérimentale |
 | `libs/engine` | QProcess : UCI asynchrone, options, annulation sérialisée, MultiPV et résultats terminés |
+| `libs/content` | Qt Network/Concurrent et libarchive : catalogue embarqué, téléchargement, vérification et extraction protégée |
 | `libs/updates` | Qt Network : Releases GitHub, canaux, SHA-256, téléchargement borné et installation |
 | `app` | Contrôleur QObject, onglets/session/historique, apparence, bilan, pendules, orchestration |
 | `ui` | Qt Quick/QML : 7 espaces, échiquier et pièces SVG, panneaux, dialogues |
@@ -31,3 +32,10 @@ Le schéma 3 garde une table de compteurs, des comptes par joueur, une arête un
 La comparaison UCI possède 2 à 4 processus indépendants. Les sorties sont bornées par le parseur UCI, validées comme coups légaux et associées à la FEN. Navigation : effacement immédiat des anciennes lignes, stop, temporisation de 180 ms puis dernière position demandée. Notifications QML au maximum toutes les 50 ms. Les profils sont plafonnés à 1 Gio de hash total, les threads répartis avec au moins un thread par moteur.
 
 La vérification de mises à jour ne démarre pas en mode test. Le téléchargement est asynchrone et les redirections contrôlées. La sauvegarde précédant l’installation et le remplacement final restent synchrones ; sur une très grosse base, cette dernière phase peut immobiliser temporairement l’interface. Les sauvegardes périodiques utilisent, elles, un worker avec une connexion SQLite distincte.
+
+
+Le schéma 4 relie les parties à leurs sources par `source_games` et garde un historique d’import. Les compteurs de sources suivent la corbeille et les suppressions via des déclencheurs transactionnels. Deux sources peuvent partager le même PGN exact sans dupliquer sa partie. La migration crée une sauvegarde avant modification.
+
+`app/search.cpp` gère un seul worker SQL à la fois, avec une connexion propre au thread. La dernière demande remplace celles en attente ; génération et drapeau atomique empêchent une réponse périmée d’alimenter la liste. `sqlite3_progress_handler` interrompt la requête en cours, puis est retiré par RAII. La fermeture annule et rejoint le worker. Les pages contiennent 200 lignes plus une sentinelle pour déterminer l’existence de la suite ; les curseurs précédents sont conservés, sans OFFSET dans l’interface. Le tri par modification utilise deux plages disjointes bornées afin de chercher aussi sur l’identifiant quand les dates sont égales.
+
+Le catalogue embarqué épingle tailles et SHA-256 des moteurs. Les PGN d’un fournisseur sans empreinte publiée sont identifiés à réception sans prétendre à une authentification indépendante. L’extraction borne taille et nombre d’entrées et rejette liens, chemins sortants et fichiers spéciaux. Un moteur installé ajoute un profil, sans l’exécuter automatiquement. Les options sont validées contre le handshake UCI avant envoi et sauvegardées par profil.

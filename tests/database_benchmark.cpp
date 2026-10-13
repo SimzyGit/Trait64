@@ -88,6 +88,17 @@ int main(int argc, char **argv) {
             report[name] = QJsonObject{{"median_ms", samples[5]}, {"max_ms", samples.back()}};
         };
         measure("library_page", [&] { must(db.search().size() == 1000, "First page count"); });
+        const QVariantMap deepCursor{{"updated", "2026-10-10T00:00:00Z"}, {"id", count / 10 + 1}};
+        QVariantList cursorPage;
+        measure("deep_cursor_200", [&] {
+            cursorPage = db.search({}, {}, false, {}, false, {{"cursor", deepCursor}, {"limit", 200}});
+            must(cursorPage.size() == std::min(200, count / 10), "Deep cursor page count");
+        });
+        measure("deep_offset_200", [&] {
+            must(db.search({}, {}, false, {}, false, {{"offset", count - count / 10}, {"limit", 200}}) ==
+                     cursorPage,
+                 "Deep OFFSET and cursor give the same rows");
+        });
         measure("trigram_substring", [&] { must(!db.search("ayer 00999").empty(), "Substring lookup"); });
         measure("exact_player", [&] {
             must(db.search({}, {}, false, {}, false, {{"white", "Player 00999"}, {"exactNames", true}})

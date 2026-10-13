@@ -34,6 +34,36 @@ void check(bool ok, const char *message) {
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     try {
+        const auto spin =
+            t64::Uci::parseOption("option name UCI_Elo type spin default 1320 min 1320 max 3190");
+        check(spin["name"] == "UCI_Elo" && t64::Uci::optionValue(spin, 1500) == "1500", "Parse spin bounds");
+        bool rejected = false;
+        try {
+            t64::Uci::optionValue(spin, 3200);
+        } catch (...) {
+            rejected = true;
+        }
+        check(rejected, "Reject out of range UCI value");
+        const auto combo = t64::Uci::parseOption(
+            "option name Style type combo default Very solid var Normal var Very solid");
+        check(t64::Uci::optionValue(combo, "Very solid") == "Very solid", "UCI multi-word combo");
+        rejected = false;
+        try {
+            t64::Uci::optionValue(combo, "Attack");
+        } catch (...) {
+            rejected = true;
+        }
+        check(rejected, "Reject undeclared combo");
+        const auto string = t64::Uci::parseOption("option name Eval File type string default <empty>");
+        check(t64::Uci::optionValue(string, "") == "<empty>", "Empty UCI string");
+        rejected = false;
+        try {
+            t64::Uci::optionValue(string, "net\nquit");
+        } catch (...) {
+            rejected = true;
+        }
+        check(rejected && t64::Uci::parseOption("option name Bad\nquit type button").isEmpty(),
+              "Reject UCI injection");
         t64::Uci engine;
         QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines),
             complete(&engine, &t64::Uci::completed);
@@ -47,8 +77,12 @@ int main(int argc, char **argv) {
             return 77;
         }
         auto start = QString::fromStdString(chess::constants::STARTPOS);
-        engine.start(path, 1, 16, 2, 20);
+        engine.start(path, 1, 16, 2, 20, {}, {{"UCI_LimitStrength", false}});
         check(waitFor([&] { return engine.ready(); }), "UCI handshake failed");
+        check(!engine.options().isEmpty(), "Engine publishes option descriptors");
+        check(engine.pressOption("Clear Hash"), "Declared button is actionable");
+        check(waitFor([&] { return engine.ready(); }), "Ready after button");
+        check(!engine.pressOption("Clear Hash\nquit"), "Reject unknown button");
         engine.analyse(start, "position fen " + start);
         check(waitFor([&] {
                   for (const auto &args : lines)
