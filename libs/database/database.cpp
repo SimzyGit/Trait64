@@ -76,7 +76,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 4, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 6, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -143,6 +143,8 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         }
         upgradeV3(v);
         upgradeV4(v);
+        upgradeV5(v);
+        upgradeV6(v);
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
@@ -533,6 +535,77 @@ void Database::favorite(qint64 id, bool value) {
     q.addBindValue(value);
     q.addBindValue(id);
     run(q);
+}
+QVariantList Database::positionStatistics(const QString &fen, const QVariantMap &filters,
+                                          const std::shared_ptr<std::atomic_bool> &canceled) const {
+    QueryCancellation cancellation(db_, canceled);
+    const int from = filters["fromYear"].toInt(), to = filters["toYear"].toInt();
+    const int min = filters["minElo"].toInt(), max = filters["maxElo"].toInt();
+    check(from >= 0 && from <= 9999 && to >= 0 && to <= 9999 && (!from || !to || from <= to),
+          "Période invalide.");
+    check(min >= 0 && min <= 4000 && max >= 0 && max <= 4000 && (!min || !max || min <= max),
+          "Plage Elo invalide.");
+    const auto colour = filters.value("colour", "both").toString();
+    check(colour == "white" || colour == "black" || colour == "both", "Couleur invalide.");
+    QString statement =
+        "SELECT DISTINCT p.game_id,p.uci,p.san,g.result,g.white_elo,g.black_elo,g.date "
+        "FROM positions p JOIN games g ON g.id=p.game_id WHERE p.fen=? AND p.uci<>'' AND g.deleted=0";
+    QVariantList args{s(positionKey(fen.toStdString()))};
+    const auto player = filters["player"].toString().trimmed();
+    if (!player.isEmpty()) {
+        if (colour == "both") {
+            statement += " AND (g.white=? OR g.black=?)";
+            args << player << player;
+        } else {
+            statement += " AND g." + colour + "=?";
+            args << player;
+        }
+    }
+    if (filters["sourceId"].toLongLong() > 0) {
+        statement += " AND EXISTS(SELECT 1 FROM source_games s WHERE s.source_id=? AND s.game_id=g.id)";
+        args << filters["sourceId"].toLongLong();
+    }
+    if (from || to)
+        statement += " AND substr(g.date,1,4) GLOB '[0-9][0-9][0-9][0-9]'";
+    if (from) {
+        statement += " AND substr(g.date,1,4)>=?";
+        args << QString::number(from).rightJustified(4, '0');
+    }
+    if (to) {
+        statement += " AND substr(g.date,1,4)<=?";
+        args << QString::number(to).rightJustified(4, '0');
+    }
+    if (min || max)
+        statement += " AND g.white_elo>0 AND g.black_elo>0";
+    if (min) {
+        statement += " AND (g.white_elo+g.black_elo)/2.0>=?";
+        args << min;
+    }
+    if (max) {
+        statement += " AND (g.white_elo+g.black_elo)/2.0<=?";
+        args << max;
+    }
+    statement =
+        "WITH selected AS (" + statement +
+        ") SELECT uci,MIN(san),COUNT(*),SUM(result='1-0'),"
+        "SUM(result='1/2-1/2'),SUM(result='0-1'),AVG(CASE WHEN white_elo>0 AND black_elo>0 THEN "
+        "(white_elo+black_elo)/2.0 END),SUM(white_elo>0 AND black_elo>0),"
+        "MAX(CASE WHEN substr(date,1,4) GLOB '[0-9][0-9][0-9][0-9]' THEN substr(date,1,4) END),MIN(game_id) "
+        "FROM selected GROUP BY uci ORDER BY COUNT(*) DESC,uci";
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare(statement);
+    for (const auto &arg : args)
+        q.addBindValue(arg);
+    run(q);
+    QVariantList rows;
+    while (q.next())
+        rows << QVariantMap{{"uci", q.value(0)},        {"san", q.value(1)},   {"count", q.value(2)},
+                            {"white", q.value(3)},      {"draw", q.value(4)},  {"black", q.value(5)},
+                            {"averageElo", q.value(6)}, {"rated", q.value(7)}, {"lastYear", q.value(8)},
+                            {"example", q.value(9)}};
+    check(!q.lastError().isValid(), q.lastError().text());
+    return rows;
 }
 void Database::trash(qint64 id, bool value) {
     QSqlQuery q(db_);

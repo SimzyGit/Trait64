@@ -1,33 +1,47 @@
-# Reprise du développement après 0.3
+# Reprise du développement — 14 octobre 2026
 
-## État fonctionnel à conserver
+## État à conserver
 
-Application C++23/Qt6/QML, monolithe modulaire. Les fonctions 0.1/0.2 restent présentes. La branche `main` contient le système de mise à jour, la distribution Linux et les modules ajoutés en 0.3. Les commits ordinaires sur main sont publiés uniquement comme préversions `X.Y.Z-dev.N` après toutes les validations. Ne pas réécrire l’application ni remplacer les contrôles existants par des maquettes.
+Trait64 est une application de bureau C++23/Qt6/QML et SQLite, monolithe modulaire. Ne pas recommencer l’application. L’esthétique est en pause. Les fonctions locales ne nécessitent ni compte ni réseau. La liste détaillée des objectifs et les limites sont dans [ROADMAP.md](ROADMAP.md).
+
+Le lot **PR #3 — imports reprenables, répertoires et préparation** est sur `feat/resumable-imports-repertoires`. Il prolonge la PR #2 publiée dans `v0.3.0-dev.23`. Les modifications du README ajoutées séparément sur main (2873ed2 puis f85ee26) sont conservées. La version publiée courante est à vérifier dans les [Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases), sans revenir à une ancienne copie locale.
+
+### Lot implémenté
+
+- `libs/database/imports.cpp`, `app/imports.cpp`, `ui/Imports.qml` : schéma **5**, tâches PGN persistantes, SHA-256 complet avant reprise, verrou interprocessus, transactions de 250 parties comprenant le point de reprise, pause et fichier déplacé. L’import classique conserve son annulation intégrale.
+- `libs/database/repertoires.cpp`, `app/repertoires.cpp`, `ui/Repertoires.qml` : schéma **6**, répertoires nommés Blancs/Noirs/classique/960, graphe de positions/transpositions, notes/NAG/priorités, modèles de parties et import/export PGN. Les branches supprimées de l’étude ne sont pas importées. La suppression d’une branche préserve les transpositions encore accessibles et leurs révisions.
+- Entraînement de répertoire : plusieurs réponses préparées acceptées, calendrier par position, rappels manqués et restauration de l’étude. `trainingActive()` couvre les cartes existantes et les répertoires ; ne pas réutiliser `cardId_` comme identifiant de répertoire.
+- Couverture : jusqu’à 100 réponses adverses absentes, observées dans la bibliothèque. Ce sont des lacunes du répertoire par rapport à ce corpus, pas des nouveautés théoriques ni des erreurs démontrées.
+- `app/preparation.cpp`, `ui/Preparation.qml`, `Database::positionStatistics` : position, source, nom exact/couleur, période et moyenne des Elo connus ; worker annulable, générations contre les résultats périmés, exemples réels et CSV avec contexte. Une partie ne compte qu’une fois par coup même après répétition.
+
+Le schéma publié ne doit pas être réécrit : le prochain changement structurel nécessite une **migration 7 sauvegardée**. L’export de répertoire développe chaque position une fois pour borner les cycles ; les transpositions sont annotées et le graphe peut être réimporté. L’import de répertoire est atomique et limité à 16 Mio / 200 parties. Certaines requêtes de couverture et opérations d’édition restent synchrones.
+
+### Validation de ce lot
+
+Localement le 14 octobre : **9/9 suites réussies en 15,53 s**, Stockfish réel inclus. Tests : arrêt réel du processus au milieu d’un lot, reprise sans doublons, fichier déplacé/modifié, verrou récupéré, graphe/transpositions/cycles/Chess960, migration 1 → 6, notes et SRS, préparation filtrée/annulée, CSV, interfaces QML et sauvegardes. Une collision de nom avec la propriété finale `Dialog.result` a été corrigée dans le dialogue de préparation.
+
+Avant fusion, vérifier la CI au SHA exact de la PR #3 ; après fusion, vérifier la chaîne de publication de main et les assets. [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3) conserve les résultats effectifs. Aucune de ces validations ne remplace un essai sur le PC Voyager de l’utilisateur.
+
+## Prochaines étapes, dans l’ordre
+
+1. **Qualification des gros corpus.** Importer des PGN réels de 1, 2, 5 puis 10 millions de parties avec protocole reproductible : durée, mémoire, taille, recherche, interruption et restauration. Le benchmark déjà livré porte sur un million de lignes de métadonnées synthétiques, pas sur autant de parties complètes. Optimiser à partir des mesures : import parallèle borné, indexation progressive, modèles Qt incrémentaux, export et migrations en arrière-plan. Voir PERFORMANCE.
+2. **Explications vérifiables et analyse.** Analyse de toutes les branches, file de tâches persistante, cache d’évaluations avec paramètres/provenance, comparaison coup joué/meilleur coup. Détection tactique appuyée par des séquences légales et vérification moteur ; ne pas inventer de plans ou de niveau Elo. Les options Syzygy actuelles sont transmises aux moteurs ; un module local dédié et ses tests restent à développer.
+3. **Répertoires approfondis.** Déporter les gros imports/exports/analyses de couverture hors du thread UI ; couverture probabiliste, comparaison de répertoires, tendances adverses et analyse moteur des branches. Distinguer explicitement absence dans un corpus et nouveauté théorique.
+4. **Sources et formats.** Import distant volontaire, formats ouverts supplémentaires et Polyglot, exploration SCID/ChessBase selon droits et documentation. Les 42 collections optionnelles actuelles sont des téléchargements PGN Mentor, pas un corpus redistribué sous licence ouverte. Ne pas annoncer une collection exhaustive de chaque championne.
+5. **Entraînement.** Corpus tactique licencié, solutions équivalentes vérifiées par moteur, finales évaluées correctement, séances de calcul et visualisation, progression par thème. Le SRS de répertoire actuel accepte les réponses enregistrées ; il n’évalue pas les autres coups échiquéennement.
+6. **Outils avancés.** Rapports PDF de répertoire/faiblesses, chapitres et outils pédagogiques, reconnaissance de diagrammes par modèle local licencié avec validation de la FEN. Les exports PDF/PNG d’étude existent déjà ; aucun bouton OCR factice n’est présent.
+7. **Fiabilité et plateformes.** Restauration guidée de tout le dossier utilisateur ; sauvegarde pré-mise à jour et installation entièrement asynchrones ; essais Voyager X11/Wayland, GPU, GitHub privé et Polkit. Signature indépendante des releases uniquement lorsqu’une clé de maintenance est gérée explicitement. Windows/macOS/Flatpak restent non validés.
+
+## Points d’architecture et distribution
 
 - `libs/updates` : sélection SemVer et canaux, authentification privée facultative, réseau asynchrone, contrôles taille/SHA-256/hôte, remplacement atomique AppImage et installation Debian via pkexec/apt-get.
-- `app/reliability.cpp` : sauvegarde pré-mise à jour, sauvegardes périodiques et rotation. Le contrôleur restaure les sessions et conserve les fichiers illisibles.
-- `libs/database/scaling.cpp` : migration sauvegardée vers le schéma 3, index, FTS5 trigramme facultatif et agrégats SQL transactionnels. Le schéma 4 ajoute les sources et leur historique dans `sources.cpp`. Prévoir une migration 5 pour les prochains changements, sans modifier les schémas publiés.
-- `libs/engine/comparison.*`, `ui/CompareEngines.qml` : 2–4 processus, budgets partagés, PV associées à la FEN, navigation et insertion.
-- `packaging/` : AppImage, inventaire des bibliothèques et notices, sources Debian correspondantes distribuées à côté du binaire. Stockfish et les tablebases sont externes.
+- `app/reliability.cpp` : sauvegardes périodiques, rotation et pré-mise à jour ; sessions atomiques et conservation des fichiers illisibles. Préserver les données utilisateur lors d’une mise à jour.
+- `libs/database/scaling.cpp` : index/FTS5 trigramme facultatif et agrégats transactionnels (schéma 3). `sources.cpp` : bases et historique (schéma 4). `imports.cpp` et `repertoires.cpp` : schémas 5/6.
+- `libs/engine/comparison.*` : 2–4 moteurs, budgets CPU/Hash partagés et PV liées à leur FEN. Profils/options issus du handshake, catalogue de versions épinglées. PlentyChess 8 exige glibc 2.38 ; respecter les minima du catalogue.
+- `ui/Main.qml` conserve les sept espaces et leurs index. `ui/Home.qml`, `TButton`, `TTabButton` et les préférences personnelles sont conservés. Ne pas réintroduire une refonte esthétique dans ce lot.
+- `packaging/` : DEB Debian 12/13, AppImage, inventaire des bibliothèques/notices et sources correspondantes distribuées. Moteurs et tablebases externes.
 
-## Interface du 11 octobre 2026
-
-`ui/Home.qml` contient l’accueil carnet et ses signaux vers Main. `ui/Main.qml` conserve les sept pages et leurs index, avec navigation numérotée en haut. `TButton` et `TTabButton` portent les contrôles communs. Les commandes de position sont dans le menu sous l’échiquier ; paramètres, mises à jour et aide dans le menu principal. Ne pas réintroduire la barre latérale sans décision de design.
-
-Les préférences sauvegardées priment sur les nouveaux défauts (palette Trait64, fond encre/papier, accent cuivre adapté à la luminance). Aucune migration n’est nécessaire. Le monogramme de lancement reste provisoire et inchangé.
-
-La capture `--smoke-test` accepte `T64_SCREENSHOT_PAGE=0..6` et `T64_SCREENSHOT_THEME=light` en plus de la taille et du chemin ; elle utilise des données temporaires. Le test de navigation recherche les délégués dans l’arbre visuel Qt Quick : ils ne sont pas nécessairement descendants QObject de la fenêtre.
-
-## Prochaines étapes concrètes
-
-1. **Répertoires** : entités personnelles nom/camp, liens vers études et positions, choix principal/alternatives, couverture des réponses adverses, transpositions et lacunes. Migration 5 sauvegardée ; tests sur branches et transpositions avant interface. Ne pas confondre une collection de parties avec un répertoire complet.
-2. **Entraînement** : modèles de cartes par thème, apprentissage de répertoire par position, solutions équivalentes validées par moteur, évaluation adaptée aux finales, séances de calcul et visualisation, suivi par thème. Les cartes actuelles valident seulement une ligne connue, avec calendrier simple.
-3. **Gros corpus** : qualifier un import de PGN réels longs avec plusieurs millions de parties ; mesurer temps, mémoire, taille et restauration. La recherche annulable et les pages par curseur sont livrées. Ajouter modèles Qt incrémentaux, reprise d’import et progression de migration. Le benchmark livré n’est pas cette qualification.
-4. **Analyse** : branches complètes, file de tâches persistante, budgets adaptatifs, tablebases locales dédiées. Les options UCI issues du handshake sont désormais exposées et mémorisées par profil. Préparer l’adversaire par couleur et position ; distinguer absence dans la base et vraie nouveauté théorique.
-5. **Outils avancés** : rapport PDF de faiblesses/répertoire, cours/annotations pédagogiques, reconnaissance de diagramme par modèle local correctement licencié avec validation manuelle de la FEN. Aucun bouton OCR factice n’est présent.
-6. **Fiabilité** : sauvegarde pré-mise à jour hors thread UI, restauration guidée bibliothèque/session/préférences/pièces personnelles, tests d’installation sur le PC Voyager en X11/Wayland. Ajouter une signature de release si une clé de maintenance est gérée explicitement.
-
-## Vérifier avant de publier
+## Vérifier et publier
 
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -35,20 +49,8 @@ cmake --build build --parallel 2
 ctest --test-dir build --output-on-failure
 ```
 
-Stockfish doit être installé pour ne pas ignorer la suite moteur. Tests sans interface physique : `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`. Le pipeline teste Debian 12/13, les paquets installés, l’AppImage et les sanitizers avant publication. Un tag stable reste une décision explicite. Après une version stable, augmenter la version de base dans CMake pour que les préversions suivantes soient sémantiquement plus récentes. À base égale, SemVer classe `beta` avant `dev` : on ne rétrograde pas automatiquement de dev vers beta.
+Dans l’environnement de développement contraint, compiler avec **`--parallel 1`** et ne jamais modifier C++/CMake pendant une compilation. Le cache automoc hérité d’une interruption peut nécessiter une régénération. Stockfish doit être présent : une suite moteur ignorée n’est pas un succès. Tests GUI sans écran : `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`. Voir TESTING pour les détails.
 
-Les outils AppImage sont épinglés par empreinte. Si une release continue amont remplace ses assets, actualiser les identifiants et SHA-256 après vérification des sources ; ne jamais désactiver le contrôle pour faire passer la CI. Le téléchargement des sources LGPL/GPL embarquées fait partie de la publication.
+La CI construit Debian 12/13, teste les paquets installés et l’AppImage, les sanitizers du cœur et rassemble les sources correspondantes avant publication. Les commits ordinaires sur main publient uniquement des **préversions Développement**. Stable/Bêta demandent un tag ou lancement explicite. Ne jamais désactiver une empreinte AppImage pour faire passer la CI ; vérifier une nouvelle archive amont avant de changer son identifiant/empreinte.
 
-Pour les 0.1/0.2 déjà installées, amorçage manuel obligatoire : elles ne possèdent pas le module de mise à jour. Le dépôt privé nécessite le compte GitHub de l’utilisateur ; ne jamais intégrer de jeton au programme.
-
-## Point de reprise — 12 octobre 2026
-
-Lot achevé et testé localement : profils UCI indépendants, catalogue moteurs/bases, migration 4, filtres combinés, recherche annulable et pagination par curseur. Branche `feat/engine-catalog-databases` ; `main` conserve les modifications de présentation ajoutées séparément par l’utilisateur. Ne pas repartir de l’ancienne copie locale 759c3dc.
-
-Fichiers : `libs/content/{content,package}.*`, `assets/content/`, `app/content.cpp`, `ui/Downloads.qml`, `libs/database/sources.cpp`, contrôleur et Main. Les sept suites locales passent (361 vérifications d’interaction). Vérification supplémentaire des trois paquets moteurs officiels par empreinte, extraction, handshake et coup légal ; deux PGN réels parsés ; téléchargement HTTPS réel PGN Mentor via Qt et suppression locale réussis. Aucun de ces binaires n’est incorporé au dépôt.
-
-Tâche suivante : import reprenable, puis véritables répertoires nommés (camp, branches, transpositions) et entraînement par position. La recherche utilise un worker Qt, une connexion SQL indépendante, une annulation SQLite et des pages de 200 résultats. Les générations empêchent les réponses périmées de remplacer le filtre courant. L’export, certaines analyses de joueurs et les migrations restent synchrones ; la pagination de l’interface n’utilise plus OFFSET. Le benchmark synthétique d’un million de lignes a mis en évidence une recherche d’index insuffisante pour les dates identiques ; la correction par deux plages bornées est mesurée dans PERFORMANCE. Les futurs modèles Qt incrémentaux et les benchmarks sur 1/2/5/10 millions de parties réelles restent à faire. Le tableau détaillé de toutes les demandes est dans ROADMAP.
-
-Précautions : PlentyChess 8 exige glibc 2.38 (donc téléchargement désactivé sur Debian 12) ; Stockfish 19 et Arasan 26 ont d’autres minima explicités au catalogue. Le catalogue est livré avec l’application, pas remplacé depuis une URL non vérifiée. Les anciennes versions et profils sont conservés lors d’une mise à jour de moteur ; la gestion de toutes les versions historiques pourra être étendue. Les cartes SRS actuelles et les bilans ne sont pas des répertoires complets et ne fournissent aucune estimation Elo artificielle.
-
-Tests à poursuivre : CI Debian 12/13 après ajout de libarchive-dev/libsqlite3-dev et de la recherche asynchrone ; restauration depuis v3 réelle, navigation et annulation sur corpus volumineux, réseau interrompu. Ne pas modifier les sources C++/CMake pendant une compilation locale ; utiliser un seul processus compilateur dans cet environnement.
+Après une version stable, augmenter la version de base CMake. À base égale, SemVer classe `beta` avant `dev` : ne pas rétrograder automatiquement. Les versions 0.1/0.2 nécessitent un amorçage manuel vers 0.3. Ne jamais intégrer un jeton GitHub au programme.

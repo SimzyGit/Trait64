@@ -150,8 +150,9 @@ int main(int argc, char **argv) {
             for (const auto &object : extra)
                 check(q.exec("DROP " + object.second + " " + object.first), "Remove v3 fixture object");
             for (const auto &table :
-                 QStringList{"source_games", "sources", "import_history", "games_fts", "library_counts",
-                             "player_counts", "opening_edges", "opening_stats"})
+                 QStringList{"repertoire_reviews", "repertoire_moves", "repertoire_positions", "repertoires",
+                             "import_jobs", "source_games", "sources", "import_history", "games_fts",
+                             "library_counts", "player_counts", "opening_edges", "opening_stats"})
                 check(q.exec("DROP TABLE IF EXISTS " + table), "Remove v3 table");
 
             for (const auto &sql :
@@ -371,6 +372,53 @@ int main(int argc, char **argv) {
             rejects([&] { slow.search({}, {}, false, {}, false, {}, canceled); });
             check(canceled->load() && timer.elapsed() < 3000, "SQLite stops an executing search promptly");
             check(slow.stats()["games"].toInt() == 1, "Progress callback removed after interruption");
+        }
+        {
+            t64::Database prep(dir.path() + "/preparation.sqlite");
+            auto games = t64::parsePgn("[White \"Rival\"] [Black \"Partner\"] [Date \"2020.01.01\"] "
+                                       "[WhiteElo \"2000\"] [BlackElo \"2200\"]\n"
+                                       "1.Nf3 Nf6 2.Ng1 Ng8 3.Nf3 1-0\n"
+                                       "[White \"Alice\"] [Black \"Rival\"] [Date \"2024.01.01\"] [WhiteElo "
+                                       "\"2300\"] [BlackElo \"2500\"]\n1.d4 0-1\n"
+                                       "[White \"Rival\"] [Date \"????.??.??\"]\n1.e4 *\n"
+                                       "[White \"Rival\"] [Black \"Other\"] [Date \"2024.02.01\"] [WhiteElo "
+                                       "\"1900\"] [BlackElo \"2100\"]\n1.d4 0-1");
+            prep.importGames(games);
+            const auto start = QString::fromStdString(chess::constants::STARTPOS);
+            auto all = prep.positionStatistics(start);
+            check(all.size() == 3 && all.first().toMap()["uci"] == "d2d4" &&
+                      all.first().toMap()["count"].toInt() == 2 &&
+                      all.first().toMap()["averageElo"].toDouble() == 2200,
+                  "Position statistics group by actual move with known average ratings");
+            auto white = prep.positionStatistics(
+                start, {{"player", "Rival"}, {"colour", "white"}, {"fromYear", 2023}, {"toYear", 2025}});
+            check(white.size() == 1 && white.first().toMap()["averageElo"].toDouble() == 2000,
+                  "Player, colour and period filters combine and exclude unknown years");
+            auto rated = prep.positionStatistics(start, {{"minElo", 2200}, {"maxElo", 2500}});
+            check(rated.size() == 1 && rated.first().toMap()["count"].toInt() == 1 &&
+                      rated.first().toMap()["averageElo"].toDouble() == 2400,
+                  "Rating filter excludes missing ratings without estimating them");
+            auto repeat = prep.positionStatistics(start, {{"toYear", 2020}});
+            check(repeat.size() == 1 && repeat.first().toMap()["count"].toInt() == 1 &&
+                      repeat.first().toMap()["rated"].toInt() == 1,
+                  "Repeated positions do not inflate game counts or rating weights");
+            const auto file = dir.path() + "/prep-source.pgn";
+            QFile f(file);
+            check(f.open(QIODevice::WriteOnly), "Write position source fixture");
+            f.write(QByteArray::fromStdString(games[1].pgn()));
+            f.close();
+            prep.importPgnFile(file, {}, {{"id", "prep"}, {"title", "Preparation"}});
+            auto source = prep.sources().first().toMap()["id"];
+            check(prep.positionStatistics(start, {{"sourceId", source}}).first().toMap()["count"].toInt() ==
+                      1,
+                  "Position statistics restrict source membership without duplicate games");
+            check(prep.positionStatistics(start, {{"player", "Riv%"}}).empty(), "Player name match is exact");
+            rejects([&] { prep.positionStatistics(start, {{"minElo", 2500}, {"maxElo", 2000}}); });
+            rejects([&] { prep.positionStatistics(start, {{"fromYear", 2025}, {"toYear", 2020}}); });
+            auto stop = std::make_shared<std::atomic_bool>(true);
+            rejects([&] { prep.positionStatistics(start, {}, stop); });
+            check(prep.positionStatistics(start).size() == 3,
+                  "Canceled statistics do not leave a progress handler behind");
         }
         std::cout << checks << " storage checks passed\n";
         return 0;

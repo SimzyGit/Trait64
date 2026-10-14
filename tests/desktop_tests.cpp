@@ -434,6 +434,172 @@ int main(int argc, char **argv) {
             c.searchLibrary("Rival", {}, false, false, false, {});
         }
         {
+            const auto folder = dir.path() + "/imports";
+            QDir().mkpath(folder);
+            const auto pgn = folder + "/local.pgn";
+            QFile source(pgn);
+            check(source.open(QIODevice::WriteOnly), "Create resumable GUI fixture");
+            for (int i = 0; i < 15; ++i)
+                source.write(QByteArray("[Event \"Resume ") + QByteArray::number(i) + "\"]\n1.e4 e5 *\n");
+            source.close();
+            auto waitImport = [](Controller &c) {
+                QElapsedTimer timeout;
+                timeout.start();
+                while (c.busy() && timeout.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(!c.busy(), "Import worker completed");
+            };
+            qint64 job = 0;
+            {
+                Controller c(folder);
+                c.importResumable(pgn);
+                check(c.resumableImport(), "Resumable worker state exposed");
+                c.cancelTask();
+                waitImport(c);
+                job = c.importJobs().first().toMap()["id"].toLongLong();
+                check(c.importJobs().first().toMap()["status"] == "paused", "GUI pauses import");
+            }
+            Controller c(folder);
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            QSignalSpy warnings(&engine, &QQmlEngine::warnings);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            check(!engine.rootObjects().empty(), "Import QML loads");
+            auto *dialog = engine.rootObjects().first()->findChild<QObject *>("importsDialog");
+            check(dialog && QMetaObject::invokeMethod(dialog, "open"), "Import manager opens");
+            c.resumeImport(job);
+            waitImport(c);
+            QTest::qWait(30);
+            check(c.importJobs().first().toMap()["status"] == "completed" &&
+                      c.stats()["games"].toInt() == 15 && c.sources().first().toMap()["games"].toInt() == 15,
+                  "GUI resumes persistent job and refreshes source/game lists");
+            check(c.importProgress()["job"].toLongLong() == job, "Detailed progress belongs to current job");
+            check(warnings.empty(), "Import dialog has no QML binding errors");
+            c.forgetImport(job);
+            check(c.importJobs().empty() && c.stats()["games"].toInt() == 15,
+                  "GUI removes checkpoint without deleting games");
+        }
+        {
+            Controller c(dir.path() + "/repertoire-ui");
+            c.move("e2e4");
+            c.navigate(0);
+            c.move("d2d4");
+            c.saveGame();
+            c.flip();
+            const auto previous = c.state();
+            c.createRepertoire("Débuts blancs", true);
+            check(c.repertoires().size() == 1 && c.repertoireState()["positions"].toInt() == 1,
+                  "Create named repertoire from study alternatives");
+            auto id = c.repertoireState()["id"].toLongLong();
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            QSignalSpy warnings(&engine, &QQmlEngine::warnings);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            check(!engine.rootObjects().empty(), "Repertoire QML loads");
+            auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+            window->resize(960, 640);
+            auto *dialog = window->findChild<QObject *>("repertoiresDialog");
+            check(dialog && QMetaObject::invokeMethod(dialog, "open"), "Repertoire manager opens");
+            QTest::qWait(30);
+            auto *selector = window->findChild<QQuickItem *>("repertoireSelector");
+            check(selector && selector->width() > 100, "Repertoire selector renders at minimum window size");
+            QMetaObject::invokeMethod(dialog, "close");
+            c.startRepertoireTraining(id);
+            check(c.state()["training"].toBool() && c.state()["repertoireTraining"].toLongLong() == id &&
+                      c.repertoireState()["moves"].toList().empty(),
+                  "Position exercise is active and prepared answers are hidden");
+            c.undo();
+            c.move("a2a3");
+            check(c.state()["node"].toInt() == 0, "Wrong repertoire reply and undo cannot advance exercise");
+            c.move("d2d4");
+            check(c.state()["trainingComplete"].toBool() && c.repertoireState()["reviews"].toInt() == 1 &&
+                      c.repertoireState()["successes"].toInt() == 0,
+                  "Alternative answer accepted, earlier failure recorded once");
+            c.move("e2e4");
+            check(c.repertoireState()["reviews"].toInt() == 1, "Completed exercise cannot be graded twice");
+            c.finishTraining();
+            check(c.state()["fen"] == previous["fen"] && c.state()["flipped"] == previous["flipped"] &&
+                      c.state()["savedId"] == previous["savedId"],
+                  "Leaving repertoire exercise restores study, orientation and saved identity");
+            c.startRepertoireTraining(id, true);
+            c.revealCard();
+            c.move("e2e4");
+            check(c.repertoireState()["successes"].toInt() == 0,
+                  "Revealed answers are not counted as recall successes");
+            c.startRepertoireTraining(id, true);
+            c.move("e2e4");
+            check(c.repertoireState()["reviews"].toInt() == 3 &&
+                      c.repertoireState()["successes"].toInt() == 1 &&
+                      c.repertoireState()["due"].toInt() == 0,
+                  "Successful recall updates schedule independently of legacy cards");
+            c.finishTraining();
+            const auto output = dir.path() + "/repertoire.pgn";
+            c.exportRepertoire(id, output);
+            check(QFileInfo(output).size() > 0, "Repertoire PGN exported from controller");
+            c.importRepertoire(id, output);
+            c.navigate(0);
+            check(c.repertoireState()["moves"].toList().size() == 2,
+                  "Reimport preserves alternative answers");
+            c.renameRepertoire(id, "Ouvertures");
+            check(c.repertoireState()["name"] == "Ouvertures", "Repertoire editor updates persisted name");
+            c.removeRepertoireMove(id, c.state()["fen"].toString(), "d2d4");
+            check(c.repertoireState()["moves"].toList().size() == 1, "Editor removes chosen continuation");
+            c.deleteRepertoire(id);
+            check(c.repertoires().empty() && c.stats()["games"].toInt() == 1,
+                  "Repertoire deletion preserves study");
+            check(warnings.empty(), "Repertoire and training UI have no QML errors");
+        }
+        {
+            Controller c(dir.path() + "/preparation-ui");
+            c.importText("[White \"Alice\"] [Black \"Rival\"] [Date \"2024.01.01\"]\n1.d4 d5 *\n"
+                         "[White \"Other\"] [Black \"Someone\"]\n1.e4 e5 *");
+            QElapsedTimer timeout;
+            timeout.start();
+            while (c.busy() && timeout.elapsed() < 10000)
+                QTest::qWait(10);
+            check(!c.busy(), "Preparation fixture imported");
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            QSignalSpy warnings(&engine, &QQmlEngine::warnings);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            check(!engine.rootObjects().empty(), "Preparation QML loads");
+            auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+            window->resize(960, 640);
+            auto *dialog = window->findChild<QObject *>("preparationDialog");
+            check(dialog && QMetaObject::invokeMethod(dialog, "open"), "Preparation manager opens");
+            auto waitPreparation = [&] {
+                timeout.restart();
+                while (c.preparation()["running"].toBool() && timeout.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(!c.preparation()["running"].toBool(), "Preparation worker completed");
+            };
+            c.preparePosition({{"player", "Other"}});
+            c.preparePosition({{"player", "Rival"}, {"colour", "black"}, {"fromYear", 2020}});
+            waitPreparation();
+            auto rows = c.preparation()["rows"].toList();
+            check(rows.size() == 1 && rows.first().toMap()["uci"] == "d2d4",
+                  "Latest preparation filters replace stale request");
+            const auto csv = dir.path() + "/preparation.csv";
+            c.exportPreparation(csv);
+            QFile output(csv);
+            check(output.open(QIODevice::ReadOnly) && output.readAll().contains("Rival"),
+                  "CSV includes filters for reproducible interpretation");
+            c.playPreparedMove("d2d4");
+            const auto resultingFen = c.state()["fen"];
+            c.playPreparedMove("e2e4");
+            check(c.state()["node"].toInt() == 1 && c.state()["fen"] == resultingFen,
+                  "Stale prepared move cannot alter a different position");
+            c.preparePosition({});
+            c.cancelPreparation();
+            QTest::qWait(30);
+            check(c.preparation()["rows"].toList().empty(), "Canceled preparation results remain hidden");
+            c.preparePosition({{"minElo", 4000}, {"maxElo", 1000}});
+            waitPreparation();
+            check(!c.preparation()["error"].toString().isEmpty() && c.preparation()["rows"].toList().empty(),
+                  "Preparation errors clear old statistics");
+            check(warnings.empty(), "Preparation QML has no runtime errors");
+        }
+        {
             const auto recovery = dir.path() + "/corrupt";
             QDir().mkpath(recovery);
             QFile bad(recovery + "/session.json");

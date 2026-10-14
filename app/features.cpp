@@ -59,7 +59,7 @@ void Controller::restore(const Snapshot &v) {
 void Controller::remember() {
     commentNode_ = -1;
     cancelReview();
-    if (cardId_)
+    if (trainingActive())
         return;
     auto v = snapshot();
     // Bound history memory per study, including large imports.
@@ -79,7 +79,7 @@ void Controller::remember() {
     }
 }
 void Controller::undo() {
-    if (cardId_ || undo_.empty() || clockRunning_)
+    if (trainingActive() || undo_.empty() || clockRunning_)
         return;
     stopPlaying();
     cancelReview();
@@ -94,7 +94,7 @@ void Controller::undo() {
     restore(v);
 }
 void Controller::redo() {
-    if (cardId_ || redo_.empty() || clockRunning_)
+    if (trainingActive() || redo_.empty() || clockRunning_)
         return;
     stopPlaying();
     cancelReview();
@@ -137,7 +137,7 @@ void Controller::switchTab(int index) {
     if (index < 0 || index >= int(studies_.size()) || index == activeTab_)
         return;
     try {
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         cancelReview();
         stopPlaying();
@@ -159,7 +159,7 @@ void Controller::closeTab(int index) {
         return;
     try {
         need(!busy_, "Attendez la fin du traitement avant de fermer une étude.");
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         storeTab();
         auto &v = studies_[index].position;
@@ -312,7 +312,7 @@ QVariantList Controller::annotations() const {
     return out;
 }
 void Controller::toggleAnnotation(const QString &from, const QString &to, const QString &color) {
-    if (cardId_ || !QRegularExpression("^[a-h][1-8]$").match(from).hasMatch() ||
+    if (trainingActive() || !QRegularExpression("^[a-h][1-8]$").match(from).hasMatch() ||
         !QRegularExpression("^[a-h][1-8]$").match(to).hasMatch() ||
         !QStringList{"G", "R", "B", "Y"}.contains(color))
         return;
@@ -349,7 +349,7 @@ void Controller::toggleAnnotation(const QString &from, const QString &to, const 
     refresh(true);
 }
 void Controller::clearAnnotations() {
-    if (cardId_)
+    if (trainingActive())
         return;
     remember();
     QString text = qs(game_.nodes[node_].comment);
@@ -359,7 +359,7 @@ void Controller::clearAnnotations() {
 }
 void Controller::mergeGame(qint64 id) {
     try {
-        need(!cardId_, "Terminez l’entraînement.");
+        need(!trainingActive(), "Terminez l’entraînement.");
         auto copy = game_;
         copy.merge(db_->load(id));
         remember();
@@ -457,7 +457,7 @@ void Controller::saveEngineProfile(const QString &name) {
 }
 void Controller::compareEngines(const QVariantList &indices) {
     try {
-        need(!cardId_ && !busy_, "Terminez l’entraînement ou le traitement en cours.");
+        need(!trainingActive() && !busy_, "Terminez l’entraînement ou le traitement en cours.");
         const auto available = settings_.value("engineProfiles").toList();
         QVariantList profiles;
         QSet<int> seen;
@@ -478,7 +478,7 @@ void Controller::compareEngines(const QVariantList &indices) {
 }
 void Controller::addComparisonLine(int engine, int variation) {
     try {
-        need(!cardId_, "Terminez l’entraînement.");
+        need(!trainingActive(), "Terminez l’entraînement.");
         const auto rows = comparison_.rows();
         need(engine >= 0 && engine < rows.size(), "Moteur indisponible.");
         const auto lines = rows[engine].toMap()["lines"].toList();
@@ -524,7 +524,7 @@ QVariantMap Controller::reviewState() const {
             {"milliseconds", reviewMilliseconds_}};
 }
 void Controller::analyseGame(int milliseconds) {
-    if (cardId_)
+    if (trainingActive())
         return;
     cancelReview();
     stopPlaying();
@@ -633,7 +633,7 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
     });
 }
 void Controller::annotateReview() {
-    if (reviewing_ || review_.empty() || cardId_)
+    if (reviewing_ || review_.empty() || trainingActive())
         return;
     remember();
     for (const auto &v : review_) {
@@ -681,7 +681,7 @@ void Controller::createMistakeCards() {
     }
 }
 void Controller::startLocalGame(int minutes, int increment, int opponent, bool humanWhite) {
-    if (cardId_)
+    if (trainingActive())
         return;
     stopPlaying();
     remember();
@@ -846,7 +846,7 @@ void Controller::exportStudyPdf(const QString &url) {
     }
 }
 void Controller::identifyOpening() {
-    if (cardId_)
+    if (trainingActive())
         return;
     const auto eco = state_["openingEco"].toString(), name = state_["openingName"].toString();
     if (eco.isEmpty()) {

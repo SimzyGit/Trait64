@@ -8,19 +8,19 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Échiquier | Chess960, 960 départs numérotés, éditeur graphique FEN, flèches/cercles persistants | Autres variantes |
 | Études | 16 onglets restaurables, annuler/rétablir, duplication, fusion d’arbres, diagramme PNG, étude PDF | Chapitres, références et documents attachés, mise en page avancée |
 | Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
-| Bibliothèque | Schéma 4, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, import par lots reprenable, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
+| Bibliothèque | Schéma 6, import PGN par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
 | Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur et Syzygy | Analyse des branches, budgets adaptatifs, interface de tablebases dédiée |
-| Ouvertures | Dictionnaire ECO CC0 embarqué, balises depuis une position, fusion d’études | Couverture/lacunes de répertoire, nouveautés, livres d’ouverture |
-| Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, objectif | Solutions équivalentes, cours de finales, agenda détaillé, certification tactique |
+| Ouvertures | ECO CC0, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, import/export PGN, parties modèles, réponses adverses manquantes dans la base locale | Analyse moteur des branches, couverture probabiliste globale, comparaison de répertoires, nouveautés théoriques, Polyglot |
+| Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, rappels espacés par position de répertoire, réponses préparées multiples et suivi des rappels manqués | Équivalences validées par moteur, cours de finales, calcul/visualisation, agenda adaptatif, certification tactique |
 | Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
-| Préparation | Fiches joueurs, résultats par couleur, ouvertures, dernières parties | Styles d’adversaires, préparation et gestion de tournois |
+| Préparation | Fiches joueurs ; statistiques par position, source, nom exact/couleur, période et Elo ; requête annulable, parties exemples et export CSV | Styles d’adversaires, tendances par période, préparation et gestion de tournois |
 | Interface | 7 espaces, personnalisation, petites fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traductions complètes |
 | Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
 | Fiabilité | Sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
 | Fonctions avancées | Études PDF/PNG, bilan moteur, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 
-Priorité actuelle : terminer moteurs/bases et renforcer les gros corpus, puis explications vérifiables, répertoires et préparation. L’esthétique est en pause. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
+Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. L’esthétique est en pause. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
 
 ## Catalogue validé localement — 12 octobre 2026
 
@@ -37,8 +37,8 @@ Je veux que Trait64 puisse travailler efficacement avec plusieurs millions de pa
 Implémente :
 
 - [ ] Un importateur PGN parallèle et performant.
-- [ ] Une importation reprenable après interruption.
-- [ ] Une progression détaillée des importations.
+- [x] Une importation reprenable après interruption.
+- [x] Une progression détaillée des importations.
 - [ ] L'indexation progressive des positions.
 - [ ] Des index persistants réutilisables.
 - [x] Des recherches annulables en arrière-plan.
@@ -151,7 +151,7 @@ Ajouter :
 - [ ] Collections personnalisables.
 - [ ] Recherche de nouveautés par rapport à une base de référence.
 - [ ] Statistiques avancées de tournois.
-- [ ] Exportation CSV des résultats.
+- [x] Exportation CSV des statistiques de préparation, avec filtres et FEN.
 - [ ] Comparaison de plusieurs bases.
 - [ ] Recherche de positions indépendamment de l'ordre des coups.
 
@@ -165,21 +165,21 @@ Créer un véritable système de préparation pour les joueurs compétitifs.
 
 Ajouter :
 
-- [ ] Répertoires séparés pour les Blancs et les Noirs.
-- [ ] Variantes principales et secondaires.
-- [ ] Gestion des transpositions.
+- [x] Répertoires séparés pour les Blancs et les Noirs.
+- [x] Variantes principales et secondaires.
+- [x] Gestion des transpositions.
 - [ ] Couverture des réponses adverses.
 - [ ] Détection des trous dans les répertoires.
-- [ ] Statistiques par position.
-- [ ] Statistiques par niveau Elo.
-- [ ] Statistiques par période.
-- [ ] Références vers des parties modèles.
-- [ ] Identification des lignes peu maîtrisées.
+- [x] Statistiques par position.
+- [x] Statistiques par plage de la moyenne des deux Elo connus.
+- [x] Statistiques par période (années).
+- [x] Références vers des parties modèles.
+- [x] Identification des positions peu maîtrisées par l’historique des rappels.
 - [ ] Comparaison de plusieurs répertoires.
 - [ ] Détection des nouveautés théoriques.
-- [ ] Entraînement automatique du répertoire.
-- [ ] Répétition espacée.
-- [ ] Importation et exportation des répertoires.
+- [x] Entraînement du répertoire par positions dues et réponses préparées multiples.
+- [x] Répétition espacée simple par position.
+- [x] Importation et exportation PGN des répertoires.
 
 Créer un mode **Préparation d'adversaire**.
 
@@ -345,3 +345,5 @@ Lorsque les fonctions principales seront suffisamment robustes :
 
 
 Références étudiées et précautions de réutilisation : [SOURCES.md](SOURCES.md). Ordre de travail et reprise : [NEXT-STEPS.md](NEXT-STEPS.md).
+
+13 octobre : répertoires par position, partage des transpositions, PGN et rappels espacés implémentés. Les réponses adverses absentes sont détectées par rapport à la bibliothèque ; couverture probabiliste globale, comparaison de répertoires et analyse moteur des branches restent à développer. Guide : [REPERTOIRES-IMPORTS.md](REPERTOIRES-IMPORTS.md).

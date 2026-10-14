@@ -29,7 +29,7 @@ void Controller::initReliability() {
     updater_->beforeInstall = [this] {
         if (busy_ || backupWorker_.isRunning() || clockRunning_)
             throw std::runtime_error("Terminez l’import, la sauvegarde ou la partie avant la mise à jour.");
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         writeSession();
         const QString dir = dataPath_ + "/backups/pre-update-" +
@@ -63,7 +63,7 @@ void Controller::startBackgroundServices() {
     updater_->startAutomaticCheck();
 }
 void Controller::automaticBackup(bool force) {
-    if (busy_ || backupWorker_.isRunning() || cardId_ || clockRunning_)
+    if (busy_ || backupWorker_.isRunning() || trainingActive() || clockRunning_)
         return;
     if (!force &&
         (!settings_.value("autoBackup", true).toBool() ||

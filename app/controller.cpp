@@ -101,6 +101,7 @@ Controller::Controller(const QString &path, QObject *parent)
     });
     connect(&importer_, &QFutureWatcher<ImportResult>::finished, this, [this] {
         busy_ = false;
+        resumableImport_ = false;
         taskPoll_.stop();
         emit busyChanged();
         const auto r = importer_.result();
@@ -116,6 +117,11 @@ Controller::Controller(const QString &path, QObject *parent)
             emit message(r.error, true);
         else if (r.operation == "reindex")
             emit message(QString("Index reconstruits pour %1 partie(s).").arg(r.count));
+        else if (r.operation == "resumable")
+            emit message(QString("Import %1 : %2 parties validées, dont %3 nouvelles.")
+                             .arg(r.job["status"] == "completed" ? "terminé" : "en pause")
+                             .arg(r.job["processed"].toLongLong())
+                             .arg(r.job["added"].toLongLong()));
         else
             emit message(
                 QString("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
@@ -151,6 +157,7 @@ Controller::Controller(const QString &path, QObject *parent)
     initReliability();
     initContent();
     initLibrarySearch();
+    initPreparation();
     refreshLibrary();
     refresh();
 }
@@ -160,13 +167,18 @@ Controller::~Controller() {
     if (cancelSearch_)
         cancelSearch_->store(true);
     searchWorker_.waitForFinished();
+    preparationPending_ = false;
+    disconnect(&preparationWorker_, nullptr, this, nullptr);
+    if (cancelPreparation_)
+        cancelPreparation_->store(true);
+    preparationWorker_.waitForFinished();
     comparison_.stop();
     backupWorker_.waitForFinished();
     reviewer_.shutdown();
     cancelTask_->store(true);
     importer_.waitForFinished();
     try {
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         writeSession();
     } catch (...) {
@@ -176,10 +188,17 @@ void Controller::fail(const std::exception &e) {
     emit message(QString::fromUtf8(e.what()), true);
 }
 void Controller::refreshLibrary() {
+    cancelPreparation();
     try {
         stats_ = db_->stats();
         cards_ = db_->cards();
+        refreshRepertoires();
         players_ = db_->players();
+        const auto jobs = db_->importJobs();
+        if (jobs != importJobs_) {
+            importJobs_ = jobs;
+            emit importsChanged();
+        }
         const auto sources = db_->sources(), history = db_->importHistory();
         if (sources != sources_ || history != importHistory_) {
             sources_ = sources;
@@ -196,7 +215,7 @@ void Controller::refresh(bool content) {
     const QString previousFen = state_["fen"].toString();
     if (content) {
         dirty_ = true;
-        if (!cardId_)
+        if (!trainingActive())
             autosave_.start();
     }
     const auto board = game_.boardAt(node_);
@@ -265,11 +284,14 @@ void Controller::refresh(bool content) {
         {"chess960", game_.chess960},
         {"arrows", annotations()},
         {"activeTab", activeTab_},
-        {"canUndo", !undo_.empty() && !cardId_ && !clockRunning_},
-        {"canRedo", !redo_.empty() && !cardId_ && !clockRunning_},
-        {"training", bool(cardId_)},
+        {"canUndo", !undo_.empty() && !trainingActive() && !clockRunning_},
+        {"canRedo", !redo_.empty() && !trainingActive() && !clockRunning_},
+        {"training", trainingActive()},
         {"trainingComplete", trainingComplete_},
-        {"trainingProgress", QString::number(solutionIndex_) + " / " + QString::number(solution_.size())},
+        {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
+        {"repertoireDue", repertoireState_.value("due", 0)},
+        {"trainingProgress", QString::number(solutionIndex_) + " / " +
+                                 QString::number(repertoireExercise_.isEmpty() ? solution_.size() : 1)},
         {"canBack", node_ > 0},
         {"canForward", !current.children.empty()},
         {"nag", current.nags.empty() ? 0 : current.nags[0]},
@@ -339,16 +361,21 @@ void Controller::refresh(bool content) {
         fail(e);
     }
     detectOpening();
+    try {
+        refreshRepertoires(false);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
     emit changed();
     if (positionFilter_ && previousFen != s(current.fen))
         requestLibrarySearch();
-    if ((analysis_ || playing_) && !cardId_ && previousFen != s(current.fen))
+    if ((analysis_ || playing_) && !trainingActive() && previousFen != s(current.fen))
         analysisTimer_.start();
-    if (!cardId_)
+    if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
 }
 void Controller::writeSession() {
-    if (cardId_)
+    if (trainingActive())
         return;
     storeTab(false);
     QJsonArray tabs;
@@ -370,7 +397,7 @@ void Controller::writeSession() {
     atomicWrite(sessionPath_, bytes);
 }
 void Controller::checkpoint() {
-    if (cardId_)
+    if (trainingActive())
         finishTraining();
     if (dirty_) {
         require(!busy_, "Attendez la fin du traitement ou interrompez-le avant de changer d’étude.");
@@ -431,7 +458,7 @@ void Controller::loadGame(qint64 id) {
 }
 void Controller::saveGame(bool copy) {
     try {
-        require(!cardId_, "Terminez l’entraînement avant de sauvegarder.");
+        require(!trainingActive(), "Terminez l’entraînement avant de sauvegarder.");
         require(!busy_, "Attendez la fin du traitement avant d’enregistrer.");
         gameId_ = db_->save(game_, copy ? 0 : gameId_);
         dirty_ = false;
@@ -470,7 +497,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
         const auto path = localPath(url);
         if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
             require(QFileInfo(path).isFile(), "PGN introuvable.");
-            if (cardId_)
+            if (trainingActive())
                 finishTraining();
             busy_ = true;
             cancelTask_->store(false);
@@ -525,7 +552,7 @@ void Controller::importBytes(const QByteArray &bytes) {
         emit message("Un import est déjà en cours.", true);
         return;
     }
-    if (cardId_)
+    if (trainingActive())
         finishTraining();
     const auto path = db_->path();
     cancelTask_->store(false);
@@ -673,11 +700,13 @@ void Controller::tryMove(const QString &from, const QString &to) {
 }
 void Controller::move(const QString &uci) {
     try {
+        if (playRepertoireAnswer(uci))
+            return;
         if (playing_) {
             auto b = game_.boardAt(node_);
             require((b.sideToMove() == chess::Color::WHITE) == humanWhite_, "Le moteur réfléchit.");
         }
-        if (cardId_) {
+        if (trainingActive()) {
             if (trainingComplete_)
                 return;
             if (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_]) {
@@ -723,7 +752,7 @@ void Controller::move(const QString &uci) {
     }
 }
 void Controller::navigate(int node) {
-    if (cardId_)
+    if (trainingActive())
         return;
     if (node < 0 || node >= int(game_.nodes.size()))
         return;
@@ -766,7 +795,7 @@ void Controller::flip() {
     refresh();
 }
 void Controller::setComment(const QString &comment) {
-    if (cardId_)
+    if (trainingActive())
         return;
     if (game_.nodes[node_].comment == comment.toStdString())
         return;
@@ -779,7 +808,7 @@ void Controller::setComment(const QString &comment) {
     refresh(true);
 }
 void Controller::setNag(int nag) {
-    if (cardId_)
+    if (trainingActive())
         return;
     remember();
     game_.nodes[node_].nags.clear();
@@ -788,7 +817,7 @@ void Controller::setNag(int nag) {
     refresh(true);
 }
 void Controller::setTags(const QVariantMap &tags) {
-    if (cardId_)
+    if (trainingActive())
         return;
     if (tags.contains("Result") &&
         !QStringList{"*", "1-0", "0-1", "1/2-1/2"}.contains(tags["Result"].toString())) {
@@ -804,7 +833,7 @@ void Controller::setTags(const QVariantMap &tags) {
 }
 void Controller::promote() {
     try {
-        if (cardId_)
+        if (trainingActive())
             return;
         remember();
         game_.promote(node_);
@@ -817,7 +846,7 @@ void Controller::promote() {
 }
 void Controller::deleteVariation() {
     try {
-        if (cardId_)
+        if (trainingActive())
             return;
         require(node_ > 0, "La position initiale ne peut pas être supprimée.");
         remember();
@@ -890,7 +919,7 @@ QString Controller::positionCommand() const {
            (moves.empty() ? QString() : " moves " + moves.join(' '));
 }
 void Controller::requestEngine() {
-    if (cardId_)
+    if (trainingActive())
         return;
     if (playing_) {
         auto b = game_.boardAt(node_);
@@ -903,7 +932,7 @@ void Controller::requestEngine() {
                         settings_.value("analysisDepth", 24).toInt(), game_.chess960);
 }
 void Controller::toggleAnalysis() {
-    if (cardId_)
+    if (trainingActive())
         return;
     comparison_.stop();
     cancelReview();
@@ -926,7 +955,7 @@ void Controller::addEngineLine(int index) {
         auto line = engineLines_[index].toMap();
         require(line["fen"].toString() == s(game_.nodes[node_].fen),
                 "Cette analyse correspond à une autre position.");
-        require(!cardId_, "Terminez l’entraînement.");
+        require(!trainingActive(), "Terminez l’entraînement.");
         remember();
         int n = node_;
         for (const auto &m : line["uci"].toString().split(' ', Qt::SkipEmptyParts))
@@ -937,7 +966,7 @@ void Controller::addEngineLine(int index) {
     }
 }
 void Controller::playComputer(bool humanWhite) {
-    if (cardId_)
+    if (trainingActive())
         return;
     comparison_.stop();
     cancelReview();
@@ -983,7 +1012,7 @@ void Controller::createCard(const QString &title) {
 void Controller::startCard(qint64 id) {
     try {
         require(!busy_, "Attendez la fin de l’import avant une révision.");
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         checkpoint();
         QVariantMap card;
@@ -1019,9 +1048,16 @@ void Controller::startCard(qint64 id) {
     }
 }
 void Controller::revealCard() {
-    if (!cardId_ || trainingComplete_)
+    if (!trainingActive() || trainingComplete_)
         return;
     trainingFailed_ = true;
+    if (!repertoireExercise_.isEmpty()) {
+        QStringList answers;
+        for (const auto &answer : repertoireExercise_["answers"].toList())
+            answers << answer.toMap()["san"].toString();
+        emit message("Réponses préparées : " + answers.join(", "));
+        return;
+    }
     QStringList san;
     auto g = game_;
     int n = node_;
@@ -1032,7 +1068,7 @@ void Controller::revealCard() {
     emit message("Solution : " + san.join(' '));
 }
 void Controller::finishTraining() {
-    if (!cardId_)
+    if (!trainingActive())
         return;
     game_ = beforeTraining_;
     node_ = beforeNode_;
@@ -1040,6 +1076,7 @@ void Controller::finishTraining() {
     dirty_ = beforeDirty_;
     flipped_ = beforeFlipped_;
     cardId_ = 0;
+    repertoireExercise_.clear();
     trainingComplete_ = false;
     selected_ = -1;
     refresh();

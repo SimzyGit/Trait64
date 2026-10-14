@@ -32,6 +32,10 @@ std::string chess960Fen(int number);
 std::vector<Game> parseEpd(const std::string &text);
 std::string exportEpd(const Game &game, int node = 0);
 void readPgn(std::istream &input, const std::function<void(Game &&)> &consume);
+// Offsets count bytes from the stream's initial position, before the next record.
+// Callbacks may throw to stop; no subsequent record is consumed in that case.
+void readPgnRecords(std::istream &input, const std::function<void(Game &&, uint64_t)> &consume,
+                    const std::function<void(uint64_t)> &progress = {});
 std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000);
 std::string positionKey(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);

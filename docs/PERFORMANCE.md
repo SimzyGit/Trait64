@@ -41,3 +41,11 @@ Base synthétique après checkpoint : 1 097 678 848 octets ; préparation : 128.
 Données brutes : [avant correction](performance-cursors-before-2026-10-12.json), [après correction](performance-cursors-2026-10-13.json). La commande `./build/database_benchmark 1000000` inclut les deux parcours. Les tests de non-régression vérifient aussi les passages entre groupes de dates, les valeurs absentes et les cinq tris.
 
 Les essais sur 1, 2, 5 et 10 millions de **parties PGN réelles avec toutes leurs positions et variantes** ne sont pas encore réalisés. Les tris globaux et filtres peu sélectifs restent à mesurer : le worker évite de bloquer l’interface, sans rendre automatiquement toute requête rapide.
+
+## Import reprenable (13 octobre 2026)
+
+Le nouveau mode conserve un lot de 250 parties par transaction et un curseur en octets dans la même transaction. La mémoire ne contient qu’une partie parsée à la fois (limite de 64 Mio par enregistrement PGN) et un tampon SHA-256 de 1 Mio. Une reprise relit le fichier complet pour vérifier son empreinte, puis rejoint directement le point de parsing conservé. Le débit et le temps restant affichés concernent la lecture et l’indexation après cette vérification ; ils restent des estimations observées pendant la session.
+
+Les tests fonctionnels vérifient la reprise après arrêt du processus ; ils ne constituent pas un benchmark de 1/2/5/10 millions de PGN réels. Ces mesures, la parallélisation du parsing et la réduction du coût d’indexation restent à qualifier.
+
+Les répertoires et leurs fichiers PGN sont bornés (16 Mio/200 parties par import dans l’éditeur). Leur import, export, agrégation de rappels et détection de lacunes restent synchrones : une très grande préparation peut encore bloquer brièvement l’éditeur. Le calcul filtré des statistiques de préparation est asynchrone et annulable, avec l’index de positions existant ; les combinaisons sur des corpus réels de plusieurs millions ne sont pas encore mesurées.
