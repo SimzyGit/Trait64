@@ -156,8 +156,10 @@ void Database::addToRepertoire(qint64 id, const Game &game, qint64 model) {
             q.addBindValue(str(node.fen));
             q.addBindValue(checkedBoard(node.fen, game.chess960).sideToMove() == chess::Color::WHITE);
             run(q);
-            reachable.insert(reachable.end(), node.children.begin(), node.children.end());
-            require(reachable.size() <= 100000, "Répertoire : étude limitée à 100 000 positions.");
+            require(node.children.size() <= 100000 - reachable.size(),
+                    "Répertoire : étude limitée à 100 000 positions.");
+            for (int child : node.children)
+                reachable.push_back(child);
         }
         for (int parent : reachable) {
             const auto position = key(str(game.nodes[parent].fen));

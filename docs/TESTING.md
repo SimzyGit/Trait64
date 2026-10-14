@@ -76,6 +76,8 @@ Lot répertoires : 9/9 suites locales en 15,44 s ; éditeur QML à 960 × 640, r
 
 ## Préparation par position — 14 octobre 2026
 
-Validation finale locale du lot : **9/9 suites réussies en 15,34 s**, avec Stockfish réel. La préparation couvre les filtres combinés source/joueur/couleur/année/Elo, les métadonnées manquantes, le dédoublonnage des répétitions, les bornes invalides et la réutilisation après annulation. Le scénario bureau ouvre le dialogue à 960 × 640, remplace rapidement des demandes, exporte le contexte en CSV, refuse un coup provenant d’une autre position et vérifie les erreurs QML.
+Validation finale locale du lot : **9/9 suites réussies en 15,53 s**, avec Stockfish réel. La préparation couvre les filtres combinés source/joueur/couleur/année/Elo, les métadonnées manquantes, le dédoublonnage des répétitions, les bornes invalides et la réutilisation après annulation. Le scénario bureau ouvre le dialogue à 960 × 640, remplace rapidement des demandes, exporte le contexte en CSV, refuse un coup provenant d’une autre position et vérifie les erreurs QML.
 
 Les résultats CI et la publication du lot sont suivis dans la [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3). Le protocole ne qualifie pas un corpus réel de plusieurs millions de parties ni une installation sur Voyager.
+
+Le contrôle de taille du parcours de répertoire est effectué avant l’ajout des enfants (100 000 positions maximum), avec insertion élément par élément pour éviter un avertissement de GCC 14 sur la copie de plage. Les neuf suites locales ont été relancées après cette correction.

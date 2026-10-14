@@ -18,7 +18,7 @@ Le schéma publié ne doit pas être réécrit : le prochain changement structur
 
 ### Validation de ce lot
 
-Localement le 14 octobre : **9/9 suites réussies en 15,34 s**, Stockfish réel inclus. Tests : arrêt réel du processus au milieu d’un lot, reprise sans doublons, fichier déplacé/modifié, verrou récupéré, graphe/transpositions/cycles/Chess960, migration 1 → 6, notes et SRS, préparation filtrée/annulée, CSV, interfaces QML et sauvegardes. Une collision de nom avec la propriété finale `Dialog.result` a été corrigée dans le dialogue de préparation.
+Localement le 14 octobre : **9/9 suites réussies en 15,53 s**, Stockfish réel inclus. Tests : arrêt réel du processus au milieu d’un lot, reprise sans doublons, fichier déplacé/modifié, verrou récupéré, graphe/transpositions/cycles/Chess960, migration 1 → 6, notes et SRS, préparation filtrée/annulée, CSV, interfaces QML et sauvegardes. Une collision de nom avec la propriété finale `Dialog.result` a été corrigée dans le dialogue de préparation.
 
 Avant fusion, vérifier la CI au SHA exact de la PR #3 ; après fusion, vérifier la chaîne de publication de main et les assets. [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3) conserve les résultats effectifs. Aucune de ces validations ne remplace un essai sur le PC Voyager de l’utilisateur.
 
