@@ -37,7 +37,7 @@ void Controller::resumeImport(qint64 id, const QString &replacement) {
         if (job["status"] == "completed")
             throw std::runtime_error("Cet import est déjà terminé.");
         const auto file = replacement.isEmpty() ? QString() : localPath(replacement);
-        if (cardId_)
+        if (trainingActive())
             finishTraining();
         busy_ = resumableImport_ = true;
         cancelTask_->store(false);

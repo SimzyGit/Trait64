@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 ColumnLayout {
     id: root
+    signal preparePlayer(string name)
     property var backend
     property var p: backend.preferences
     property var profile: backend.playerProfile
@@ -12,7 +13,7 @@ ColumnLayout {
         Item {Layout.fillWidth:true}
         TextField {id:filter;placeholderText:"Rechercher un joueur";Layout.preferredWidth:240}
     }
-    Label {text:"Statistiques calculées depuis les parties de votre bibliothèque locale.";color:root.p.muted}
+    RowLayout {Layout.fillWidth:true;Label {text:"Statistiques calculées depuis les parties de votre bibliothèque locale.";color:root.p.muted;Layout.fillWidth:true} TButton {text:"Préparer cette position";enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)}}
     SplitView {Layout.fillWidth:true;Layout.fillHeight:true
         ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:4;ScrollBar.vertical:ScrollBar{}
             delegate:ItemDelegate {required property var modelData;width:players.width;implicitHeight:55

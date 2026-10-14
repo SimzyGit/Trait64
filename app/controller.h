@@ -23,6 +23,9 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList importJobs READ importJobs NOTIFY importsChanged)
     Q_PROPERTY(QVariantMap importProgress READ importProgress NOTIFY busyChanged)
     Q_PROPERTY(bool resumableImport READ resumableImport NOTIFY busyChanged)
+    Q_PROPERTY(QVariantList repertoires READ repertoires NOTIFY repertoiresChanged)
+    Q_PROPERTY(QVariantMap repertoireState READ repertoireState NOTIFY repertoiresChanged)
+    Q_PROPERTY(QVariantMap preparation READ preparation NOTIFY preparationChanged)
     Q_PROPERTY(bool librarySearching READ librarySearching NOTIFY searchChanged)
     Q_PROPERTY(bool libraryHasNext READ libraryHasNext NOTIFY searchChanged)
     Q_PROPERTY(int libraryPage READ libraryPage NOTIFY searchChanged)
@@ -59,6 +62,25 @@ class Controller : public QObject {
     Q_INVOKABLE void importResumable(const QString &url);
     Q_INVOKABLE void resumeImport(qint64 id, const QString &replacement = {});
     Q_INVOKABLE void forgetImport(qint64 id);
+    QVariantList repertoires() const { return repertoires_; }
+    QVariantMap repertoireState() const { return repertoireState_; }
+    Q_INVOKABLE void selectRepertoire(qint64 id);
+    Q_INVOKABLE void createRepertoire(const QString &name, bool white);
+    Q_INVOKABLE void renameRepertoire(qint64 id, const QString &name);
+    Q_INVOKABLE void deleteRepertoire(qint64 id);
+    Q_INVOKABLE void addStudyToRepertoire(qint64 id);
+    Q_INVOKABLE void importRepertoire(qint64 id, const QString &url);
+    Q_INVOKABLE void exportRepertoire(qint64 id, const QString &url);
+    Q_INVOKABLE void editRepertoireMove(qint64 id, const QString &fen, const QString &uci,
+                                        const QString &note, bool principal);
+    Q_INVOKABLE void removeRepertoireMove(qint64 id, const QString &fen, const QString &uci);
+    Q_INVOKABLE void openRepertoirePosition(qint64 id, const QString &fen);
+    Q_INVOKABLE void startRepertoireTraining(qint64 id, bool includeFuture = false);
+    QVariantMap preparation() const { return preparation_; }
+    Q_INVOKABLE void preparePosition(const QVariantMap &filters);
+    Q_INVOKABLE void cancelPreparation();
+    Q_INVOKABLE void playPreparedMove(const QString &uci);
+    Q_INVOKABLE void exportPreparation(const QString &url);
     bool librarySearching() const { return librarySearching_; }
     bool libraryHasNext() const { return libraryHasNext_; }
     int libraryPage() const { return int(searchCursors_.size()) + 1; }
@@ -177,6 +199,8 @@ class Controller : public QObject {
     void libraryChanged();
     void sourcesChanged();
     void importsChanged();
+    void repertoiresChanged();
+    void preparationChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -188,6 +212,25 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
+    struct PreparationResult {
+        QVariantList rows;
+        QString error, fen;
+        quint64 generation = 0;
+    };
+    QFutureWatcher<PreparationResult> preparationWorker_;
+    std::shared_ptr<std::atomic_bool> cancelPreparation_;
+    quint64 preparationGeneration_ = 0;
+    bool preparationActive_ = false, preparationPending_ = false;
+    QVariantMap preparation_, preparationFilters_;
+    QString preparationFen_;
+    void initPreparation();
+    void startPreparation();
+    qint64 selectedRepertoire_ = 0;
+    QVariantList repertoires_;
+    QVariantMap repertoireState_, repertoireExercise_;
+    bool trainingActive() const { return cardId_ || !repertoireExercise_.isEmpty(); }
+    void refreshRepertoires(bool overview = true);
+    bool playRepertoireAnswer(const QString &uci);
     struct SearchResult {
         QVariantList rows;
         QString error;

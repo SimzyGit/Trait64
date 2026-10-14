@@ -31,6 +31,22 @@ class Database {
     QVariantList importJobs() const;
     QVariantMap importJob(qint64 id) const;
     void forgetImportJob(qint64 id);
+    qint64 createRepertoire(const QString &name, bool white, const Game &root);
+    QVariantList repertoires() const;
+    QVariantMap repertoire(qint64 id) const;
+    void renameRepertoire(qint64 id, const QString &name);
+    void deleteRepertoire(qint64 id);
+    void addToRepertoire(qint64 id, const Game &game, qint64 model = 0);
+    void importRepertoire(qint64 id, const std::vector<Game> &games);
+    QVariantList repertoireMoves(qint64 id, const QString &fen) const;
+    void editRepertoireMove(qint64 id, const QString &fen, const QString &uci, const QString &note,
+                            bool principal);
+    void removeRepertoireMove(qint64 id, const QString &fen, const QString &uci);
+    Game exportRepertoire(qint64 id) const;
+    QVariantMap nextRepertoirePosition(qint64 id, bool includeFuture = false) const;
+    void reviewRepertoire(qint64 id, const QString &fen, bool success);
+    QVariantList repertoireWeaknesses(qint64 id) const;
+    QVariantList repertoireGaps(qint64 id) const;
     void exportSource(QIODevice &output, qint64 source) const;
     Game load(qint64 id) const;
     QVariantList search(const QString &query = {}, const QString &result = {}, bool favorite = false,
@@ -38,6 +54,8 @@ class Database {
                         const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantMap stats() const;
     QVariantList explorer(const QString &position) const;
+    QVariantList positionStatistics(const QString &fen, const QVariantMap &filters = {},
+                                    const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void favorite(qint64 id, bool value);
     void trash(qint64 id, bool value);
     void collection(qint64 id, const QString &value);
@@ -61,6 +79,7 @@ class Database {
     void upgradeV3(int originalVersion);
     void upgradeV4(int originalVersion);
     void upgradeV5(int originalVersion);
+    void upgradeV6(int originalVersion);
     qint64 registerSource(const QVariantMap &source);
     void linkSource(qint64 source, qint64 game);
     void recordImport(qint64 source, const QString &file, const QString &digest, int processed, int added);

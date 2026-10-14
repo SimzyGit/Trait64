@@ -54,6 +54,8 @@ ApplicationWindow {
                 TButton {text: "Commandes  /  Ctrl K"; onClicked: commands.open()}
                 TButton {id: appMenuButton; objectName: "appMenuButton"; text: "Menu  ≡"; flat: true; onClicked: appMenu.open()
                     Menu {id: appMenu; y: appMenuButton.height
+                        MenuItem {text: "Préparation par position"; onTriggered: preparationDialog.open()}
+                        MenuItem {text: "Mes répertoires"; onTriggered: repertoiresDialog.open()}
                         MenuItem {text: "Imports PGN reprenables"; onTriggered: importsDialog.open()}
                         MenuItem {text: "Moteurs et bases à télécharger"; onTriggered: downloadsDialog.open()}
                         MenuItem {text: "Paramètres"; onTriggered: settingsDialog.open()}
@@ -184,10 +186,11 @@ ApplicationWindow {
                 Layout.margins:0;spacing:win.height<820?8:14
                 RowLayout {Layout.fillWidth:true
                     ColumnLayout {spacing:3;Layout.fillWidth:true
-                        Label {text:controller.state.training?"Retrouver la ligne":"Sur l’échiquier.";font.family:"DejaVu Serif";font.pixelSize:win.height<820?24:30}
+                        Label {text:controller.state.training?(controller.state.repertoireTraining>0?"Retrouver le coup":"Retrouver la ligne"):"Sur l’échiquier.";font.family:"DejaVu Serif";font.pixelSize:win.height<820?24:30}
                         Label {visible:win.height>=820||controller.state.training;text:controller.state.training?"Jouez les coups de votre répertoire · "+controller.state.trainingProgress:controller.state.title;color:win.muted;font.pixelSize:12;elide:Text.ElideRight;Layout.fillWidth:true}
                     }
                     Item {Layout.fillWidth:true}
+                    TButton {text:"Position suivante";visible:controller.state.repertoireTraining>0;enabled:controller.state.trainingComplete && controller.state.repertoireDue>0;onClicked:controller.startRepertoireTraining(controller.state.repertoireTraining)}
                     TButton {text:controller.state.training?"Quitter l’exercice":"Nouvelle étude";onClicked:controller.state.training?controller.finishTraining():controller.newGame()}
                     TButton {objectName:"saveStudy";text:controller.state.training?"Voir la solution":"Enregistrer";accent:true;onClicked:controller.state.training?controller.revealCard():controller.saveGame()}
                     TButton {text:"⋮";visible:!controller.state.training;onClicked:analysisMenu.open()}
@@ -325,7 +328,7 @@ ApplicationWindow {
                 Layout.margins:0;spacing:20
                 Label {text:"Explorer vos ouvertures";font.family:"DejaVu Serif";font.pixelSize:30;font.weight:Font.Normal}
                 Label {text:"Les suites jouées dans votre bibliothèque, depuis la position actuelle de l’échiquier.";color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                RowLayout {TButton {text:"←  Reculer";enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:"Position initiale";onClicked:controller.step(-2)} TButton {text:"Voir l’échiquier";onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:"Créer une carte depuis ici";accent:true;onClicked:cardDialog.open()}}
+                RowLayout {TButton {text:"←  Reculer";enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:"Position initiale";onClicked:controller.step(-2)} TButton {text:"Voir l’échiquier";onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:"Préparer";onClicked:preparationDialog.open()} TButton {text:"Mes répertoires";objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:"Créer une carte depuis ici";accent:true;onClicked:cardDialog.open()}}
                 Label {text:controller.state.fen;color:win.muted;font.family:"monospace";font.pixelSize:11;elide:Text.ElideRight;Layout.fillWidth:true}
                 Rectangle {Layout.fillWidth:true;height:1;color:win.line}
                 RowLayout {Layout.fillWidth:true;Label {text:"COUP";Layout.preferredWidth:95;color:win.muted;font.pixelSize:10} Label {text:"PARTIES";Layout.preferredWidth:90;color:win.muted;font.pixelSize:10} Label {text:"BLANCS / NULLES / NOIRS (RÉSULTATS TERMINÉS)";color:win.muted;font.pixelSize:10;Layout.fillWidth:true}}
@@ -369,6 +372,7 @@ ApplicationWindow {
                     }
                 }
                 RowLayout {Layout.fillWidth:true
+                    TButton {text:"Réviser un répertoire";onClicked:repertoiresDialog.open()}
                     TButton {text:"Réviser la prochaine carte";accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
                     Label {text:"Aujourd’hui : "+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+" · Cette semaine : "+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
                     Label {text:"Objectif"} SpinBox {from:1;to:1000;value:controller.preferences.dailyGoal;onValueModified:controller.setPreference("dailyGoal",value)}
@@ -443,7 +447,7 @@ ApplicationWindow {
                     Item {height:20}
                 }
             }
-            Players {backend:controller;Layout.margins:0}
+            Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)}}
         }
     }
     footer:Rectangle {
@@ -469,6 +473,8 @@ ApplicationWindow {
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
+    Preparation {id:preparationDialog;objectName:"preparationDialog";backend:controller}
+    Repertoires {id:repertoiresDialog;objectName:"repertoiresDialog";backend:controller}
     Imports {id:importsDialog;objectName:"importsDialog";backend:controller}
     Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}
     Native.FileDialog {id:sourceExportDialog;title:"Exporter cette base en PGN";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
