@@ -4,6 +4,12 @@ Objectif utilisateur conservé : poursuivre toute la feuille de route Trait64, s
 
 Base publiée : main b78d52fe549a5b8ce80b2dac30e0b7765d663004, v0.3.0-dev.33, schéma 6. Les tâches suivantes ne sont pas encore publiées.
 
+## Nettoyage du stockage effectué
+
+Le 15 octobre à 05:59 UTC, l'exécution [38689692486](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38689692486) a supprimé **58 archives Actions, soit 8 371 207 728 octets**. Inventaire final : zéro archive et zéro octet de cache. Les dix releases et leurs cinquante fichiers sont inchangés (identifiants, noms, tailles et empreintes contrôlés avant/après). Aucun code, branche ou historique n'a été supprimé.
+
+La [PR #4](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/4), fusionnée dans main (`ec62a99d1807b3f3e45f68b46deb15a688f0954b`) et intégrée à cette branche de travail, supprime les téléversements temporaires sur les PR, réduit leur conservation à un jour pour les publications et ajoute une purge après succès ainsi qu'une purge quotidienne. Voir `GITHUB-STORAGE.md`. La CI au commit exact de la PR est réussie : 9/9 suites sur Debian 12, 9/9 sur Debian 13, cœur ASan/UBSan, DEB installés et AppImage. Aucun artefact n'a été créé par ces vérifications. La version distribuée reste dev.33 : cette maintenance ne change pas l'application.
+
 ## Code présent dans ce point de sauvegarde
 
 - Parseur PGN parallèle borné, 1 à 8 lecteurs, ordre/offsets conservés, consommateur sur son thread appelant, annulation/erreurs ; `libs/core/parallel.cpp` et extraction `scanPgnRecords`.

@@ -1,4 +1,6 @@
-# Reprise du développement — 14 octobre 2026
+# Reprise du développement — 15 octobre 2026
+
+**Point de reprise courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** La PR #3 a été publiée en dev.33. La maintenance du stockage (PR #4) est fusionnée : 8 371 207 728 octets libérés, aucune archive Actions ni cache restant, releases conservées. La branche `feat/analysis-scaling-training` contient l'import parallèle et le détail du travail d'analyse à récupérer/terminer. Le bilan du lot précédent ci-dessous reste une référence historique ; ne pas le confondre avec le code effectivement présent dans cette branche.
 
 ## État à conserver
 

@@ -1,0 +1,60 @@
+name: Reclaim Trait64 Actions storage
+on:
+  workflow_dispatch:
+    inputs:
+      all_completed:
+        description: 'Remove all completed build artifacts (releases and sources stay published)'
+        type: boolean
+        default: false
+      clear_caches:
+        description: 'Also clear reproducible caches if no build is active'
+        type: boolean
+        default: false
+  push:
+    branches: [maintenance/actions-storage]
+    paths:
+      - '.github/workflows/storage.yml'
+      - 'scripts/cleanup-actions.py'
+      - 'tests/test_cleanup_actions.py'
+  workflow_run:
+    workflows: ['Build, test and release Trait64']
+    types: [completed]
+  schedule:
+    - cron: '23 3 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: trait64-storage-maintenance
+  cancel-in-progress: false
+jobs:
+  clean:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # workflow_run must never execute code from an untrusted PR branch.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref || github.event.repository.default_branch }}
+      - name: Test cleanup safeguards
+        run: python3 -m unittest discover -s tests -p 'test_cleanup_actions.py' -v
+      - name: Remove completed build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          FINISHED_RUN: ${{ github.event.workflow_run.id }}
+          ALL_COMPLETED: ${{ inputs.all_completed }}
+          CLEAR_CACHES: ${{ inputs.clear_caches }}
+        run: |
+          args=(--apply)
+          if [ "$EVENT_NAME" = push ] || [ "$ALL_COMPLETED" = true ]; then
+            args+=(--all-completed)
+          elif [ "$EVENT_NAME" = workflow_run ]; then
+            args+=(--run-id "$FINISHED_RUN")
+          fi
+          if [ "$EVENT_NAME" = push ] || [ "$CLEAR_CACHES" = true ]; then
+            args+=(--clear-caches)
+          fi
+          python3 scripts/cleanup-actions.py "${args[@]}"
