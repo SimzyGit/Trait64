@@ -4,6 +4,7 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 int checks = 0;
 void check(bool ok, const char *message) {
     ++checks;
@@ -151,6 +152,35 @@ int main() {
                       "Record offsets preserve remaining games, UTF-8, CRLF and missing results");
             }
         }
+        // Parallel parsing must keep order/offsets and execute consumers on the calling thread.
+        const auto caller = std::this_thread::get_id();
+        for (int workers : {1, 2, 4, 8}) {
+            std::string corpus;
+            for (int i = 0; i < 67; ++i)
+                corpus += "[Event \"Partie " + std::to_string(i) + "\"]\r\n" + text;
+            std::vector<std::pair<std::string, uint64_t>> expected, parallel;
+            std::istringstream serial(corpus), input(corpus);
+            t64::readPgnRecords(serial,
+                                [&](t64::Game &&g, uint64_t n) { expected.emplace_back(g.pgn(), n); });
+            t64::readPgnParallel(input, workers, [&](t64::Game &&g, uint64_t n) {
+                check(std::this_thread::get_id() == caller, "Consumers run on caller thread");
+                parallel.emplace_back(g.pgn(), n);
+            });
+            check(parallel == expected, "Parallel PGN is byte-boundary and order equivalent");
+            int consumed = 0;
+            std::istringstream canceled(corpus);
+            rejects([&] {
+                t64::readPgnParallel(canceled, workers, [&](t64::Game &&, uint64_t) {
+                    if (++consumed == 3)
+                        throw std::runtime_error("stop");
+                });
+            });
+            check(consumed == 3, "Cancellation never consumes a later parsed record");
+            std::istringstream invalid("1.e4 *\n1.e5 *\n1.d4 *");
+            rejects([&] { t64::readPgnParallel(invalid, workers, [](t64::Game &&, uint64_t) {}); });
+        }
+        std::istringstream invalidWorkers("1.e4 *");
+        rejects([&] { t64::readPgnParallel(invalidWorkers, 9, [](t64::Game &&, uint64_t) {}); });
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

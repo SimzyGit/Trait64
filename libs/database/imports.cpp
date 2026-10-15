@@ -123,7 +123,8 @@ void Database::forgetImportJob(qint64 id) {
 }
 
 QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const ImportProgress &)> &progress,
-                                   const QString &replacement, int batchSize) {
+                                   const QString &replacement, int batchSize, int workers) {
+    require(workers >= 1 && workers <= 8, "Nombre de lecteurs PGN invalide (1 à 8).");
     require(batchSize >= 1 && batchSize <= 1000, "Taille de lot invalide.");
     QLockFile lock(lockPath(path_));
     // Long imports must not steal another living process's lock after a timeout.
@@ -237,15 +238,15 @@ QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const Imp
             p.committedBytes = complete ? p.total : nextOffset;
         };
         notify();
-        readPgnRecords(
-            input,
+        readPgnParallel(
+            input, workers,
             [&](Game &&game, uint64_t offset) {
                 notify();
                 begin();
                 linkSource(sourceId, save(game));
                 ++p.processed;
                 nextOffset = start + qint64(offset);
-                p.bytes = nextOffset;
+                p.bytes = std::max(p.bytes, nextOffset);
                 if (p.processed - p.committed >= batchSize)
                     commit(false);
                 notify();

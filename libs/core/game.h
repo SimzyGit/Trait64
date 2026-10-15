@@ -36,6 +36,11 @@ void readPgn(std::istream &input, const std::function<void(Game &&)> &consume);
 // Callbacks may throw to stop; no subsequent record is consumed in that case.
 void readPgnRecords(std::istream &input, const std::function<void(Game &&, uint64_t)> &consume,
                     const std::function<void(uint64_t)> &progress = {});
+// Raw framing is sequential; parsed results are delivered in file order on the caller's thread.
+void scanPgnRecords(std::istream &input, const std::function<void(std::string &&, uint64_t)> &consume,
+                    const std::function<void(uint64_t)> &progress = {});
+void readPgnParallel(std::istream &input, int workers, const std::function<void(Game &&, uint64_t)> &consume,
+                     const std::function<void(uint64_t)> &progress = {});
 std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000);
 std::string positionKey(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);

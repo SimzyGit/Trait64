@@ -27,7 +27,7 @@ class Database {
     QVariantList importHistory() const;
     qint64 createImportJob(const QString &path, const QVariantMap &source = {});
     QVariantMap runImportJob(qint64 id, const std::function<bool(const ImportProgress &)> &progress = {},
-                             const QString &replacement = {}, int batchSize = 250);
+                             const QString &replacement = {}, int batchSize = 250, int workers = 1);
     QVariantList importJobs() const;
     QVariantMap importJob(qint64 id) const;
     void forgetImportJob(qint64 id);
