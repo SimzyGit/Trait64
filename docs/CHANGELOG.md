@@ -1,5 +1,14 @@
 # Changements
 
+## File d’analyses persistante — 15 octobre 2026
+
+- Analyse hors ligne en arrière-plan, toutes les branches ou ligne principale, profils et MultiPV, pause/reprise et récupération après plantage. Copie PGN indépendante de l’étude ouverte.
+- Migration 7 sauvegardée, résultats et point de reprise atomiques, verrou par bibliothèque, pages de 200 résultats et cache borné à 10 000 positions. Identité SHA-256/options/ressources et historique complet pour la réutilisation ; ressources non identifiées exclues du cache.
+- Export et ouverture d’une copie annotée, variantes légales et provenance, conservation des commentaires et de la fin réellement jouée.
+- Scores UCI typés, WDL du moteur et compteurs ; scores malformés rejetés et suppression des fausses pertes en centipions lors des mats.
+- Tests avec vrai Stockfish, moteur modifié, pause/reprise, processus tué, Chess960, pagination et étude éditée pendant l’analyse.
+- Correction du plantage au redimensionnement après une comparaison UCI sur Qt 6.4 ; dialogue de file vérifié à 960 × 720 et exports empêchés d’écraser les verrous, même via un lien de bibliothèque.
+
 ## Import parallèle et stockage GitHub — 15 octobre 2026
 
 - Parsing PGN avec 1 à 8 lecteurs, file bornée, restitution ordonnée sur le thread du consommateur et un seul écrivain SQLite. Préférence persistante accessible dans les imports reprenables.

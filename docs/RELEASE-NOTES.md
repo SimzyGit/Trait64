@@ -1,3 +1,13 @@
+## Analyses en arrière-plan et reprise
+
+- File persistante accessible dans le menu de l’espace Analyse : moteur courant ou profil enregistré, MultiPV, temps par position et toutes les variantes.
+- Pause/reprise, récupération après interruption, résultats conservés à chaque position et étude courante indépendante.
+- Évaluations, WDL fournis par le moteur et variantes légales ; cache avec provenance et export PGN annoté, sans modifier la ligne réellement jouée.
+- Les mats restent des scores de mat et ne gonflent plus les pertes en centipions du bilan.
+- Migration 7 avec sauvegarde préalable. Tests Stockfish réels, arrêt brutal, changement de moteur, Chess960, pagination et édition simultanée.
+
+Guide : `docs/ANALYSIS-QUEUE.md`. Les réseaux NNUE ou autres ressources non identifiables désactivent seulement le cache ; ils n’empêchent pas l’analyse.
+
 ## Import PGN parallèle et compatibilité des corpus anciens
 
 - **Lecteurs parallèles réglables de 1 à 8** dans les imports reprenables, avec conservation de l'ordre des parties, de la pause/reprise et du point de sauvegarde. Deux lecteurs sont proposés par défaut.

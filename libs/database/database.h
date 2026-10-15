@@ -31,6 +31,18 @@ class Database {
     QVariantList importJobs() const;
     QVariantMap importJob(qint64 id) const;
     void forgetImportJob(qint64 id);
+    qint64 createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations, int total);
+    QVariantList analysisJobs() const;
+    QVariantMap analysisJob(qint64 id, bool includePgn = true) const;
+    QVariantList analysisResults(qint64 id, int offset = 0, int limit = 200) const;
+    void setAnalysisStatus(qint64 id, const QString &status, const QString &error = QStringLiteral(""));
+    void setAnalysisIdentity(qint64 id, const QVariantMap &identity);
+    void recoverAnalyses();
+    void forgetAnalysis(qint64 id);
+    void saveAnalysisResult(qint64 id, int ordinal, int node, const QString &fen, const QVariantList &lines,
+                            const QString &cacheKey = {}, bool cached = false);
+    QVariantList cachedAnalysis(const QString &key) const;
+    void clearAnalysisCache();
     qint64 createRepertoire(const QString &name, bool white, const Game &root);
     QVariantList repertoires() const;
     QVariantMap repertoire(qint64 id) const;
@@ -80,6 +92,7 @@ class Database {
     void upgradeV4(int originalVersion);
     void upgradeV5(int originalVersion);
     void upgradeV6(int originalVersion);
+    void upgradeV7(int originalVersion);
     qint64 registerSource(const QVariantMap &source);
     void linkSource(qint64 source, qint64 game);
     void recordImport(qint64 source, const QString &file, const QString &digest, int processed, int added);

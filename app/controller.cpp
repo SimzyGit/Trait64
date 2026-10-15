@@ -158,10 +158,12 @@ Controller::Controller(const QString &path, QObject *parent)
     initContent();
     initLibrarySearch();
     initPreparation();
+    initAnalyses();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    analysisQueue_.shutdown();
     searchEnabled_ = false;
     disconnect(&searchWorker_, nullptr, this, nullptr);
     if (cancelSearch_)
@@ -622,6 +624,7 @@ void Controller::openBackup(const QString &url) {
         auto candidate = std::make_unique<t64::Database>(path);
         require(candidate->integrity() == "ok", "Cette bibliothèque est endommagée.");
         db_ = std::move(candidate);
+        analysisQueue_.setLibrary(db_->path());
         gameId_ = 0;
         dirty_ = true;
         for (auto &tab : studies_) {

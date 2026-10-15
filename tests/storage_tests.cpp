@@ -41,6 +41,12 @@ int main(int argc, char **argv) {
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
         check(QFile::link(db.path(), dir.path() + "/alias.pgn"), "Create export alias fixture");
         rejects([&] { db.validateOutputPath(dir.path() + "/alias.pgn"); });
+        {
+            t64::Database alias(dir.path() + "/alias.pgn");
+            rejects([&] { alias.validateOutputPath(db.path() + ".analysis.lock"); });
+            rejects([&] { alias.validateOutputPath(db.path() + ".import.lock"); });
+            rejects([&] { alias.validateOutputPath(db.path() + "-wal"); });
+        }
         auto rows = db.search("Alice");
         check(rows.size() == 1, "Search player");
         auto id = rows[0].toMap()["id"].toLongLong();
@@ -150,9 +156,10 @@ int main(int argc, char **argv) {
             for (const auto &object : extra)
                 check(q.exec("DROP " + object.second + " " + object.first), "Remove v3 fixture object");
             for (const auto &table :
-                 QStringList{"repertoire_reviews", "repertoire_moves", "repertoire_positions", "repertoires",
-                             "import_jobs", "source_games", "sources", "import_history", "games_fts",
-                             "library_counts", "player_counts", "opening_edges", "opening_stats"})
+                 QStringList{"analysis_results", "analysis_jobs", "analysis_cache", "repertoire_reviews",
+                             "repertoire_moves", "repertoire_positions", "repertoires", "import_jobs",
+                             "source_games", "sources", "import_history", "games_fts", "library_counts",
+                             "player_counts", "opening_edges", "opening_stats"})
                 check(q.exec("DROP TABLE IF EXISTS " + table), "Remove v3 table");
 
             for (const auto &sql :

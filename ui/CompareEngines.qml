@@ -34,24 +34,29 @@ Dialog {
         }
         Label {text:"La comparaison suit la navigation de l’échiquier. Ressources plafonnées : 1 Gio de hash au total et partage des processeurs disponibles.";Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:11;opacity:0.7}
         ScrollView {
+            id: comparisonScroll
             Layout.fillWidth:true;Layout.fillHeight:true;contentWidth:availableWidth;clip:true
-            ColumnLayout {
-                width:parent.width;spacing:16
+            // Positioners own transient Repeater items. Hidden Qt 6.4 layouts can
+            // retain removed items until polish, then crash during a window resize.
+            Column {
+                id: cards
+                width:comparisonScroll.availableWidth;spacing:16
                 Repeater {model:root.backend.comparison.rows
                     Frame {
                         id:card
                         required property int index
                         required property var modelData
-                        Layout.fillWidth:true
-                        ColumnLayout {
-                            anchors.fill:parent
-                            Label {text:card.modelData.name+" · "+card.modelData.threads+" thread(s) · "+card.modelData.hash+" Mio";font.bold:true;Layout.fillWidth:true;elide:Text.ElideRight}
-                            Label {text:card.modelData.status;Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:11}
+                        width:cards.width
+                        contentItem: Column {
+                            id: variations
+                            spacing: 5
+                            Label {text:card.modelData.name+" · "+card.modelData.threads+" thread(s) · "+card.modelData.hash+" Mio";font.bold:true;width:parent.width;elide:Text.ElideRight}
+                            Label {text:card.modelData.status;width:parent.width;wrapMode:Text.WordWrap;font.pixelSize:11}
                             Repeater {model:card.modelData.lines
                                 RowLayout {
                                     required property int index
                                     required property var modelData
-                                    Layout.fillWidth:true
+                                    width:variations.width
                                     Label {text:modelData.eval;Layout.preferredWidth:65;font.bold:true}
                                     Label {text:"d="+modelData.depth+" · TB "+modelData.tbhits;Layout.preferredWidth:95;font.pixelSize:10}
                                     Label {text:modelData.san;Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:12}

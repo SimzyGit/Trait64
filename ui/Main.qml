@@ -532,6 +532,7 @@ ApplicationWindow {
         }
     }
     Menu {id:analysisMenu;x:win.width-width-32;y:172
+        MenuItem {text:"Analyses en arrière-plan";onTriggered:analysisQueueDialog.open()}
         MenuItem {text:"Comparer plusieurs moteurs";onTriggered:compareDialog.open()}
         MenuItem {text:"Éditer la position";onTriggered:positionEditor.open()}
         MenuItem {text:"Copier la position FEN";onTriggered:controller.copyText("fen")}
@@ -566,6 +567,7 @@ ApplicationWindow {
         onAccepted:controller.setCollection(win.selectedGame,collectionField.text)
     }
     PositionEditor {id:positionEditor;objectName:"positionEditor";backend:controller}
+    AnalysisQueue {id:analysisQueueDialog;objectName:"analysisQueueDialog";backend:controller}
     Review {id:reviewDialog;objectName:"reviewDialog";backend:controller}
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Native.FileDialog {id:diagramDialog;title:"Exporter le diagramme";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
@@ -651,7 +653,7 @@ ApplicationWindow {
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
-    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!appMenu.visible&&!analysisMenu.visible&&!positionMenu.visible}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!appMenu.visible&&!analysisMenu.visible&&!positionMenu.visible}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
     Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}
