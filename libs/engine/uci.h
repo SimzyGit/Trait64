@@ -17,6 +17,7 @@ class Uci : public QObject {
     QVariantList options() const { return descriptors_; }
     QString executable() const { return process_.program(); }
     static QVariantMap parseOption(const QString &line);
+    static QVariantMap parseInfo(const QString &line, const QString &fen, bool chess960 = false);
     static QString optionValue(const QVariantMap &descriptor, const QVariant &value);
     bool pressOption(const QString &name);
     void analyse(const QString &fen, const QString &positionCommand, bool play = false,
@@ -26,6 +27,7 @@ class Uci : public QObject {
     QString name() const { return name_; }
     bool ready() const { return state_ == Ready || state_ == Searching || state_ == Stopping; }
   signals:
+    void initialized();
     void status(const QString &text);
     void lines(const QVariantList &lines);
     void bestMove(const QString &uci, const QString &fen);

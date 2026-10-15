@@ -578,6 +578,9 @@ void Controller::requestReviewPosition() {
             if (epoch != reviewEpoch_)
                 return;
             finishReviewPosition(fen, {QVariantMap{{"score", score},
+                                                   {"scoreType", score == 0 ? "cp" : "mate"},
+                                                   {"cp", score == 0 ? QVariant(0) : QVariant()},
+                                                   {"mate", score == 0 ? QVariant() : QVariant(0)},
                                                    {"eval", score == 0  ? "0.00"
                                                             : score > 0 ? "+M0"
                                                                         : "−M0"},
@@ -606,9 +609,12 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
         int node = reviewNodes_[reviewIndex_], parent = reviewNodes_[reviewIndex_ - 1];
         auto previous = reviewScores_[reviewIndex_ - 1].toMap();
         const bool white = reviewGame_.boardAt(parent).sideToMove() == chess::Color::WHITE;
+        const bool lossKnown = previous["scoreType"] == "cp" && score["scoreType"] == "cp";
         const double loss =
-            std::max(0., (previous["score"].toDouble() - score["score"].toDouble()) * (white ? 100 : -100));
-        QString label = loss >= 250   ? "Gaffe"
+            lossKnown ? std::max(0., (previous["cp"].toDouble() - score["cp"].toDouble()) * (white ? 1 : -1))
+                      : 0.;
+        QString label = !lossKnown    ? "Séquence de mat"
+                        : loss >= 250 ? "Gaffe"
                         : loss >= 100 ? "Erreur"
                         : loss >= 50  ? "Imprécision"
                                       : "Correct";
@@ -618,7 +624,9 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
                                {"white", white},
                                {"score", score["score"]},
                                {"eval", score["eval"]},
-                               {"loss", qRound(loss)},
+                               {"loss", lossKnown ? QVariant(qRound(loss)) : QVariant()},
+                               {"lossKnown", lossKnown},
+                               {"scoreType", score["scoreType"]},
                                {"label", label},
                                {"best", previous["uci"]},
                                {"fen", qs(reviewGame_.nodes[parent].fen)},
