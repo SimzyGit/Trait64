@@ -4,12 +4,12 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QSaveFile>
 #include <QSysInfo>
 #include <algorithm>
 #include <fstream>
@@ -23,6 +23,13 @@ struct LimitReached {};
 void need(bool ok, const char *message) {
     if (!ok)
         throw std::runtime_error(message);
+}
+QString newOutput(const QString &path) {
+    const QFileInfo file(path);
+    need(!file.exists() && !file.isSymLink(), "Refusing to overwrite an existing output");
+    const auto directory = file.dir().canonicalPath();
+    need(!directory.isEmpty(), "Output parent directory must exist");
+    return QDir(directory).filePath(file.fileName());
 }
 } // namespace
 int main(int argc, char **argv) {
@@ -50,10 +57,22 @@ int main(int argc, char **argv) {
         need(ok && limit >= 0, "Invalid --limit");
         const qint64 pauseAt = args.value("pause-at").toLongLong(&ok);
         need(ok && pauseAt >= 0 && (!limit || pauseAt < limit), "Invalid --pause-at");
-        const auto path = args.value("database"), reportPath = args.value("report");
-        need(path.isEmpty() || !QFileInfo::exists(path), "Refusing to overwrite an existing database");
-        need(reportPath.isEmpty() || !QFileInfo::exists(reportPath), "Refusing to overwrite a report");
+        const auto path = args.isSet("database") ? newOutput(args.value("database")) : QString{};
+        const auto reportPath = args.isSet("report") ? newOutput(args.value("report")) : QString{};
         need(path.isEmpty() || limit % 250 == 0, "Import --limit must be a multiple of 250");
+        need(!path.isEmpty() || (!pauseAt && !args.isSet("backup")),
+             "--pause-at and --backup require --database");
+        // Validate all destinations before creating SQLite files. Resolving the existing
+        // parent also catches aliases through symlinked directories and '..' components.
+        if (!path.isEmpty()) {
+            QStringList destinations{path, path + "-wal", path + "-shm", path + "-journal",
+                                     path + ".import.lock"};
+            if (args.isSet("backup"))
+                for (const auto &suffix : QStringList{"", "-wal", "-shm", "-journal"})
+                    destinations.push_back(path + ".backup" + suffix);
+            for (const auto &destination : destinations)
+                need(newOutput(destination) != reportPath, "Report overlaps a database or journal path");
+        }
         QElapsedTimer clock;
         clock.start();
         QFile source(input);
@@ -178,8 +197,10 @@ int main(int argc, char **argv) {
         if (reportPath.isEmpty())
             std::cout << bytes.constData();
         else {
-            QSaveFile output(reportPath);
-            need(output.open(QIODevice::WriteOnly) && output.write(bytes) == bytes.size() && output.commit(),
+            // NewOnly also protects a report created by another process during the run.
+            QFile output(reportPath);
+            need(output.open(QIODevice::WriteOnly | QIODevice::NewOnly) &&
+                     output.write(bytes) == bytes.size() && output.flush(),
                  "Cannot write report");
         }
         return 0;

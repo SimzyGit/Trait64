@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-15",
+  "build": "Release",
+  "compiler": "GCC 13.3",
+  "schema": 6,
+  "license": "CC0; https://database.lichess.org/",
+  "compressed_sha256": "aa40b3671fa3cf1072eb182892cd90b0e1e003a4a5943492f64b77e7f3fd1635",
+  "scope": "First 10,000 actual games from Lichess January 2013; shared development host, not a million-game qualification",
+  "parse_1": {
+    "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+    "cpu_arch": "x86_64",
+    "elapsed_ms": 10126,
+    "games": 10000,
+    "hash_ms": 731,
+    "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "input_bytes": 92811021,
+    "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+    "limit": 10000,
+    "mode": "parse + canonical PGN hash (no database)",
+    "nodes": 661314,
+    "os": "Ubuntu 24.04.3 LTS",
+    "peak_rss_kib": 9008,
+    "qt": "6.4.2",
+    "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "version": "0.3.0-dev.1",
+    "workers": 1
+  },
+  "parse_4": {
+    "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+    "cpu_arch": "x86_64",
+    "elapsed_ms": 3637,
+    "games": 10000,
+    "hash_ms": 547,
+    "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "input_bytes": 92811021,
+    "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+    "limit": 10000,
+    "mode": "parse + canonical PGN hash (no database)",
+    "nodes": 661314,
+    "os": "Ubuntu 24.04.3 LTS",
+    "peak_rss_kib": 9316,
+    "qt": "6.4.2",
+    "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "version": "0.3.0-dev.1",
+    "workers": 4
+  },
+  "import_4_pause_resume": {
+    "backup_ms": 809,
+    "backup_verified": true,
+    "cpu_arch": "x86_64",
+    "database_with_journals_bytes": 371634176,
+    "elapsed_ms": 72462,
+    "exact_player": {
+      "max_ms": 1.273985,
+      "median_ms": 0.899251
+    },
+    "first_page_200": {
+      "max_ms": 0.764952,
+      "median_ms": 0.700267
+    },
+    "first_pass_ms": 25582,
+    "games": 10000,
+    "hash_ms": 561,
+    "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "input_bytes": 92811021,
+    "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+    "integrity": "ok",
+    "integrity_ms": 2585,
+    "job": {
+      "added": 10000,
+      "bytes": 92811021,
+      "error": "",
+      "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "id": 1,
+      "modified": 1791982932833,
+      "offset": 7561130,
+      "processed": 10000,
+      "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+      "sourceId": 1,
+      "status": "paused",
+      "title": "lichess-2013-01",
+      "updated": "2026-10-15T06:18:32.094Z"
+    },
+    "limit": 10000,
+    "load_one_game": {
+      "max_ms": 1.021001,
+      "median_ms": 0.866772
+    },
+    "mode": "checkpointed import including file verification, full positions and indexes",
+    "next_page_200": {
+      "max_ms": 1.108591,
+      "median_ms": 0.992068
+    },
+    "opening_tree": {
+      "max_ms": 0.126668,
+      "median_ms": 0.090594
+    },
+    "os": "Ubuntu 24.04.3 LTS",
+    "pause_committed": 5000,
+    "peak_rss_kib": 18452,
+    "qt": "6.4.2",
+    "reopen_ms": 0.741788,
+    "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "version": "0.3.0-dev.1",
+    "workers": 4
+  }
+}

@@ -71,7 +71,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_RELEASE_VERSION="$RELEASE_VERSION"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON -DT64_RELEASE_VERSION="$RELEASE_VERSION"
           cmake --build build --parallel 2
       - name: Test
         run: ctest --test-dir build --output-on-failure

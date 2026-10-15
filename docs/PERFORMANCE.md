@@ -44,8 +44,60 @@ Les essais sur 1, 2, 5 et 10 millions de **parties PGN réelles avec toutes leur
 
 ## Import reprenable (13 octobre 2026)
 
-Le nouveau mode conserve un lot de 250 parties par transaction et un curseur en octets dans la même transaction. La mémoire ne contient qu’une partie parsée à la fois (limite de 64 Mio par enregistrement PGN) et un tampon SHA-256 de 1 Mio. Une reprise relit le fichier complet pour vérifier son empreinte, puis rejoint directement le point de parsing conservé. Le débit et le temps restant affichés concernent la lecture et l’indexation après cette vérification ; ils restent des estimations observées pendant la session.
+Le nouveau mode conserve un lot de 250 parties par transaction et un curseur en octets dans la même transaction. Avec un seul lecteur, la mémoire ne contient qu’une partie parsée à la fois (limite de 64 Mio par enregistrement PGN) et un tampon SHA-256 de 1 Mio. Une reprise relit le fichier complet pour vérifier son empreinte, puis rejoint directement le point de parsing conservé. Le débit et le temps restant affichés concernent la lecture et l’indexation après cette vérification ; ils restent des estimations observées pendant la session.
 
 Les tests fonctionnels vérifient la reprise après arrêt du processus ; ils ne constituent pas un benchmark de 1/2/5/10 millions de PGN réels. Ces mesures, la parallélisation du parsing et la réduction du coût d’indexation restent à qualifier.
 
 Les répertoires et leurs fichiers PGN sont bornés (16 Mio/200 parties par import dans l’éditeur). Leur import, export, agrégation de rappels et détection de lacunes restent synchrones : une très grande préparation peut encore bloquer brièvement l’éditeur. Le calcul filtré des statistiques de préparation est asynchrone et annulable, avec l’index de positions existant ; les combinaisons sur des corpus réels de plusieurs millions ne sont pas encore mesurées.
+
+## Import parallèle et protocole sur un vrai PGN — 15 octobre 2026
+
+Le dialogue d'import permet désormais de choisir de 1 à 8 lecteurs (2 par défaut).
+Le cadrage des enregistrements reste séquentiel ; seul leur parsing est parallèle.
+La restitution se fait dans l'ordre du fichier sur le thread appelant. SQLite
+conserve un seul écrivain et les mêmes transactions/points de reprise. La file
+est bornée à deux enregistrements par lecteur et 32 Mio de texte brut en attente,
+à l'exception d'un enregistrement isolé de 64 Mio maximum. La mémoire des arbres
+parsés s'ajoute à ces octets : 32 Mio n'est pas une limite de RAM du processus.
+
+Le benchmark optionnel accepte un PGN local réel et mesure parsing, import,
+reprise, recherches et sauvegarde. Les sorties doivent être de nouveaux fichiers.
+Il refuse les collisions entre rapport, base, journaux SQLite et sauvegarde,
+y compris via un alias de dossier. Le corpus et les bases volumineuses ne sont
+pas ajoutés au dépôt GitHub.
+
+```sh
+cmake -S . -B build-perf -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON
+cmake --build build-perf --target pgn_benchmark --parallel 1
+./build-perf/pgn_benchmark --input /chemin/corpus.pgn --threads 1 --limit 10000 --report /chemin/parse-1.json
+./build-perf/pgn_benchmark --input /chemin/corpus.pgn --threads 4 --limit 10000 --report /chemin/parse-4.json
+./build-perf/pgn_benchmark --input /chemin/corpus.pgn --threads 4 --limit 10000 --pause-at 5000 --database /chemin/nouvelle-base.sqlite --backup --report /chemin/import.json
+```
+
+La comparaison du parsing exige un même nombre de parties/positions et la même
+empreinte du PGN réexporté. Une mesure sur 10 000 parties ne qualifie pas les
+objectifs de 1, 2, 5 et 10 millions de parties complètes.
+
+Mesure réelle : premières **10 000 parties / 661 314 positions** du corpus
+[Lichess janvier 2013](https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst),
+sous [CC0](https://database.lichess.org/), sur l'hôte Linux partagé, GCC 13.3,
+Qt 6.4.2, compilation Release. PGN de 92 811 021 octets ; empreintes et rapports
+bruts dans [performance-pgn-2026-10-15.json](performance-pgn-2026-10-15.json).
+L'identifiant embarqué `0.3.0-dev.1` est celui de la configuration locale de
+mesure ; ce n'est pas une nouvelle version distribuée.
+
+| Opération | Temps | Pic RSS du processus |
+|---|---:|---:|
+| Parsing, réexport et SHA-256 canonique — 1 lecteur | 10,126 s | 9 008 Kio |
+| Parsing, réexport et SHA-256 canonique — 4 lecteurs | 3,637 s | 9 316 Kio |
+| Import avec index, pause à 5 000, fermeture/réouverture et reprise à 10 000 | 72,462 s | 18 452 Kio |
+
+Les deux sorties de parsing ont exactement la même empreinte canonique.
+L'import s'arrête volontairement en pause à la limite de 10 000 ; le reste du
+corpus n'est pas importé dans cet essai. La base avec journaux occupe
+371 634 176 octets. Contrôle d'intégrité réussi ; sauvegarde effectuée en 0,809 s
+puis rouverte et vérifiée. Les lectures chaudes mesurées sur cinq passages ont
+des médianes de 0,700 ms (première page de 200), 0,992 ms (page suivante),
+0,899 ms (joueur exact) et 0,091 ms (arbre depuis la position initiale).
+Ce sont des observations ponctuelles sur cet hôte/corpus, pas une garantie de
+débit sur Voyager ni une comparaison avec d'autres logiciels.

@@ -55,6 +55,26 @@ int main() {
         rejects([] { t64::parsePgn("1. e4 (1. d4"); });
         rejects([] { t64::parsePgn("1. e4 {unclosed"); });
         rejects([] { t64::parsePgn("1. e5 *"); });
+        // Real CC0 Lichess January 2013 record, https://lichess.org/9opx3qh7.
+        auto historical =
+            t64::parsePgn("1. d4 e5 2. dxe5 d6 3. exd6 Bxd6 4. Nf3 Nf6 5. Nc3 O-O 6. a3 Nc6 7. e3 a6 "
+                          "8. Be2 h6 9. O-O Ne5 10. Bd2 Nxf3+ 11. Bxf3 Be5 12. Rc1 c6 13. Qe2 Qd6 "
+                          "14. Rfd1 Bxh2+ 15. Kh1 Be5 16. e4 Bxc3 17. Bxc3 Qe6 18. Rd3 Bd7 19. Rcd1 Rad8 "
+                          "20. Bxf6 gxf6 21. Rd6 Qe7 22. Rd1d2 *")
+                .at(0);
+        check(historical.nodes.back().uci == "d1d2" && historical.nodes.back().san == "R1d2",
+              "Historical full-origin SAN is normalized to canonical SAN");
+        const auto parent = historical.nodes.back().parent;
+        const auto unchanged = historical.pgn();
+        for (const auto &bad : {"Rd2", "Rdd2", "Rd3d2", "Rd1xd2", "Rd1-d2", "Rdd1d2"})
+            rejects([&] { historical.playSan(parent, bad); });
+        check(historical.pgn() == unchanged, "Rejected ambiguous/invalid SAN never changes the study");
+        check(t64::parsePgn("1.Ng1f3 d5 2.Nf3g5 *")[0].nodes.back().uci == "f3g5",
+              "Redundant origin works for legal non-capturing piece moves");
+        auto capture = t64::parsePgn("1.e4 d5 2.exd5 Qd8xd5 *").at(0);
+        check(capture.nodes.back().san == "Qxd5", "Redundant capture origin is normalized");
+        rejects([] { t64::parsePgn("1.e4 d5 2.exd5 Qd8d5 *"); });
+        rejects([] { t64::parsePgn("1.Nb1f3 *"); });
         rejects([] { t64::parsePgn("[Variant \"Atomic\"] 1.e4 *"); });
         rejects([] { t64::checkedBoard("8/8/8/8/8/8/8/8 w - - 0 1"); });
         rejects([] { t64::checkedBoard("8/8/8/8/8/8/4k3/4K3 w - - 0 1"); });

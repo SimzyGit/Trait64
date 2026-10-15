@@ -1,6 +1,6 @@
 # Vérification 0.3
 
-`ctest --test-dir build --output-on-failure` exécute neuf suites :
+`ctest --test-dir build --output-on-failure` exécute neuf suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une dixième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
 
 | Suite | Scénarios vérifiés |
 |---|---|
@@ -81,3 +81,21 @@ Validation finale locale du lot : **9/9 suites réussies en 15,53 s**, avec Stoc
 Les résultats CI et la publication du lot sont suivis dans la [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3). Le protocole ne qualifie pas un corpus réel de plusieurs millions de parties ni une installation sur Voyager.
 
 Le contrôle de taille du parcours de répertoire est effectué avant l’ajout des enfants (100 000 positions maximum), avec insertion élément par élément pour éviter un avertissement de GCC 14 sur la copie de plage. Les neuf suites locales ont été relancées après cette correction.
+
+## Import parallèle et protection du benchmark — 15 octobre 2026
+
+**10/10 suites locales réussies en 17,23 s**, avec Stockfish réel. Les scénarios
+du cœur comparent 1, 2, 4 et 8 lecteurs : ordre, PGN canonique, offsets de reprise,
+thread du consommateur, arrêt et propagation des erreurs. Une partie réelle
+CC0 de Lichess vérifie la notation historique `Rd1d2`, avec rejets d'ambiguïtés,
+d'origines incorrectes et de fausses captures, sans mutation de l'étude rejetée.
+
+La suite du benchmark lance son vrai exécutable dans des dossiers temporaires :
+collisions rapport/base/journaux/sauvegarde, fichiers préexistants, alias de dossier,
+lien symbolique sans cible, équivalence du parsing à 1/4 lecteurs, import SQLite
+et sauvegarde vérifiée. Ce sont de petits PGN de test ; aucune mesure synthétique
+n'est présentée comme celle d'un corpus réel.
+
+Le dialogue d'import a été inspecté à 960 × 720 : sélection de 1 à 8 lecteurs,
+contrôles et texte accessibles. Les mesures sur corpus et leurs limites figurent
+dans [PERFORMANCE.md](PERFORMANCE.md).
