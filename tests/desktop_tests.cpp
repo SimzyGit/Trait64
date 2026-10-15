@@ -10,6 +10,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickItem>
+#include <QQuickItemGrabResult>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QSettings>
@@ -260,6 +261,42 @@ int main(int argc, char **argv) {
                 QTest::qWait(80);
                 check(!c.reviewState()["running"].toBool() && c.review().empty(),
                       "Changing study cancels review and clears stale results");
+                c.move("e2e4");
+                c.move("e7e5");
+                c.navigate(1);
+                c.move("c7c5");
+                c.setComment("Before queue snapshot");
+                c.enqueueAnalysis(true, 100);
+                c.move("g1f3");
+                c.setComment("Study edited while analysis runs");
+                const auto editingFen = c.state()["fen"];
+                timer.restart();
+                while (timer.elapsed() < 10000 &&
+                       (c.analysisQueue()->jobs().empty() ||
+                        c.analysisQueue()->jobs().first().toMap()["status"] == "queued" ||
+                        c.analysisQueue()->jobs().first().toMap()["status"] == "running"))
+                    QTest::qWait(20);
+                check(!c.analysisQueue()->jobs().empty() &&
+                          c.analysisQueue()->jobs().first().toMap()["status"] == "completed" &&
+                          c.analysisQueue()->jobs().first().toMap()["total"].toInt() == 4 &&
+                          c.state()["fen"] == editingFen &&
+                          c.state()["comment"] == "Study edited while analysis runs",
+                      "Background branch analysis leaves the current study intact");
+                auto *queueDialog = window->findChild<QObject *>("analysisQueueDialog");
+                const auto previousSize = window->size();
+                window->resize(960, 720);
+                QMetaObject::invokeMethod(queueDialog, "open");
+                QTest::qWait(80);
+                const auto screenshot = qEnvironmentVariable("T64_ANALYSIS_SCREENSHOT");
+                if (!screenshot.isEmpty()) {
+                    auto capture = window->contentItem()->grabToImage();
+                    check(bool(capture), "Prepare populated analysis capture");
+                    QSignalSpy ready(capture.data(), &QQuickItemGrabResult::ready);
+                    check(ready.wait(3000) && capture->saveToFile(screenshot),
+                          "Capture populated background analysis dialog");
+                }
+                QMetaObject::invokeMethod(queueDialog, "close");
+                window->resize(previousSize);
                 c.closeTab(c.state()["activeTab"].toInt());
                 c.switchTab(0);
             }
@@ -286,8 +323,9 @@ int main(int argc, char **argv) {
             c.stopPlaying();
             check(!c.state()["clockRunning"].toBool(), "Stopping game stops clock");
             // Exercise every new dialog including small window layout and keyboard capture.
-            for (const auto &name : QStringList{"appearanceDialog", "positionEditor", "reviewDialog",
-                                                "settingsDialog", "updatesDialog", "compareDialog"}) {
+            for (const auto &name :
+                 QStringList{"appearanceDialog", "positionEditor", "reviewDialog", "settingsDialog",
+                             "updatesDialog", "compareDialog", "analysisQueueDialog"}) {
                 QObject *dialog = window->findChild<QObject *>(name);
                 check(dialog, "Feature dialog exists");
                 QMetaObject::invokeMethod(dialog, "open");

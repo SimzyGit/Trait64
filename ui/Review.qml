@@ -8,7 +8,7 @@ Dialog {
     width:Math.min(860,parent?parent.width-24:860)
     height:Math.min(700,parent?parent.height-24:700)
     anchors.centerIn:parent;modal:true;standardButtons:Dialog.Close
-    function average(white) {var sum=0,n=0;for(var i=0;i<backend.review.length;i++){var row=backend.review[i];if(row.white===white){sum+=row.loss;n++}}return n?Math.round(sum/n):0}
+    function average(white) {var sum=0,n=0;for(var i=0;i<backend.review.length;i++){var row=backend.review[i];if(row.white===white&&row.lossKnown){sum+=row.loss;n++}}return n?Math.round(sum/n):"—"}
     Connections {target:root.backend;function onReviewChanged(){graph.requestPaint()}}
     ColumnLayout {
         anchors.fill:parent;spacing:12
@@ -38,7 +38,7 @@ Dialog {
         Label {text:"Perte moyenne (centipions) — Blancs : "+root.average(true)+" · Noirs : "+root.average(false);font.bold:true}
         ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}
             delegate:ItemDelegate {required property var modelData;required property int index;width:rows.width;implicitHeight:36
-                text:(index+1)+".  "+modelData.move+"    "+modelData.eval+"    "+modelData.label+"    (−"+modelData.loss+" cp)";onClicked:root.backend.navigate(modelData.node)
+                text:(index+1)+".  "+modelData.move+"    "+modelData.eval+"    "+modelData.label+(modelData.lossKnown?"    (−"+modelData.loss+" cp)":"");onClicked:root.backend.navigate(modelData.node)
             }
         }
         RowLayout {Layout.fillWidth:true

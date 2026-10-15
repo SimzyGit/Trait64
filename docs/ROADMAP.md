@@ -8,8 +8,8 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Échiquier | Chess960, 960 départs numérotés, éditeur graphique FEN, flèches/cercles persistants | Autres variantes |
 | Études | 16 onglets restaurables, annuler/rétablir, duplication, fusion d’arbres, diagramme PNG, étude PDF | Chapitres, références et documents attachés, mise en page avancée |
 | Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
-| Bibliothèque | Schéma 6, import PGN parallèle (1–8 lecteurs) par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
-| Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur et Syzygy | Analyse des branches, budgets adaptatifs, interface de tablebases dédiée |
+| Bibliothèque | Schéma 7, import PGN parallèle (1–8 lecteurs) par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
+| Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur, Syzygy via UCI, file persistante avec variantes/pause/reprise, cache avec provenance et export annoté | Budgets adaptatifs, interface de tablebases dédiée |
 | Ouvertures | ECO CC0, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, import/export PGN, parties modèles, réponses adverses manquantes dans la base locale | Analyse moteur des branches, couverture probabiliste globale, comparaison de répertoires, nouveautés théoriques, Polyglot |
 | Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, rappels espacés par position de répertoire, réponses préparées multiples et suivi des rappels manqués | Équivalences validées par moteur, cours de finales, calcul/visualisation, agenda adaptatif, certification tactique |
 | Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
@@ -85,12 +85,12 @@ Fonctionnalités :
 - [ ] Identification des colonnes ouvertes et des cases faibles.
 - [ ] Explication des plans stratégiques lorsque des éléments concrets les justifient.
 - [ ] Comparaison visuelle entre le coup joué et le meilleur coup.
-- [ ] Analyse automatique des variantes secondaires.
-- [ ] File de tâches d'analyse persistante.
+- [x] Analyse automatique des variantes secondaires.
+- [x] File de tâches d'analyse persistante.
 - [ ] Budgets de calcul adaptatifs.
 - [ ] Comparaison détaillée des conclusions de plusieurs moteurs.
 - [ ] Exploitation des tables de finales Syzygy.
-- [ ] Conservation et réutilisation des évaluations précédentes.
+- [x] Conservation et réutilisation des évaluations précédentes.
 - [ ] Explications pédagogiques en français.
 
 Les explications doivent s'appuyer sur de véritables calculs et des caractéristiques échiquéennes vérifiables.
@@ -349,3 +349,5 @@ Références étudiées et précautions de réutilisation : [SOURCES.md](SOURCES
 13 octobre : répertoires par position, partage des transpositions, PGN et rappels espacés implémentés. Les réponses adverses absentes sont détectées par rapport à la bibliothèque ; couverture probabiliste globale, comparaison de répertoires et analyse moteur des branches restent à développer. Guide : [REPERTOIRES-IMPORTS.md](REPERTOIRES-IMPORTS.md).
 
 15 octobre : stockage Actions nettoyé (8,37 Go) et purge automatique intégrée par la PR #4. La PR #5 ajoute l'import parallèle, corrige la notation SAN historique et protège les sorties du benchmark. Dix suites réussissent sur Debian 12 et 13 ; corpus réel de 10 000 parties avec pause/reprise et sauvegarde vérifiées. Voir [PERFORMANCE.md](PERFORMANCE.md). Prochain lot : file d'analyses persistante et explications vérifiables, puis entraînement et répertoires ; détails de reprise dans [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).
+
+15 octobre, lot analyses : file Qt/SQLite persistante, copie indépendante de l’étude, toutes les branches, pause/reprise après arrêt réel, MultiPV, cache borné tenant compte de l’historique et de l’identité moteur, export PGN annoté sans prolonger la ligne jouée. Les scores de mat ne produisent plus de pertes artificielles en centipions. Guide : [ANALYSIS-QUEUE.md](ANALYSIS-QUEUE.md).

@@ -77,8 +77,33 @@ int main(int argc, char **argv) {
             return 77;
         }
         auto start = QString::fromStdString(chess::constants::STARTPOS);
+        for (const auto &bad : QStringList{"score cp abc", "score cp 2147483648", "score bananas 10",
+                                           "score mate -2147483648", "depth 5", "score cp 1 multipv abc"})
+            check(t64::Uci::parseInfo("info " + bad + " pv e2e4", start).isEmpty(),
+                  "Malformed score must never be accepted as an exact evaluation");
+        check(t64::Uci::parseInfo("info string score cp 0 pv e2e4", start).isEmpty(),
+              "Engine diagnostic text is not a score");
+        const auto parsed = t64::Uci::parseInfo(
+            "info depth 7 score cp 123 wdl 200 700 100 nodes 123456 time 42 pv e2e4 e7e5 e2e5", start);
+        check(parsed["cp"].toInt() == 123 && parsed["scoreType"] == "cp" && parsed["uci"] == "e2e4 e7e5" &&
+                  parsed["nodes"].toULongLong() == 123456 && parsed["time"].toInt() == 42 &&
+                  parsed["wdl"].toList() == QVariantList{200, 700, 100},
+              "Typed score, WDL, counters and only legal PV prefix");
+        auto blackFen = start;
+        blackFen.replace(" w ", " b ");
+        const auto blackScore = t64::Uci::parseInfo("info score cp 25 wdl 200 700 100 pv e7e5", blackFen);
+        check(blackScore["cp"].toInt() == -25 && blackScore["wdl"].toList() == QVariantList{100, 700, 200},
+              "Scores and WDL consistently use White's point of view");
+        const auto mateScore = t64::Uci::parseInfo("info score mate -2 pv e7e5", blackFen);
+        check(mateScore["scoreType"] == "mate" && mateScore["mate"].toInt() == 2 &&
+                  !mateScore["cp"].isValid(),
+              "Mate is not a synthetic centipawn score");
+        check(!t64::Uci::parseInfo("info score cp 0 wdl 0 0 0 pv e2e4", start).contains("wdl"),
+              "Invalid WDL is omitted, not invented");
+        QSignalSpy initialized(&engine, &t64::Uci::initialized);
         engine.start(path, 1, 16, 2, 20, {}, {{"UCI_LimitStrength", false}});
         check(waitFor([&] { return engine.ready(); }), "UCI handshake failed");
+        check(initialized.size() == 1, "Initialization announced after readyok");
         check(!engine.options().isEmpty(), "Engine publishes option descriptors");
         check(engine.pressOption("Clear Hash"), "Declared button is actionable");
         check(waitFor([&] { return engine.ready(); }), "Ready after button");

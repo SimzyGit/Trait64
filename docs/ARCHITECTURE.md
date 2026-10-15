@@ -5,7 +5,7 @@ Monolithe modulaire de bureau, sans serveur. Les mises à jour et le catalogue d
 | Module | Rôle |
 |---|---|
 | `libs/core` | C++ standard sans Qt : FEN, règles classiques/Chess960, arbre, PGN et lecture en flux, EPD, fusion, perft |
-| `libs/database` | Qt SQL : SQLite schéma 4, transactions, index, statistiques joueurs/entraînements, sauvegarde ; archive expérimentale |
+| `libs/database` | Qt SQL : SQLite schéma 7, transactions, index, statistiques joueurs/entraînements, sauvegarde ; archive expérimentale |
 | `libs/engine` | QProcess : UCI asynchrone, options, annulation sérialisée, MultiPV et résultats terminés |
 | `libs/content` | Qt Network/Concurrent et libarchive : catalogue embarqué, téléchargement, vérification et extraction protégée |
 | `libs/updates` | Qt Network : Releases GitHub, canaux, SHA-256, téléchargement borné et installation |
@@ -49,3 +49,7 @@ Le schéma 6 ajoute répertoires, positions, arêtes et journal de rappels. La c
 Les exercices de répertoire et les anciennes cartes partagent `trainingActive()` pour les gardes d’édition, le gel de session et la restauration de l’étude. Les réponses multiples viennent du répertoire ; aucune équivalence moteur n’est inventée. Le calendrier simple 1/3/double (maximum 365 jours, retour à 1 en cas d’échec) reste séparé des anciennes cartes.
 
 La préparation par position interroge l’index `positions_fen`, déduplique les couples partie/coup avant les agrégats, et applique les filtres de source/métadonnées. Un worker Qt sérialisé, une connexion SQL indépendante, une génération et un drapeau d’annulation SQLite empêchent les résultats périmés. Le CSV conserve les filtres et la FEN. Ces statistiques dépendent exclusivement du corpus local.
+
+## File d’analyses
+
+Le schéma 7 conserve les copies PGN, les paramètres et identités UCI, les résultats ordonnés et un cache limité à 10 000 positions. Un résultat et l’incrément du point de reprise sont validés dans la même transaction. Le worker `libs/analysis` crée sa connexion SQLite et son processus UCI dans un QThread séparé, sous verrou par bibliothèque. Les signaux portent une génération pour ignorer les retours d’une bibliothèque fermée. Les notifications de progression sont bornées à 10 Hz ; les résultats sont paginés par 200. Voir ANALYSIS-QUEUE pour la politique de cache, les limites et les exports.

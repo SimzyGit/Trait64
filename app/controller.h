@@ -3,6 +3,7 @@
 #include "comparison.h"
 #include "content.h"
 #include "database.h"
+#include "queue.h"
 #include "uci.h"
 #include "updater.h"
 #include <QElapsedTimer>
@@ -32,6 +33,7 @@ class Controller : public QObject {
     Q_PROPERTY(QString librarySearchStatus READ librarySearchStatus NOTIFY searchChanged)
     Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
+    Q_PROPERTY(t64::AnalysisQueue *analysisQueue READ analysisQueue CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
     Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
     Q_PROPERTY(QVariantList notation READ notation NOTIFY changed)
@@ -112,6 +114,8 @@ class Controller : public QObject {
     Q_INVOKABLE void cancelTask() { cancelTask_->store(true); }
     t64::Updater *updater() const { return updater_.get(); }
     t64::Comparison *comparison() { return &comparison_; }
+    t64::AnalysisQueue *analysisQueue() { return &analysisQueue_; }
+    Q_INVOKABLE void enqueueAnalysis(bool variations = true, int milliseconds = 500, int profile = -1);
     Q_INVOKABLE void compareEngines(const QVariantList &indices);
     Q_INVOKABLE void addComparisonLine(int engine, int variation);
     void startBackgroundServices();
@@ -289,6 +293,8 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     t64::Uci engine_;
     t64::Comparison comparison_;
+    t64::AnalysisQueue analysisQueue_;
+    void initAnalyses();
     QFutureWatcher<ImportResult> importer_;
     std::shared_ptr<std::atomic_bool> cancelTask_ = std::make_shared<std::atomic_bool>(false);
     std::shared_ptr<std::atomic_int> taskProgress_ = std::make_shared<std::atomic_int>(0);

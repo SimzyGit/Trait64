@@ -1,15 +1,16 @@
 # Vérification 0.3
 
-`ctest --test-dir build --output-on-failure` exécute neuf suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une dixième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
+`ctest --test-dir build --output-on-failure` exécute dix suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une onzième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
 
 | Suite | Scénarios vérifiés |
 |---|---|
 | `core` | Perft initiale profondeur 4 = 197281, Kiwipete profondeur 3 = 97862, finale profondeur 4 = 43238 ; coups spéciaux, répétition et mat ; 960 départs distincts, roque Chess960 avec roi immobile, PGN variante ; arbre PGN et lecture en flux, commentaires/RAV imbriqués, round trip, fusion idempotente, EPD et rejets d’entrées invalides |
 | `content` | Catalogue hors ligne, HTTPS/hôtes, SHA-256, annulation, extraction bornée, chemins et liens dangereux, permissions et reçus |
 | `updates` | SemVer, canaux, préversions/drafts, ignorance, absence de digest, hôtes trompeurs, absence de fuite du jeton sur redirection, erreur réseau/JSON, annulation, empreinte incorrecte, installation atomique, ancien binaire conservé et sauvegarde échouée bloquante |
-| `storage` | Import/dédoublonnage, mise à jour stable, filtres SQL, positions de variantes/matériel/Elo, joueurs, corbeille, révisions quotidiennes, sauvegarde ; migration version 1 → 6, recherche FTS5/exacte, agrégats cohérents après édition/répétition/corbeille/restauration/réindexation et suppression en cascade ; import en flux annulé sans résultat partiel ; export en flux et protection des chemins ; récupération T64 après troncature/écriture déchirée |
+| `storage` | Import/dédoublonnage, mise à jour stable, filtres SQL, positions de variantes/matériel/Elo, joueurs, corbeille, révisions quotidiennes, sauvegarde ; migration version 1 → 7, recherche FTS5/exacte, agrégats cohérents après édition/répétition/corbeille/restauration/réindexation et suppression en cascade ; import en flux annulé sans résultat partiel ; export en flux et protection des chemins ; récupération T64 après troncature/écriture déchirée |
 | `repertoires` | Transpositions et réponses multiples, priorités, commentaires/NAG, PGN réimportable, cycles, Chess960, branches orphelines, fusion atomique, calendrier partagé, lacunes de couverture et suppressions sans perte des parties modèles |
 | `resumable_import` | Pause avec rollback du lot incomplet, reprise à l’octet après réouverture, empreinte et fichier déplacé, doublons, historique unique, verrou concurrent, PGN invalide/vide, arrêt réel du processus pendant une transaction et récupération du verrou et des index |
+| `persistent_analysis` | Stockfish réel : copie PGN/variantes, MultiPV et WDL, export conservant la ligne jouée, cache et historique, budgets distincts, pause/reprise, binaire modifié, verrou concurrent, Chess960, pages 200/9, transaction idempotente, processus réellement tué puis repris, migration sauvegardée 6 → 7 |
 | `engine` | Véritable Stockfish : handshake, MultiPV, annulation/remplacement, exclusion des anciens bestmove, conservation du dernier score exact, résultats de recherche terminée, coup Chess960 légal, comparaison de deux vrais processus avec changements rapides de position, fermeture |
 | `desktop_smoke` | Chargement et rendu des 7 espaces, enregistrement/réouverture, aucune alerte QML ; dossier temporaire isolé |
 | `desktop_interactions` | Événements QtTest clic/glisser, notes et navigation, sauvegarde et entraînement, 48 SVG, styles/couleurs, annuler/rétablir, onglets et session, flèches PGN, profils moteur, bilan et annulation, ECO, exports PDF/PNG, roque 960, pendule/incrément, dialogues et géométrie à 960 × 720, comparaison UCI avec lignes réelles dans QML, sauvegarde pré-mise à jour et automatique, préservation des octets d’une session illisible |
@@ -99,3 +100,7 @@ n'est présentée comme celle d'un corpus réel.
 Le dialogue d'import a été inspecté à 960 × 720 : sélection de 1 à 8 lecteurs,
 contrôles et texte accessibles. Les mesures sur corpus et leurs limites figurent
 dans [PERFORMANCE.md](PERFORMANCE.md).
+
+Lot analyses du 15 octobre : première passe complète **11/11 en 49,46 s** ; vérifications complémentaires de pagination et Chess960, 95 contrôles avec Stockfish réel. La suite desktop analyse une copie comprenant deux branches pendant que l’étude est modifiée et vérifie que cette dernière reste intacte. `T64_ANALYSIS_SCREENSHOT` permet une capture du dialogue rempli pendant ce scénario. Les scores non numériques, les types inconnus et les WDL invalides sont rejetés ; les mats sont distincts des centipions.
+
+Régression Qt 6.4 : redimensionner à 960 × 720 après l’arrêt d’une comparaison de moteurs, puis ouvrir le dialogue peuplé. Les Repeater de résultats de comparaison ne résident plus directement dans un layout retenant des éléments supprimés. 404 vérifications desktop passent, capture incluse. Les sorties visant un verrou ou un journal de la base sont refusées même lorsque celle-ci est ouverte via un lien symbolique.

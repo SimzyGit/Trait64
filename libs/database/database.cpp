@@ -76,7 +76,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 6, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 7, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -145,6 +145,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV4(v);
         upgradeV5(v);
         upgradeV6(v);
+        upgradeV7(v);
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
@@ -646,9 +647,11 @@ void Database::validateOutputPath(const QString &path) const {
         const auto parent = f.dir().canonicalPath();
         return parent.isEmpty() ? f.absoluteFilePath() : parent + '/' + f.fileName();
     };
-    for (const auto &suffix : QStringList{"", "-wal", "-shm", "-journal"})
-        check(resolved(path) != resolved(path_ + suffix),
-              "L’export ne peut pas remplacer la bibliothèque ouverte ni ses journaux.");
+    for (const auto &base : QStringList{path_, QFileInfo(path_).canonicalFilePath()})
+        for (const auto &suffix :
+             QStringList{"", "-wal", "-shm", "-journal", ".import.lock", ".analysis.lock"})
+            check(resolved(path) != resolved(base + suffix),
+                  "L’export ne peut pas remplacer la bibliothèque ouverte, ses journaux ou ses verrous.");
 }
 void Database::backup(const QString &path) {
     validateOutputPath(path);

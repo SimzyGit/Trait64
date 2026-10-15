@@ -277,6 +277,7 @@ void Uci::parse(const QString &line) {
         timeout_.stop();
         state_ = Ready;
         emit status(name_ + " · prêt");
+        emit initialized();
         beginSearch();
         return;
     }
@@ -298,42 +299,65 @@ void Uci::parse(const QString &line) {
     }
     if (!line.startsWith("info ") || state_ != Searching || !line.contains(" pv "))
         return;
-    const auto parts = line.split(' ', Qt::SkipEmptyParts);
+    auto info = parseInfo(line, activeFen_, active960_);
+    if (info.isEmpty())
+        return;
+    const int rank = info["rank"].toInt();
+    variations_[rank] = info;
+    if (!info["bound"].toBool() && !info["uci"].toString().isEmpty())
+        exactVariations_[rank] = info;
+    QVariantList list;
+    for (const auto &v : variations_)
+        list << v;
+    emit lines(list);
+}
+QVariantMap Uci::parseInfo(const QString &line, const QString &fen, bool chess960) {
+    if (!line.startsWith("info ") || line.startsWith("info string ") || line.size() > 65536)
+        return {};
+    const int pv = line.indexOf(" pv ");
+    if (pv < 0)
+        return {};
+    const auto parts = line.left(pv).split(' ', Qt::SkipEmptyParts);
     auto value = [&](const QString &key, QString fallback = QString()) {
         const int i = parts.indexOf(key);
         return i >= 0 && i + 1 < parts.size() ? parts[i + 1] : fallback;
     };
-    const int rank = std::clamp(value("multipv", "1").toInt(), 1, 5);
-    QString eval = "—";
-    double score = 0;
-    const int sign = activeFen_.section(' ', 1, 1) == "w" ? 1 : -1;
+    bool rankOk, scoreOk;
+    const int rank = value("multipv", "1").toInt(&rankOk);
+    if (!rankOk || rank < 1 || rank > 5)
+        return {};
+    const int sign = fen.section(' ', 1, 1) == "w" ? 1 : -1;
     const int si = parts.indexOf("score");
-    if (si >= 0 && si + 2 < parts.size()) {
-        const int raw = parts[si + 2].toInt() * sign;
-        if (parts[si + 1] == "mate") {
-            eval = (raw >= 0 ? "+M" : "−M") + QString::number(qAbs(raw));
-            score = raw >= 0 ? 100 : -100;
-        } else {
-            score = raw / 100.0;
-            eval = (score > 0 ? "+" : "") + QString::number(score, 'f', 2);
-        }
-        if (parts.contains("lowerbound") || parts.contains("upperbound"))
-            eval += " ≈";
-    }
+    if (si < 0 || si + 2 >= parts.size() || (parts[si + 1] != "mate" && parts[si + 1] != "cp"))
+        return {};
+    const int raw = parts[si + 2].toInt(&scoreOk);
+    if (!scoreOk || raw < -1000000 || raw > 1000000)
+        return {};
+    const bool mate = parts[si + 1] == "mate";
+    const int oriented = raw * sign;
+    // Mate zero means the side to move is mated. The plot ordinate is never a cp value.
+    const int winner = raw == 0 ? -sign : (oriented > 0 ? 1 : -1);
+    const double score = mate ? winner * 100. : oriented / 100.;
+    QString eval = mate ? (winner > 0 ? "+M" : "−M") + QString::number(qAbs(raw))
+                        : (score > 0 ? "+" : "") + QString::number(score, 'f', 2);
+    const bool bound = parts.contains("lowerbound") || parts.contains("upperbound");
+    if (bound)
+        eval += " ≈";
     QStringList san, uci;
-    const int pi = parts.indexOf("pv");
     try {
-        auto board = checkedBoard(activeFen_.toStdString(), active960_);
-        for (int i = pi + 1; i < parts.size() && uci.size() < 24; ++i) {
-            if (!QRegularExpression("^[a-h][1-8][a-h][1-8][qrbn]?$").match(parts[i]).hasMatch())
+        auto board = checkedBoard(fen.toStdString(), chess960);
+        const auto moves = line.mid(pv + 4).split(' ', Qt::SkipEmptyParts);
+        static const QRegularExpression movePattern("^[a-h][1-8][a-h][1-8][qrbn]?$");
+        for (const auto &move : moves) {
+            if (uci.size() >= 24 || !movePattern.match(move).hasMatch())
                 break;
             chess::Movelist legal;
             chess::movegen::legalmoves(legal, board);
             bool found = false;
             for (auto m : legal)
-                if (chess::uci::moveToUci(m, active960_) == parts[i].toStdString()) {
+                if (chess::uci::moveToUci(m, chess960) == move.toStdString()) {
                     san << QString::fromStdString(chess::uci::moveToSan(board, m));
-                    uci << parts[i];
+                    uci << move;
                     board.makeMove(m);
                     found = true;
                     break;
@@ -342,23 +366,37 @@ void Uci::parse(const QString &line) {
                 break;
         }
     } catch (...) {
-        return;
+        return {};
     }
-    variations_[rank] = {{"rank", rank},
-                         {"eval", eval},
-                         {"score", score},
-                         {"depth", value("depth")},
-                         {"nps", value("nps")},
-                         {"san", san.join(' ')},
-                         {"uci", uci.join(' ')},
-                         {"fen", activeFen_},
-                         {"tbhits", value("tbhits", "0")},
-                         {"bound", parts.contains("lowerbound") || parts.contains("upperbound")}};
-    if (si >= 0 && !variations_[rank]["bound"].toBool() && !uci.empty())
-        exactVariations_[rank] = variations_[rank];
-    QVariantList list;
-    for (const auto &v : variations_)
-        list << v;
-    emit lines(list);
+    auto number = [&](const QString &key) -> qulonglong {
+        bool ok;
+        auto n = value(key, "0").toULongLong(&ok);
+        return ok ? n : 0;
+    };
+    QVariantMap result = {{"rank", rank},
+                          {"eval", eval},
+                          {"score", score},
+                          {"scoreType", mate ? "mate" : "cp"},
+                          {"cp", mate ? QVariant() : QVariant(oriented)},
+                          {"mate", mate ? QVariant(oriented) : QVariant()},
+                          {"winner", mate ? winner : 0},
+                          {"depth", number("depth")},
+                          {"nps", number("nps")},
+                          {"nodes", number("nodes")},
+                          {"time", number("time")},
+                          {"san", san.join(' ')},
+                          {"uci", uci.join(' ')},
+                          {"fen", fen},
+                          {"tbhits", number("tbhits")},
+                          {"bound", bound}};
+    const int wi = parts.indexOf("wdl");
+    if (wi >= 0 && wi + 3 < parts.size()) {
+        bool a, b, c;
+        const int w = parts[wi + 1].toInt(&a), d = parts[wi + 2].toInt(&b), l = parts[wi + 3].toInt(&c);
+        if (a && b && c && w >= 0 && w <= 1000 && d >= 0 && d <= 1000 && l >= 0 && l <= 1000 &&
+            w + d + l == 1000)
+            result["wdl"] = QVariantList{sign > 0 ? w : l, d, sign > 0 ? l : w};
+    }
+    return result;
 }
 } // namespace t64

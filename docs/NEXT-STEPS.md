@@ -1,3 +1,5 @@
+> Mise à jour du 15 octobre : la file d’analyses, les variantes, le cache avec provenance et les scores UCI typés sont implémentés sur `feat/persistent-analysis` (migration 7). Voir [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md) pour les validations et le suivi CI/publication. Le lot précédent d’import parallèle est intégré à main. Les informations historiques ci-dessous décrivent la base du développement ; le prochain changement structurel doit désormais utiliser une migration **8**.
+
 # Reprise du développement — 15 octobre 2026
 
 **Point de reprise courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage) et #5 (import parallèle) sont fusionnées dans main. 8 371 207 728 octets ont été libérés, les releases sont conservées et dix suites réussissent sur Debian 12/13. La publication dev.36 est bloquée uniquement par le recalcul du quota Actions, annoncé sous 6 à 12 heures après suppression : relancer ensuite les tâches échouées de l'exécution 38692749119. La version distribuée reste dev.33. Le point de reprise détaille le travail d'analyse à récupérer/terminer ; le bilan PR #3 ci-dessous reste une référence historique.
@@ -16,7 +18,7 @@ Le lot **PR #3 — imports reprenables, répertoires et préparation** est sur `
 - Couverture : jusqu’à 100 réponses adverses absentes, observées dans la bibliothèque. Ce sont des lacunes du répertoire par rapport à ce corpus, pas des nouveautés théoriques ni des erreurs démontrées.
 - `app/preparation.cpp`, `ui/Preparation.qml`, `Database::positionStatistics` : position, source, nom exact/couleur, période et moyenne des Elo connus ; worker annulable, générations contre les résultats périmés, exemples réels et CSV avec contexte. Une partie ne compte qu’une fois par coup même après répétition.
 
-Le schéma publié ne doit pas être réécrit : le prochain changement structurel nécessite une **migration 7 sauvegardée**. L’export de répertoire développe chaque position une fois pour borner les cycles ; les transpositions sont annotées et le graphe peut être réimporté. L’import de répertoire est atomique et limité à 16 Mio / 200 parties. Certaines requêtes de couverture et opérations d’édition restent synchrones.
+Les migrations existantes ne doivent pas être réécrites. Après le lot analyse (schéma 7), le prochain changement structurel nécessite une **migration 8 sauvegardée**. L’export de répertoire développe chaque position une fois pour borner les cycles ; les transpositions sont annotées et le graphe peut être réimporté. L’import de répertoire est atomique et limité à 16 Mio / 200 parties. Certaines requêtes de couverture et opérations d’édition restent synchrones.
 
 ### Validation de ce lot
 
