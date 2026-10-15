@@ -200,9 +200,31 @@ int Game::playSan(int parent, const std::string &san) {
     chess::movegen::legalmoves(moves, board);
     auto target = san;
     std::replace(target.begin(), target.end(), '0', 'O');
+    target = stripCheck(target);
     for (auto m : moves)
-        if (stripCheck(chess::uci::moveToSan(board, m)) == stripCheck(target))
+        if (stripCheck(chess::uci::moveToSan(board, m)) == target)
             return play(parent, chess::uci::moveToUci(m, chess960));
+    // Historical PGN exports sometimes include an unnecessary origin, e.g. Rd1d2.
+    // Accept it only when it identifies exactly one legal move, with the correct
+    // capture marker. Pawns, promotions and castling keep their canonical syntax.
+    std::string candidate;
+    if (!target.empty() && std::string("KQRBN").find(target.front()) != std::string::npos) {
+        for (auto m : moves) {
+            const auto canonical = stripCheck(chess::uci::moveToSan(board, m));
+            if (canonical.front() != target.front() || m.typeOf() == chess::Move::CASTLING)
+                continue;
+            const auto origin = std::string(m.from());
+            const auto suffix = (board.isCapture(m) ? "x" : "") + std::string(m.to());
+            const auto piece = target.substr(0, 1);
+            if (target != piece + origin + suffix && target != piece + origin.substr(0, 1) + suffix &&
+                target != piece + origin.substr(1, 1) + suffix)
+                continue;
+            require(candidate.empty(), "Coup PGN ambigu : " + san);
+            candidate = chess::uci::moveToUci(m, chess960);
+        }
+    }
+    if (!candidate.empty())
+        return play(parent, candidate);
     throw std::runtime_error("Coup PGN invalide : " + san + " (position " + std::to_string(parent) + ")");
 }
 

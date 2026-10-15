@@ -55,6 +55,7 @@ void Controller::resumeImport(qint64 id, const QString &replacement) {
             importView_->elapsed = 0;
             importView_->startBytes = job["offset"].toLongLong();
         }
+        const int workers = std::clamp(settings_.value("importWorkers", 2).toInt(), 1, 8);
         const auto databasePath = db_->path();
         const auto canceled = cancelTask_;
         const auto progress = taskProgress_;
@@ -81,7 +82,7 @@ void Controller::resumeImport(qint64 id, const QString &replacement) {
                         progress->store(int(p.processed));
                         return !canceled->load();
                     },
-                    file);
+                    file, 250, workers);
                 r.error = r.job["error"].toString();
                 r.count = r.job["added"].toInt();
                 r.duplicates = r.job["processed"].toInt() - r.count;

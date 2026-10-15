@@ -171,6 +171,17 @@ void readPgn(std::istream &input, const std::function<void(Game &&)> &consume) {
 }
 void readPgnRecords(std::istream &input, const std::function<void(Game &&, uint64_t)> &consume,
                     const std::function<void(uint64_t)> &progress) {
+    scanPgnRecords(
+        input,
+        [&](std::string &&record, uint64_t offset) {
+            auto games = parsePgn(record, 1);
+            if (!games.empty())
+                consume(std::move(games[0]), offset);
+        },
+        progress);
+}
+void scanPgnRecords(std::istream &input, const std::function<void(std::string &&, uint64_t)> &consume,
+                    const std::function<void(uint64_t)> &progress) {
     std::string buffer, token;
     bool header = false, quoted = false, escaped = false, brace = false, lineComment = false, moves = false,
          lineStart = true;
@@ -181,9 +192,7 @@ void readPgnRecords(std::istream &input, const std::function<void(Game &&, uint6
             buffer.clear();
             return;
         }
-        auto games = parsePgn(buffer, 1);
-        if (!games.empty())
-            consume(std::move(games[0]), nextOffset);
+        consume(std::move(buffer), nextOffset);
         buffer.clear();
         token.clear();
         moves = false;

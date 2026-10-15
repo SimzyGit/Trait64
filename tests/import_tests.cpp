@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
                     std::_Exit(23); // Real process death with a transaction and lock still open.
                 return true;
             },
-            {}, 3);
+            {}, 3, 4);
         return 24;
     }
     try {
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         t64::Database db(database);
         auto id = db.createImportJob(path);
         auto paused = db.runImportJob(
-            id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3);
+            id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3, 4);
         check(paused["status"] == "paused" && paused["processed"].toInt() == 3 &&
                   db.stats()["games"].toInt() == 3 && db.importHistory().empty(),
               "Pause keeps only atomically committed batches, without a completed history entry");
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         }
         auto bad = dir.filePath("invalid.pgn");
         write(bad, pgn + "[Event \"Invalid\"]\n1.e5 *\n");
-        auto failed = db.runImportJob(db.createImportJob(bad), {}, {}, 5);
+        auto failed = db.runImportJob(db.createImportJob(bad), {}, {}, 5, 4);
         check(failed["status"] == "failed" && failed["processed"].toInt() == 10 &&
                   !failed["error"].toString().isEmpty(),
               "Malformed game preserves earlier checkpoints and reports failure");

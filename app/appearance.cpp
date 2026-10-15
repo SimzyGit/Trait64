@@ -18,6 +18,7 @@ QVariantMap Controller::preferences() const {
                          {"skill", 12},
                          {"moveTime", 1000},
                          {"analysisDepth", 24},
+                         {"importWorkers", 2},
                          {"syzygyPath", ""},
                          {"lightTheme", false},
                          {"coordinates", true},
@@ -67,7 +68,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         const QMap<QString, QPair<int, int>> limits{{"threads", {1, 32}},       {"hash", {16, 4096}},
                                                     {"multiPV", {1, 5}},        {"skill", {0, 20}},
                                                     {"moveTime", {100, 10000}}, {"analysisDepth", {1, 99}},
-                                                    {"dailyGoal", {1, 1000}}};
+                                                    {"dailyGoal", {1, 1000}},   {"importWorkers", {1, 8}}};
         QVariant clean = value;
         if (limits.contains(key)) {
             bool ok;

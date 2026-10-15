@@ -27,6 +27,8 @@ Dialog {
         }
         RowLayout {
             TButton {objectName:"newResumableImport"; text:"Choisir un PGN"; enabled:!root.backend.busy; onClicked:{root.relocateId=0; choose.open()} }
+            Label {text:"Lecteurs parallèles"}
+            SpinBox {from:1;to:8;value:root.backend.preferences.importWorkers||2;enabled:!root.backend.busy;onValueModified:root.backend.setPreference("importWorkers",value)}
             Item {Layout.fillWidth: true}
             TButton {objectName:"pauseImport"; text:"Mettre en pause"; visible:root.backend.resumableImport; onClicked:root.backend.cancelTask()}
         }
