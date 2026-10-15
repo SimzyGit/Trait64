@@ -50,6 +50,22 @@ pendant 30 jours et les produisait aussi sur les branches et les demandes de
 modification. Les dix versions déjà publiées disposaient de leurs cinq fichiers,
 dont les sources nécessaires aux licences : elles doivent rester disponibles.
 
+Nettoyage réellement effectué à 05:59 UTC dans l'exécution
+[38689692486](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38689692486) :
+les 58 archives et leurs 8 371 207 728 octets ont été supprimés. L'inventaire final
+ne contient aucune archive Actions ni cache. Les dix releases et leurs cinquante
+fichiers sont identiques avant/après. La [PR #4](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/4)
+est fusionnée après validation Debian 12/13, paquets, AppImage et sanitizers.
+La purge déclenchée automatiquement à la fin de la CI de la PR #5 a également
+réussi ([38692633667](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38692633667)).
+
+À 06:35 UTC, la publication dev.36 (exécution 38692749119) a encore rencontré
+`Artifact storage quota has been hit` au téléversement, malgré un inventaire
+vide. Les tests et les paquets ont réussi ; le service annonce un recalcul toutes
+les 6 à 12 heures. Attendre ce recalcul puis relancer uniquement les tâches
+échouées. Voir `WORK-IN-PROGRESS.md` pour l'état exact ; aucun achat ni changement
+du budget du compte n'a été effectué.
+
 Références :
 
 - <https://docs.github.com/en/billing/concepts/product-billing/github-actions>

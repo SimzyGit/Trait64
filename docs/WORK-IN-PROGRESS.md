@@ -2,13 +2,19 @@
 
 Objectif utilisateur conservé : poursuivre toute la feuille de route Trait64, sans recréer l’application. L’esthétique reste en pause ; aucun niveau Elo fictif. Le 15 octobre, l’utilisateur a demandé de libérer d’abord le stockage GitHub, sans oublier les développements en cours.
 
-Base publiée : main b78d52fe549a5b8ce80b2dac30e0b7765d663004, v0.3.0-dev.33, schéma 6. Les tâches suivantes ne sont pas encore publiées.
+Code courant sur main : **62737b2e87eafc9358717a08de9392d2cc8a5ae7**, PR #5 fusionnée, schéma 6. Le lot d'import décrit ci-dessous est intégré et validé. Dernière version distribuée : **v0.3.0-dev.33** ; la nouvelle dev.36 attend le recalcul du quota GitHub (voir ci-dessous). Les modules d'analyse de la section « État de récupération » ne sont pas encore présents.
+
+## Publication à reprendre après recalcul du quota
+
+L'exécution main [38692749119](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38692749119), numéro 36, a réussi les dix suites sur Debian 12 (13,63 s) et Debian 13 (13,75 s), les paquets DEB installés, l'AppImage et le cœur ASan/UBSan. **Seul le téléversement des archives Actions échoue** : `Artifact storage quota has been hit`, avec recalcul annoncé toutes les 6 à 12 heures. La publication est donc ignorée ; aucun tag/release dev.36 n'a été créé. Inventaire de cette exécution : zéro artefact. Les dix releases antérieures et leurs cinquante fichiers sont inchangés.
+
+La suppression initiale a eu lieu le 15 octobre à 05:59 UTC : vérifier le recalcul ultérieurement, puis utiliser **Re-run failed jobs** pour cette exécution précise, sans relancer en boucle les compilations pendant l'attente. Le numéro de version restera dev.36. Vérifier ensuite les cinq fichiers de la release, leurs SHA-256 et l'exécution de purge `workflow_run`. Ne pas déclarer dev.36 disponible tant que cette vérification n'a pas réussi. Le connecteur GitHub expose `rerun_failed_workflow_run_jobs` pour ce suivi.
 
 ## Nettoyage du stockage effectué
 
 Le 15 octobre à 05:59 UTC, l'exécution [38689692486](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38689692486) a supprimé **58 archives Actions, soit 8 371 207 728 octets**. Inventaire final : zéro archive et zéro octet de cache. Les dix releases et leurs cinquante fichiers sont inchangés (identifiants, noms, tailles et empreintes contrôlés avant/après). Aucun code, branche ou historique n'a été supprimé.
 
-La [PR #4](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/4), fusionnée dans main (`ec62a99d1807b3f3e45f68b46deb15a688f0954b`) et intégrée à cette branche de travail, supprime les téléversements temporaires sur les PR, réduit leur conservation à un jour pour les publications et ajoute une purge après succès ainsi qu'une purge quotidienne. Voir `GITHUB-STORAGE.md`. La CI au commit exact de la PR est réussie : 9/9 suites sur Debian 12, 9/9 sur Debian 13, cœur ASan/UBSan, DEB installés et AppImage. Aucun artefact n'a été créé par ces vérifications. La version distribuée reste dev.33 : cette maintenance ne change pas l'application.
+La [PR #4](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/4), fusionnée dans main (`ec62a99d1807b3f3e45f68b46deb15a688f0954b`), supprime les téléversements temporaires sur les PR, réduit leur conservation à un jour pour les publications et ajoute une purge après succès ainsi qu'une purge quotidienne. Voir `GITHUB-STORAGE.md`. La CI au commit exact de la PR est réussie : 9/9 suites sur Debian 12, 9/9 sur Debian 13, cœur ASan/UBSan, DEB installés et AppImage. Aucun artefact n'a été créé par ces vérifications. Cette maintenance seule n'a pas changé la version distribuée.
 
 ## Code présent dans ce point de sauvegarde
 
@@ -38,6 +44,6 @@ Historique de la séance précédente (rapports bruts alors absents, remplacés 
 
 Corpus CC0 Lichess janvier 2013, archive SHA256 aa40b3671fa3cf1072eb182892cd90b0e1e003a4a5943492f64b77e7f3fd1635 ; PGN décompressé 92 811 021 octets, SHA256 8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37. Les 10 000 premières parties : 661 314 positions. Release/GCC13.3/Qt6.4.2, hôte Linux partagé. Parsing + réexport/hash : 11,038 s (1 lecteur), 3,571 s (4), hash canonique identique fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8. Import avec pause à 5 000 puis reprise : 79,845 s ; 371 642 368 octets avec journaux, pic RSS 18 764 Kio. Intégrité ok, sauvegarde vérifiée (0,731 s). Les rapports JSON ne sont pas présents dans l’environnement repris : les régénérer avant publication des données brutes. Aucun essai 1/2/5/10 millions de parties complètes n’est validé.
 
-Après le nettoyage GitHub : terminer/valider/publier ce lot en Développement, puis entraînements tactiques sous licence avec filtres et progression, répertoires asynchrones, explications tactiques vérifiables et reste de ROADMAP. Ne pas présenter l’ensemble des ~245 objectifs comme achevé.
+Prochaine reprise : finaliser la publication dev.36 après recalcul du quota, puis récupérer/implémenter la file d'analyses et ses tests (points 2 à 6 ci-dessus). Continuer avec les entraînements tactiques sous licence, filtres/progression, répertoires asynchrones, explications tactiques vérifiables et le reste de ROADMAP. Ne pas présenter l'ensemble des ~245 objectifs comme achevé. Le code courant et le point de reprise sont sur main ; ne pas repartir d'une ancienne branche.
 
 Compilation locale : `source ../qt-env.sh`, `--parallel 1`, aucune édition C++/CMake pendant compilation, `set -e` avant build/tests. Un exécutable généré vide après restauration doit être régénéré, pas simplement rendu exécutable. Ne pas modifier les fichiers de travail lors du nettoyage : branche/worktree de maintenance séparée.

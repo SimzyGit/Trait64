@@ -1,6 +1,6 @@
 # Reprise du développement — 15 octobre 2026
 
-**Point de reprise courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** La PR #3 a été publiée en dev.33. La maintenance du stockage (PR #4) est fusionnée : 8 371 207 728 octets libérés, aucune archive Actions ni cache restant, releases conservées. La branche `feat/analysis-scaling-training` contient l'import parallèle et le détail du travail d'analyse à récupérer/terminer. Le bilan du lot précédent ci-dessous reste une référence historique ; ne pas le confondre avec le code effectivement présent dans cette branche.
+**Point de reprise courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage) et #5 (import parallèle) sont fusionnées dans main. 8 371 207 728 octets ont été libérés, les releases sont conservées et dix suites réussissent sur Debian 12/13. La publication dev.36 est bloquée uniquement par le recalcul du quota Actions, annoncé sous 6 à 12 heures après suppression : relancer ensuite les tâches échouées de l'exécution 38692749119. La version distribuée reste dev.33. Le point de reprise détaille le travail d'analyse à récupérer/terminer ; le bilan PR #3 ci-dessous reste une référence historique.
 
 ## État à conserver
 
