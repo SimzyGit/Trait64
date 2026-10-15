@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
-#include <QFile>
-#include <QSaveFile>
 
 namespace {
 void require(bool ok, const QString &error) {
@@ -11,47 +9,41 @@ void require(bool ok, const QString &error) {
 } // namespace
 
 void Controller::refreshRepertoires(bool overview) {
+    if (!repertoiresEnabled_)
+        return;
     if (overview) {
-        repertoires_ = db_->repertoires();
-        QVariantMap selected;
-        for (const auto &item : repertoires_)
-            if (item.toMap()["id"].toLongLong() == selectedRepertoire_)
-                selected = item.toMap();
-        repertoireState_.clear();
-        if (!selected.isEmpty()) {
-            repertoireState_ = db_->repertoire(selectedRepertoire_);
-            for (auto it = selected.begin(); it != selected.end(); ++it)
-                repertoireState_[it.key()] = it.value();
-            repertoireState_["gaps"] = db_->repertoireGaps(selectedRepertoire_);
-            repertoireState_["weaknesses"] = db_->repertoireWeaknesses(selectedRepertoire_);
-        } else
-            selectedRepertoire_ = 0;
+        ++repertoireGeneration_;
+        if (cancelRepertoireRead_)
+            cancelRepertoireRead_->store(true);
+        repertoireReadPending_ = true;
+        repertoireState_["loading"] = true;
+        repertoireState_["error"] = QString();
+        repertoireState_["gapsLoaded"] = false;
+        repertoireState_["gaps"] = QVariantList();
+        repertoireState_["weaknesses"] = QVariantList();
+        if (!repertoireReadActive_)
+            startRepertoireRead();
     }
-    // Hide prepared answers until the exercise has been completed or explicitly revealed.
-    repertoireState_["moves"] =
-        selectedRepertoire_ && !trainingActive() && repertoireState_["chess960"].toBool() == game_.chess960
-            ? db_->repertoireMoves(selectedRepertoire_, QString::fromStdString(game_.nodes[node_].fen))
-            : QVariantList();
+    // Hide prepared answers while practising; this small indexed lookup stays on the GUI connection.
+    try {
+        repertoireState_["moves"] =
+            selectedRepertoire_ && !trainingActive() &&
+                    repertoireState_["chess960"].toBool() == game_.chess960
+                ? db_->repertoireMoves(selectedRepertoire_, QString::fromStdString(game_.nodes[node_].fen))
+                : QVariantList();
+    } catch (const std::exception &e) {
+        repertoireState_["moves"] = QVariantList();
+        repertoireState_["error"] = QString::fromUtf8(e.what());
+    }
     emit repertoiresChanged();
 }
 
 void Controller::selectRepertoire(qint64 id) {
     try {
-        db_->repertoire(id);
+        require(!busy_, "Attendez la fin du traitement.");
+        repertoireState_ = db_->repertoire(id);
         selectedRepertoire_ = id;
         refreshRepertoires();
-    } catch (const std::exception &e) {
-        fail(e);
-    }
-}
-void Controller::createRepertoire(const QString &name, bool white) {
-    try {
-        require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
-        selectedRepertoire_ = db_->createRepertoire(name, white, game_);
-        if (gameId_ && !dirty_)
-            db_->addToRepertoire(selectedRepertoire_, game_, gameId_);
-        refreshRepertoires();
-        emit message("Répertoire créé depuis l’étude et ses variantes.");
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -70,46 +62,6 @@ void Controller::deleteRepertoire(qint64 id) {
         require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
         db_->deleteRepertoire(id);
         refreshRepertoires();
-    } catch (const std::exception &e) {
-        fail(e);
-    }
-}
-void Controller::addStudyToRepertoire(qint64 id) {
-    try {
-        require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
-        db_->addToRepertoire(id, game_, dirty_ ? 0 : gameId_);
-        selectedRepertoire_ = id;
-        refreshRepertoires();
-        emit message("L’étude et ses variantes ont été fusionnées dans le répertoire.");
-    } catch (const std::exception &e) {
-        fail(e);
-    }
-}
-void Controller::importRepertoire(qint64 id, const QString &url) {
-    try {
-        require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
-        QFile input(localPath(url));
-        require(input.open(QIODevice::ReadOnly), input.errorString());
-        require(input.size() <= 16 * 1024 * 1024, "Import de répertoire limité à 16 Mio par fichier.");
-        const auto bytes = input.readAll();
-        require(input.error() == QFileDevice::NoError, input.errorString());
-        db_->importRepertoire(id, t64::parsePgn(bytes.toStdString(), 200));
-        selectedRepertoire_ = id;
-        refreshRepertoires();
-        emit message("PGN ajouté au répertoire, avec ses variantes et transpositions.");
-    } catch (const std::exception &e) {
-        fail(e);
-    }
-}
-void Controller::exportRepertoire(qint64 id, const QString &url) {
-    try {
-        const auto path = localPath(url);
-        db_->validateOutputPath(path);
-        const auto bytes = QByteArray::fromStdString(db_->exportRepertoire(id).pgn());
-        QSaveFile output(path);
-        require(output.open(QIODevice::WriteOnly) && output.write(bytes) == bytes.size() && output.commit(),
-                output.errorString());
-        emit message("Répertoire exporté en PGN. Les transpositions sont signalées dans les commentaires.");
     } catch (const std::exception &e) {
         fail(e);
     }

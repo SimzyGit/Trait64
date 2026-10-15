@@ -6,6 +6,7 @@ import QtQuick.Dialogs as Native
 
 Dialog {
     id: root
+    parent: Overlay.overlay
     required property var backend
     property var detail: backend.repertoireState
     property double selectedId: detail.id || 0
@@ -15,19 +16,42 @@ Dialog {
     title: "Mes répertoires"
     width:Math.min(1000,parent.width-32); height:Math.min(790,parent.height-32)
     anchors.centerIn:parent; modal:true; standardButtons:Dialog.Close
-    onOpened: if (!selectedId && backend.repertoires.length) backend.selectRepertoire(backend.repertoires[0].id)
+    function syncSelection() {
+        var rows = backend.repertoires
+        var selected = -1
+        for (var i = 0; i < rows.length; ++i)
+            if (Number(rows[i].id) === Number(selectedId)) { selected = i; break }
+        selector.currentIndex = selected
+    }
+    onOpened: {
+        if (!selectedId && backend.repertoires.length) backend.selectRepertoire(backend.repertoires[0].id)
+        syncSelection()
+    }
+    onSelectedIdChanged: syncSelection()
     ColumnLayout {
         anchors.fill:parent; spacing:10
         RowLayout {
             Layout.fillWidth:true
             ComboBox {
-                id: selector; objectName:"repertoireSelector"
+                id: selector; objectName:"repertoireSelector"; enabled:!root.backend.busy
                 Layout.fillWidth:true; textRole:"name"; valueRole:"id"; model:root.backend.repertoires
                 onActivated:root.backend.selectRepertoire(currentValue)
-                onModelChanged:currentIndex=indexOfValue(root.selectedId)
+                onModelChanged:root.syncSelection()
+                Component.onCompleted:root.syncSelection()
             }
-            Connections {target:root.backend;function onRepertoiresChanged(){selector.currentIndex=selector.indexOfValue(root.selectedId)}}
+            Connections {target:root.backend;function onRepertoiresChanged(){root.syncSelection()}}
             TButton {objectName:"createRepertoire";text:"Créer depuis l’étude";enabled:root.editable;onClicked:{createName.clear();createDialog.open()}}
+        }
+        RowLayout {
+            Layout.fillWidth:true
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:root.detail.loading?"Actualisation des statistiques et des réponses adverses…":(root.detail.error||"")}
+            TButton {text:root.detail.loading?"Annuler l’actualisation":"Actualiser";onClicked:root.detail.loading?root.backend.cancelRepertoireOverview():root.backend.reloadRepertoires()}
+        }
+        RowLayout {
+            Layout.fillWidth:true;visible:!!root.backend.repertoireTask.status
+            BusyIndicator {running:!!root.backend.repertoireTask.running;visible:running;implicitWidth:24;implicitHeight:24}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:(root.backend.repertoireTask.error||root.backend.repertoireTask.status||"")+(root.backend.repertoireTask.running?" · "+root.backend.repertoireTask.positions+" positions traitées":"")}
+            TButton {text:"Annuler";visible:!!root.backend.repertoireTask.running;onClicked:root.backend.cancelTask()}
         }
         Label {
             Layout.fillWidth:true;wrapMode:Text.WordWrap
@@ -36,8 +60,9 @@ Dialog {
         Flow {
             Layout.fillWidth:true; spacing:8; enabled:root.selectedId>0 && root.editable
             TButton {text:"Ajouter l’étude et ses variantes";onClicked:root.backend.addStudyToRepertoire(root.selectedId)}
-            TButton {text:"Importer PGN";onClicked:importPgn.open()}
-            TButton {text:"Exporter PGN";onClicked:exportPgn.open()}
+            TButton {text:"Importer PGN";onClicked:{importPgn.repertoireId=root.selectedId;importPgn.open()}}
+            TButton {text:"Exporter PGN";onClicked:{exportPgn.repertoireId=root.selectedId;exportPgn.open()}}
+            TButton {objectName:"analyseRepertoire";text:"Analyser le répertoire";enabled:!!root.backend.analysisQueue.state.ready;onClicked:analysisDialog.open()}
             TButton {text:"Renommer";onClicked:{renameField.text=root.detail.name;renameDialog.open()}}
             TButton {text:"Supprimer";onClicked:deleteDialog.open()}
         }
@@ -98,7 +123,7 @@ Dialog {
                             TButton {text:"Préparer";enabled:root.editable;onClicked:{root.backend.openRepertoirePosition(root.selectedId,modelData.fen);root.close()}}
                         }
                     }
-                    Label {anchors.centerIn:parent;visible:gaps.count===0;text:"Aucune réponse manquante trouvée dans la base locale."}
+                    Label {anchors.centerIn:parent;visible:gaps.count===0 && !!root.detail.gapsLoaded;text:"Aucune réponse manquante trouvée dans la base locale."}
                 }
             }
             ColumnLayout {
@@ -116,7 +141,7 @@ Dialog {
                             TButton {text:"Étudier";enabled:root.editable;onClicked:{root.backend.openRepertoirePosition(root.selectedId,modelData.fen);root.close()}}
                         }
                     }
-                    Label {anchors.centerIn:parent;visible:weak.count===0;text:"Aucun rappel manqué enregistré."}
+                    Label {anchors.centerIn:parent;visible:weak.count===0 && !!root.detail.gapsLoaded;text:"Aucun rappel manqué enregistré."}
                 }
             }
         }
@@ -147,6 +172,23 @@ Dialog {
         }
         onAccepted:root.backend.editRepertoireMove(root.selectedId,root.editFen,root.editedMove.uci,noteField.text,mainCheck.checked)
     }
-    Native.FileDialog {id:importPgn;title:"Ajouter un PGN au répertoire";nameFilters:["PGN (*.pgn *.PGN)"];onAccepted:root.backend.importRepertoire(root.selectedId,selectedFile.toString())}
-    Native.FileDialog {id:exportPgn;title:"Exporter le répertoire";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:root.backend.exportRepertoire(root.selectedId,selectedFile.toString())}
+    Connections {target:root.backend;function onShowAnalysisQueue(){root.close()}}
+    Dialog {
+        id:analysisDialog;title:"Analyser toutes les variantes";anchors.centerIn:parent;modal:true
+        standardButtons:Dialog.Ok|Dialog.Cancel;width:500
+        ColumnLayout {
+            anchors.fill:parent
+            Label {text:"Profil moteur"}
+            ComboBox {
+                id:analysisProfile;Layout.fillWidth:true
+                model: { var names=["Réglages actuels"];var saved=root.backend.preferences.engineProfiles||[];for(var i=0;i<saved.length;++i) names.push(saved[i].name);return names }
+            }
+            Label {text:"Temps par position"}
+            ComboBox {id:analysisBudget;Layout.fillWidth:true;model:["0,1 seconde","0,5 seconde","1 seconde","2 secondes","5 secondes","10 secondes"];currentIndex:1}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:"Une copie de toutes les variantes est transmise à la file d’analyses. Chaque position de transposition est développée une seule fois. Vos notes et vos révisions restent conservées."}
+        }
+        onAccepted:root.backend.analyseRepertoire(root.selectedId,[100,500,1000,2000,5000,10000][analysisBudget.currentIndex],analysisProfile.currentIndex-1)
+    }
+    Native.FileDialog {id:importPgn;property double repertoireId:0;title:"Ajouter un PGN au répertoire";nameFilters:["PGN (*.pgn *.PGN)"];onAccepted:root.backend.importRepertoire(repertoireId,selectedFile.toString())}
+    Native.FileDialog {id:exportPgn;property double repertoireId:0;title:"Exporter le répertoire";fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:root.backend.exportRepertoire(repertoireId,selectedFile.toString())}
 }

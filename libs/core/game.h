@@ -41,7 +41,8 @@ void scanPgnRecords(std::istream &input, const std::function<void(std::string &&
                     const std::function<void(uint64_t)> &progress = {});
 void readPgnParallel(std::istream &input, int workers, const std::function<void(Game &&, uint64_t)> &consume,
                      const std::function<void(uint64_t)> &progress = {});
-std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000);
+std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000,
+                           const std::function<void()> &checkpoint = {});
 std::string positionKey(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);
 } // namespace t64

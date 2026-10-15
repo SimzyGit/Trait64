@@ -26,6 +26,7 @@ class Controller : public QObject {
     Q_PROPERTY(bool resumableImport READ resumableImport NOTIFY busyChanged)
     Q_PROPERTY(QVariantList repertoires READ repertoires NOTIFY repertoiresChanged)
     Q_PROPERTY(QVariantMap repertoireState READ repertoireState NOTIFY repertoiresChanged)
+    Q_PROPERTY(QVariantMap repertoireTask READ repertoireTask NOTIFY repertoireTaskChanged)
     Q_PROPERTY(QVariantMap preparation READ preparation NOTIFY preparationChanged)
     Q_PROPERTY(bool librarySearching READ librarySearching NOTIFY searchChanged)
     Q_PROPERTY(bool libraryHasNext READ libraryHasNext NOTIFY searchChanged)
@@ -66,6 +67,10 @@ class Controller : public QObject {
     Q_INVOKABLE void forgetImport(qint64 id);
     QVariantList repertoires() const { return repertoires_; }
     QVariantMap repertoireState() const { return repertoireState_; }
+    QVariantMap repertoireTask() const;
+    Q_INVOKABLE void cancelRepertoireOverview();
+    Q_INVOKABLE void reloadRepertoires();
+    Q_INVOKABLE void analyseRepertoire(qint64 id, int milliseconds = 500, int profile = -1);
     Q_INVOKABLE void selectRepertoire(qint64 id);
     Q_INVOKABLE void createRepertoire(const QString &name, bool white);
     Q_INVOKABLE void renameRepertoire(qint64 id, const QString &name);
@@ -204,6 +209,8 @@ class Controller : public QObject {
     void sourcesChanged();
     void importsChanged();
     void repertoiresChanged();
+    void repertoireTaskChanged();
+    void showAnalysisQueue();
     void preparationChanged();
     void searchChanged();
     void libraryOpened();
@@ -229,6 +236,26 @@ class Controller : public QObject {
     QString preparationFen_;
     void initPreparation();
     void startPreparation();
+    struct RepertoireResult {
+        QVariantMap overview, config;
+        QString error, message, pgn;
+        quint64 generation = 0;
+        qint64 selected = 0;
+        bool canceled = false;
+    };
+    QFutureWatcher<RepertoireResult> repertoireReader_, repertoireWriter_;
+    std::shared_ptr<std::atomic_bool> cancelRepertoireRead_;
+    std::shared_ptr<std::atomic<qint64>> repertoireProgress_ = std::make_shared<std::atomic<qint64>>(0);
+    quint64 repertoireGeneration_ = 0;
+    bool repertoiresEnabled_ = false, repertoireReadActive_ = false, repertoireReadPending_ = false;
+    QVariantMap repertoireTask_;
+    QTimer repertoirePoll_;
+    void initRepertoires();
+    void startRepertoireRead();
+    void startRepertoireTask(
+        const QString &operation,
+        std::function<RepertoireResult(t64::Database &, const t64::RepertoireProgress &)> work);
+    QVariantMap analysisConfig(int milliseconds, int profile) const;
     qint64 selectedRepertoire_ = 0;
     QVariantList repertoires_;
     QVariantMap repertoireState_, repertoireExercise_;

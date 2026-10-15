@@ -158,11 +158,20 @@ Controller::Controller(const QString &path, QObject *parent)
     initContent();
     initLibrarySearch();
     initPreparation();
+    initRepertoires();
     initAnalyses();
     refreshLibrary();
     refresh();
 }
 Controller::~Controller() {
+    repertoiresEnabled_ = repertoireReadPending_ = false;
+    disconnect(&repertoireReader_, nullptr, this, nullptr);
+    disconnect(&repertoireWriter_, nullptr, this, nullptr);
+    if (cancelRepertoireRead_)
+        cancelRepertoireRead_->store(true);
+    cancelTask_->store(true);
+    repertoireReader_.waitForFinished();
+    repertoireWriter_.waitForFinished();
     analysisQueue_.shutdown();
     searchEnabled_ = false;
     disconnect(&searchWorker_, nullptr, this, nullptr);
@@ -617,13 +626,23 @@ void Controller::backup(const QString &url) {
 }
 void Controller::openBackup(const QString &url) {
     try {
-        require(!busy_, "Attendez la fin de l’import.");
+        require(!busy_ && !trainingActive(),
+                "Terminez le traitement ou l’entraînement avant de changer de bibliothèque.");
         checkpoint();
         const auto path = localPath(url);
         require(QFileInfo::exists(path), "Bibliothèque introuvable.");
         auto candidate = std::make_unique<t64::Database>(path);
         require(candidate->integrity() == "ok", "Cette bibliothèque est endommagée.");
         db_ = std::move(candidate);
+        ++repertoireGeneration_;
+        if (cancelRepertoireRead_)
+            cancelRepertoireRead_->store(true);
+        repertoireReadPending_ = false;
+        selectedRepertoire_ = 0;
+        repertoires_.clear();
+        repertoireState_.clear();
+        repertoireTask_.clear();
+        emit repertoireTaskChanged();
         analysisQueue_.setLibrary(db_->path());
         gameId_ = 0;
         dirty_ = true;

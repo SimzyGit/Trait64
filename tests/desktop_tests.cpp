@@ -519,6 +519,13 @@ int main(int argc, char **argv) {
         }
         {
             Controller c(dir.path() + "/repertoire-ui");
+            auto waitRepertoire = [&] {
+                QElapsedTimer timeout;
+                timeout.start();
+                while ((c.busy() || c.repertoireState()["loading"].toBool()) && timeout.elapsed() < 10000)
+                    QTest::qWait(5);
+                check(!c.busy() && !c.repertoireState()["loading"].toBool(), "Repertoire workers completed");
+            };
             c.move("e2e4");
             c.navigate(0);
             c.move("d2d4");
@@ -526,6 +533,9 @@ int main(int argc, char **argv) {
             c.flip();
             const auto previous = c.state();
             c.createRepertoire("Débuts blancs", true);
+            check(c.busy() && c.repertoireTask()["running"].toBool(),
+                  "Repertoire creation runs off GUI thread");
+            waitRepertoire();
             check(c.repertoires().size() == 1 && c.repertoireState()["positions"].toInt() == 1,
                   "Create named repertoire from study alternatives");
             auto id = c.repertoireState()["id"].toLongLong();
@@ -541,19 +551,33 @@ int main(int argc, char **argv) {
             QTest::qWait(30);
             auto *selector = window->findChild<QQuickItem *>("repertoireSelector");
             check(selector && selector->width() > 100, "Repertoire selector renders at minimum window size");
+            check(selector->property("currentText").toString() == "Débuts blancs",
+                  "Selected repertoire name remains visible when dialog opens");
+            const auto capture = qEnvironmentVariable("T64_REPERTOIRE_SCREENSHOT");
+            if (!capture.isEmpty()) {
+                const auto grab = window->contentItem()->grabToImage();
+                QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+                check(ready.wait(3000), "Repertoire screenshot rendered");
+                check(grab->saveToFile(capture), "Repertoire screenshot saved");
+            }
             QMetaObject::invokeMethod(dialog, "close");
             c.startRepertoireTraining(id);
             check(c.state()["training"].toBool() && c.state()["repertoireTraining"].toLongLong() == id &&
                       c.repertoireState()["moves"].toList().empty(),
                   "Position exercise is active and prepared answers are hidden");
+            c.openBackup(dir.path() + "/repertoire-ui/library.sqlite");
+            check(c.state()["training"].toBool() && c.repertoireState()["id"].toLongLong() == id,
+                  "Changing library is refused during an active repertoire exercise");
             c.undo();
             c.move("a2a3");
             check(c.state()["node"].toInt() == 0, "Wrong repertoire reply and undo cannot advance exercise");
             c.move("d2d4");
+            waitRepertoire();
             check(c.state()["trainingComplete"].toBool() && c.repertoireState()["reviews"].toInt() == 1 &&
                       c.repertoireState()["successes"].toInt() == 0,
                   "Alternative answer accepted, earlier failure recorded once");
             c.move("e2e4");
+            waitRepertoire();
             check(c.repertoireState()["reviews"].toInt() == 1, "Completed exercise cannot be graded twice");
             c.finishTraining();
             check(c.state()["fen"] == previous["fen"] && c.state()["flipped"] == previous["flipped"] &&
@@ -562,10 +586,12 @@ int main(int argc, char **argv) {
             c.startRepertoireTraining(id, true);
             c.revealCard();
             c.move("e2e4");
+            waitRepertoire();
             check(c.repertoireState()["successes"].toInt() == 0,
                   "Revealed answers are not counted as recall successes");
             c.startRepertoireTraining(id, true);
             c.move("e2e4");
+            waitRepertoire();
             check(c.repertoireState()["reviews"].toInt() == 3 &&
                       c.repertoireState()["successes"].toInt() == 1 &&
                       c.repertoireState()["due"].toInt() == 0,
@@ -573,19 +599,113 @@ int main(int argc, char **argv) {
             c.finishTraining();
             const auto output = dir.path() + "/repertoire.pgn";
             c.exportRepertoire(id, output);
+            waitRepertoire();
             check(QFileInfo(output).size() > 0, "Repertoire PGN exported from controller");
             c.importRepertoire(id, output);
+            waitRepertoire();
             c.navigate(0);
             check(c.repertoireState()["moves"].toList().size() == 2,
                   "Reimport preserves alternative answers");
             c.renameRepertoire(id, "Ouvertures");
+            waitRepertoire();
             check(c.repertoireState()["name"] == "Ouvertures", "Repertoire editor updates persisted name");
             c.removeRepertoireMove(id, c.state()["fen"].toString(), "d2d4");
+            waitRepertoire();
             check(c.repertoireState()["moves"].toList().size() == 1, "Editor removes chosen continuation");
+            c.reloadRepertoires();
+            c.cancelRepertoireOverview();
+            QTest::qWait(20);
+            check(!c.repertoireState()["loading"].toBool() && !c.repertoireState()["gapsLoaded"].toBool() &&
+                      !c.repertoireState()["error"].toString().isEmpty(),
+                  "Canceled overview cannot claim empty coverage is complete");
+            c.reloadRepertoires();
+            waitRepertoire();
+            const auto bulk = dir.path() + "/bulk-repertoire.pgn";
+            {
+                QFile file(bulk);
+                check(file.open(QIODevice::WriteOnly), "Open bulk repertoire fixture");
+                const auto game = QByteArray("[Event \"Bulk\"]\n1.d4 {") + QByteArray(24000, 'x') +
+                                  "} d5 2.Nf3 Nf6 3.Ng1 Ng8 4.Nf3 Nf6 5.Ng1 Ng8 *\n";
+                for (int i = 0; i < 200; ++i)
+                    check(file.write(game) == game.size(), "Write bulk repertoire record");
+            }
+            int pulses = 0;
+            QTimer responsive;
+            responsive.setInterval(1);
+            QObject::connect(&responsive, &QTimer::timeout, [&] { ++pulses; });
+            responsive.start();
+            c.importRepertoire(id, bulk);
+            QElapsedTimer timeout;
+            timeout.start();
+            while (c.busy() && c.repertoireTask()["positions"].toLongLong() < 30 && timeout.elapsed() < 10000)
+                QTest::qWait(1);
+            check(c.busy() && c.repertoireTask()["positions"].toLongLong() >= 30 && pulses > 0,
+                  "GUI keeps processing events during repertoire import");
+            c.cancelTask();
+            waitRepertoire();
+            responsive.stop();
+            check(c.repertoireTask()["canceled"].toBool() &&
+                      c.repertoireState()["moves"].toList().size() == 1 &&
+                      c.repertoireState()["reviews"].toInt() == 3,
+                  "Canceled active import rolls back moves and preserves reviews");
+            QFile savedExport(output);
+            check(savedExport.open(QIODevice::ReadOnly), "Read previous repertoire export");
+            const auto originalBytes = savedExport.readAll();
+            savedExport.close();
+            c.exportRepertoire(id, output);
+            c.cancelTask();
+            waitRepertoire();
+            check(c.repertoireTask()["canceled"].toBool() && savedExport.open(QIODevice::ReadOnly) &&
+                      savedExport.readAll() == originalBytes,
+                  "Canceled export preserves destination bytes");
+            savedExport.close();
+            c.exportRepertoire(id, dir.path() + "/repertoire-ui/library.sqlite");
+            waitRepertoire();
+            check(!c.repertoireTask()["error"].toString().isEmpty() && c.stats()["games"].toInt() == 1,
+                  "Export cannot overwrite the live library");
+            if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
+                c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                timeout.restart();
+                while (!c.analysisQueue()->state()["ready"].toBool() && timeout.elapsed() < 5000)
+                    QTest::qWait(5);
+                const auto beforeAnalysis = c.state();
+                c.analyseRepertoire(id, 100);
+                waitRepertoire();
+                timeout.restart();
+                while ((c.analysisQueue()->jobs().isEmpty() ||
+                        c.analysisQueue()->jobs().first().toMap()["status"] != "completed") &&
+                       timeout.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(c.analysisQueue()->jobs().size() == 1 &&
+                          c.analysisQueue()->jobs().first().toMap()["status"] == "completed" &&
+                          c.analysisQueue()->jobs().first().toMap()["total"].toInt() == 2,
+                      "Real Stockfish completes every position in a repertoire copy");
+                check(c.state()["fen"] == beforeAnalysis["fen"] &&
+                          c.repertoireState()["reviews"].toInt() == 3,
+                      "Repertoire analysis preserves the current study and learning history");
+                auto *queueDialog = window->findChild<QObject *>("analysisQueueDialog");
+                check(queueDialog && queueDialog->property("visible").toBool(),
+                      "Repertoire analysis opens persistent queue");
+                QMetaObject::invokeMethod(queueDialog, "close");
+            }
             c.deleteRepertoire(id);
+            waitRepertoire();
             check(c.repertoires().empty() && c.stats()["games"].toInt() == 1,
                   "Repertoire deletion preserves study");
             check(warnings.empty(), "Repertoire and training UI have no QML errors");
+            c.createRepertoire("Ancienne base", true);
+            waitRepertoire();
+            const auto otherPath = dir.path() + "/other-library.sqlite";
+            {
+                t64::Database other(otherPath);
+                other.createRepertoire("Nouvelle base", false, t64::Game());
+            }
+            c.reloadRepertoires();
+            c.openBackup(otherPath);
+            waitRepertoire();
+            check(c.repertoires().size() == 1 && c.repertoires().first().toMap()["name"] == "Nouvelle base" &&
+                      c.repertoireState()["id"].toLongLong() == 0,
+                  "Results and reused repertoire IDs from previous library cannot leak after switching");
         }
         {
             Controller c(dir.path() + "/preparation-ui");

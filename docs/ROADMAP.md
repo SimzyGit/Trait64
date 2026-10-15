@@ -10,17 +10,25 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
 | Bibliothèque | Schéma 7, import PGN parallèle (1–8 lecteurs) par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
 | Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur, Syzygy via UCI, file persistante avec variantes/pause/reprise, cache avec provenance et export annoté | Budgets adaptatifs, interface de tablebases dédiée |
-| Ouvertures | ECO CC0, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, import/export PGN, parties modèles, réponses adverses manquantes dans la base locale | Analyse moteur des branches, couverture probabiliste globale, comparaison de répertoires, nouveautés théoriques, Polyglot |
+| Ouvertures | ECO CC0, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, création/fusion/import/export PGN annulables en arrière-plan, parties modèles, couverture locale asynchrone, analyse moteur de toutes les variantes via copie persistante | Couverture probabiliste globale, comparaison de répertoires, nouveautés théoriques, Polyglot |
 | Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, rappels espacés par position de répertoire, réponses préparées multiples et suivi des rappels manqués | Équivalences validées par moteur, cours de finales, calcul/visualisation, agenda adaptatif, certification tactique |
 | Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
 | Préparation | Fiches joueurs ; statistiques par position, source, nom exact/couleur, période et Elo ; requête annulable, parties exemples et export CSV | Styles d’adversaires, tendances par période, préparation et gestion de tournois |
 | Interface | 7 espaces, personnalisation, petites fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traductions complètes |
-| Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
+| Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées sans archives Actions | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
 | Fiabilité | Sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
 | Fonctions avancées | Études PDF/PNG, bilan moteur, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 
 Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. L’esthétique est en pause. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
+
+## Lot répertoires — 15 octobre 2026
+
+- [x] Création, fusion, import et export annulables en arrière-plan, progression et transactions atomiques.
+- [x] Statistiques et couverture locale asynchrones, annulation et rejet des résultats d’une ancienne bibliothèque.
+- [x] Analyse moteur de la copie complète d’un répertoire, profils et budget par position, sans modifier les notes ni les révisions.
+
+La validation de publication du commit exact est suivie dans WORK-IN-PROGRESS. Les éditions ponctuelles restent synchrones, les transpositions sont développées une seule fois, et la couverture probabiliste/comparaison des répertoires restent ouvertes.
 
 ## Catalogue validé localement — 12 octobre 2026
 

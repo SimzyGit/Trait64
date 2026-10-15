@@ -1,5 +1,13 @@
 # Changements
 
+## Répertoires asynchrones et distribution
+
+- Création, fusion, import/export des répertoires en arrière-plan, progression et annulation sans ajout partiel. Notes et révisions préservées.
+- Statistiques et réponses adverses manquantes calculées sans bloquer l’interface ; résultats périmés ignorés.
+- Analyse de toutes les variantes d’un répertoire par profil moteur, dans la file persistante.
+- Correction du nom sélectionné à l’ouverture du dialogue et des notifications en petite fenêtre ; changement de bibliothèque refusé pendant un exercice.
+- Tests Debian 12/13, DEB installés et AppImage puis publication directe dans GitHub Releases, sans archives Actions. Manifeste et SHA-256 vérifiés ; une version publiée n’est pas écrasée.
+
 ## File d’analyses persistante — 15 octobre 2026
 
 - Analyse hors ligne en arrière-plan, toutes les branches ou ligne principale, profils et MultiPV, pause/reprise et récupération après plantage. Copie PGN indépendante de l’étude ouverte.

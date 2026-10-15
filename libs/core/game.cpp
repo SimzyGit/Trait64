@@ -286,7 +286,10 @@ std::string Game::pgn() const {
     return out.str();
 }
 
-std::vector<Game> parsePgn(const std::string &text, size_t maxGames) {
+std::vector<Game> parsePgn(const std::string &text, size_t maxGames,
+                           const std::function<void()> &checkpoint) {
+    if (checkpoint)
+        checkpoint();
     require(text.size() <= 64 * 1024 * 1024, "PGN limité à 64 Mio par import.");
     std::vector<Game> games;
     Game game;
@@ -324,6 +327,8 @@ std::vector<Game> parsePgn(const std::string &text, size_t maxGames) {
     };
     size_t i = text.starts_with("\xEF\xBB\xBF") ? 3 : 0;
     while (i < text.size()) {
+        if (checkpoint)
+            checkpoint();
         char c = text[i];
         if (std::isspace(static_cast<unsigned char>(c))) {
             ++i;

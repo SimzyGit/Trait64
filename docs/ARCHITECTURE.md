@@ -53,3 +53,11 @@ La préparation par position interroge l’index `positions_fen`, déduplique le
 ## File d’analyses
 
 Le schéma 7 conserve les copies PGN, les paramètres et identités UCI, les résultats ordonnés et un cache limité à 10 000 positions. Un résultat et l’incrément du point de reprise sont validés dans la même transaction. Le worker `libs/analysis` crée sa connexion SQLite et son processus UCI dans un QThread séparé, sous verrou par bibliothèque. Les signaux portent une génération pour ignorer les retours d’une bibliothèque fermée. Les notifications de progression sont bornées à 10 Hz ; les résultats sont paginés par 200. Voir ANALYSIS-QUEUE pour la politique de cache, les limites et les exports.
+
+## Répertoires asynchrones et publication directe
+
+`app/repertoire_tasks.cpp` sépare une lecture de statistiques annulable et un traitement d’écriture/export. QtConcurrent capture uniquement les données et des atomiques ; chaque worker ouvre sa propre connexion SQLite. Des générations rejettent les lectures obsolètes. Les transactions sont validées avant de signaler le succès, sans transformer une annulation tardive en faux rollback. La fermeture annule puis attend les workers ; un changement de bibliothèque est refusé pendant un traitement ou un entraînement.
+
+`libs/database/cancellation.h` réutilise le progress handler SQLite pour la recherche et la couverture. Le handler est désinstallé avant le rollback. Les imports de répertoire lisent au maximum 16 Mio, parsant un record à la fois dans une transaction unique ; le parseur accepte un point d’annulation. L’export prend un instantané SQLite et l’écrit avec QSaveFile. Les modèles/notes/révisions restent dans le schéma 7.
+
+`packaging/ci-linux.sh` est exécuté dans deux conteneurs Debian indépendants, partageant seulement les sources en lecture seule et les paquets produits. `scripts/publish-release.py` contrôle les fichiers locaux puis les assets GitHub avant publication du brouillon. Le jeton n’est disponible que dans cette étape, jamais dans les conteneurs. Aucun artefact Actions intermédiaire n’est créé. Les versions stables demandent un tag ou une action manuelle ; les commits ordinaires restent dans le canal développement.
