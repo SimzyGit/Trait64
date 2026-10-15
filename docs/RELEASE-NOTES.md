@@ -1,3 +1,10 @@
+## Import PGN parallèle et compatibilité des corpus anciens
+
+- **Lecteurs parallèles réglables de 1 à 8** dans les imports reprenables, avec conservation de l'ordre des parties, de la pause/reprise et du point de sauvegarde. Deux lecteurs sont proposés par défaut.
+- **PGN anciens** : acceptation d'une origine de pièce redondante, telle que `Rd1d2`, uniquement lorsqu'elle identifie un seul coup légal. Les coups ambigus, fausses captures et origines incorrectes sont refusés.
+- **Validation sur 10 000 parties réelles** : résultats identiques à 1 et 4 lecteurs, pause à 5 000 puis reprise, intégrité et sauvegarde vérifiées. Les corpus de plusieurs millions de parties restent à qualifier.
+- **Dix suites automatisées** dans la CI Linux, avec contrôles des sorties du benchmark pour protéger les bases, journaux et sauvegardes existants. Aucun changement de schéma de données dans ce lot.
+
 ## Imports reprenables, répertoires et préparation
 
 - **Imports PGN reprenables** : progression, vitesse et estimation du temps restant ; pause puis reprise après fermeture ou interruption. Les parties et leur point de reprise sont validés ensemble par lots de 250. Le lot incomplet est annulé.

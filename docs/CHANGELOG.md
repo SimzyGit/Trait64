@@ -1,5 +1,13 @@
 # Changements
 
+## Import parallèle et stockage GitHub — 15 octobre 2026
+
+- Parsing PGN avec 1 à 8 lecteurs, file bornée, restitution ordonnée sur le thread du consommateur et un seul écrivain SQLite. Préférence persistante accessible dans les imports reprenables.
+- Notation SAN historique surspécifiée acceptée seulement pour un unique coup légal ; export canonique et refus des ambiguïtés/fausses captures.
+- Benchmark sur de vrais PGN, contrôles des chemins de sortie, import interrompu/repris et sauvegarde vérifiée. Mesures de 10 000 parties complètes enregistrées dans PERFORMANCE, sans qualification abusive de millions de parties.
+- 10 suites locales réussies ; test du benchmark activé en CI Debian 12/13.
+- Nettoyage effectif de 58 archives Actions (8 371 207 728 octets), dix releases préservées ; suppression des archives des PR, conservation d'un jour pour les publications, purge automatique après succès et quotidienne.
+
 ## Préparation par position — 13 octobre 2026
 
 - Statistiques locales combinant position, base, adversaire exact/couleur, période et Elo moyen connu des deux joueurs. Les répétitions ne gonflent pas les comptes.
