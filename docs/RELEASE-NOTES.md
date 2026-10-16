@@ -1,5 +1,3 @@
-## Analyses en arrière-plan et reprise
-
 ## Nouveautés du lot répertoires
 
 - Création, fusion, import/export des répertoires en arrière-plan, progression et annulation sans ajout partiel. Notes et révisions préservées.
@@ -7,6 +5,9 @@
 - Analyse de toutes les variantes d’un répertoire par profil moteur, dans la file persistante.
 - Correction du nom sélectionné à l’ouverture du dialogue et des notifications en petite fenêtre ; changement de bibliothèque refusé pendant un exercice.
 - Tests Debian 12/13, DEB installés et AppImage puis publication directe dans GitHub Releases, sans archives Actions. Manifeste et SHA-256 vérifiés ; une version publiée n’est pas écrasée.
+- Publication des brouillons : utilisation de la réponse de création et de l’identifiant exact, attente bornée si l’index GitHub tarde à refléter la création. Aucun brouillon dupliqué et aucun assouplissement des vérifications.
+
+## Analyses en arrière-plan et reprise
 
 - File persistante accessible dans le menu de l’espace Analyse : moteur courant ou profil enregistré, MultiPV, temps par position et toutes les variantes.
 - Pause/reprise, récupération après interruption, résultats conservés à chaque position et étude courante indépendante.
@@ -48,8 +49,8 @@ Guide : `docs/REPERTOIRES-IMPORTS.md`.
 
 ## Limites de cette préversion
 
-La série 0.3 reste en alpha. Le catalogue complet n’est pas achevé. Les imports ont une reprise fiable, mais les performances sur 1/2/5/10 millions de **PGN réels** ne sont pas encore qualifiées. L’import PGN d’un répertoire reste limité à 16 Mio et 200 parties ; certaines opérations de répertoire restent synchrones.
+La série 0.3 reste en alpha. Le catalogue complet n’est pas achevé. Les imports ont une reprise fiable, mais les performances sur 1/2/5/10 millions de **PGN réels** ne sont pas encore qualifiées. L’import PGN d’un répertoire reste limité à 16 Mio et 200 parties ; l’édition des coups, le renommage, la suppression et les révisions restent synchrones. Les transpositions sont développées une seule fois lors de l’export ou de la préparation d’une analyse.
 
-Les rappels manqués mesurent la mémorisation, pas la qualité des coups ni un niveau Elo. Les statistiques reposent sur les métadonnées connues des parties. L’analyse moteur de toutes les branches, les explications tactiques approfondies, les cours de finales/calcul/visualisation, les formats supplémentaires et la reconnaissance d’images restent à développer. Un essai sur le PC Voyager cible reste nécessaire.
+Les rappels manqués mesurent la mémorisation, pas la qualité des coups ni un niveau Elo. Les statistiques reposent sur les métadonnées connues des parties. La comparaison de répertoires, les explications tactiques approfondies, les cours de finales/calcul/visualisation, les formats supplémentaires et la reconnaissance d’images restent à développer. Un essai sur le PC Voyager cible reste nécessaire.
 
 Les installations 0.1/0.2 nécessitent un premier passage manuel à 0.3, car elles ne disposent pas du module de mise à jour. Voir `docs/NEXT-STEPS.md`, `docs/ROADMAP.md` et `docs/PERFORMANCE.md` pour les limites et la reprise précise.

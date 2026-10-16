@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import copy
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/publish-release.py"
 spec = importlib.util.spec_from_file_location("publisher", SCRIPT)
@@ -39,14 +41,20 @@ class FakeGitHub:
     def assets(self, release_id):
         return copy.deepcopy(self.files)
 
-    def upload(self, tag, paths):
+    def get_release(self, release_id):
+        if self.release["id"] != release_id:
+            raise ValueError("Unknown release")
+        return copy.deepcopy(self.release)
+
+    def upload(self, release, paths):
         self.uploads += 1
         self.files = [dict(name=p.name, state="uploaded", **publisher.file_info(p)) for p in paths]
         if self.corrupt:
             self.files[0]["digest"] = "sha256:" + "0" * 64
 
-    def publish(self, tag, prerelease):
+    def publish(self, release_id, prerelease):
         self.release.update(draft=False, prerelease=prerelease)
+        return self.get_release(release_id)
 
 
 class PublicationTests(unittest.TestCase):
@@ -179,6 +187,59 @@ class PublicationTests(unittest.TestCase):
         self.version = "0.3.0"
         self.make_packages()
         self.assertFalse(self.publish()["prerelease"])
+
+    def test_created_release_does_not_depend_on_a_fresh_listing(self):
+        find = self.api.find_release
+        with patch.object(self.api, "find_release", side_effect=[None]), \
+                patch.object(self.api, "create", side_effect=lambda *args: self.create_without_list(*args)):
+            result = self.publish()
+        self.assertFalse(result["draft"])
+        self.assertIsNotNone(find("v" + self.version))
+
+    def create_without_list(self, tag, commit, prerelease, notes):
+        self.api.release = dict(id=1, tag_name=tag, target_commitish=commit, draft=True,
+                                prerelease=prerelease, body=notes)
+        return self.api.get_release(1)
+
+    def test_rest_create_and_publish_use_mutation_responses_and_exact_id(self):
+        github = publisher.GitHub("owner/repo")
+        notes = "Nouveautés\n\n`literal $() text`\n"
+        with patch.object(publisher.subprocess, "check_output", return_value='{"id": 123}') as run:
+            self.assertEqual(github.create("v" + self.version, COMMIT, True, notes), {"id": 123})
+            command = run.call_args.args[0]
+            self.assertEqual(command, ["gh", "api", "repos/owner/repo/releases", "--method", "POST", "--input", "-"])
+            data = json.loads(run.call_args.kwargs["input"])
+            self.assertEqual(data["body"], notes)
+            self.assertTrue(data["draft"])
+            self.assertEqual(data["target_commitish"], COMMIT)
+            self.assertEqual(github.publish(123, True), {"id": 123})
+            self.assertEqual(run.call_args.args[0][2], "repos/owner/repo/releases/123")
+            self.assertEqual(json.loads(run.call_args.kwargs["input"]),
+                             {"draft": False, "prerelease": True, "make_latest": "false"})
+
+    def test_upload_waits_for_same_draft_without_creating_it_again(self):
+        self.owned_draft()
+        github = publisher.GitHub("owner/repo")
+        with patch.object(github, "find_release", side_effect=[None, None, self.api.release]) as find, \
+                patch.object(github, "release_command") as command, patch.object(publisher.time, "sleep") as sleep:
+            github.upload(self.api.release, [self.directory / "SHA256SUMS"])
+            self.assertEqual(find.call_count, 3)
+            self.assertEqual([call.args[0] for call in sleep.call_args_list], [1, 2])
+            self.assertEqual(command.call_count, 1)
+            self.assertEqual(command.call_args.args[0], "upload")
+
+    def test_invisible_or_changed_draft_never_uploaded(self):
+        self.owned_draft()
+        github = publisher.GitHub("owner/repo")
+        other_id = dict(self.api.release, id=2)
+        published = dict(self.api.release, draft=False)
+        for response in (None, other_id, published):
+            with self.subTest(response=response), \
+                    patch.object(github, "find_release", return_value=response), \
+                    patch.object(github, "release_command") as command, patch.object(publisher.time, "sleep"):
+                with self.assertRaises(ValueError):
+                    github.upload(self.api.release, [self.directory / "SHA256SUMS"])
+                command.assert_not_called()
 
 
 if __name__ == "__main__":

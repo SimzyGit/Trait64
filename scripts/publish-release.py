@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
-import tempfile
+import time
 
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(beta|rc|dev)\.(0|[1-9][0-9]*))?")
 
@@ -40,7 +40,9 @@ def package_manifest(directory, version):
 
 
 def validate_draft(release, tag, commit, marker):
-    if (not release or not release.get("draft") or release.get("tag_name") != tag
+    if release is None:
+        raise ValueError("The expected draft is not visible in the GitHub response")
+    if (not release.get("draft") or release.get("tag_name") != tag
             or release.get("target_commitish") != commit or marker not in (release.get("body") or "")):
         raise ValueError("Refusing to modify a published release or an unrelated draft")
 
@@ -68,14 +70,14 @@ def publish(api, directory, version, commit, notes):
     validate_draft(release, tag, commit, marker)
     if any(a["name"] not in manifest for a in api.assets(release["id"])):
         raise ValueError("Refusing to replace a draft containing unrelated assets")
-    api.upload(tag, [directory / name for name in manifest])
-    validate_draft(api.find_release(tag), tag, commit, marker)
+    api.upload(release, [directory / name for name in manifest])
+    validate_draft(api.get_release(release["id"]), tag, commit, marker)
     verify_assets(api.assets(release["id"]), manifest)
     # Check the tag again immediately before exposing the release to updaters.
     api.validate_tag(tag, commit)
-    api.publish(tag, prerelease)
-    published = api.find_release(tag)
-    if (not published or published["draft"] or published["target_commitish"] != commit
+    published = api.publish(release["id"], prerelease)
+    if (not published or published["id"] != release["id"] or published["tag_name"] != tag
+            or published["draft"] or published["target_commitish"] != commit
             or published["prerelease"] != prerelease):
         raise ValueError("Published release metadata does not match the tested commit")
     verify_assets(api.assets(published["id"]), manifest)
@@ -88,11 +90,16 @@ class GitHub:
             raise ValueError("Invalid repository")
         self.repository = repository
 
-    def api(self, path, pages=False):
+    def api(self, path, pages=False, *, method="GET", payload=None):
         command = ["gh", "api", f"repos/{self.repository}/{path}"]
+        if method != "GET":
+            command += ["--method", method]
+        if payload is not None:
+            command += ["--input", "-"]
         if pages:
             command += ["--paginate", "--slurp"]
-        value = json.loads(subprocess.check_output(command, text=True))
+        value = json.loads(subprocess.check_output(command, text=True,
+                           input=json.dumps(payload) if payload is not None else None))
         return [item for page in value for item in page] if pages else value
 
     def release_command(self, *args):
@@ -111,26 +118,44 @@ class GitHub:
         return matches[0] if matches else None
 
     def create(self, tag, commit, prerelease, notes):
-        with tempfile.TemporaryDirectory() as temporary:
-            path = Path(temporary) / "notes.md"
-            path.write_text(notes, encoding="utf-8")
-            args = ["create", tag, "--target", commit, "--draft", "--title", "Trait64 " + tag[1:],
-                    "--notes-file", str(path)]
-            if prerelease:
-                args.append("--prerelease")
-            self.release_command(*args)
-        return self.find_release(tag)
+        # Use the creation response, not the release listing: the latter may
+        # briefly omit a draft that GitHub has already created successfully.
+        return self.api("releases", method="POST", payload={
+            "tag_name": tag, "target_commitish": commit, "draft": True,
+            "name": "Trait64 " + tag[1:], "prerelease": prerelease, "body": notes})
+
+    def get_release(self, release_id):
+        return self.api(f"releases/{release_id}")
 
     def assets(self, release_id):
         return self.api(f"releases/{release_id}/assets?per_page=100", pages=True)
 
-    def upload(self, tag, paths):
+    def upload(self, release, paths):
         # Only an owned, unpublished draft can reach this operation.
+        # gh release upload resolves its tag through the release listing. Wait
+        # for that index without retrying creation or weakening draft checks.
+        tag = release["tag_name"]
+        marker = f"<!-- Trait64 tested commit: {release['target_commitish']} -->"
+        for delay in (0, 1, 2, 4, 8):
+            if delay:
+                time.sleep(delay)
+            visible = self.find_release(tag)
+            if visible is None:
+                continue
+            validate_draft(visible, tag, release["target_commitish"], marker)
+            if visible["id"] != release["id"]:
+                raise ValueError("Release ID changed before uploading")
+            break
+        else:
+            raise ValueError("Draft is not indexed yet; retry this tested version later")
         self.release_command("upload", tag, *map(str, paths), "--clobber")
 
-    def publish(self, tag, prerelease):
-        self.release_command("edit", tag, "--draft=false", "--prerelease=" + str(prerelease).lower(),
-                             "--latest=" + str(not prerelease).lower())
+    def publish(self, release_id, prerelease):
+        # The PATCH response describes this precise release even while the
+        # listing still shows its earlier draft state.
+        return self.api(f"releases/{release_id}", method="PATCH", payload={
+            "draft": False, "prerelease": prerelease,
+            "make_latest": str(not prerelease).lower()})
 
 
 def main():

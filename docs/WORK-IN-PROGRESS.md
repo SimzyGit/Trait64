@@ -26,13 +26,15 @@ La [PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/7), comm
 
 ## Publication et stockage
 
-Au dernier contrôle, version distribuée : **v0.3.0-dev.33**. Les exécutions main 36 et 38 ont échoué uniquement sur le quota d’archives Actions, malgré les tests et paquets réussis. Ne pas relancer ces anciennes versions : le nouveau pipeline supprime leur dépendance au stockage d’archives. La fusion a lancé [l’exécution main 41](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38859094682), destinée à **v0.3.0-dev.41**. La compilation/publication réelle est en cours : vérifier son succès, les cinq fichiers, leurs digests, le commit cible et zéro artefact avant de déclarer cette version disponible.
+Au dernier contrôle, version distribuée : **v0.3.0-dev.33**. Les exécutions main 36 et 38 ont échoué uniquement sur le quota d’archives Actions, malgré les tests et paquets réussis. Ne pas relancer ces anciennes versions : le nouveau pipeline supprime leur dépendance au stockage d’archives. [L’exécution main 41](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38859094682) a réussi les 11 suites sur chaque Debian, les paquets installés et le manifeste, puis échoué juste après la création du brouillon : sa relecture immédiate dans la liste des releases n’a pas retrouvé le brouillon attendu. Le brouillon **v0.3.0-dev.41** (id `414615852`) existe, vise le bon commit et ne contient aucun fichier ; il n’est pas une version distribuée.
+
+Correction du publieur : réponse REST de création utilisée directement, lectures/publication par identifiant exact et attente bornée avant la résolution du tag par `gh release upload`. **17 tests de publication réussis localement**, dont visibilité retardée, dépassement du délai, changement d’identifiant et version publiée protégée. Le prochain push main reconstruira une nouvelle version de développement ; contrôler les cinq fichiers, leurs digests, le tag cible et zéro archive Actions avant d’annoncer sa disponibilité.
 
 Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 octets** supprimés ; zéro archive et zéro cache après contrôle. Les dix releases antérieures et leurs cinquante fichiers sont conservés. La purge quotidienne reste présente pour les archives anciennes ; elle ne touche ni au code ni aux fichiers distribués.
 
 ## Reprise suivante
 
-1. Terminer le suivi de l’exécution main 41 : les tests PR sont réussis et la fusion est faite. Vérifier les cinq assets de la release effectivement publiée avant de clôturer ce lot.
+1. Valider en CI la correction du publieur, puis vérifier les cinq assets de la release effectivement publiée avant de clôturer ce lot. Ne pas confondre le brouillon vide dev.41 avec une release disponible.
 2. Explications tactiques vérifiables, corpus tactique sous licence ouverte et progression par thème ; ne pas inventer d’équivalences ni de niveau Elo.
 3. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 4. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
