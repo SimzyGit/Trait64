@@ -125,3 +125,24 @@ bash -n packaging/ci-linux.sh
 La CI [38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628) a publié **v0.3.0-dev.42** au commit `fc941c17c53d6c5aa639433c6563f73469971ae9` : 11/11 suites Debian 12 (47,44 s) et Debian 13 (58,41 s), DEB installés, AppImage démarrée, 17 tests du publieur, 9 du nettoyage et cœur ASan/UBSan. Les cinq noms/tailles/SHA-256 distants correspondent au manifeste de compilation ; le tag résout le commit testé. Zéro archive Actions.
 
 Vérification complémentaire avec les métadonnées réellement publiées et `libs/updates/releases.cpp` : les trois paquets sont sélectionnés pour une mise à jour dev.33 → dev.42 sur Développement, exclus de Stable/Bêta ; ignorance, version identique et rétrogradation restent bloquées. Cette lecture n’effectue aucune installation sur le PC utilisateur. Détails dans `verification-repertoires-2026-10-16.json`.
+
+
+## Explications des coups — 16 octobre 2026
+
+`core_tests` ajoute 15 vérifications : échange égal, orientation du matériel pour
+les deux camps, prise en passant et case capturée, capture avec promotion,
+sous-promotion, roque Chess960 avec roi immobile, mat à matériel égal, pat,
+suites illégales/nulles/après mat, limite de 128 demi-coups et ligne vide. Le cœur
+atteint 2 553 contrôles réussis.
+
+Les interactions du bureau utilisent Stockfish réel, vérifient les deux suites,
+le changement de sélection dans le dialogue, le clic sur « Ouvrir la suite »,
+la position finale de la copie et le retour à l’étude avec son bilan inchangé.
+`T64_EXPLANATION_SCREENSHOT=/chemin/image.png` capture le dialogue à 960 × 640.
+La capture locale a été inspectée ; aucun avertissement QML.
+
+Les 11 suites locales sont couvertes : 9 passent dans la passe complète ; deux
+exécutables générés restaurés sans permission d’exécution sont remis exécutables,
+puis `content` et `pgn_benchmark_safety` passent séparément. Le test du clic réel
+est ensuite reconstruit et repasse en 17,31 s. Il ne s’agit pas d’une installation
+sur le PC Voyager. La validation des paquets propres Debian reste à suivre en CI.

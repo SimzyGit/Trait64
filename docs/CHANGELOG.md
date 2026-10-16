@@ -1,5 +1,12 @@
 # Changements
 
+## Explications des suites du bilan — 16 octobre 2026
+
+- Relecture légale des suites avant/après le coup joué, avec captures, promotions, roques, échecs, mats, pats et compte matériel conventionnel.
+- Dialogue « Comprendre ce coup », comparaison des deux suites, provenance moteur et ouverture d’une copie annotée sans modifier l’étude d’origine.
+- 15 contrôles du cœur ajoutés, tests Stockfish et clic réel sur le bouton d’ouverture, capture à 960 × 640.
+- Aucun changement de schéma ; limites et guide dans MOVE-EXPLANATIONS.md.
+
 ## Publication des brouillons — 16 octobre 2026
 
 - La création utilise directement la réponse REST de GitHub ; les contrôles et la publication ciblent l’identifiant exact de la release.

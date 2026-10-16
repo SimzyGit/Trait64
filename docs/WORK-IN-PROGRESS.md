@@ -1,4 +1,4 @@
-# Point de reprise — répertoires et publication, 16 octobre 2026
+# Point de reprise — explications du bilan, 16 octobre 2026
 
 Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23, Qt6/QML et SQLite ; fonctions locales hors ligne, esthétique en pause, aucun bouton factice ni Elo inventé.
 
@@ -7,6 +7,23 @@ Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23
 La PR #6 est intégrée à `main` au commit `31ac8803cb7d6e7e0f98ca0c3cf7eeea1b6e5eaa`. Elle apporte la file d’analyses persistante, les variantes, le cache avec provenance et les scores UCI typés. La CI de cette PR a réussi les 11 suites sur Debian 12 et 13, le cœur ASan/UBSan et les essais des paquets installés.
 
 La [PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/7), commit testé `e2191937041460508507ffff4ab5c0a20afe9a70`, est **fusionnée** dans main le 16 octobre au commit `d8c49243f961ae20dfb33e11231a69cbc898f428`. Son arbre de fichiers est identique à celui validé en PR. Schéma toujours **7**, aucune migration existante réécrite. Le prochain changement structurel nécessite une migration **8** sauvegardée.
+
+## Nouveau lot : explications du bilan
+
+Après dev.42, ajout de `libs/core/explanation.*` : relecture légale bornée à 128
+demi-coups, faits de captures/promotions/roques/échecs/mats/pats et matériel
+Blancs moins Noirs. `explainReview` construit les explications à partir des suites
+avant/après réellement calculées. `openReviewLine` ouvre une copie annotée depuis
+la FEN ; aucune répétition antérieure n’est revendiquée. `ui/Review.qml` propose
+les deux suites, la provenance moteur et le bouton d’ouverture testé par un clic.
+
+Les 11 suites sont validées localement, dont Stockfish réel et interaction QML ;
+2 553 contrôles du cœur. Deux exécutables restaurés avaient perdu leur bit
+exécutable : permissions corrigées, puis suites concernées repassées. Le test
+d’interaction final passe en 17,31 s ; capture à 960 × 640 inspectée sans alerte.
+Aucune migration. Intégration/publication du nouveau lot à vérifier dans GitHub
+Actions avant d’annoncer une nouvelle version disponible. Dev.42 reste la version
+publiée confirmée ci-dessous. Guide : MOVE-EXPLANATIONS.md.
 
 ## Code du lot
 
@@ -36,7 +53,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Explications tactiques vérifiables, corpus tactique sous licence ouverte et progression par thème ; ne pas inventer d’équivalences ni de niveau Elo.
+1. Valider la CI et la publication du lot explications. Puis motifs tactiques vérifiables, corpus tactique sous licence ouverte et progression par thème ; ne pas inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

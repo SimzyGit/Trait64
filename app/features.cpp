@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "explanation.h"
 #include <QDate>
 #include <QFile>
 #include <QImageReader>
@@ -629,6 +630,13 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
                                {"scoreType", score["scoreType"]},
                                {"label", label},
                                {"best", previous["uci"]},
+                               {"played", qs(reviewGame_.nodes[node].uci)},
+                               {"reply", score["uci"]},
+                               {"variant960", reviewGame_.chess960},
+                               {"beforeEval", previous["eval"]},
+                               {"beforeDepth", previous["depth"]},
+                               {"engine", reviewer_.name()},
+                               {"milliseconds", reviewMilliseconds_},
                                {"fen", qs(reviewGame_.nodes[parent].fen)},
                                {"depth", score["depth"]}};
     }
@@ -639,6 +647,83 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
         if (epoch == reviewEpoch_)
             requestReviewPosition();
     });
+}
+QVariantMap Controller::explainReview(int index, bool alternative) const {
+    try {
+        need(index >= 0 && index < review_.size(), "Sélectionnez un coup analysé.");
+        const auto row = review_[index].toMap();
+        need(!row["played"].toString().isEmpty(), "Relancez le bilan pour obtenir les suites.");
+        QStringList line = (alternative ? row["best"].toString()
+                                       : row["played"].toString() + " " + row["reply"].toString())
+                               .split(' ', Qt::SkipEmptyParts);
+        need(!line.empty(), "Aucune suite moteur disponible pour cette position.");
+        const bool truncated = line.size() > 128;
+        line = line.mid(0, 128);
+        std::vector<std::string> moves;
+        for (const auto &move : line)
+            moves.push_back(move.toStdString());
+        const auto facts = t64::explainLine(t64::checkedBoard(row["fen"].toString().toStdString(),
+                                                           row["variant960"].toBool()), moves);
+        const QStringList names{"pion", "cavalier", "fou", "tour", "dame", "roi", ""};
+        QVariantList steps;
+        for (const auto &move : facts.moves) {
+            QStringList events;
+            if (move.castle)
+                events << "Roque : déplacement du roi et de la tour.";
+            if (move.captured != chess::PieceType::NONE)
+                events << QString("Capture%1 : %2 en %3.")
+                              .arg(move.enPassant ? " en passant" : "", names[int(move.captured)],
+                                   qs(move.captureSquare));
+            if (move.promotion != chess::PieceType::NONE)
+                events << "Promotion en " + names[int(move.promotion)] + ".";
+            if (move.mate)
+                events << "Échec et mat : aucune réponse légale.";
+            else if (move.check)
+                events << "Échec au roi adverse.";
+            else if (move.stalemate)
+                events << "Pat : aucun coup légal, sans échec.";
+            if (events.empty())
+                events << "Le matériel ne change pas.";
+            steps << QVariantMap{{"uci", qs(move.uci)}, {"san", qs(move.san)}, {"fen", qs(move.fen)},
+                                  {"side", move.white ? "Blancs" : "Noirs"},
+                                  {"facts", events.join(' ')}, {"material", move.material}};
+        }
+        return {{"available", true}, {"steps", steps}, {"uci", line.join(' ')},
+                {"fen", row["fen"]}, {"variant960", row["variant960"]},
+                {"move", row["move"]}, {"label", row["label"]}, {"beforeEval", row["beforeEval"]},
+                {"afterEval", row["eval"]}, {"lossKnown", row["lossKnown"]}, {"loss", row["loss"]},
+                {"engine", row["engine"]}, {"milliseconds", row["milliseconds"]},
+                {"depth", row[alternative ? "beforeDepth" : "depth"]},
+                {"initialMaterial", facts.initialMaterial}, {"finalMaterial", facts.moves.back().material},
+                {"truncated", truncated}};
+    } catch (const std::exception &e) {
+        return {{"available", false}, {"error", QString::fromUtf8(e.what())}};
+    }
+}
+bool Controller::openReviewLine(int index, bool alternative) {
+    try {
+        need(!trainingActive() && !reviewing_, "Terminez l’exercice ou le bilan avant d’ouvrir une copie.");
+        const auto details = explainReview(index, alternative);
+        need(details["available"].toBool(), details["error"].toString());
+        t64::Game copy(details["fen"].toString().toStdString(), details["variant960"].toBool());
+        copy.tags["Event"] = alternative ? "Proposition moteur avant le coup" : "Coup joué et réponse moteur";
+        copy.tags["Annotator"] = details["engine"].toString().toStdString();
+        copy.nodes[0].comment = QString("Suite calculée par %1, %2 ms par position, profondeur %3. "
+                                       "Départ depuis un diagramme ; historique antérieur non reproduit.")
+                                   .arg(details["engine"].toString()).arg(details["milliseconds"].toInt())
+                                   .arg(details["depth"].toInt()).toStdString();
+        int node = 0;
+        for (const auto &value : details["steps"].toList()) {
+            const auto step = value.toMap();
+            node = copy.play(node, step["uci"].toString().toStdString());
+            copy.nodes[node].comment = step["facts"].toString().toStdString();
+        }
+        replaceGame(std::move(copy));
+        return true;
+    } catch (const std::exception &e) {
+        fail(e);
+        return false;
+    }
 }
 void Controller::annotateReview() {
     if (reviewing_ || review_.empty() || trainingActive())

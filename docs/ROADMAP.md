@@ -18,9 +18,18 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées sans archives Actions | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
 | Fiabilité | Sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
-| Fonctions avancées | Études PDF/PNG, bilan moteur, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
+| Fonctions avancées | Études PDF/PNG, bilan moteur expliqué par suites légales et événements matériels, copies annotées, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 
 Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. L’esthétique est en pause. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
+
+## Lot explications — 16 octobre 2026
+
+Le bilan immédiat propose « Comprendre ce coup » : coup joué et réponse moteur,
+proposition moteur avant le coup, faits de captures/promotions/échecs/mats/pats,
+compte matériel conventionnel et ouverture d’une copie navigable. Les lignes
+sont légalement rejouées, avec moteur/budget/profondeur visibles. Ce premier lot
+ne clôt pas les objectifs complets de la section B : motifs tactiques, plans,
+réfutations démontrées et équivalences restent ouverts. Guide : [MOVE-EXPLANATIONS.md](MOVE-EXPLANATIONS.md).
 
 ## Lot répertoires — 15 octobre 2026
 

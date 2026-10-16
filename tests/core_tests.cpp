@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "game.h"
+#include "explanation.h"
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -22,6 +23,50 @@ template <class F> void rejects(F f) {
 }
 int main() {
     try {
+        const chess::Board initial;
+        const auto exchange = t64::explainLine(initial, {"e2e4", "d7d5", "e4d5", "d8d5"});
+        check(exchange.initialMaterial == 0 && exchange.moves.back().material == 0,
+              "Equal pawn exchange is not described as a material gain");
+        check(exchange.moves[2].captured == chess::PieceType::PAWN &&
+                  exchange.moves[2].captureSquare == "d5" && exchange.moves[2].material == 1 &&
+                  exchange.moves[3].material == 0 && initial.getFen() == chess::constants::STARTPOS,
+              "Capture facts, both colors and caller board preserved");
+        check(exchange.moves[0].captured == chess::PieceType::NONE && !exchange.moves[0].check,
+              "Quiet move has no invented capture or check");
+        auto enPassant = t64::parsePgn("1.e4 a6 2.e5 d5 *").front();
+        const auto epFacts = t64::explainLine(enPassant.boardAt(4), {"e5d6"}).moves.front();
+        check(epFacts.enPassant && epFacts.captureSquare == "d5" && epFacts.material == 1,
+              "En passant explains the removed pawn's actual square");
+        const auto promotionFacts = t64::explainLine(
+            t64::checkedBoard("1r5k/P7/8/8/8/8/8/7K w - - 0 1"), {"a7b8q"});
+        check(promotionFacts.initialMaterial == -4 && promotionFacts.moves[0].material == 9 &&
+                  promotionFacts.moves[0].captured == chess::PieceType::ROOK &&
+                  promotionFacts.moves[0].promotion == chess::PieceType::QUEEN && promotionFacts.moves[0].check,
+              "Capture promotion counts the captured rook and replacement of the pawn");
+        const auto under = t64::explainLine(t64::checkedBoard("7k/P7/8/8/8/8/8/7K w - - 0 1"), {"a7a8n"});
+        check(under.moves[0].promotion == chess::PieceType::KNIGHT && under.moves[0].material == 3,
+              "Underpromotion uses the actual piece, not a queen");
+        const auto blackPromotion = t64::explainLine(
+            t64::checkedBoard("7K/8/8/8/8/8/p7/7k b - - 0 1"), {"a2a1q"});
+        check(!blackPromotion.moves[0].white && blackPromotion.moves[0].material == -9,
+              "Black promotion keeps White-minus-Black material orientation");
+        const auto castleFacts = t64::explainLine(
+            t64::checkedBoard("k7/8/8/8/8/8/8/6KR w H - 0 1", true), {"g1h1"});
+        check(castleFacts.moves[0].castle && castleFacts.moves[0].captured == chess::PieceType::NONE &&
+                  castleFacts.moves[0].material == 5 && castleFacts.moves[0].san == "O-O",
+              "Stationary Chess960 king castling is not a rook capture");
+        const auto mateFacts = t64::explainLine(initial, {"f2f3", "e7e5", "g2g4", "d8h4"});
+        check(mateFacts.moves.back().mate && mateFacts.moves.back().check &&
+                  !mateFacts.moves.back().stalemate && mateFacts.moves.back().material == 0,
+              "Checkmate is a board fact, independent from material balance");
+        const auto pat = t64::explainLine(t64::checkedBoard("7k/5K2/8/6Q1/8/8/8/8 w - - 0 1"), {"g5g6"});
+        check(pat.moves.back().stalemate && !pat.moves.back().check && !pat.moves.back().mate,
+              "Stalemate is distinguished from checkmate");
+        rejects([&] { t64::explainLine(initial, {"e2e4", "e7e4"}); });
+        rejects([&] { t64::explainLine(initial, {"0000"}); });
+        rejects([&] { t64::explainLine(initial, {"f2f3", "e7e5", "g2g4", "d8h4", "a2a3"}); });
+        rejects([&] { t64::explainLine(initial, std::vector<std::string>(129, "g1f3")); });
+        check(t64::explainLine(initial, {}).moves.empty(), "Empty line contains no manufactured explanation");
         chess::Board board;
         check(t64::perft(board, 4) == 197281, "Startpos perft 4");
         board = t64::checkedBoard("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");

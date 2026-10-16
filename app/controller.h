@@ -147,6 +147,8 @@ class Controller : public QObject {
     Q_INVOKABLE void analyseGame(int milliseconds = 500);
     Q_INVOKABLE void cancelReview();
     Q_INVOKABLE void annotateReview();
+    Q_INVOKABLE QVariantMap explainReview(int index, bool alternative = false) const;
+    Q_INVOKABLE bool openReviewLine(int index, bool alternative = false);
     Q_INVOKABLE void createMistakeCards();
     Q_INVOKABLE void exportStudyPdf(const QString &url);
     Q_INVOKABLE void exportDiagram(const QString &url);

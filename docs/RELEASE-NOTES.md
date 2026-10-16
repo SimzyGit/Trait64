@@ -1,3 +1,13 @@
+## Comprendre les coups du bilan
+
+- Deux suites consultables pour chaque coup analysé : coup joué suivi de la réponse moteur, et proposition moteur avant le coup.
+- Captures et cases réelles, prise en passant, promotions, roques classiques/Chess960, échecs, mats et pats déterminés en rejouant uniquement des coups légaux.
+- Comparaison du matériel présent, distincte de l’évaluation moteur ; nom du moteur, budget et profondeur affichés. Aucun niveau Elo estimé.
+- Ouverture de la suite annotée dans une étude indépendante ; retour à l’étude d’origine avec ses résultats conservés.
+- Limites explicites : suite moteur, pas preuve d’une défense forcée ; 128 demi-coups maximum, départ depuis une FEN sans historique des répétitions. Les thèmes tactiques et plans stratégiques restent à approfondir.
+
+Guide : `docs/MOVE-EXPLANATIONS.md`.
+
 ## Nouveautés du lot répertoires
 
 - Création, fusion, import/export des répertoires en arrière-plan, progression et annulation sans ajout partiel. Notes et révisions préservées.

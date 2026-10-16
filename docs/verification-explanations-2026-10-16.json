@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-16",
+  "compiler": "GCC 13.3",
+  "qt": "6.4.2",
+  "stockfish": "16 (real executable)",
+  "schema": 7,
+  "core_checks": 2553,
+  "all_11_suites_covered": true,
+  "full_ctest_passed": 9,
+  "full_ctest_total": 11,
+  "initial_failures": "content and pgn_benchmark_safety binaries restored without executable permission",
+  "resolved_by": "Restore executable bit on these generated binaries and rerun both suites",
+  "content_seconds": 0.07,
+  "pgn_benchmark_safety_seconds": 0.95,
+  "final_desktop_interactions_seconds": 17.31,
+  "screen_size": [
+    960,
+    640
+  ],
+  "visual_inspection": "Explanation dialog readable; real button opens copy and original study/review preserved",
+  "ci_status": "pending",
+  "limitations": [
+    "No checkmate threats or tactical motif detector yet",
+    "Material count is not an engine evaluation",
+    "Copies start from FEN without earlier repetition history",
+    "No validation on the user Voyager computer"
+  ]
+}

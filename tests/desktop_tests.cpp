@@ -253,6 +253,57 @@ int main(int argc, char **argv) {
                                << "messages" << errors;
                 check(!c.reviewState()["running"].toBool() && c.review().size() == 2,
                       "Full game review completes with Stockfish");
+                const auto reviewBeforeExplanation = c.review();
+                const auto beforeExplanation = c.state();
+                const auto actual = c.explainReview(0, false);
+                const auto alternative = c.explainReview(0, true);
+                check(actual["available"].toBool() && alternative["available"].toBool() &&
+                          !actual["steps"].toList().empty() && !alternative["steps"].toList().empty() &&
+                          actual["steps"].toList().first().toMap()["uci"] == c.review()[0].toMap()["played"],
+                      "Real Stockfish review explains played move and pre-move alternative legally");
+                check(!c.explainReview(-1)["available"].toBool() && !c.explainReview(999)["available"].toBool(),
+                      "Unavailable review rows cannot fabricate explanations");
+                auto *reviewDialog = window->findChild<QObject *>("reviewDialog");
+                QMetaObject::invokeMethod(reviewDialog, "open");
+                QMetaObject::invokeMethod(reviewDialog, "explain", Q_ARG(QVariant, 0));
+                QTest::qWait(80);
+                auto *explanationDialog = window->findChild<QObject *>("reviewExplanationDialog");
+                check(explanationDialog && explanationDialog->property("visible").toBool() &&
+                          explanationDialog->property("details").toMap()["available"].toBool(),
+                      "Explanation dialog opens with real analysis facts");
+                if (qEnvironmentVariableIsSet("T64_EXPLANATION_SCREENSHOT")) {
+                    window->resize(960, 640);
+                    QTest::qWait(100);
+                    check(window->grabWindow().save(qEnvironmentVariable("T64_EXPLANATION_SCREENSHOT")),
+                          "Explanation screenshot saved");
+                }
+                auto *lineChoice = window->findChild<QObject *>("reviewLineChoice");
+                lineChoice->setProperty("currentIndex", 1);
+                QTest::qWait(30);
+                check(explanationDialog->property("details").toMap()["uci"] == alternative["uci"],
+                      "Changing the explanation choice displays the pre-move engine line");
+                lineChoice->setProperty("currentIndex", 0);
+                QTest::qWait(30);
+                int originalTab = 0;
+                for (int i = 0; i < c.tabs().size(); ++i)
+                    if (c.tabs()[i].toMap()["active"].toBool()) originalTab = i;
+                const auto originalTabs = c.tabs().size();
+                auto *openLine = window->findChild<QQuickItem *>("openReviewLineButton");
+                check(openLine && openLine->isVisible() && openLine->isEnabled(),
+                      "Review line button is accessible");
+                QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+                                  openLine->mapToScene(QPointF(openLine->width()/2, openLine->height()/2)).toPoint());
+                QTest::qWait(60);
+                check(c.tabs().size() == originalTabs + 1 && !explanationDialog->property("visible").toBool(),
+                      "Clicking the review line button opens an independent study and closes the dialog");
+                c.step(2);
+                check(c.state()["fen"] == actual["steps"].toList().last().toMap()["fen"],
+                      "Opened study reaches the exact explained terminal position");
+                c.switchTab(originalTab);
+                check(c.state()["fen"] == beforeExplanation["fen"] && c.review() == reviewBeforeExplanation,
+                      "Returning to original study preserves position and review results");
+                c.closeTab(originalTabs);
+                window->resize(1440, 940);
                 c.annotateReview();
                 check(c.state()["comment"].toString().contains("[%eval"),
                       "Review annotations persist to PGN");
