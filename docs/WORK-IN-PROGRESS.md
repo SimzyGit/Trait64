@@ -1,4 +1,4 @@
-# Point de reprise — répertoires et publication, 15 octobre 2026
+# Point de reprise — répertoires et publication, 16 octobre 2026
 
 Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23, Qt6/QML et SQLite ; fonctions locales hors ligne, esthétique en pause, aucun bouton factice ni Elo inventé.
 
@@ -6,7 +6,7 @@ Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23
 
 La PR #6 est intégrée à `main` au commit `31ac8803cb7d6e7e0f98ca0c3cf7eeea1b6e5eaa`. Elle apporte la file d’analyses persistante, les variantes, le cache avec provenance et les scores UCI typés. La CI de cette PR a réussi les 11 suites sur Debian 12 et 13, le cœur ASan/UBSan et les essais des paquets installés.
 
-Le nouveau lot est sauvegardé sur **feat/async-repertoires**, [PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/7). Le premier commit `a619bbc26c13844fffb83dd8812cbd210b2f8f72` contient la publication sans archives Actions ; les opérations de répertoire sont ajoutées au même lot. Schéma toujours **7**, aucune migration existante réécrite. Le prochain changement structurel nécessite une migration **8** sauvegardée.
+La [PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/7), commit testé `e2191937041460508507ffff4ab5c0a20afe9a70`, est **fusionnée** dans main le 16 octobre au commit `d8c49243f961ae20dfb33e11231a69cbc898f428`. Son arbre de fichiers est identique à celui validé en PR. Schéma toujours **7**, aucune migration existante réécrite. Le prochain changement structurel nécessite une migration **8** sauvegardée.
 
 ## Code du lot
 
@@ -17,19 +17,22 @@ Le nouveau lot est sauvegardé sur **feat/async-repertoires**, [PR #7](https://g
 - Interface : progression/annulation, rechargement des statistiques, nom du répertoire sélectionné fiable, identifiant capturé avant les sélecteurs de fichiers. Correction du positionnement de la notification dans les petites fenêtres.
 - Publication : Debian 12 puis 13 dans deux conteneurs propres sur un runner ; tests, DEB installés, AppImage et sources correspondantes. Envoi direct à Releases, aucun upload/download-artifact. Manifeste exact de cinq fichiers, tailles et SHA-256 distants contrôlés avant publication. Refus d’écraser une version publiée ou un brouillon étranger ; reprise possible de son propre brouillon au même commit. Les commits ordinaires sur main restent des versions de développement.
 
-## Vérifications en cours
+## Vérifications réussies
 
-Les 13 tests Python de publication, 9 tests de nettoyage, la syntaxe Bash et la structure YAML passent localement. Compilation C++ complète et tests d’intégration du lot répertoire en cours ; **ne pas annoncer leur réussite avant leurs résultats**. La première CI de la PR #7 valide déjà le cœur ASan/UBSan ; les conteneurs Debian restent à contrôler. Les tests couvrent notamment l’annulation réelle après progression, la conservation des octets de l’export, les changements de bibliothèque et une analyse avec Stockfish réel.
+- Localement, commit `e219193` : **11/11 suites en 66,42 s**, GCC 13.3, Qt 6.4.2, Stockfish 16 réel. 51 contrôles de répertoires, 95 d’analyse persistante, 635 contrôles d’interface/fixtures. Dialogue inspecté à 960 × 640, sans avertissement QML.
+- [CI de la PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38797743659) : **11/11 Debian 12 en 48,75 s**, **11/11 Debian 13 en 59,03 s**, DEB installés et démarrés, AppImage démarrée, sources correspondantes produites et manifeste des cinq fichiers validé. **Aucune archive Actions créée.**
+- Cœur ASan/UBSan, 13 tests de publication et 9 tests de nettoyage réussis ; syntaxe Bash et structure YAML vérifiées. L’annulation en cours d’import, les révisions conservées, l’export intact, les lectures obsolètes et l’analyse réelle de répertoire sont testés.
+- Les mesures et références sont enregistrées dans `verification-repertoires-2026-10-16.json`. Aucun essai sur le PC Voyager de l’utilisateur n’est revendiqué.
 
 ## Publication et stockage
 
-Au dernier contrôle, version distribuée : **v0.3.0-dev.33**. Les exécutions main 36 et 38 ont échoué uniquement sur le quota d’archives Actions, malgré les tests et paquets réussis. Ne pas relancer ces anciennes versions : le nouveau pipeline supprime leur dépendance au stockage d’archives. Après fusion de la PR #7, vérifier la nouvelle release, ses cinq fichiers, leurs digests, le commit cible et l’absence d’artefacts Actions avant de la déclarer disponible.
+Au dernier contrôle, version distribuée : **v0.3.0-dev.33**. Les exécutions main 36 et 38 ont échoué uniquement sur le quota d’archives Actions, malgré les tests et paquets réussis. Ne pas relancer ces anciennes versions : le nouveau pipeline supprime leur dépendance au stockage d’archives. La fusion a lancé [l’exécution main 41](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38859094682), destinée à **v0.3.0-dev.41**. La compilation/publication réelle est en cours : vérifier son succès, les cinq fichiers, leurs digests, le commit cible et zéro artefact avant de déclarer cette version disponible.
 
 Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 octets** supprimés ; zéro archive et zéro cache après contrôle. Les dix releases antérieures et leurs cinquante fichiers sont conservés. La purge quotidienne reste présente pour les archives anciennes ; elle ne touche ni au code ni aux fichiers distribués.
 
 ## Reprise suivante
 
-1. Terminer les tests du commit exact, corriger toute régression, puis CI Debian 12/13 avant fusion et publication de développement. Vérifier les cinq assets de la release réellement créée.
+1. Terminer le suivi de l’exécution main 41 : les tests PR sont réussis et la fusion est faite. Vérifier les cinq assets de la release effectivement publiée avant de clôturer ce lot.
 2. Explications tactiques vérifiables, corpus tactique sous licence ouverte et progression par thème ; ne pas inventer d’équivalences ni de niveau Elo.
 3. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 4. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.

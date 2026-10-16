@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-15",
+  "commit": "e2191937041460508507ffff4ab5c0a20afe9a70",
+  "build": "Debug",
+  "compiler": "GCC 13.3",
+  "qt": "6.4.2",
+  "stockfish": "16 (real executable)",
+  "schema": 7,
+  "tests": [
+    {
+      "name": "core",
+      "passed": true,
+      "seconds": 2.78
+    },
+    {
+      "name": "pgn_benchmark_safety",
+      "passed": true,
+      "seconds": 1.14
+    },
+    {
+      "name": "content",
+      "passed": true,
+      "seconds": 0.07
+    },
+    {
+      "name": "updates",
+      "passed": true,
+      "seconds": 0.1
+    },
+    {
+      "name": "storage",
+      "passed": true,
+      "seconds": 0.37
+    },
+    {
+      "name": "repertoires",
+      "passed": true,
+      "seconds": 0.41
+    },
+    {
+      "name": "resumable_import",
+      "passed": true,
+      "seconds": 0.24
+    },
+    {
+      "name": "persistent_analysis",
+      "passed": true,
+      "seconds": 40.44
+    },
+    {
+      "name": "engine",
+      "passed": true,
+      "seconds": 1.38
+    },
+    {
+      "name": "desktop_smoke",
+      "passed": true,
+      "seconds": 3.09
+    },
+    {
+      "name": "desktop_interactions",
+      "passed": true,
+      "seconds": 16.38
+    }
+  ],
+  "ctest_total_seconds": 66.42,
+  "publication_unit_tests": 13,
+  "cleanup_unit_tests": 9,
+  "screen_size": [
+    960,
+    640
+  ],
+  "visual_inspection": "Repertoire selector and all action buttons visible, no QML warnings",
+  "limitations": [
+    "CI package validation tracked separately",
+    "Not a million-game performance qualification",
+    "No test on the user Voyager computer"
+  ],
+  "ci": {
+    "run_id": 38797743659,
+    "tested_commit": "e2191937041460508507ffff4ab5c0a20afe9a70",
+    "debian12": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 48.75
+    },
+    "debian13": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 59.03
+    },
+    "installed_deb_smoke_tests": true,
+    "appimage_smoke_test": true,
+    "runtime_sources_packaged": true,
+    "core_sanitizers": "passed",
+    "manifest": "five required files verified locally",
+    "actions_artifacts": 0
+  },
+  "merge": {
+    "date": "2026-10-16",
+    "commit": "d8c49243f961ae20dfb33e11231a69cbc898f428",
+    "pull_request": 7
+  },
+  "release": {
+    "run_id": 38859094682,
+    "version": "0.3.0-dev.41",
+    "status": "in_progress"
+  }
+}

@@ -117,4 +117,4 @@ python3 -m unittest discover -s tests -p 'test_cleanup_actions.py' -v
 bash -n packaging/ci-linux.sh
 ```
 
-13 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Les échanges GitHub y utilisent un double de test ; la vraie CI doit encore valider la création des paquets et la publication réelle. Voir WORK-IN-PROGRESS pour l’état courant de cette validation.
+13 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Les échanges GitHub y utilisent un double de test ; la CI 38797743659 a validé les 11 suites et paquets sur Debian 12/13, ainsi que l’AppImage. La publication réelle après fusion est suivie séparément dans WORK-IN-PROGRESS. Voir WORK-IN-PROGRESS pour l’état courant de cette validation.

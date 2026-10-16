@@ -1,6 +1,6 @@
 # Reprise du développement — 15 octobre 2026
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles) et #6 (analyses persistantes) sont intégrées à main. La PR #7 complète les répertoires en arrière-plan et remplace le transfert par archives Actions par une publication directe des paquets vérifiés. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. Le point de reprise suit la publication de développement réellement disponible. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 ## État à conserver
 
