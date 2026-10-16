@@ -17,7 +17,7 @@
 
 Le test moteur est **skipped**, pas réussi, si Stockfish est absent. Les tests GUI utilisent `QT_QPA_PLATFORM=offscreen` et `QT_QUICK_BACKEND=software`. Ils ne remplacent pas un essai sur le GPU et l’écran du PC cible. Le cœur compile sans Qt avec `-DT64_BUILD_GUI=OFF`. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
 
-La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les neuf suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
+La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les onze suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
 
 Vérification historique avant catalogue : **6 suites sur 6 réussies** ; les vérifications du lot actuel sont détaillées plus bas. Le redimensionnement après sauvegarde, les dialogues et les captures 960 × 720 sont vérifiés. La chaîne GitHub complète a effectivement publié `v0.3.0-dev.6` ; consulter les exécutions suivantes pour la version finale enrichie.
 
@@ -117,4 +117,11 @@ python3 -m unittest discover -s tests -p 'test_cleanup_actions.py' -v
 bash -n packaging/ci-linux.sh
 ```
 
-13 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Les échanges GitHub y utilisent un double de test ; la CI 38797743659 a validé les 11 suites et paquets sur Debian 12/13, ainsi que l’AppImage. La publication réelle après fusion est suivie séparément dans WORK-IN-PROGRESS. Voir WORK-IN-PROGRESS pour l’état courant de cette validation.
+17 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Ils couvrent aussi le retard de visibilité d’un nouveau brouillon, le délai dépassé, un identifiant changé et l’utilisation des réponses REST de création/publication. Les échanges GitHub y utilisent un double de test. La CI 38797743659 a validé les 11 suites et paquets sur Debian 12/13, ainsi que l’AppImage. Voir WORK-IN-PROGRESS pour la publication réelle et `verification-repertoires-2026-10-16.json` pour les mesures datées.
+
+
+## Publication effectivement vérifiée — 16 octobre 2026
+
+La CI [38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628) a publié **v0.3.0-dev.42** au commit `fc941c17c53d6c5aa639433c6563f73469971ae9` : 11/11 suites Debian 12 (47,44 s) et Debian 13 (58,41 s), DEB installés, AppImage démarrée, 17 tests du publieur, 9 du nettoyage et cœur ASan/UBSan. Les cinq noms/tailles/SHA-256 distants correspondent au manifeste de compilation ; le tag résout le commit testé. Zéro archive Actions.
+
+Vérification complémentaire avec les métadonnées réellement publiées et `libs/updates/releases.cpp` : les trois paquets sont sélectionnés pour une mise à jour dev.33 → dev.42 sur Développement, exclus de Stable/Bêta ; ignorance, version identique et rétrogradation restent bloquées. Cette lecture n’effectue aucune installation sur le PC utilisateur. Détails dans `verification-repertoires-2026-10-16.json`.

@@ -28,7 +28,7 @@ Priorité suivante : qualifier les gros corpus et développer les explications v
 - [x] Statistiques et couverture locale asynchrones, annulation et rejet des résultats d’une ancienne bibliothèque.
 - [x] Analyse moteur de la copie complète d’un répertoire, profils et budget par position, sans modifier les notes ni les révisions.
 
-La validation de publication du commit exact est suivie dans WORK-IN-PROGRESS. Les éditions ponctuelles restent synchrones, les transpositions sont développées une seule fois, et la couverture probabiliste/comparaison des répertoires restent ouvertes.
+Le lot est distribué dans v0.3.0-dev.42 : 11/11 suites sur Debian 12 et 13, paquets et empreintes distantes vérifiés, zéro archive Actions. Les preuves et le commit exact figurent dans WORK-IN-PROGRESS. Les éditions ponctuelles restent synchrones, les transpositions sont développées une seule fois, et la couverture probabiliste/comparaison des répertoires restent ouvertes.
 
 ## Catalogue validé localement — 12 octobre 2026
 

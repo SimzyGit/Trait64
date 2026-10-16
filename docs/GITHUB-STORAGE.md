@@ -50,12 +50,19 @@ est fusionnée après validation Debian 12/13, paquets, AppImage et sanitizers.
 La purge déclenchée automatiquement à la fin de la CI de la PR #5 a également
 réussi ([38692633667](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38692633667)).
 
-À 06:35 UTC, la publication dev.36 (exécution 38692749119) a encore rencontré
-`Artifact storage quota has been hit` au téléversement, malgré un inventaire
-vide. Les tests et les paquets ont réussi ; le service annonce un recalcul toutes
-les 6 à 12 heures. Attendre ce recalcul puis relancer uniquement les tâches
-échouées. Voir `WORK-IN-PROGRESS.md` pour l'état exact ; aucun achat ni changement
-du budget du compte n'a été effectué.
+À 06:35 UTC, la publication dev.36 (exécution 38692749119), puis dev.38, ont
+encore rencontré `Artifact storage quota has been hit` au téléversement, malgré
+un inventaire vide et les tests/paquets réussis. Depuis la PR #7, le pipeline
+transmet directement les fichiers vérifiés à Releases et ne dépend plus de ce
+quota d’archives. Ne pas relancer les anciennes exécutions 36/38 : elles utilisent
+l’ancien workflow. Voir `WORK-IN-PROGRESS.md` pour la publication actuelle ;
+aucun achat ni changement du budget du compte n’a été effectué.
+
+Le 16 octobre, [l’exécution 38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628)
+a réellement publié **v0.3.0-dev.42**, avec cinq fichiers et zéro archive Actions.
+Les tailles et SHA-256 des cinq fichiers distants correspondent au manifeste
+validé avant envoi. Les dix releases précédentes et leurs cinquante fichiers
+étaient toujours présents au contrôle précédant cette publication.
 
 Références :
 

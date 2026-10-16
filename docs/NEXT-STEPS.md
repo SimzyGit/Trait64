@@ -1,14 +1,14 @@
-# Reprise du développement — 15 octobre 2026
+# Reprise du développement — 16 octobre 2026
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. Le point de reprise suit la publication de développement réellement disponible. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. La version distribuée est [v0.3.0-dev.42](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42), vérifiée sans archive Actions. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 ## État à conserver
 
 Trait64 est une application de bureau C++23/Qt6/QML et SQLite, monolithe modulaire. Ne pas recommencer l’application. L’esthétique est en pause. Les fonctions locales ne nécessitent ni compte ni réseau. La liste détaillée des objectifs et les limites sont dans [ROADMAP.md](ROADMAP.md).
 
-Le lot **PR #3 — imports reprenables, répertoires et préparation** est sur `feat/resumable-imports-repertoires`. Il prolonge la PR #2 publiée dans `v0.3.0-dev.23`. Les modifications du README ajoutées séparément sur main (2873ed2 puis f85ee26) sont conservées. La version publiée courante est à vérifier dans les [Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases), sans revenir à une ancienne copie locale.
+Le lot historique **PR #3 — imports reprenables, répertoires et préparation** a été intégré à main, puis prolongé par les PR #4 à #7. Il succédait à la PR #2 publiée dans `v0.3.0-dev.23`. Les modifications du README ajoutées séparément sur main (2873ed2 puis f85ee26) sont conservées. La version publiée courante est à vérifier dans les [Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases), sans revenir à une ancienne copie locale.
 
-### Lot implémenté
+### Historique du lot #3
 
 - `libs/database/imports.cpp`, `app/imports.cpp`, `ui/Imports.qml` : schéma **5**, tâches PGN persistantes, SHA-256 complet avant reprise, verrou interprocessus, transactions de 250 parties comprenant le point de reprise, pause et fichier déplacé. L’import classique conserve son annulation intégrale.
 - `libs/database/repertoires.cpp`, `app/repertoires.cpp`, `ui/Repertoires.qml` : schéma **6**, répertoires nommés Blancs/Noirs/classique/960, graphe de positions/transpositions, notes/NAG/priorités, modèles de parties et import/export PGN. Les branches supprimées de l’étude ne sont pas importées. La suppression d’une branche préserve les transpositions encore accessibles et leurs révisions.
@@ -22,7 +22,7 @@ Les migrations existantes ne doivent pas être réécrites. Après le lot analys
 
 Localement le 14 octobre : **9/9 suites réussies en 15,53 s**, Stockfish réel inclus. Tests : arrêt réel du processus au milieu d’un lot, reprise sans doublons, fichier déplacé/modifié, verrou récupéré, graphe/transpositions/cycles/Chess960, migration 1 → 6, notes et SRS, préparation filtrée/annulée, CSV, interfaces QML et sauvegardes. Une collision de nom avec la propriété finale `Dialog.result` a été corrigée dans le dialogue de préparation.
 
-Avant fusion, vérifier la CI au SHA exact de la PR #3 ; après fusion, vérifier la chaîne de publication de main et les assets. [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3) conserve les résultats effectifs. Aucune de ces validations ne remplace un essai sur le PC Voyager de l’utilisateur.
+La [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3) conserve les résultats historiques. Pour chaque nouveau lot, vérifier la CI au SHA exact puis la publication de main et ses fichiers. Aucune de ces validations ne remplace un essai sur le PC Voyager de l’utilisateur.
 
 ## Prochaines étapes, dans l’ordre
 

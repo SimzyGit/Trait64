@@ -102,8 +102,117 @@
     "pull_request": 7
   },
   "release": {
+    "run_id": 38861352628,
+    "version": "0.3.0-dev.42",
+    "tested_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+    "status": "published",
+    "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42",
+    "published_at": "2026-10-16T06:40:07Z",
+    "prerelease": true,
+    "tag_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+    "manifest_matches_remote_assets": true,
+    "actions_artifacts": 0,
+    "debian12": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 47.44
+    },
+    "debian13": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 58.41
+    },
+    "installed_deb_smoke_tests": true,
+    "appimage_smoke_test": true,
+    "runtime_sources_packaged": true,
+    "assets": [
+      {
+        "name": "SHA256SUMS",
+        "size": 415,
+        "digest": "sha256:44992102a50556b460f5bbbd67d142307da9f949395e2288720775c7ab82d93b",
+        "state": "uploaded"
+      },
+      {
+        "name": "Trait64-0.3.0-dev.42-linux-x86_64.AppImage",
+        "size": 36837880,
+        "digest": "sha256:2b208d28e01d2333d12fa50c5a1f4964cb88536ddaf06ee9cc5759a94ac1484f",
+        "state": "uploaded"
+      },
+      {
+        "name": "Trait64-runtime-sources.tar",
+        "size": 291573760,
+        "digest": "sha256:095954c4a2b6dfed9eb5f6b713879c664b021e38bb49f56ae1550b2cef9b6bb8",
+        "state": "uploaded"
+      },
+      {
+        "name": "trait64_0.3.0-dev.42_debian12_amd64.deb",
+        "size": 1007554,
+        "digest": "sha256:95cf4feda58b40f9ed7d4c066e6f8ecf8731b3feb69b63f0ec73fe88cd2e6965",
+        "state": "uploaded"
+      },
+      {
+        "name": "trait64_0.3.0-dev.42_debian13_amd64.deb",
+        "size": 1012366,
+        "digest": "sha256:049fcd1dae94c04d9933f8c891a3b77db71c80fd745059afe8e4fe3e1e10f6d3",
+        "state": "uploaded"
+      }
+    ],
+    "updater_selection": {
+      "development_channel": true,
+      "ignored_version_rejection": true,
+      "same_version_and_downgrade_rejection": true,
+      "selected": [
+        {
+          "asset_id": 646413159,
+          "bytes": 36837880,
+          "name": "Trait64-0.3.0-dev.42-linux-x86_64.AppImage",
+          "sha256": "2b208d28e01d2333d12fa50c5a1f4964cb88536ddaf06ee9cc5759a94ac1484f"
+        },
+        {
+          "asset_id": 646413160,
+          "bytes": 1007554,
+          "name": "trait64_0.3.0-dev.42_debian12_amd64.deb",
+          "sha256": "95cf4feda58b40f9ed7d4c066e6f8ecf8731b3feb69b63f0ec73fe88cd2e6965"
+        },
+        {
+          "asset_id": 646413163,
+          "bytes": 1012366,
+          "name": "trait64_0.3.0-dev.42_debian13_amd64.deb",
+          "sha256": "049fcd1dae94c04d9933f8c891a3b77db71c80fd745059afe8e4fe3e1e10f6d3"
+        }
+      ],
+      "stable_and_beta_exclusion": true,
+      "tag": "v0.3.0-dev.42"
+    }
+  },
+  "failed_publication": {
     "run_id": 38859094682,
     "version": "0.3.0-dev.41",
-    "status": "in_progress"
-  }
+    "commit": "d8c49243f961ae20dfb33e11231a69cbc898f428",
+    "debian12": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 47.94
+    },
+    "debian13": {
+      "passed": 11,
+      "total": 11,
+      "seconds": 58.88
+    },
+    "installed_deb_smoke_tests": true,
+    "appimage_smoke_test": true,
+    "manifest_verified": true,
+    "failure": "Immediate release listing did not return the newly created draft",
+    "draft_id": 414615852,
+    "draft_assets": 0,
+    "published": false
+  },
+  "publisher_fix": {
+    "commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+    "local_unit_tests": 17,
+    "ci_unit_tests": 17,
+    "ci_cleanup_unit_tests": 9,
+    "ci_core_sanitizers": "passed"
+  },
+  "verified_at": "2026-10-16T06:41:53.932268+00:00"
 }

@@ -1,5 +1,11 @@
 # Changements
 
+## Publication des brouillons — 16 octobre 2026
+
+- La création utilise directement la réponse REST de GitHub ; les contrôles et la publication ciblent l’identifiant exact de la release.
+- Attente bornée si le nouveau brouillon tarde à apparaître dans la liste utilisée par le téléversement. Aucun nouvel essai de création, aucun écrasement d’une version publiée ou d’un brouillon étranger.
+- Quatre tests de régression supplémentaires, soit 17 tests de publication ; correction des descriptions périmées du schéma et des fonctions livrées.
+
 ## Répertoires asynchrones et distribution
 
 - Création, fusion, import/export des répertoires en arrière-plan, progression et annulation sans ajout partiel. Notes et révisions préservées.
