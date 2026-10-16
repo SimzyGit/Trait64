@@ -137,7 +137,7 @@ ApplicationWindow {
                     CheckBox {id:trashCheck;text:"Corbeille";onToggled:win.filterLibrary()}
                     Item {Layout.fillWidth:true}
                     TButton {text:"Annuler la recherche";visible:controller.librarySearching;onClicked:controller.cancelLibrarySearch()}
-                    Label {text:controller.busy?"Import en cours…":controller.librarySearchStatus;color:win.muted;font.pixelSize:11;Layout.fillWidth:true;Layout.minimumWidth:70;elide:Text.ElideRight;horizontalAlignment:Text.AlignRight}
+                    Label {text:controller.busy?"Traitement en cours…":controller.librarySearchStatus;color:win.muted;font.pixelSize:11;Layout.fillWidth:true;Layout.minimumWidth:70;elide:Text.ElideRight;horizontalAlignment:Text.AlignRight}
                 }
                 Rectangle {Layout.fillWidth:true;height:37;color:win.raised;radius:6
                     RowLayout {anchors.fill:parent;anchors.leftMargin:18;anchors.rightMargin:18
@@ -454,7 +454,7 @@ ApplicationWindow {
         height:32;color:win.bg
         Rectangle {width:parent.width;height:1;color:win.line}
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
-            Label {text:controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
+            Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
             Item {Layout.fillWidth:true}
             TButton {visible:controller.busy;text:controller.resumableImport?"Mettre en pause":"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
             Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted;visible:win.width>=1100}
@@ -467,8 +467,9 @@ ApplicationWindow {
         function onMessage(text,error){toastLabel.text=text;toast.error=error;toast.open();toastTimer.restart()}
         function onPromotionNeeded(prefix){win.promotionPrefix=prefix;promotionDialog.open()}
         function onShowAnalysis(){win.page=2}
+        function onShowAnalysisQueue(){analysisQueueDialog.open()}
     }
-    Popup {id:toast;property bool error:false;x:(win.width-width)/2;y:win.height-height-64;width:Math.min(760,win.width-280);padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
+    Popup {id:toast;parent:Overlay.overlay;property bool error:false;x:(parent.width-width)/2;y:Math.max(8,parent.height-height-64);width:Math.min(760,win.width-280);height:toastLabel.implicitHeight+topPadding+bottomPadding;padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
         background:Rectangle {color:toast.error?"#633c37":win.raised;border.color:toast.error?"#a86559":win.line;radius:2}
         contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
     }

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "cancellation.h"
 #include "database.h"
 #include <QDate>
+#include <QFile>
+#include <QFileInfo>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
 #include <deque>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 
 namespace t64 {
@@ -13,6 +17,9 @@ namespace {
 void require(bool ok, const QString &error) {
     if (!ok)
         throw std::runtime_error(error.toStdString());
+}
+void checkpoint(const RepertoireProgress &progress, qint64 count) {
+    require(!progress || progress(count), "Traitement du répertoire annulé.");
 }
 void run(QSqlQuery &q) {
     if (!q.exec())
@@ -67,7 +74,9 @@ void Database::upgradeV6(int originalVersion) {
     }
 }
 
-qint64 Database::createRepertoire(const QString &name, bool white, const Game &root) {
+qint64 Database::createRepertoire(const QString &name, bool white, const Game &root,
+                                  const RepertoireProgress &progress, qint64 model) {
+    checkpoint(progress, 0);
     const auto validated = title(name);
     checkedBoard(root.nodes.at(0).fen, root.chess960);
     sql("SAVEPOINT create_repertoire");
@@ -81,7 +90,7 @@ qint64 Database::createRepertoire(const QString &name, bool white, const Game &r
         q.addBindValue(str(root.nodes[0].comment));
         run(q);
         const auto id = q.lastInsertId().toLongLong();
-        addToRepertoire(id, root);
+        addToRepertoire(id, root, model, progress);
         sql("RELEASE create_repertoire");
         return id;
     } catch (...) {
@@ -131,7 +140,9 @@ void Database::deleteRepertoire(qint64 id) {
     run(q);
 }
 
-void Database::addToRepertoire(qint64 id, const Game &game, qint64 model) {
+void Database::addToRepertoire(qint64 id, const Game &game, qint64 model,
+                               const RepertoireProgress &progress) {
+    checkpoint(progress, 0);
     const auto rep = repertoire(id);
     require(rep["chess960"].toBool() == game.chess960, "Variante incompatible avec ce répertoire.");
     const auto rootKey = key(str(game.nodes.at(0).fen));
@@ -148,6 +159,7 @@ void Database::addToRepertoire(qint64 id, const Game &game, qint64 model) {
         // Only reachable nodes: deleted variations remain in the study's backing vector.
         std::vector<int> reachable{0};
         for (size_t i = 0; i < reachable.size(); ++i) {
+            checkpoint(progress, i);
             const auto &node = game.nodes.at(reachable[i]);
             QSqlQuery q(db_);
             q.prepare("INSERT OR IGNORE INTO repertoire_positions(repertoire,key,fen,white) VALUES(?,?,?,?)");
@@ -162,8 +174,10 @@ void Database::addToRepertoire(qint64 id, const Game &game, qint64 model) {
                 reachable.push_back(child);
         }
         for (int parent : reachable) {
+            checkpoint(progress, reachable.size());
             const auto position = key(str(game.nodes[parent].fen));
             for (int child : game.nodes[parent].children) {
+                checkpoint(progress, reachable.size());
                 const auto &node = game.nodes.at(child);
                 QSqlQuery q(db_);
                 q.prepare(
@@ -193,10 +207,86 @@ void Database::addToRepertoire(qint64 id, const Game &game, qint64 model) {
                 run(q);
             }
         }
+        checkpoint(progress, reachable.size());
         sql("RELEASE repertoire_merge");
     } catch (...) {
         sql("ROLLBACK TO repertoire_merge");
         sql("RELEASE repertoire_merge");
+        throw;
+    }
+}
+
+int Database::importRepertoireFile(qint64 id, const QString &path, const RepertoireProgress &progress) {
+    checkpoint(progress, 0);
+    require(QFileInfo(path).isFile(), "Choisissez un fichier PGN régulier.");
+    QFile file(path);
+    require(file.open(QIODevice::ReadOnly), file.errorString());
+    constexpr qint64 limit = 16 * 1024 * 1024;
+    require(file.size() <= limit, "Import de répertoire limité à 16 Mio par fichier.");
+    const auto bytes = file.read(limit + 1);
+    require(file.error() == QFileDevice::NoError, file.errorString());
+    require(bytes.size() <= limit, "Import de répertoire limité à 16 Mio par fichier.");
+    std::istringstream input(bytes.toStdString());
+    qint64 done = 0;
+    int count = 0;
+    sql("SAVEPOINT repertoire_file");
+    try {
+        scanPgnRecords(
+            input,
+            [&](std::string &&record, uint64_t) {
+                auto games = parsePgn(record, 1, [&] { checkpoint(progress, done); });
+                if (games.empty())
+                    return;
+                require(++count <= 200, "Import de répertoire limité à 200 parties par fichier.");
+                qint64 processed = 0;
+                addToRepertoire(id, games.front(), 0, [&](qint64 positions) {
+                    processed = positions;
+                    checkpoint(progress, done + positions);
+                    return true;
+                });
+                done += processed;
+            },
+            [&](uint64_t) { checkpoint(progress, done); });
+        require(count > 0, "Aucune partie à ajouter au répertoire.");
+        checkpoint(progress, done);
+        sql("RELEASE repertoire_file");
+        return count;
+    } catch (...) {
+        sql("ROLLBACK TO repertoire_file");
+        sql("RELEASE repertoire_file");
+        throw;
+    }
+}
+
+QVariantMap Database::repertoireOverview(qint64 id, const std::shared_ptr<std::atomic_bool> &canceled) const {
+    sql("SAVEPOINT repertoire_view");
+    try {
+        QVariantMap result;
+        {
+            // Remove the progress handler before releasing or rolling back the transaction.
+            QueryCancellation cancellation(db_, canceled);
+            const auto list = repertoires();
+            QVariantMap detail;
+            for (const auto &value : list) {
+                const auto row = value.toMap();
+                if (row["id"].toLongLong() != id)
+                    continue;
+                detail = repertoire(id);
+                for (auto it = row.begin(); it != row.end(); ++it)
+                    detail[it.key()] = it.value();
+                detail["gaps"] = repertoireGaps(id);
+                detail["weaknesses"] = repertoireWeaknesses(id);
+                detail["gapsLoaded"] = true;
+                break;
+            }
+            require(!canceled || !canceled->load(), "Recherche annulée.");
+            result = {{"list", list}, {"detail", detail}};
+        }
+        sql("RELEASE repertoire_view");
+        return result;
+    } catch (...) {
+        sql("ROLLBACK TO repertoire_view");
+        sql("RELEASE repertoire_view");
         throw;
     }
 }
@@ -287,34 +377,47 @@ void Database::removeRepertoireMove(qint64 id, const QString &fen, const QString
     }
 }
 
-Game Database::exportRepertoire(qint64 id) const {
-    const auto rep = repertoire(id);
-    Game game(rep["root"].toString().toStdString(), rep["chess960"].toBool());
-    game.tags["Event"] = rep["name"].toString().toStdString();
-    game.tags["Trait64RepertoireSide"] = rep["white"].toBool() ? "White" : "Black";
-    game.tags["Result"] = "*";
-    game.nodes[0].comment = rep["rootComment"].toString().toStdString();
-    std::deque<int> pending{0};
-    std::set<std::string> expanded;
-    while (!pending.empty()) {
-        const auto parent = pending.front();
-        pending.pop_front();
-        const auto position = game.nodes[parent].fen;
-        if (!expanded.insert(positionKey(position)).second) {
-            game.nodes[parent].comment +=
-                "\nTransposition : suite développée à la même position dans ce PGN.";
-            continue;
+Game Database::exportRepertoire(qint64 id, const RepertoireProgress &progress) const {
+    checkpoint(progress, 0);
+    sql("SAVEPOINT repertoire_export");
+    try {
+        const auto rep = repertoire(id);
+        Game game(rep["root"].toString().toStdString(), rep["chess960"].toBool());
+        game.tags["Event"] = rep["name"].toString().toStdString();
+        game.tags["Trait64RepertoireSide"] = rep["white"].toBool() ? "White" : "Black";
+        game.tags["Result"] = "*";
+        game.tags["Trait64RepertoireId"] = std::to_string(id);
+        game.nodes[0].comment = rep["rootComment"].toString().toStdString();
+        std::deque<int> pending{0};
+        std::set<std::string> expanded;
+        while (!pending.empty()) {
+            checkpoint(progress, game.nodes.size());
+            const auto parent = pending.front();
+            pending.pop_front();
+            const auto position = game.nodes[parent].fen;
+            if (!expanded.insert(positionKey(position)).second) {
+                game.nodes[parent].comment +=
+                    "\nTransposition : suite développée à la même position dans ce PGN.";
+                continue;
+            }
+            for (const auto &value : repertoireMoves(id, str(position))) {
+                checkpoint(progress, game.nodes.size());
+                const auto move = value.toMap();
+                const auto child = game.play(parent, move["uci"].toString().toStdString());
+                game.nodes[child].comment = move["note"].toString().toStdString();
+                for (const auto &nag : move["nags"].toString().split(' ', Qt::SkipEmptyParts))
+                    game.nodes[child].nags.push_back(nag.toInt());
+                pending.push_back(child);
+            }
         }
-        for (const auto &value : repertoireMoves(id, str(position))) {
-            const auto move = value.toMap();
-            const auto child = game.play(parent, move["uci"].toString().toStdString());
-            game.nodes[child].comment = move["note"].toString().toStdString();
-            for (const auto &nag : move["nags"].toString().split(' ', Qt::SkipEmptyParts))
-                game.nodes[child].nags.push_back(nag.toInt());
-            pending.push_back(child);
-        }
+        checkpoint(progress, game.nodes.size());
+        sql("RELEASE repertoire_export");
+        return game;
+    } catch (...) {
+        sql("ROLLBACK TO repertoire_export");
+        sql("RELEASE repertoire_export");
+        throw;
     }
-    return game;
 }
 
 QVariantMap Database::nextRepertoirePosition(qint64 id, bool includeFuture) const {

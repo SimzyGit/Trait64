@@ -1,24 +1,15 @@
 # Stockage GitHub Actions
 
-Les paquets distribués à l'utilisateur et leurs sources correspondantes sont
-conservés dans **GitHub Releases**. Les archives Actions servent uniquement au
-transfert des paquets entre les tâches de compilation et de publication.
+Les paquets distribués et leurs sources correspondantes sont conservés dans **GitHub Releases**. Le workflow de compilation n’utilise plus d’archives Actions : Debian 12 et Debian 13 sont compilés dans deux conteneurs propres sur un même runner, avec un dossier local commun pour les paquets. Les sources du projet sont montées en lecture seule ; aucun jeton GitHub n’est transmis aux conteneurs.
 
-## Politique de conservation
+## Politique de publication
 
-- Une demande de modification lance les tests et la compilation Debian 12/13,
-  les vérifications des paquets installés et de l'AppImage, sans téléverser
-  d'archive Actions.
-- Un commit de code sur `main` publie uniquement une version de développement.
-  Les versions stables et bêta demandent toujours un tag ou une publication
-  manuelle. Les changements de documentation seuls ne lancent pas de compilation.
-- Les publications conservent temporairement leurs archives Actions pendant un
-  jour au maximum. Le workflow `Reclaim Trait64 Actions storage` les supprime
-  aussitôt que le workflow de publication s'est terminé avec succès.
-- Une purge quotidienne à 03:23 UTC retire les archives de compilation terminées
-  qui ont plus de 24 heures, y compris celles d'une publication interrompue.
-- Les sources, commits, branches, journaux d'exécution et fichiers des versions
-  publiées ne sont jamais supprimés par cette purge.
+- Les PR exécutent tous les tests, les paquets DEB installés et l’AppImage, sans publier ni stocker d’archive.
+- Les commits de code sur main publient exclusivement des versions de développement. Stable et Bêta demandent un tag ou une publication manuelle explicite. Les changements de documentation seuls ne déclenchent pas de compilation.
+- Après les tests des deux distributions et les sanitizers, `scripts/publish-release.py` exige exactement les deux DEB, l’AppImage et les sources du runtime. Il produit SHA256SUMS, envoie les cinq fichiers dans un brouillon Releases et vérifie les tailles et SHA-256 annoncés par GitHub avant publication.
+- Une version publiée n’est jamais réécrite. Un brouillon ne peut être repris que s’il a été créé par ce processus pour le même commit, avec des fichiers attendus. Tout fichier supplémentaire est conservé et bloque la reprise.
+- Les publications sont sérialisées. Les trois canaux de l’application restent inchangés.
+- La purge quotidienne à 03:23 UTC et la purge après succès restent actives pour les anciennes archives connues. Elles ne touchent pas aux sources, commits, branches, logs ni fichiers Releases.
 
 ## Nettoyage manuel
 

@@ -1,5 +1,13 @@
 ## Analyses en arrière-plan et reprise
 
+## Nouveautés du lot répertoires
+
+- Création, fusion, import/export des répertoires en arrière-plan, progression et annulation sans ajout partiel. Notes et révisions préservées.
+- Statistiques et réponses adverses manquantes calculées sans bloquer l’interface ; résultats périmés ignorés.
+- Analyse de toutes les variantes d’un répertoire par profil moteur, dans la file persistante.
+- Correction du nom sélectionné à l’ouverture du dialogue et des notifications en petite fenêtre ; changement de bibliothèque refusé pendant un exercice.
+- Tests Debian 12/13, DEB installés et AppImage puis publication directe dans GitHub Releases, sans archives Actions. Manifeste et SHA-256 vérifiés ; une version publiée n’est pas écrasée.
+
 - File persistante accessible dans le menu de l’espace Analyse : moteur courant ou profil enregistré, MultiPV, temps par position et toutes les variantes.
 - Pause/reprise, récupération après interruption, résultats conservés à chaque position et étude courante indépendante.
 - Évaluations, WDL fournis par le moteur et variantes légales ; cache avec provenance et export PGN annoté, sans modifier la ligne réellement jouée.

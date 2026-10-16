@@ -21,21 +21,26 @@ void Controller::enqueueAnalysis(bool variations, int milliseconds, int profile)
     try {
         if (trainingActive())
             throw std::runtime_error("Terminez l’entraînement avant de créer une analyse.");
-        QVariantMap config;
-        if (profile < 0) {
-            for (const auto &key :
-                 QStringList{"enginePath", "threads", "hash", "multiPV", "syzygyPath", "uciOptions"})
-                if (settings_.contains(key))
-                    config[key] = settings_.value(key);
-        } else {
-            const auto profiles = settings_.value("engineProfiles").toList();
-            if (profile >= profiles.size())
-                throw std::runtime_error("Profil moteur introuvable.");
-            config = profiles[profile].toMap();
-        }
-        config["milliseconds"] = milliseconds;
+        const auto config = analysisConfig(milliseconds, profile);
         analysisQueue_.enqueue(QString::fromStdString(game_.pgn()), config, variations);
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+
+QVariantMap Controller::analysisConfig(int milliseconds, int profile) const {
+    QVariantMap config;
+    if (profile < 0) {
+        for (const auto &key :
+             QStringList{"enginePath", "threads", "hash", "multiPV", "syzygyPath", "uciOptions"})
+            if (settings_.contains(key))
+                config[key] = settings_.value(key);
+    } else {
+        const auto profiles = settings_.value("engineProfiles").toList();
+        if (profile >= profiles.size())
+            throw std::runtime_error("Profil moteur introuvable.");
+        config = profiles[profile].toMap();
+    }
+    config["milliseconds"] = milliseconds;
+    return config;
 }

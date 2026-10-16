@@ -104,3 +104,17 @@ dans [PERFORMANCE.md](PERFORMANCE.md).
 Lot analyses du 15 octobre : première passe complète **11/11 en 49,46 s** ; vérifications complémentaires de pagination et Chess960, 95 contrôles avec Stockfish réel. La suite desktop analyse une copie comprenant deux branches pendant que l’étude est modifiée et vérifie que cette dernière reste intacte. `T64_ANALYSIS_SCREENSHOT` permet une capture du dialogue rempli pendant ce scénario. Les scores non numériques, les types inconnus et les WDL invalides sont rejetés ; les mats sont distincts des centipions.
 
 Régression Qt 6.4 : redimensionner à 960 × 720 après l’arrêt d’une comparaison de moteurs, puis ouvrir le dialogue peuplé. Les Repeater de résultats de comparaison ne résident plus directement dans un layout retenant des éléments supprimés. 404 vérifications desktop passent, capture incluse. Les sorties visant un verrou ou un journal de la base sont refusées même lorsque celle-ci est ouverte via un lien symbolique.
+
+## Répertoires et publication sans archives — lot du 15 octobre
+
+`repertoire_tests` vérifie l’annulation des créations/fusions/exports, l’atomicité d’un fichier multi-parties interrompu ou invalide, les limites 16 Mio/200 parties, la progression monotone, la conservation des notes/révisions et la libération du handler SQLite après interruption.
+
+`desktop_tests` attend les résultats asynchrones, vérifie la réactivité pendant un véritable import avant annulation, la conservation du fichier exporté, le refus d’écrire sur la base ouverte et les résultats périmés après changement de bibliothèque. Avec `T64_STOCKFISH`, il analyse réellement une copie de répertoire et vérifie l’étude/révisions conservées. `T64_REPERTOIRE_SCREENSHOT` permet de capturer le dialogue à 960 × 640.
+
+```sh
+python3 -m unittest discover -s tests -p 'test_publish_release.py' -v
+python3 -m unittest discover -s tests -p 'test_cleanup_actions.py' -v
+bash -n packaging/ci-linux.sh
+```
+
+13 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Les échanges GitHub y utilisent un double de test ; la vraie CI doit encore valider la création des paquets et la publication réelle. Voir WORK-IN-PROGRESS pour l’état courant de cette validation.

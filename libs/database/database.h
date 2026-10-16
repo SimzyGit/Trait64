@@ -9,6 +9,7 @@
 #include <memory>
 
 namespace t64 {
+using RepertoireProgress = std::function<bool(qint64)>;
 struct ImportProgress {
     qint64 job = 0, bytes = 0, total = 0, processed = 0, added = 0, committed = 0, committedBytes = 0;
     bool verifying = true;
@@ -43,18 +44,22 @@ class Database {
                             const QString &cacheKey = {}, bool cached = false);
     QVariantList cachedAnalysis(const QString &key) const;
     void clearAnalysisCache();
-    qint64 createRepertoire(const QString &name, bool white, const Game &root);
+    qint64 createRepertoire(const QString &name, bool white, const Game &root,
+                            const RepertoireProgress &progress = {}, qint64 model = 0);
     QVariantList repertoires() const;
     QVariantMap repertoire(qint64 id) const;
     void renameRepertoire(qint64 id, const QString &name);
     void deleteRepertoire(qint64 id);
-    void addToRepertoire(qint64 id, const Game &game, qint64 model = 0);
+    void addToRepertoire(qint64 id, const Game &game, qint64 model = 0,
+                         const RepertoireProgress &progress = {});
+    int importRepertoireFile(qint64 id, const QString &path, const RepertoireProgress &progress = {});
+    QVariantMap repertoireOverview(qint64 id, const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void importRepertoire(qint64 id, const std::vector<Game> &games);
     QVariantList repertoireMoves(qint64 id, const QString &fen) const;
     void editRepertoireMove(qint64 id, const QString &fen, const QString &uci, const QString &note,
                             bool principal);
     void removeRepertoireMove(qint64 id, const QString &fen, const QString &uci);
-    Game exportRepertoire(qint64 id) const;
+    Game exportRepertoire(qint64 id, const RepertoireProgress &progress = {}) const;
     QVariantMap nextRepertoirePosition(qint64 id, bool includeFuture = false) const;
     void reviewRepertoire(qint64 id, const QString &fen, bool success);
     QVariantList repertoireWeaknesses(qint64 id) const;

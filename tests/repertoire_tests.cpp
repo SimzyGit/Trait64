@@ -2,6 +2,7 @@
 #include "database.h"
 #include <QCoreApplication>
 #include <QDate>
+#include <QFile>
 #include <QTemporaryDir>
 #include <iostream>
 #include <stdexcept>
@@ -114,6 +115,64 @@ int main(int argc, char **argv) {
         check(gaps.size() == 1 && gaps.first().toMap()["uci"] == "c7c5" &&
                   gaps.first().toMap()["count"].toInt() == 1,
               "Coverage identifies an actual missing opponent reply in local reference games");
+        const auto beforeCancel = db.exportRepertoire(id).pgn();
+        const auto reviewsBefore = db.repertoireWeaknesses(id);
+        int calls = 0;
+        rejects([&] { db.addToRepertoire(id, extension, 0, [&](qint64) { return ++calls < 4; }); });
+        check(db.exportRepertoire(id).pgn() == beforeCancel && db.repertoireWeaknesses(id) == reviewsBefore,
+              "Canceled merge preserves existing moves, annotations and reviews");
+        const auto countBefore = db.repertoires().size();
+        rejects([&] { db.createRepertoire("Canceled", true, a, [](qint64 n) { return n < 2; }); });
+        check(db.repertoires().size() == countBefore, "Canceled creation leaves no empty repertoire");
+        rejects([&] { db.exportRepertoire(id, [](qint64 n) { return n < 2; }); });
+        check(db.exportRepertoire(id).pgn() == beforeCancel, "Canceled export releases its snapshot");
+        const auto overview = db.repertoireOverview(noOrphans);
+        check(overview["detail"].toMap()["gaps"] == gaps && overview["detail"].toMap()["gapsLoaded"].toBool(),
+              "Overview returns coherent coverage and counts");
+        const auto canceled = std::make_shared<std::atomic_bool>(true);
+        rejects([&] { db.repertoireOverview(id, canceled); });
+        canceled->store(false);
+        check(db.repertoireOverview(id, canceled)["detail"].toMap()["id"].toLongLong() == id,
+              "Canceled overview releases SQL handler and transaction");
+        const auto inputPath = dir.filePath("import.pgn");
+        auto writeInput = [&](const QByteArray &bytes) {
+            QFile file(inputPath);
+            check(file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size(), "Write PGN fixture");
+        };
+        writeInput("1.d4 d5 *\n1.e4 e5 *\n");
+        rejects([&] { db.importRepertoireFile(id, inputPath, [](qint64 n) { return n < 4; }); });
+        check(db.exportRepertoire(id).pgn() == beforeCancel,
+              "Cancellation during a later record rolls back every imported record");
+        writeInput("1.d4 d5 *\n1.e4 invalid *\n");
+        rejects([&] { db.importRepertoireFile(id, inputPath); });
+        check(db.exportRepertoire(id).pgn() == beforeCancel, "Invalid later record rolls back entire file");
+        writeInput(QByteArray("1.d4 d5 *\n").repeated(201));
+        rejects([&] { db.importRepertoireFile(id, inputPath); });
+        check(db.exportRepertoire(id).pgn() == beforeCancel, "Game count limit cannot leave partial imports");
+        writeInput(QByteArray(16 * 1024 * 1024 + 1, ' '));
+        rejects([&] { db.importRepertoireFile(id, inputPath); });
+        writeInput("1.d4 {Imported note} d5 *\n1.e4 e5 *\n");
+        qint64 progress = 0;
+        bool monotonic = true;
+        check(db.importRepertoireFile(id, inputPath,
+                                      [&](qint64 n) {
+                                          monotonic &= n >= progress;
+                                          progress = n;
+                                          return true;
+                                      }) == 2 &&
+                  progress == 6 && monotonic,
+              "Streaming import reports monotonically increasing positions across records");
+        check(db.exportRepertoire(id).pgn().find("Imported note") != std::string::npos &&
+                  db.repertoireWeaknesses(id) == reviewsBefore,
+              "Successful streaming import preserves annotations and training history");
+        calls = 0;
+        rejects([&] {
+            t64::parsePgn("1.e4 e5 2.Nf3 Nc6 *", 1, [&] {
+                if (++calls == 5)
+                    throw std::runtime_error("Canceled parsing");
+            });
+        });
+        check(calls == 5, "PGN parser permits cancellation within a record");
         db.deleteRepertoire(copy);
         db.deleteRepertoire(id);
         check(db.repertoireMoves(id, fen(a, 0)).empty() && db.repertoireWeaknesses(id).empty() &&
