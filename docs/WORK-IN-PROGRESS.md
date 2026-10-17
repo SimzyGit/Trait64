@@ -21,9 +21,17 @@ Les 11 suites sont validées localement, dont Stockfish réel et interaction QML
 2 553 contrôles du cœur. Deux exécutables restaurés avaient perdu leur bit
 exécutable : permissions corrigées, puis suites concernées repassées. Le test
 d’interaction final passe en 17,31 s ; capture à 960 × 640 inspectée sans alerte.
-Aucune migration. Intégration/publication du nouveau lot à vérifier dans GitHub
-Actions avant d’annoncer une nouvelle version disponible. Dev.42 reste la version
-publiée confirmée ci-dessous. Guide : MOVE-EXPLANATIONS.md.
+Aucune migration. Code intégré au commit `3a6f5d4fbdeee87d466fe31fa034eb5f3fb05d55`,
+publié dans **[v0.3.0-dev.43](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43)**
+le 16 octobre à 17:45 UTC. La [CI 38940592180](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38940592180)
+réussit : **11/11 Debian 12 (49,00 s), 11/11 Debian 13 (60,91 s)**, deux DEB
+installés/démarrés, AppImage démarrée, cœur ASan/UBSan (14,23 s), 17 tests du
+publieur et 9 de nettoyage. Les cinq fichiers publiés correspondent exactement
+au manifeste (noms, tailles, SHA-256), le tag pointe sur le commit testé et aucune
+archive Actions n’a été créée. Le sélecteur de mises à jour réel propose les
+trois paquets sur Développement ; Stable/Bêta, version ignorée, identique et
+rétrogradation restent exclus. Aucun essai sur le PC Voyager n’est revendiqué.
+Mesures : `verification-explanations-2026-10-16.json`. Guide : MOVE-EXPLANATIONS.md.
 
 ## Code du lot
 
@@ -43,7 +51,7 @@ publiée confirmée ci-dessous. Guide : MOVE-EXPLANATIONS.md.
 
 ## Publication et stockage
 
-Version distribuée : **[v0.3.0-dev.42](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42)**, publiée le 16 octobre. [L’exécution 42](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628) est réussie sur le commit `fc941c17c53d6c5aa639433c6563f73469971ae9`, également cible du tag. **11/11 suites sur Debian 12 en 47,44 s et Debian 13 en 58,41 s**, deux DEB installés/démarrés, AppImage démarrée et sources correspondantes distribuées. Les cinq fichiers distants ont exactement les noms, tailles et SHA-256 du manifeste validé sur le runner. **Zéro archive Actions** pour cette exécution.
+Publication précédente : **[v0.3.0-dev.42](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42)**, publiée le 16 octobre. [L’exécution 42](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628) est réussie sur le commit `fc941c17c53d6c5aa639433c6563f73469971ae9`, également cible du tag. **11/11 suites sur Debian 12 en 47,44 s et Debian 13 en 58,41 s**, deux DEB installés/démarrés, AppImage démarrée et sources correspondantes distribuées. Les cinq fichiers distants ont exactement les noms, tailles et SHA-256 du manifeste validé sur le runner. **Zéro archive Actions** pour cette exécution.
 
 Le correctif du publieur utilise la réponse REST de création, des lectures/publication par identifiant exact et une attente bornée avant la résolution du tag par `gh release upload`. **17 tests de publication, 9 tests de nettoyage et le cœur ASan/UBSan réussissent dans cette CI.** Le code réel `selectRelease` a relu les métadonnées publiées : AppImage, Debian 12 et Debian 13 sont proposés depuis dev.33 sur Développement, exclus de Stable/Bêta, et une version ignorée, identique ou antérieure n’est pas proposée. Cela ne remplace pas un essai d’installation sur le PC Voyager.
 
@@ -53,7 +61,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Valider la CI et la publication du lot explications. Puis motifs tactiques vérifiables, corpus tactique sous licence ouverte et progression par thème ; ne pas inventer d’équivalences ni de niveau Elo.
+1. Motifs tactiques vérifiables dans les explications, puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

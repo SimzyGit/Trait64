@@ -145,4 +145,13 @@ Les 11 suites locales sont couvertes : 9 passent dans la passe complète ; deux
 exécutables générés restaurés sans permission d’exécution sont remis exécutables,
 puis `content` et `pgn_benchmark_safety` passent séparément. Le test du clic réel
 est ensuite reconstruit et repasse en 17,31 s. Il ne s’agit pas d’une installation
-sur le PC Voyager. La validation des paquets propres Debian reste à suivre en CI.
+sur le PC Voyager.
+
+La [CI 38940592180](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38940592180)
+a ensuite validé le commit `3a6f5d4` : **11/11 Debian 12 en 49,00 s**, **11/11
+Debian 13 en 60,91 s**, deux DEB installés/démarrés, AppImage démarrée, cœur
+ASan/UBSan (14,23 s), 17 tests de publication et 9 de nettoyage. **dev.43 est
+publiée**, ses cinq fichiers correspondent au manifeste en noms/tailles/SHA-256
+et le tag pointe sur le commit testé. Zéro archive Actions. Le sélecteur réel de
+mises à jour a relu ses métadonnées pour les trois paquets et les exclusions de
+canal/version. Détails : `verification-explanations-2026-10-16.json`.

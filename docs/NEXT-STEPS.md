@@ -1,6 +1,6 @@
-# Reprise du développement — 16 octobre 2026
+# Reprise du développement — 17 octobre 2026
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. La version distribuée est [v0.3.0-dev.42](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42), vérifiée sans archive Actions. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. La version distribuée est [v0.3.0-dev.43](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43), vérifiée sans archive Actions. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 ## État à conserver
 

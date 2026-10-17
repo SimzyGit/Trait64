@@ -61,3 +61,22 @@ Le schéma 7 conserve les copies PGN, les paramètres et identités UCI, les ré
 `libs/database/cancellation.h` réutilise le progress handler SQLite pour la recherche et la couverture. Le handler est désinstallé avant le rollback. Les imports de répertoire lisent au maximum 16 Mio, parsant un record à la fois dans une transaction unique ; le parseur accepte un point d’annulation. L’export prend un instantané SQLite et l’écrit avec QSaveFile. Les modèles/notes/révisions restent dans le schéma 7.
 
 `packaging/ci-linux.sh` est exécuté dans deux conteneurs Debian indépendants, partageant seulement les sources en lecture seule et les paquets produits. `scripts/publish-release.py` contrôle les fichiers locaux puis les assets GitHub avant publication du brouillon. Le jeton n’est disponible que dans cette étape, jamais dans les conteneurs. Aucun artefact Actions intermédiaire n’est créé. Les versions stables demandent un tag ou une action manuelle ; les commits ordinaires restent dans le canal développement.
+
+## Explications des suites du bilan
+
+`libs/core/explanation.*` rejoue une liste UCI sur une copie de l’échiquier. Les
+coups sont recherchés parmi les coups légaux avant toute mutation ; une erreur
+rejette la ligne entière. Le résultat contient des faits par demi-coup et un
+compte matériel conventionnel, sans estimation de qualité ni motifs tactiques
+supposés. L’API du cœur refuse plus de 128 demi-coups.
+
+Les lignes du bilan conservent le coup joué, les variantes moteur avant/après,
+la FEN de départ, la variante, le moteur, le budget et les profondeurs. Le dialogue
+calcule les faits à la demande, uniquement lorsqu’il est visible ; il ne stocke
+pas toutes les positions développées de tous les coups. Une ligne dépassant la
+limite est tronquée explicitement dans cette vue.
+
+`openReviewLine` réutilise `replaceGame` pour ouvrir une étude annotée dans un
+nouvel onglet. Le bilan d’origine reste associé à son étude. La copie part de la
+FEN et ne prétend pas reproduire les répétitions précédentes. Aucun schéma SQL
+ne change ; la file d’analyses persistante reste indépendante du bilan immédiat.
