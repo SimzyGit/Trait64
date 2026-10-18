@@ -1,3 +1,12 @@
+## Motifs tactiques et repères sur l’échiquier
+
+- Fourchettes/attaques multiples, clouages au roi, enfilades du roi, échecs à la découverte et doubles échecs détectés dans les suites légales du bilan.
+- Pièces et cases explicites ; captures qui exposeraient le roi de l’attaquant exclues des cibles de fourchette. Un motif observé n’est pas présenté comme un gain forcé.
+- Copie d’étude annotée : flèches vertes pour les attaques, marques jaunes pour les alignements, conservation dans le PGN exporté et étude d’origine préservée.
+- Tests des faux positifs, sous-promotions, prise en passant, Chess960 et comparaison au générateur de coups légaux. Aucun changement de schéma.
+
+Guide : `docs/TACTICAL-MOTIFS.md`. Les attaques à la découverte sans échec, plans stratégiques et sacrifices justifiés restent à développer.
+
 ## Comprendre les coups du bilan
 
 - Deux suites consultables pour chaque coup analysé : coup joué suivi de la réponse moteur, et proposition moteur avant le coup.

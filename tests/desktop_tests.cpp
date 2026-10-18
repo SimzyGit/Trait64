@@ -303,6 +303,80 @@ int main(int argc, char **argv) {
                 check(c.state()["fen"] == beforeExplanation["fen"] && c.review() == reviewBeforeExplanation,
                       "Returning to original study preserves position and review results");
                 c.closeTab(originalTabs);
+                // The first played move is known, independent of Stockfish's chosen reply.
+                const QStringList motifFens{
+                    "4k3/5q2/8/8/2N5/8/8/4K3 w - - 0 1",
+                    "4k3/4n3/8/8/8/8/8/K1R5 w - - 0 1"};
+                const QStringList motifMoves{"c4d6", "c1e1"};
+                const QStringList motifLabels{"Fourchette", "Clouage au roi"};
+                const QStringList motifMarks{"[%cal Gd6e8,Gd6f7]", "[%csl Ye1,Ye7,Ye8]"};
+                for (int fixture = 0; fixture < motifFens.size(); ++fixture) {
+                    const int fixtureTab = c.tabs().size();
+                    c.setPosition(motifFens[fixture], false);
+                    c.move(motifMoves[fixture]);
+                    c.setComment("Original tactical study");
+                    const auto fixtureFen = c.state()["fen"];
+                    c.analyseGame(100);
+                    timer.restart();
+                    while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)
+                        QTest::qWait(20);
+                    check(!c.reviewState()["running"].toBool() && c.review().size() == 1,
+                          "Stockfish completes the tactical fixture review");
+                    const auto fixtureReview = c.review();
+                    const auto details = c.explainReview(0, false);
+                    const auto steps = details["steps"].toList();
+                    check(details["available"].toBool() && !steps.empty(), "Tactical explanation available");
+                    const auto first = steps.first().toMap();
+                    check(first["facts"].toString().contains(motifLabels[fixture]) &&
+                              first["facts"].toString().contains("aucun gain matériel forcé") &&
+                              first["marks"].toString() == motifMarks[fixture],
+                          "Played tactical move has exact marks and cautious explanation");
+                    window->resize(960, 640);
+                    QMetaObject::invokeMethod(reviewDialog, "open");
+                    QMetaObject::invokeMethod(reviewDialog, "explain", Q_ARG(QVariant, 0));
+                    QTest::qWait(100);
+                    if (fixture == 0 && qEnvironmentVariableIsSet("T64_TACTICS_SCREENSHOT"))
+                        check(window->grabWindow().save(qEnvironmentVariable("T64_TACTICS_SCREENSHOT")),
+                              "Small-screen tactical explanation screenshot saved");
+                    check(openLine->isVisible() && openLine->isEnabled(), "Tactical copy button accessible at 960x640");
+                    const int copyTab = c.tabs().size();
+                    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+                                      openLine->mapToScene(QPointF(openLine->width()/2, openLine->height()/2)).toPoint());
+                    QTest::qWait(80);
+                    check(c.tabs().size() == copyTab + 1 && !explanationDialog->property("visible").toBool(),
+                          "Real click creates tactical copy");
+                    c.navigate(1);
+                    const auto marks = c.state()["arrows"].toList();
+                    check(c.state()["comment"].toString().contains(motifLabels[fixture]) &&
+                              c.state()["comment"].toString().contains(motifMarks[fixture]) &&
+                              marks.size() == (fixture == 0 ? 2 : 3),
+                          "Copy displays tactical text and parsed board marks");
+                    for (const auto &mark : marks) {
+                        const auto m = mark.toMap();
+                        check(fixture == 0 ? m["color"] == "G" && m["from"] == "d6" &&
+                                                (m["to"] == "e8" || m["to"] == "f7")
+                                           : m["color"] == "Y" && m["from"] == m["to"],
+                              "Attacks are arrows and pin alignments are square marks");
+                    }
+                    QTest::qWait(50);
+                    if (fixture == 0 && qEnvironmentVariableIsSet("T64_TACTICS_BOARD_SCREENSHOT"))
+                        check(window->grabWindow().save(qEnvironmentVariable("T64_TACTICS_BOARD_SCREENSHOT")),
+                              "Tactical board screenshot saved");
+                    const auto exportPath = dir.path() + "/tactical-" + QString::number(fixture) + ".pgn";
+                    c.exportFile(exportPath);
+                    QFile exported(exportPath);
+                    check(exported.open(QIODevice::ReadOnly), "Tactical copy exported");
+                    const auto restored = t64::parsePgn(exported.readAll().toStdString());
+                    check(restored.size() == 1 && restored[0].nodes[1].comment.find(motifMarks[fixture].toStdString()) != std::string::npos,
+                          "Exported tactical copy retains graphical annotations");
+                    c.switchTab(fixtureTab);
+                    check(c.state()["fen"] == fixtureFen && c.review() == fixtureReview &&
+                              c.state()["comment"] == "Original tactical study" && c.state()["arrows"].toList().empty(),
+                          "Original tactical study and its review remain untouched");
+                    c.closeTab(copyTab);
+                    c.switchTab(originalTab);
+                    c.closeTab(fixtureTab);
+                }
                 window->resize(1440, 940);
                 c.annotateReview();
                 check(c.state()["comment"].toString().contains("[%eval"),
