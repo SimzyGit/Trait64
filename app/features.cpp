@@ -682,11 +682,31 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 events << "Échec au roi adverse.";
             else if (move.stalemate)
                 events << "Pat : aucun coup légal, sans échec.";
+            for (const auto &tactic : move.tactics) {
+                QStringList attackers, targets;
+                for (const auto &piece : tactic.attackers)
+                    attackers << names[int(piece.type)] + " " + qs(piece.square);
+                for (const auto &piece : tactic.targets)
+                    targets << names[int(piece.type)] + " " + qs(piece.square);
+                QString label;
+                switch (tactic.kind) {
+                case t64::TacticalKind::Fork: label = "Fourchette / attaque multiple"; break;
+                case t64::TacticalKind::AbsolutePin: label = "Clouage au roi (déplacement limité à cet alignement)"; break;
+                case t64::TacticalKind::KingSkewer: label = "Enfilade du roi"; break;
+                case t64::TacticalKind::DiscoveredCheck: label = "Échec à la découverte"; break;
+                case t64::TacticalKind::DoubleCheck: label = "Échec double"; break;
+                }
+                events << QString("%1 : %2 → %3.").arg(label, attackers.join(", "), targets.join(", "));
+            }
+            if (!move.tactics.empty())
+                events << "Motifs observés ; aucun gain matériel forcé n’est démontré.";
             if (events.empty())
                 events << "Le matériel ne change pas.";
             steps << QVariantMap{{"uci", qs(move.uci)}, {"san", qs(move.san)}, {"fen", qs(move.fen)},
                                   {"side", move.white ? "Blancs" : "Noirs"},
-                                  {"facts", events.join(' ')}, {"material", move.material}};
+                                  {"facts", events.join(' ')}, {"material", move.material},
+                                  {"marks", qs(t64::tacticalAnnotations(move.tactics))},
+                                  {"motifCount", int(move.tactics.size())}};
         }
         return {{"available", true}, {"steps", steps}, {"uci", line.join(' ')},
                 {"fen", row["fen"]}, {"variant960", row["variant960"]},
@@ -716,7 +736,7 @@ bool Controller::openReviewLine(int index, bool alternative) {
         for (const auto &value : details["steps"].toList()) {
             const auto step = value.toMap();
             node = copy.play(node, step["uci"].toString().toStdString());
-            copy.nodes[node].comment = step["facts"].toString().toStdString();
+            copy.nodes[node].comment = (step["facts"].toString() + " " + step["marks"].toString()).trimmed().toStdString();
         }
         replaceGame(std::move(copy));
         return true;

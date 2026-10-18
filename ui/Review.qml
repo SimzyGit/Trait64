@@ -71,7 +71,7 @@ Dialog {
                     Label {width:parent.width;text:modelData.facts;wrapMode:Text.WordWrap}
                 }
             }
-            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:11;text:"Chaque coup de la suite affichée est légal. Les faits décrivent cette suite du moteur, qui peut évoluer avec une analyse plus longue. La copie repart du diagramme ; les répétitions antérieures ne sont pas reproduites."+(explanation.details.truncated?" Suite limitée aux 128 premiers demi-coups.":"")}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:11;text:"Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites."+(explanation.details.truncated?" Suite limitée aux 128 premiers demi-coups.":"")}
             TButton {objectName:"openReviewLineButton";text:"Ouvrir la suite dans une nouvelle étude";enabled:explanation.details.available&&!root.backend.reviewState.running;onClicked:{if(root.backend.openReviewLine(explanation.rowIndex,choice.currentIndex===1)){explanation.close();root.close()}}}
         }
     }

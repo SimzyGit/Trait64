@@ -21,8 +21,10 @@ template <class F> void rejects(F f) {
     }
     check(failed, "Invalid input accepted");
 }
+#include "tactics_cases.h"
 int main() {
     try {
+        tacticalChecks();
         const chess::Board initial;
         const auto exchange = t64::explainLine(initial, {"e2e4", "d7d5", "e4d5", "d8d5"});
         check(exchange.initialMaterial == 0 && exchange.moves.back().material == 0,
