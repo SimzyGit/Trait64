@@ -40,7 +40,9 @@ LineFacts explainLine(chess::Board board, const std::vector<std::string> &moves)
             fact.captureSquare = std::string(fact.enPassant ? move.to().ep_square() : move.to());
         if (move.typeOf() == chess::Move::PROMOTION)
             fact.promotion = move.promotionType();
+        const auto before = board;
         board.makeMove(move);
+        fact.tactics = explainTactics(before, board);
         fact.fen = board.getFen();
         fact.material = material(board);
         fact.check = board.inCheck();

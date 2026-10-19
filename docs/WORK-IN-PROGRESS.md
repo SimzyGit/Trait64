@@ -1,6 +1,20 @@
-# Point de reprise — explications du bilan, 16 octobre 2026
+# Point de reprise — motifs tactiques, 18 octobre 2026
 
 Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23, Qt6/QML et SQLite ; fonctions locales hors ligne, esthétique en pause, aucun bouton factice ni Elo inventé.
+
+## Lot actif — PR #8
+
+La branche `feat/tactical-explanations` sauvegarde le lot reconstitué au commit
+`9b4567e252bb6884eb21fab7e11ffc75d5e4a24b`, basé sur `ef383aa`.
+[PR #8](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/8) : motifs
+vérifiables, commentaires pédagogiques et repères PGN dans la copie d’étude.
+Checkout isolé : `Trait64-tactics`. Le contenu a été récupéré depuis les objets
+GitHub et comparé aux empreintes de l’arbre ; les anciens checkouts sont conservés.
+
+Le cœur reconstitué a réussi 3 258 contrôles. Les vérifications complètes, les
+interactions avec Stockfish, la CI Debian 12/13 et la publication sont à terminer.
+Ne pas confondre cet état avec les validations de dev.43 ci-dessous. Le schéma
+reste 7. Guide et limites : [TACTICAL-MOTIFS.md](TACTICAL-MOTIFS.md).
 
 ## État faisant autorité
 
@@ -61,7 +75,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Motifs tactiques vérifiables dans les explications, puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
+1. Terminer les tests et la publication de la PR #8 (motifs tactiques et repères PGN). Puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

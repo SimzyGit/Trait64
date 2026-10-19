@@ -28,8 +28,9 @@ Le bilan immédiat propose « Comprendre ce coup » : coup joué et réponse mot
 proposition moteur avant le coup, faits de captures/promotions/échecs/mats/pats,
 compte matériel conventionnel et ouverture d’une copie navigable. Les lignes
 sont légalement rejouées, avec moteur/budget/profondeur visibles. Ce premier lot
-ne clôt pas les objectifs complets de la section B : motifs tactiques, plans,
-réfutations démontrées et équivalences restent ouverts. Guide : [MOVE-EXPLANATIONS.md](MOVE-EXPLANATIONS.md).
+est complété par les motifs tactiques de la PR #8 : fourchettes, clouages au roi,
+enfilades du roi, échecs à la découverte et doubles échecs, avec repères PGN.
+Les plans, réfutations démontrées et équivalences restent ouverts. Guide : [MOVE-EXPLANATIONS.md](MOVE-EXPLANATIONS.md).
 
 ## Lot répertoires — 15 octobre 2026
 
@@ -85,14 +86,14 @@ Créer un véritable système d'explication échiquéenne inspiré des meilleurs
 
 Fonctionnalités :
 
-- [ ] Bouton « Pourquoi ce coup ? ».
+- [x] Bouton « Comprendre ce coup » dans le bilan.
 - [ ] Réfutations visuelles des erreurs.
-- [ ] Affichage des alternatives pertinentes.
-- [ ] Détection des gains et pertes de matériel.
-- [ ] Détection des fourchettes.
-- [ ] Détection des clouages.
-- [ ] Détection des enfilades.
-- [ ] Détection des attaques à la découverte.
+- [x] Affichage de la variante moteur avant le coup et de sa réponse au coup joué.
+- [x] Faits de captures/promotions et variation du compte matériel dans la suite ; gain forcé non déduit.
+- [x] Détection des fourchettes/attaques multiples dans les suites du bilan (captures laissant le roi en sécurité, sans gain forcé revendiqué).
+- [x] Détection des clouages absolus au roi (les clouages relatifs restent à développer).
+- [x] Détection des enfilades du roi (autres enfilades à développer).
+- [ ] Détection des attaques à la découverte : échecs à la découverte et doubles échecs implémentés ; attaques sans échec à développer.
 - [ ] Détection des déviations et surcharges.
 - [ ] Détection des sacrifices tactiques justifiés.
 - [ ] Reconnaissance des menaces de mat.

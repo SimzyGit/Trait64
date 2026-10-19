@@ -32,7 +32,10 @@ bilan restent dans leur onglet. La copie commence à la FEN avant le coup : les
 répétitions antérieures ne sont pas reproduites. Le roque Chess960 conserve sa
 variante et n’est jamais décrit comme la capture de sa propre tour.
 
-Ce premier lot explique des événements concrets dans les variantes du bilan.
-La détection des fourchettes, clouages, enfilades, sacrifices justifiés, plans
-stratégiques et équivalences tactiques reste à développer. La file d’analyses
-persistante conserve son fonctionnement ; ce dialogue utilise le bilan immédiat.
+Les nouveaux motifs tactiques sont également décrits : attaques multiples,
+clouages au roi, enfilades du roi, échecs à la découverte et doubles échecs.
+La copie contient des flèches vertes pour les attaques et des marques jaunes
+pour les alignements. Voir [TACTICAL-MOTIFS.md](TACTICAL-MOTIFS.md) pour la portée
+et les limites. Les sacrifices justifiés, plans stratégiques et équivalences
+restent à développer. La file d’analyses persistante conserve son fonctionnement ;
+ce dialogue utilise le bilan immédiat.
