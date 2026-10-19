@@ -19,9 +19,14 @@ sur deux cas tactiques, export PGN et étude d’origine conservés ; contrôle 
 réussit : 11/11 Debian 12 (49,37 s), 11/11 Debian 13 (60,14 s), deux DEB
 installés/démarrés, AppImage, cœur ASan/UBSan et manifeste des cinq fichiers.
 
-Publication **dev.46 en cours**, [exécution 39206008438](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39206008438).
-Dev.43 reste la dernière version publiée vérifiée. Ne pas annoncer dev.46
-disponible avant contrôle du tag, des fichiers et du sélecteur de mise à jour.
+**[dev.46 publiée et vérifiée](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46)**
+le 19 octobre à 05:56 UTC. [Exécution 39206008438](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39206008438)
+réussie : 11/11 Debian 12 (50,19 s), 11/11 Debian 13 (60,78 s), paquets installés,
+AppImage et contrôles mémoire. Le tag vise `1c86d53` ; les cinq fichiers ont les
+noms, tailles et SHA-256 exacts du manifeste. Aucune archive Actions créée.
+Le sélecteur de mises à jour compilé depuis le code réel reconnaît AppImage,
+Debian 12/13 sur Développement ; Stable/Bêta, version ignorée, identique et
+rétrogradation sont exclus. Aucun essai sur le PC Voyager n’est revendiqué.
 Rapport : `verification-tactics-2026-10-19.json`.
 
 Les fichiers du lot sont sur GitHub. Si le checkout isolé `Trait64-tactics`
@@ -88,7 +93,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Vérifier la publication dev.46 du lot tactique intégré. Puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
+1. Lot tactique publié et vérifié dans dev.46. Poursuivre avec un corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

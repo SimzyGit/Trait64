@@ -39,3 +39,5 @@ Lot testé `ced2428`, intégré par la PR #8 au commit `1c86d53`. Les 11 suites
 locales et Debian 12/13 passent, ainsi que le cœur ASan/UBSan et les paquets.
 Le contrôle visuel à 960 × 640 confirme les repères et l’accès au bouton de copie.
 Détails : `verification-tactics-2026-10-19.json`. Aucun changement de schéma.
+
+Disponible dans [Trait64 0.3.0-dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46), canal Développement.

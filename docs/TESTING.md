@@ -167,5 +167,9 @@ export/relecture PGN et étude d’origine intacte. Dialogue et échiquier inspe
 CI [39127471728](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728) :
 11/11 Debian 12 en 49,37 s, 11/11 Debian 13 en 60,14 s ; paquets installés,
 AppImage, cœur ASan/UBSan, 17 tests de publication et 9 de nettoyage réussis.
-La publication dev.46 est suivie séparément dans WORK-IN-PROGRESS.md et
+Publication dev.46 confirmée par la CI 39206008438 : 11/11 Debian 12 en 50,19 s,
+11/11 Debian 13 en 60,78 s, paquets installés et AppImage. Tag, noms/tailles/SHA-256
+des cinq fichiers et sélection des trois paquets depuis les métadonnées réelles
+vérifiés ; aucune archive Actions. Les canaux Stable/Bêta sont exclus, ainsi que
+les versions ignorées, identiques ou plus anciennes. Rapport :
 `verification-tactics-2026-10-19.json`. Aucun essai sur le PC Voyager.
