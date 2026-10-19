@@ -29,11 +29,13 @@ Chess960 sont traités après application du coup légal. La suite reste limité
 Les sacrifices justifiés, plans stratégiques, défenses forcées et équivalences
 tactiques restent à développer. Aucun niveau Elo n’est déduit.
 
-## Reprise du 17 octobre 2026
+## Validation du 19 octobre 2026
 
 Base : `ef383aa8aec45e771fcf31d70e065066ace300b3` (dev.43 vérifiée).
 Checkout isolé : `Trait64-tactics`, sans modification de l’ancien dossier.
 Fichiers du lot : `libs/core/tactics.*`, `explanation.*`, `app/features.cpp`,
 `ui/Review.qml`, `tests/tactics_cases.h`, `tests/core_tests.cpp` et CMake.
-Validation du lot reconstitué en cours ; les anciens comptes de tests ne sont
-pas utilisés comme preuve pour ce nouvel arbre. Aucun changement de schéma.
+Lot testé `ced2428`, intégré par la PR #8 au commit `1c86d53`. Les 11 suites
+locales et Debian 12/13 passent, ainsi que le cœur ASan/UBSan et les paquets.
+Le contrôle visuel à 960 × 640 confirme les repères et l’accès au bouton de copie.
+Détails : `verification-tactics-2026-10-19.json`. Aucun changement de schéma.

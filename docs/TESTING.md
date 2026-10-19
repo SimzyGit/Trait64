@@ -155,3 +155,17 @@ publiée**, ses cinq fichiers correspondent au manifeste en noms/tailles/SHA-256
 et le tag pointe sur le commit testé. Zéro archive Actions. Le sélecteur réel de
 mises à jour a relu ses métadonnées pour les trois paquets et les exclusions de
 canal/version. Détails : `verification-explanations-2026-10-16.json`.
+
+## Motifs tactiques — validation du 19 octobre 2026
+
+Commit `ced2428`, fusion `1c86d53` (arbre identique). Local : 3 258 contrôles du
+cœur, 11 suites avec Stockfish réel, 666 contrôles de l’interface avec deux
+captures optionnelles. Fourchette et clouage testés par clic, repères exacts,
+export/relecture PGN et étude d’origine intacte. Dialogue et échiquier inspectés
+à 960 × 640. Compilation sans avertissement relevé.
+
+CI [39127471728](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728) :
+11/11 Debian 12 en 49,37 s, 11/11 Debian 13 en 60,14 s ; paquets installés,
+AppImage, cœur ASan/UBSan, 17 tests de publication et 9 de nettoyage réussis.
+La publication dev.46 est suivie séparément dans WORK-IN-PROGRESS.md et
+`verification-tactics-2026-10-19.json`. Aucun essai sur le PC Voyager.

@@ -1,20 +1,33 @@
-# Point de reprise — motifs tactiques, 18 octobre 2026
+# Point de reprise — motifs tactiques, 19 octobre 2026
 
 Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23, Qt6/QML et SQLite ; fonctions locales hors ligne, esthétique en pause, aucun bouton factice ni Elo inventé.
 
-## Lot actif — PR #8
+## Lot tactique intégré — PR #8
 
-La branche `feat/tactical-explanations` sauvegarde le lot reconstitué au commit
-`9b4567e252bb6884eb21fab7e11ffc75d5e4a24b`, basé sur `ef383aa`.
-[PR #8](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/8) : motifs
-vérifiables, commentaires pédagogiques et repères PGN dans la copie d’étude.
-Checkout isolé : `Trait64-tactics`. Le contenu a été récupéré depuis les objets
-GitHub et comparé aux empreintes de l’arbre ; les anciens checkouts sont conservés.
+La [PR #8](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/8) est fusionnée
+au commit `1c86d538dba4b0c65020efcd1f0dff99bc329031`. Son arbre est identique au
+commit testé `ced24282a2b27bb68b914e315775407d228d6c1f`.
 
-Le cœur reconstitué a réussi 3 258 contrôles. Les vérifications complètes, les
-interactions avec Stockfish, la CI Debian 12/13 et la publication sont à terminer.
-Ne pas confondre cet état avec les validations de dev.43 ci-dessous. Le schéma
-reste 7. Guide et limites : [TACTICAL-MOTIFS.md](TACTICAL-MOTIFS.md).
+Implémenté : attaques multiples, clouages au roi, enfilades du roi, échecs à la
+découverte et doubles échecs ; captures exposant le roi exclues des cibles de
+fourchette ; copie annotée avec flèches d’attaque et marques d’alignement PGN.
+Guide : [TACTICAL-MOTIFS.md](TACTICAL-MOTIFS.md). Aucun changement de schéma (7).
+
+Validation locale : 3 258 contrôles du cœur, 11 suites avec Stockfish 16, clics
+sur deux cas tactiques, export PGN et étude d’origine conservés ; contrôle visuel
+à 960 × 640. La [CI de la PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728)
+réussit : 11/11 Debian 12 (49,37 s), 11/11 Debian 13 (60,14 s), deux DEB
+installés/démarrés, AppImage, cœur ASan/UBSan et manifeste des cinq fichiers.
+
+Publication **dev.46 en cours**, [exécution 39206008438](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39206008438).
+Dev.43 reste la dernière version publiée vérifiée. Ne pas annoncer dev.46
+disponible avant contrôle du tag, des fichiers et du sélecteur de mise à jour.
+Rapport : `verification-tactics-2026-10-19.json`.
+
+Les fichiers du lot sont sur GitHub. Si le checkout isolé `Trait64-tactics`
+n’a pas survécu à la restauration de l’environnement, repartir de main ou de la
+branche `feat/tactical-explanations`, sans reconstituer le code depuis le chat.
+Ne pas modifier les anciens checkouts non committés.
 
 ## État faisant autorité
 
@@ -75,7 +88,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Terminer les tests et la publication de la PR #8 (motifs tactiques et repères PGN). Puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
+1. Vérifier la publication dev.46 du lot tactique intégré. Puis corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

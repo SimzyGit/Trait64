@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-19",
+  "code_commit": "ced24282a2b27bb68b914e315775407d228d6c1f",
+  "merge_commit": "1c86d538dba4b0c65020efcd1f0dff99bc329031",
+  "tested_and_merged_tree": "340e7c77661d0384cad1f571c2065ea3e76d7607",
+  "schema": 7,
+  "local": {
+    "compiler": "GCC 13.3",
+    "qt": "6.4.2",
+    "stockfish": "16 (real executable)",
+    "core_checks": 3258,
+    "suites_passed": 11,
+    "suites_total": 11,
+    "ctest_note": "Initial invocation ended after six completed suites without a final summary. Five remaining suites rerun and passed.",
+    "remaining_five_seconds": 52.21,
+    "desktop_seconds": 14.32,
+    "visual_desktop_seconds": 14.34,
+    "visual_desktop_checks": 666,
+    "visual_check_count_note": "Includes two optional screenshot-save checks.",
+    "screen_size": [
+      960,
+      640
+    ],
+    "visual_inspection": "Dialog readable, copy button accessible, two fork arrows visible on board.",
+    "publisher_tests": 17,
+    "cleanup_tests": 9,
+    "compile_warnings": 0
+  },
+  "ci": {
+    "run_id": 39127471728,
+    "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728",
+    "status": "success",
+    "debian12": {
+      "suites_passed": 11,
+      "total": 11,
+      "seconds": 49.37,
+      "installed_deb_smoke": "passed",
+      "appimage_smoke": "passed"
+    },
+    "debian13": {
+      "suites_passed": 11,
+      "total": 11,
+      "seconds": 60.14,
+      "installed_deb_smoke": "passed"
+    },
+    "sanitizers": {
+      "passed": 1,
+      "seconds": 14.56
+    },
+    "package_manifest": "passed",
+    "compile_warnings": 0
+  },
+  "release": {
+    "version": "v0.3.0-dev.46",
+    "run_id": 39206008438,
+    "status": "pending"
+  },
+  "limits": [
+    "Observed patterns do not establish a forced material gain",
+    "Kings excluded as fork attackers",
+    "Only absolute pins and king skewers",
+    "Discovered attacks without check remain unsupported",
+    "No installation test on user Voyager computer"
+  ]
+}
