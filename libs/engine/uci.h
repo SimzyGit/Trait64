@@ -49,6 +49,7 @@ class Uci : public QObject {
     QSet<QString> options_;
     QVariantList descriptors_;
     QVariantMap customOptions_;
+    quint64 generation_ = 0;
     void command(const QString &text);
     void consume();
     void parse(const QString &line);

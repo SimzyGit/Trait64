@@ -898,6 +898,19 @@ int main(int argc, char **argv) {
             check(original.open(QIODevice::ReadOnly) && original.readAll() == "{\"tabs\":[",
                   "Recovery preserves exact unreadable bytes");
         }
+        for (const auto &bytes : QList<QByteArray>{"{}", "{\"tabs\":{}}", "{\"tabs\":[]}"}) {
+            QTemporaryDir recovery;
+            QFile session(recovery.path() + "/session.json");
+            check(session.open(QIODevice::WriteOnly) && session.write(bytes) == bytes.size(),
+                  "Create structurally invalid session fixture");
+            session.close();
+            { Controller recovered(recovery.path()); }
+            const auto originals = QDir(recovery.path()).entryList({"session.json.unreadable-*"}, QDir::Files);
+            check(originals.size() == 1, "Invalid session structure is preserved before replacement");
+            QFile original(recovery.path() + '/' + originals.first());
+            check(original.open(QIODevice::ReadOnly) && original.readAll() == bytes,
+                  "Invalid session structure keeps its exact original bytes");
+        }
         std::cout << checks << " desktop interaction checks passed\n";
         return 0;
     } catch (const std::exception &e) {

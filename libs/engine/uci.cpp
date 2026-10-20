@@ -143,6 +143,7 @@ void Uci::start(const QString &executable, int threads, int hash, int multiPV, i
     process_.start();
 }
 void Uci::shutdown() {
+    ++generation_;
     state_ = Off;
     timeout_.stop();
     pending_ = false;
@@ -168,6 +169,7 @@ void Uci::analyse(const QString &fen, const QString &position, bool play, int mi
         return;
     }
     pending960_ = variant960;
+    ++generation_;
     depth_ = std::clamp(depth, 1, 99);
     pendingFen_ = fen;
     pendingPosition_ = position;
@@ -182,6 +184,7 @@ void Uci::analyse(const QString &fen, const QString &position, bool play, int mi
         beginSearch();
 }
 void Uci::stop() {
+    ++generation_;
     pending_ = false;
     activePlay_ = false;
     if (state_ == Searching) {
@@ -284,16 +287,18 @@ void Uci::parse(const QString &line) {
     if (line.startsWith("bestmove ") && (state_ == Searching || state_ == Stopping)) {
         const bool complete = state_ == Searching && !pending_;
         const bool deliver = complete && activePlay_;
+        const auto generation = generation_;
+        const auto completedFen = activeFen_;
         timeout_.stop();
         state_ = Ready;
         if (complete) {
             QVariantList result;
             for (const auto &v : exactVariations_)
                 result << v;
-            emit completed(activeFen_, result);
+            emit completed(completedFen, result);
         }
-        if (deliver)
-            emit bestMove(line.section(' ', 1, 1), activeFen_);
+        if (deliver && generation == generation_)
+            emit bestMove(line.section(' ', 1, 1), completedFen);
         beginSearch();
         return;
     }

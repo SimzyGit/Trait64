@@ -221,17 +221,30 @@ void Controller::initFeatures() {
     QFile f(sessionPath_);
     if (f.open(QIODevice::ReadOnly) && f.size() <= 64 * 1024 * 1024) {
         try {
-            auto json = QJsonDocument::fromJson(f.readAll()).object();
+            QJsonParseError error;
+            const auto document = QJsonDocument::fromJson(f.readAll(), &error);
+            // The constructor already preserved malformed JSON; do not create a second recovery copy.
+            const auto json = error.error == QJsonParseError::NoError && document.isObject()
+                                  ? document.object() : QJsonObject();
             auto tabs = json["tabs"].toArray();
-            if (!tabs.empty() && tabs.size() <= 16) {
+            if (json.contains("tabs")) {
+                need(json["tabs"].isArray() && !tabs.empty() && tabs.size() <= 16,
+                     "Liste des onglets de session invalide.");
                 std::vector<Study> recovered;
                 for (auto v : tabs) {
                     auto tab = v.toObject();
                     auto games = t64::parsePgn(tab["pgn"].toString().toStdString());
                     need(games.size() == 1, "Onglet de session invalide.");
                     int node = 0;
-                    for (auto m : tab["path"].toArray())
-                        node = games[0].play(node, m.toString().toStdString());
+                    need(tab["path"].isArray(), "Chemin de session invalide.");
+                    for (auto m : tab["path"].toArray()) {
+                        const auto &children = games[0].nodes[node].children;
+                        const auto found = std::find_if(children.begin(), children.end(), [&](int child) {
+                            return m.isString() && games[0].nodes[child].uci == m.toString().toStdString();
+                        });
+                        need(found != children.end(), "Position absente de l’étude enregistrée.");
+                        node = *found;
+                    }
                     qint64 id =
                         json["library"].toString() == db_->path() ? tab["id"].toVariant().toLongLong() : 0;
                     recovered.push_back(

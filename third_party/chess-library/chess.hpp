@@ -1894,10 +1894,10 @@ class Board {
         U64 hash;
         CastlingRights castling;
         Square enpassant;
-        std::uint8_t half_moves;
+        std::uint32_t half_moves; // Trait64: keep counters exact across long analysis lines.
         Piece captured_piece;
 
-        State(const U64& hash, const CastlingRights& castling, const Square& enpassant, const std::uint8_t& half_moves,
+        State(const U64& hash, const CastlingRights& castling, const Square& enpassant, const std::uint32_t& half_moves,
               const Piece& captured_piece)
             : hash(hash),
               castling(castling),
@@ -2514,7 +2514,8 @@ class Board {
         // be across half-moves.
         const auto size = static_cast<int>(prev_states_.size());
 
-        for (int i = size - 2; i >= 0 && i >= size - hfm_ - 1; i -= 2) {
+        const auto available = static_cast<int>(std::min(hfm_, static_cast<std::uint32_t>(size)));
+        for (int i = size - 2; i >= 0 && i >= size - available - 1; i -= 2) {
             if (prev_states_[i].hash == key_) c++;
             if (c == count) return true;
         }
@@ -3121,10 +3122,10 @@ class Board {
 
     U64 key_             = 0ULL;
     CastlingRights cr_   = {};
-    std::uint16_t plies_ = 0;
+    std::uint32_t plies_ = 0; // Trait64: avoid wrapping the fullmove number.
     Color stm_           = Color::WHITE;
     Square ep_sq_        = Square::NO_SQ;
-    std::uint8_t hfm_    = 0;
+    std::uint32_t hfm_   = 0;
 
     bool chess960_ = false;
 

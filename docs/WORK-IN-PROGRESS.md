@@ -1,4 +1,8 @@
-# Point de reprise — motifs tactiques, 19 octobre 2026
+# Point de reprise — audit global, 20 octobre 2026
+
+**Priorité utilisateur : débogage massif avant tout ajout.** Audit en cours sur la branche `audit/full-debug`, base `4e4cd3d`. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) pour les défauts reproduits et les validations restant à terminer. Ne pas reprendre les ajouts tant que ce lot n’est pas validé. La version distribuée reste dev.46.
+
+## État précédent conservé
 
 Objectif conservé : poursuivre la feuille de route sans recréer Trait64. C++23, Qt6/QML et SQLite ; fonctions locales hors ligne, esthétique en pause, aucun bouton factice ni Elo inventé.
 

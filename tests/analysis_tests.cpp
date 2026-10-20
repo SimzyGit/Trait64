@@ -250,6 +250,18 @@ int main(int argc, char **argv) {
         queue.select(pagesId, 200);
         check(waitFor([&] { return queue.results().size() == 9 && !queue.state()["hasNext"].toBool(); }),
               "Second result page has exact remaining positions");
+        for (const auto &study : std::vector<t64::Game>{
+                 t64::Game("4k3/8/8/8/8/8/8/R3K3 w - - 100 1"),
+                 t64::parsePgn("1.Nf3 Nf6 2.Ng1 Ng8 3.Nf3 Nf6 4.Ng1 Ng8 *").front()}) {
+            const int count = queue.jobs().size();
+            queue.enqueue(QString::fromStdString(study.pgn()), profile, false);
+            const auto claimId = added(queue, count + 1);
+            complete(queue, claimId);
+            const auto lines = db.analysisResults(claimId).last().toMap()["lines"].toList();
+            check(!lines.empty() && !lines.first().toMap()["terminal"].toBool() &&
+                      lines.first().toMap()["nodes"].toULongLong() > 0,
+                  "A claimable draw still receives a real engine evaluation, not a fabricated terminal score");
+        }
         queue.shutdown();
         const auto first = all.first().toMap();
         db.setAnalysisStatus(id, "running");

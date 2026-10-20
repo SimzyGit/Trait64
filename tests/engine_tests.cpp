@@ -139,6 +139,34 @@ int main(int argc, char **argv) {
         t64::Game frcGame(frc.toStdString(), true);
         frcGame.play(0, best.last()[0].toString().toStdString());
         engine.shutdown();
+        {
+            t64::Uci chained;
+            QObject::connect(&chained, &t64::Uci::completed, &app,
+                             [&](const QString &completedFen, const QVariantList &) {
+                if (completedFen == start)
+                    chained.analyse(fen, "position startpos moves e2e4", true, 100);
+            });
+            QSignalSpy searches(&chained, &t64::Uci::completed), replies(&chained, &t64::Uci::bestMove);
+            chained.start(path, 1, 16, 1);
+            chained.analyse(start, "position startpos", true, 100);
+            check(waitFor([&] { return searches.size() >= 2; }), "Chained searches finish");
+            check(searches.first()[0].toString() == start && searches.last()[0].toString() == fen,
+                  "Completion signal keeps its original FEN when a receiver starts another search");
+            check(replies.size() == 1 && replies.first()[1].toString() == fen,
+                  "A superseded completion cannot deliver its old move as the new position's move");
+            chained.shutdown();
+        }
+        {
+            t64::Uci stopped;
+            QObject::connect(&stopped, &t64::Uci::completed, &app,
+                             [&](const QString &, const QVariantList &) { stopped.stop(); });
+            QSignalSpy searches(&stopped, &t64::Uci::completed), replies(&stopped, &t64::Uci::bestMove);
+            stopped.start(path, 1, 16, 1);
+            stopped.analyse(start, "position startpos", true, 100);
+            check(waitFor([&] { return !searches.empty(); }), "Stop at completion received");
+            check(replies.empty(), "Stopping in a completion callback cancels move delivery");
+            stopped.shutdown();
+        }
         t64::Comparison comparison;
         QVariantMap profile{{"name", "Stockfish A"},
                             {"enginePath", path},

@@ -136,6 +136,8 @@ Controller::Controller(const QString &path, QObject *parent)
                     "Session JSON illisible.");
             auto json = document.object();
             auto games = t64::parsePgn(json["pgn"].toString().toStdString());
+            require(json.contains("tabs") || (json["pgn"].isString() && games.size() == 1),
+                    "Session sans étude restaurable.");
             if (!games.empty()) {
                 game_ = std::move(games[0]);
                 node_ = std::clamp(json["node"].toInt(), 0, int(game_.nodes.size()) - 1);
