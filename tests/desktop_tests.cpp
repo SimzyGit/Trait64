@@ -782,8 +782,13 @@ int main(int argc, char **argv) {
             check(savedExport.open(QIODevice::ReadOnly), "Read previous repertoire export");
             const auto originalBytes = savedExport.readAll();
             savedExport.close();
+            // Cancel before dispatch: a tiny export may commit before the next UI statement.
+            const auto cancelExport = QObject::connect(&c, &Controller::repertoireTaskChanged, &c, [&] {
+                if (c.repertoireTask()["running"].toBool())
+                    c.cancelTask();
+            });
             c.exportRepertoire(id, output);
-            c.cancelTask();
+            QObject::disconnect(cancelExport);
             waitRepertoire();
             check(c.repertoireTask()["canceled"].toBool() && savedExport.open(QIODevice::ReadOnly) &&
                       savedExport.readAll() == originalBytes,

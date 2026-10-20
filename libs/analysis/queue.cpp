@@ -429,7 +429,11 @@ class AnalysisWorker : public QObject {
             return;
         }
         const auto cached = db_->cachedAnalysis(key_);
-        if (!cached.empty()) {
+        // Older versions cached claimable draws as forced endings. The current board
+        // is not terminal, so such an entry must be replaced by a real search.
+        if (!cached.empty() && std::none_of(cached.begin(), cached.end(), [](const QVariant &line) {
+                return line.toMap()["terminal"].toBool();
+            })) {
             finish(cached, true);
             return;
         }

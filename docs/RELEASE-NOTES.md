@@ -6,6 +6,7 @@
 - Anciennes réponses moteur exclues après une nouvelle recherche ou un arrêt réentrant ; options automatiques adaptées aux bornes du moteur.
 - Fermeture sûre pendant une connexion GitHub ; correction d’un accès à de la mémoire libérée.
 - Distinction entre fin de partie et nulle réclamable dans les analyses ; priorité correcte du pat.
+- Anciennes entrées de cache marquées à tort comme fin de partie recalculées puis remplacées. Relancer une analyse pour actualiser un bilan historique.
 - Cadence PGN cohérente avec l’horloge et protégée des dépassements entiers.
 - Stress FEN/PGN reproductible et contrôles ASan/UBSan étendus à tous les modules dans la CI.
 

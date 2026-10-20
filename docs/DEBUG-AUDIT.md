@@ -14,6 +14,7 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 | Fermeture pendant une authentification GitHub : accès à des membres déjà détruits | Déconnexion des signaux des processus et de la réponse réseau avant destruction ; arrêt du processus d’authentification. Un faux `gh` isolé reste actif pendant la destruction. AddressSanitizer avait signalé un `heap-use-after-free` dans `Updater::fail`, appelé depuis la destruction de `QProcess`. |
 | Nulle réclamable traitée comme fin forcée dans les analyses ; pat masqué par les 50 coups | Résolution des mats/pats/matériel insuffisant avant les motifs réclamables. Répétition et 50 coups continuent à recevoir une évaluation moteur réelle ; tests des nœuds analysés et de la priorité du pat. |
 | Cadence PGN calculée avec les valeurs non bornées | Minutes et incrément bornés avant le calcul de l’horloge et de `TimeControl`. Test avec `INT_MAX`, attendu `10800+120`, sans dépassement signé. |
+| Ancien cache réintroduisant une fausse fin de partie | Les entrées marquées terminales sont ignorées si la position actuelle ne l’est pas, puis remplacées par une vraie évaluation. Test d’un cache hérité injecté après une recherche réelle : recalcul nécessaire, puis réutilisation du cache réparé. Les analyses déjà terminées restent historiques ; en lancer une nouvelle applique la correction. |
 | Options automatiques UCI ignorant les bornes déclarées par un moteur | Threads/Hash/MultiPV/Skill Level adaptés aux bornes annoncées ; identité du cache fondée sur les valeurs réellement envoyées. Les options personnalisées restent validées strictement. Un moteur de test refuse explicitement les valeurs hors limites. |
 
 ## Vérification
@@ -22,6 +23,7 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 - Avertissements `-Wall -Wextra -Wpedantic -Wformat=2` étendus à tous les modules ; trois expressions logiques parenthésées sans changement de comportement.
 - Nouvelle suite déterministe `robustness` : 80 études légales classiques/Chess960 avec variantes, notes, suppressions et fusions ; ordre et offsets du parseur en flux et parallèle ; 3 000 mutations FEN/PGN, avec round trip des entrées acceptées.
 - Tests de publication (17) et de nettoyage (9), plus syntaxe des scripts de distribution.
+- Test d’annulation d’export rendu déterministe : annulation avant dispatch. Un export minuscule peut légitimement être terminé avant l’instruction UI suivante ; le test ne suppose plus que l’annulation gagne cette course.
 - CI étendue aux douze suites avec ASan/UBSan, Qt et Stockfish avant les paquets Debian 12/13. Le contrôle mémoire du cœur sans Qt est conservé.
 - Résultats complets après correction et liens CI : en cours de validation. Ce fichier n’annonce pas une publication avant réussite des contrôles.
 

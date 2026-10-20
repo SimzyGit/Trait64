@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonDocument>
 #include <QProcess>
 #include <QSignalSpy>
 #include <QSqlQuery>
@@ -261,6 +262,45 @@ int main(int argc, char **argv) {
             check(!lines.empty() && !lines.first().toMap()["terminal"].toBool() &&
                       lines.first().toMap()["nodes"].toULongLong() > 0,
                   "A claimable draw still receives a real engine evaluation, not a fabricated terminal score");
+            // Reproduce a cache written by the old terminal-draw behavior, without duplicating key logic.
+            const auto claimFen = QString::fromStdString(study.nodes[study.mainline().back()].fen);
+            {
+                auto legacy = QSqlDatabase::addDatabase("QSQLITE", "legacy-terminal-cache");
+                legacy.setDatabaseName(path);
+                check(legacy.open(), "Open legacy cache fixture");
+                QSqlQuery read(legacy);
+                check(read.exec("SELECT key,lines FROM analysis_cache"), "Read existing cache keys");
+                QString key;
+                while (read.next()) {
+                    const auto saved = QJsonDocument::fromJson(read.value(1).toByteArray()).toVariant().toList();
+                    if (!saved.empty() && saved.first().toMap()["fen"].toString() == claimFen)
+                        key = read.value(0).toString();
+                }
+                read.finish();
+                check(!key.isEmpty(), "Real evaluation was cached");
+                QVariantList oldLines{QVariantMap{{"rank", 1}, {"fen", claimFen}, {"scoreType", "cp"},
+                                                   {"cp", 0}, {"nodes", 0}, {"depth", 0},
+                                                   {"bound", false}, {"terminal", true}}};
+                QSqlQuery write(legacy);
+                write.prepare("UPDATE analysis_cache SET lines=? WHERE key=?");
+                write.addBindValue(QString::fromUtf8(QJsonDocument::fromVariant(oldLines).toJson(QJsonDocument::Compact)));
+                write.addBindValue(key);
+                check(write.exec() && write.numRowsAffected() == 1, "Seed exact legacy terminal cache entry");
+                write.finish();
+                legacy.close();
+            }
+            QSqlDatabase::removeDatabase("legacy-terminal-cache");
+            for (bool expectCached : {false, true}) {
+                const int total = queue.jobs().size();
+                queue.enqueue(QString::fromStdString(study.pgn()), profile, false);
+                const auto repairedId = added(queue, total + 1);
+                complete(queue, repairedId);
+                const auto result = db.analysisResults(repairedId).last().toMap();
+                const auto score = result["lines"].toList().first().toMap();
+                check(!score["terminal"].toBool() && score["nodes"].toULongLong() > 0 &&
+                          result["cached"].toBool() == expectCached,
+                      "Legacy terminal score is recomputed, replaced and then safely reused");
+            }
         }
         queue.shutdown();
         const auto first = all.first().toMap();
