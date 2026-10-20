@@ -903,7 +903,11 @@ int main(int argc, char **argv) {
             check(original.open(QIODevice::ReadOnly) && original.readAll() == "{\"tabs\":[",
                   "Recovery preserves exact unreadable bytes");
         }
-        for (const auto &bytes : QList<QByteArray>{"{}", "{\"tabs\":{}}", "{\"tabs\":[]}"}) {
+        for (const auto &bytes : QList<QByteArray>{
+                 "{}", "{\"tabs\":{}}", "{\"tabs\":[]}",
+                 R"({"tabs":[{"pgn":"1.e4 *","path":["d2d4"]}]})",
+                 R"({"tabs":[{"pgn":"1.e4 *","path":"invalid"}]})",
+                 R"({"tabs":[{"pgn":"1.e4 *"}]})"}) {
             QTemporaryDir recovery;
             QFile session(recovery.path() + "/session.json");
             check(session.open(QIODevice::WriteOnly) && session.write(bytes) == bytes.size(),
