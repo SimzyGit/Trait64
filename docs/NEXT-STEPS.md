@@ -1,4 +1,6 @@
-# Reprise du développement — 19 octobre 2026
+# Reprise du développement — audit du 20 octobre 2026
+
+**Priorité : terminer l’audit de débogage global avant tout ajout.** Branche `audit/full-debug`, rapport [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Les correctifs sont en validation locale puis CI ; la référence distribuée reste dev.46 jusqu’à publication confirmée. Les paragraphes suivants conservent l’état antérieur et la feuille de route.
 
 **État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. La version distribuée est [v0.3.0-dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46), vérifiée sans archive Actions. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 

@@ -18,7 +18,7 @@ class Uci : public QObject {
     QString executable() const { return process_.program(); }
     static QVariantMap parseOption(const QString &line);
     static QVariantMap parseInfo(const QString &line, const QString &fen, bool chess960 = false);
-    static QString optionValue(const QVariantMap &descriptor, const QVariant &value);
+    static QString optionValue(const QVariantMap &descriptor, const QVariant &value, bool clampSpin = false);
     bool pressOption(const QString &name);
     void analyse(const QString &fen, const QString &positionCommand, bool play = false,
                  int milliseconds = 800, int depth = 24, bool chess960 = false);

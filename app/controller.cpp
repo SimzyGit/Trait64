@@ -233,7 +233,7 @@ void Controller::refresh(bool content) {
     }
     const auto board = game_.boardAt(node_);
     const auto &current = game_.nodes[node_];
-    auto end = board.isGameOver();
+    auto end = t64::gameResult(board);
     QString status = board.sideToMove() == chess::Color::WHITE ? "Trait aux Blancs" : "Trait aux Noirs";
     if (board.inCheck())
         status += " · Échec";

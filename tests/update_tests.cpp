@@ -220,6 +220,35 @@ int main(int argc, char **argv) {
         check(!persisted.allKeys().join(' ').contains("token", Qt::CaseInsensitive),
               "Session token never persisted");
         check(t64::debianVersion("v0.3.0-beta.2") == "0.3.0~beta.2", "Debian prerelease ordering");
+        {
+            QTemporaryDir tools;
+            QFile fake(tools.path() + "/gh");
+            check(fake.open(QIODevice::WriteOnly), "Create isolated authentication fixture");
+            fake.write("#!/bin/sh\nprintf ready > \"$T64_FAKE_AUTH_READY\"\nexec /bin/sleep 30\n");
+            fake.close();
+            check(fake.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner),
+                  "Make authentication fixture executable");
+            const auto oldPath = qgetenv("PATH");
+            const auto marker = tools.path() + "/ready";
+            qputenv("PATH", tools.path().toUtf8() + ':' + oldPath);
+            qputenv("T64_FAKE_AUTH_READY", marker.toUtf8());
+            auto closing = std::make_unique<t64::Updater>(dir.path());
+            closing->useGithubCli(true);
+            bool destroying = false, lateSignal = false;
+            QObject::connect(closing.get(), &t64::Updater::changed, &app, [&] {
+                if (destroying)
+                    lateSignal = true;
+            });
+            closing->check();
+            for (int i = 0; i < 100 && !QFile::exists(marker); ++i)
+                QTest::qWait(10);
+            check(QFile::exists(marker), "Authentication process is running before shutdown");
+            destroying = true;
+            closing.reset();
+            qputenv("PATH", oldPath);
+            qunsetenv("T64_FAKE_AUTH_READY");
+            check(!lateSignal, "Shutdown cannot call slots on partially destroyed updater members");
+        }
         std::cout << checks << " update checks passed\n";
         return 0;
     } catch (const std::exception &e) {

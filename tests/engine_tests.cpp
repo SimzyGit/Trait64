@@ -44,6 +44,9 @@ int main(int argc, char **argv) {
             rejected = true;
         }
         check(rejected, "Reject out of range UCI value");
+        check(t64::Uci::optionValue(spin, 5000, true) == "3190" &&
+                  t64::Uci::optionValue(spin, 1000, true) == "1320",
+              "Managed spin values honor engine-declared limits");
         const auto combo = t64::Uci::parseOption(
             "option name Style type combo default Very solid var Normal var Very solid");
         check(t64::Uci::optionValue(combo, "Very solid") == "Very solid", "UCI multi-word combo");
@@ -65,6 +68,24 @@ int main(int argc, char **argv) {
         check(rejected && t64::Uci::parseOption("option name Bad\nquit type button").isEmpty(),
               "Reject UCI injection");
         t64::Uci engine;
+        {
+            QTemporaryDir dir;
+            QFile fake(dir.path() + "/bounded-engine");
+            check(fake.open(QIODevice::WriteOnly), "Create isolated UCI fixture");
+            fake.write("#!/bin/sh\nwhile IFS= read -r line; do\ncase \"$line\" in\n"
+                       "uci) printf '%s\\n' 'id name Bounded fixture' "
+                       "'option name Threads type spin default 1 min 1 max 1' "
+                       "'option name Hash type spin default 16 min 1 max 32' 'uciok';;\n"
+                       "'setoption name Threads value 1'|'setoption name Hash value 32') ;;\n"
+                       "setoption*) exit 42;;\nisready) printf 'readyok\\n';;\nquit) exit;;\nesac\ndone\n");
+            fake.close();
+            check(fake.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner),
+                  "Make UCI fixture executable");
+            t64::Uci bounded;
+            bounded.start(fake.fileName(), 32, 4096, 1);
+            check(waitFor([&] { return bounded.ready(); }), "Handshake adapts to bounded engine options");
+            bounded.shutdown();
+        }
         QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines),
             complete(&engine, &t64::Uci::completed);
         QString path = qEnvironmentVariable("T64_STOCKFISH");

@@ -1,3 +1,16 @@
+## Audit global de fiabilité — 20 octobre 2026
+
+- Récupération des sessions endommagées sans perte de l’original ; chemins restaurés uniquement depuis les variantes enregistrées.
+- Annulation de réindexation atomique, même au dernier signal de progression.
+- Compteurs FEN protégés ; refus d’un dépassement avant modification de l’étude.
+- Anciennes réponses moteur exclues après une nouvelle recherche ou un arrêt réentrant ; options automatiques adaptées aux bornes du moteur.
+- Fermeture sûre pendant une connexion GitHub ; correction d’un accès à de la mémoire libérée.
+- Distinction entre fin de partie et nulle réclamable dans les analyses ; priorité correcte du pat.
+- Cadence PGN cohérente avec l’horloge et protégée des dépassements entiers.
+- Stress FEN/PGN reproductible et contrôles ASan/UBSan étendus à tous les modules dans la CI.
+
+Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Schéma 7 conservé. Publication en attente de validation complète.
+
 ## Motifs tactiques et repères sur l’échiquier
 
 - Fourchettes/attaques multiples, clouages au roi, enfilades du roi, échecs à la découverte et doubles échecs détectés dans les suites légales du bilan.

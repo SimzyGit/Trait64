@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include <limits>
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -440,6 +441,10 @@ int main(int argc, char **argv) {
             c.clickSquare("h1");
             check(c.state()["node"].toInt() == 1, "Chess960 castle by clicking own rook");
             c.newGame();
+            c.startLocalGame(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 0, true);
+            check(c.state()["tags"].toMap()["TimeControl"] == "10800+120",
+                  "Clock metadata uses bounded values without integer overflow");
+            c.stopPlaying();
             c.startLocalGame(1, 2, 0, true);
             QTest::qWait(150);
             check(c.state()["clockRunning"].toBool(), "Local clock starts");

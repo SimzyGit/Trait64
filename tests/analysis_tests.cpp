@@ -233,9 +233,9 @@ int main(int argc, char **argv) {
         complete(queue, frcId);
         check(db.analysisResults(frcId).size() == 2,
               "Chess960 analysis includes a legal stationary-king castle");
-        t64::Game longGame;
+        t64::Game longGame("7k/8/8/8/8/8/8/K7 w - - 0 1");
         int node = 0;
-        const std::vector<std::string> cycle{"g1f3", "g8f6", "f3g1", "f6g8"};
+        const std::vector<std::string> cycle{"a1a2", "h8h7", "a2a1", "h7h8"};
         for (int i = 0; i < 208; ++i)
             node = longGame.play(node, cycle[i % 4]);
         queue.enqueue(QString::fromStdString(longGame.pgn()), profile, true);

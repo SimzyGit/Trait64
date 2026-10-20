@@ -16,6 +16,7 @@ class Updater : public QObject {
   public:
     explicit Updater(const QString &dataPath, QObject *parent = nullptr,
                      QNetworkAccessManager *network = nullptr);
+    ~Updater() override;
     QVariantMap state() const;
     std::function<QString()> beforeInstall;
     void startAutomaticCheck();

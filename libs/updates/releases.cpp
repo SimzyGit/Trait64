@@ -80,7 +80,7 @@ Release selectRelease(const QJsonArray &rows, const QString &current, const QStr
             const QString name = asset["name"].toString(), hash = asset["digest"].toString();
             const qint64 size = asset["size"].toInteger(), id = asset["id"].toInteger();
             if (!name.endsWith(suffix) || name.contains('/') || name.contains('\\') ||
-                !name.startsWith("Trait64-") && !name.startsWith("trait64_") ||
+                (!name.startsWith("Trait64-") && !name.startsWith("trait64_")) ||
                 asset["state"] != "uploaded" ||
                 !QRegularExpression("^sha256:[0-9a-f]{64}$").match(hash).hasMatch() || size < 8 ||
                 size > 1024LL * 1024 * 1024 || id <= 0)
@@ -116,7 +116,7 @@ static void copyAtomic(const QString &source, const QString &target) {
         throw std::runtime_error("Impossible d’écrire le nouvel exécutable.");
     while (!in.atEnd()) {
         auto bytes = in.read(1024 * 1024);
-        if (bytes.isEmpty() && in.error() != QFileDevice::NoError || out.write(bytes) != bytes.size())
+        if ((bytes.isEmpty() && in.error() != QFileDevice::NoError) || out.write(bytes) != bytes.size())
             throw std::runtime_error("Copie interrompue.");
     }
     if (!out.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup |

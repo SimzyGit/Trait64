@@ -32,7 +32,7 @@ QVariantMap Uci::parseOption(const QString &line) {
     option["choices"] = choices;
     return option;
 }
-QString Uci::optionValue(const QVariantMap &option, const QVariant &value) {
+QString Uci::optionValue(const QVariantMap &option, const QVariant &value, bool clampSpin) {
     const auto text = value.toString();
     auto invalid = [] { throw std::runtime_error("Valeur UCI invalide ou hors limites."); };
     if (text.size() > 4096 || text.contains('\n') || text.contains('\r') || text.contains(QChar(0)))
@@ -46,10 +46,14 @@ QString Uci::optionValue(const QVariantMap &option, const QVariant &value) {
         invalid();
     } else if (type == "spin") {
         bool ok, minOk, maxOk;
-        const auto number = text.toLongLong(&ok);
+        auto number = text.toLongLong(&ok);
         const auto minimum = option["min"].toLongLong(&minOk);
         const auto maximum = option["max"].toLongLong(&maxOk);
-        if (!ok || !minOk || !maxOk || minimum > maximum || number < minimum || number > maximum)
+        if (!ok || !minOk || !maxOk || minimum > maximum)
+            invalid();
+        if (clampSpin)
+            number = std::clamp(number, minimum, maximum);
+        if (number < minimum || number > maximum)
             invalid();
         return QString::number(number);
     } else if (type == "combo") {
@@ -249,25 +253,24 @@ void Uci::parse(const QString &line) {
         return;
     }
     if (line == "uciok" && state_ == Handshake) {
-        for (const auto &pair : QList<QPair<QString, int>>{
-                 {"Threads", threads_}, {"Hash", hash_}, {"MultiPV", multiPV_}, {"Skill Level", skill_}})
-            if (options_.contains(pair.first))
-                command("setoption name " + pair.first + " value " + QString::number(pair.second));
-        if (options_.contains("SyzygyPath") && !syzygyPath_.isEmpty())
-            command("setoption name SyzygyPath value " + syzygyPath_);
+        const QVariantMap automatic{{"Threads", threads_}, {"Hash", hash_},
+                                    {"MultiPV", multiPV_}, {"Skill Level", skill_}};
         const QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
         for (const auto &value : descriptors_) {
             const auto option = value.toMap();
             const auto name = option["name"].toString();
-            if (!managed.contains(name) && customOptions_.contains(name)) {
-                try {
+            try {
+                if (automatic.contains(name))
+                    command("setoption name " + name + " value " + optionValue(option, automatic[name], true));
+                else if (name == "SyzygyPath" && !syzygyPath_.isEmpty())
+                    command("setoption name " + name + " value " + optionValue(option, syzygyPath_));
+                else if (!managed.contains(name) && customOptions_.contains(name))
                     command("setoption name " + name + " value " + optionValue(option, customOptions_[name]));
-                } catch (const std::exception &e) {
-                    shutdown();
-                    emit failed(name + " : " + QString::fromUtf8(e.what()));
-                    emit status(name + " : " + QString::fromUtf8(e.what()));
-                    return;
-                }
+            } catch (const std::exception &e) {
+                shutdown();
+                emit failed(name + " : " + QString::fromUtf8(e.what()));
+                emit status(name + " : " + QString::fromUtf8(e.what()));
+                return;
             }
         }
         emit optionsChanged();

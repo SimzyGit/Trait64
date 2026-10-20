@@ -24,6 +24,15 @@ template <class F> void rejects(F f) {
 #include "tactics_cases.h"
 int main() {
     try {
+        check(t64::gameResult(t64::checkedBoard("7k/5K2/6Q1/8/8/8/8/8 b - - 100 1")).first ==
+                  chess::GameResultReason::STALEMATE,
+              "Stalemate takes precedence over a claimable fifty-move draw");
+        check(t64::gameResult(t64::checkedBoard("7k/8/8/8/8/8/8/K7 w - - 100 1")).first ==
+                  chess::GameResultReason::INSUFFICIENT_MATERIAL,
+              "Insufficient material remains a forced ending after fifty moves");
+        check(t64::gameResult(t64::checkedBoard("4k3/8/8/8/8/8/8/R3K3 w - - 100 1")).first ==
+                  chess::GameResultReason::FIFTY_MOVE_RULE,
+              "A position with legal moves and material only offers a draw claim");
         auto extreme = t64::checkedBoard("4k3/8/8/8/8/8/8/R3K3 w - - 255 1");
         const auto quiet = chess::uci::uciToMove(extreme, "a1a2");
         extreme.makeMove(quiet);

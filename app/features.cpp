@@ -581,8 +581,10 @@ void Controller::requestReviewPosition() {
     }
     const int node = reviewNodes_[reviewIndex_];
     auto board = reviewGame_.boardAt(node);
-    auto end = board.isGameOver();
-    if (end.second != chess::GameResult::NONE) {
+    auto end = t64::gameResult(board);
+    if (end.first == chess::GameResultReason::CHECKMATE ||
+        end.first == chess::GameResultReason::STALEMATE ||
+        end.first == chess::GameResultReason::INSUFFICIENT_MATERIAL) {
         double score = end.first == chess::GameResultReason::CHECKMATE
                            ? (board.sideToMove() == chess::Color::WHITE ? -100. : 100.)
                            : 0.;
@@ -815,8 +817,10 @@ void Controller::startLocalGame(int minutes, int increment, int opponent, bool h
     emit reviewChanged();
     game_.tags["Result"] = "*";
     clockResult_.clear();
-    whiteMs_ = blackMs_ = std::clamp(minutes, 1, 180) * 60000;
-    incrementMs_ = std::clamp(increment, 0, 120) * 1000;
+    minutes = std::clamp(minutes, 1, 180);
+    increment = std::clamp(increment, 0, 120);
+    whiteMs_ = blackMs_ = minutes * 60000;
+    incrementMs_ = increment * 1000;
     localGame_ = opponent == 0;
     playing_ = !localGame_;
     humanWhite_ = humanWhite;
@@ -881,7 +885,7 @@ void Controller::claimDraw() {
     if (!playing_ && !localGame_)
         return;
     auto b = game_.boardAt(node_);
-    auto e = b.isGameOver();
+    auto e = t64::gameResult(b);
     if (e.second == chess::GameResult::NONE) {
         emit message("Aucune nulle réclamable dans cette position.");
         return;
