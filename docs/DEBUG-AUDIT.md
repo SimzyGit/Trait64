@@ -26,6 +26,7 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 - Tests de publication (17) et de nettoyage (9), plus syntaxe des scripts de distribution.
 - Test d’annulation d’export rendu déterministe : annulation avant dispatch. Un export minuscule peut légitimement être terminé avant l’instruction UI suivante ; le test ne suppose plus que l’annulation gagne cette course.
 - CI étendue aux douze suites avec ASan/UBSan, Qt et Stockfish avant les paquets Debian 12/13. Le contrôle mémoire du cœur sans Qt est conservé.
+- Délai du stress porté à 300 s uniquement sous sanitizers, contre 120 s dans les autres builds. L’exécution CI 39563408828 a atteint 120 s en Debug non optimisé ; la précédente passait ce même corpus en 70,44 s. Aucun cas, contrôle ni sanitizer retiré.
 - Résultats complets après correction et liens CI : en cours de validation. Ce fichier n’annonce pas une publication avant réussite des contrôles.
 - Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La CI Ubuntu de la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), [exécution 39393905485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39393905485), a ensuite révélé le défaut des chaînes UCI vides ci-dessus ; cet échec n’est pas masqué par une relance sans correction. Validation du correctif du 21 octobre en cours.
 
