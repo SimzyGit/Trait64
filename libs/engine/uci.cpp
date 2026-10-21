@@ -61,7 +61,8 @@ QString Uci::optionValue(const QVariantMap &option, const QVariant &value, bool 
             invalid();
         return text;
     } else if (type == "string")
-        return text.isEmpty() ? "<empty>" : text;
+        // <empty> is the descriptor/legacy-profile marker, not a literal command value.
+        return text == "<empty>" ? QString() : text;
     invalid();
     return {};
 }

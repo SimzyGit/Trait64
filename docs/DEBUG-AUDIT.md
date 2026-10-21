@@ -1,4 +1,4 @@
-# Audit de débogage global — 20 octobre 2026
+# Audit de débogage global — 20–21 octobre 2026
 
 Demande utilisateur : suspendre les ajouts et déboguer tout le logiciel.
 Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
@@ -16,6 +16,7 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 | Cadence PGN calculée avec les valeurs non bornées | Minutes et incrément bornés avant le calcul de l’horloge et de `TimeControl`. Test avec `INT_MAX`, attendu `10800+120`, sans dépassement signé. |
 | Ancien cache réintroduisant une fausse fin de partie | Les entrées marquées terminales sont ignorées si la position actuelle ne l’est pas, puis remplacées par une vraie évaluation. Test d’un cache hérité injecté après une recherche réelle : recalcul nécessaire, puis réutilisation du cache réparé. Les analyses déjà terminées restent historiques ; en lancer une nouvelle applique la correction. |
 | Options automatiques UCI ignorant les bornes déclarées par un moteur | Threads/Hash/MultiPV/Skill Level adaptés aux bornes annoncées ; identité du cache fondée sur les valeurs réellement envoyées. Les options personnalisées restent validées strictement. Un moteur de test refuse explicitement les valeurs hors limites. |
+| Option UCI vide envoyée comme nom de fichier `<empty>` | Une chaîne vide est envoyée réellement vide ; les anciens profils contenant ce marqueur sont également corrigés. Stockfish quittait avec `Unable to open debug log file <empty>` dans un dossier protégé, notamment pour les analyses en arrière-plan. Test avec Stockfish réel et un dossier homonyme empêchant toute création du fichier, y compris en exécution privilégiée. |
 
 ## Vérification
 
@@ -26,6 +27,7 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 - Test d’annulation d’export rendu déterministe : annulation avant dispatch. Un export minuscule peut légitimement être terminé avant l’instruction UI suivante ; le test ne suppose plus que l’annulation gagne cette course.
 - CI étendue aux douze suites avec ASan/UBSan, Qt et Stockfish avant les paquets Debian 12/13. Le contrôle mémoire du cœur sans Qt est conservé.
 - Résultats complets après correction et liens CI : en cours de validation. Ce fichier n’annonce pas une publication avant réussite des contrôles.
+- Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La CI Ubuntu de la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), [exécution 39393905485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39393905485), a ensuite révélé le défaut des chaînes UCI vides ci-dessus ; cet échec n’est pas masqué par une relance sans correction. Validation du correctif du 21 octobre en cours.
 
 ## Périmètre et limites
 

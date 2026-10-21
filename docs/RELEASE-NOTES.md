@@ -4,6 +4,7 @@
 - Annulation de réindexation atomique, même au dernier signal de progression.
 - Compteurs FEN protégés ; refus d’un dépassement avant modification de l’étude.
 - Anciennes réponses moteur exclues après une nouvelle recherche ou un arrêt réentrant ; options automatiques adaptées aux bornes du moteur.
+- Chaînes UCI vides corrigées : désactiver le journal ne tente plus d’ouvrir un fichier `<empty>` et ne fait plus quitter Stockfish dans un dossier protégé.
 - Fermeture sûre pendant une connexion GitHub ; correction d’un accès à de la mémoire libérée.
 - Distinction entre fin de partie et nulle réclamable dans les analyses ; priorité correcte du pat.
 - Anciennes entrées de cache marquées à tort comme fin de partie recalculées puis remplacées. Relancer une analyse pour actualiser un bilan historique.
