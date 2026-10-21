@@ -105,7 +105,8 @@ QVariantMap engineIdentity(const QVariantMap &config, const Uci &engine) {
             value = config["syzygyPath"];
         if (name == "UCI_Chess960")
             value = false; // Each position's variant is included in its key.
-        effective[name] = Uci::optionValue(descriptor, value);
+        effective[name] = Uci::optionValue(
+            descriptor, value, QStringList{"Threads", "Hash", "MultiPV", "Skill Level"}.contains(name));
         if (type != "string" || value.toString().isEmpty() || value == "<empty>" || name == "Debug Log File")
             continue;
         if (name == "EvalFile" || name == "EvalFileSmall" || name.contains("file", Qt::CaseInsensitive)) {
@@ -124,8 +125,10 @@ QVariantMap engineIdentity(const QVariantMap &config, const Uci &engine) {
             {"resources", resources},     {"cacheable", cacheable}, {"format", 1}};
 }
 QVariantList terminalScore(const chess::Board &board, const QString &fen) {
-    const auto end = board.isGameOver();
-    if (end.second == chess::GameResult::NONE)
+    const auto end = gameResult(board);
+    if (end.first != chess::GameResultReason::CHECKMATE &&
+        end.first != chess::GameResultReason::STALEMATE &&
+        end.first != chess::GameResultReason::INSUFFICIENT_MATERIAL)
         return {};
     const bool mate = end.first == chess::GameResultReason::CHECKMATE;
     const int winner = mate ? (board.sideToMove() == chess::Color::WHITE ? -1 : 1) : 0;
@@ -426,7 +429,11 @@ class AnalysisWorker : public QObject {
             return;
         }
         const auto cached = db_->cachedAnalysis(key_);
-        if (!cached.empty()) {
+        // Older versions cached claimable draws as forced endings. The current board
+        // is not terminal, so such an entry must be replaced by a real search.
+        if (!cached.empty() && std::none_of(cached.begin(), cached.end(), [](const QVariant &line) {
+                return line.toMap()["terminal"].toBool();
+            })) {
             finish(cached, true);
             return;
         }

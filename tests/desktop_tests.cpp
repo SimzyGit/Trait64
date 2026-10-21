@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include <limits>
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -440,6 +441,10 @@ int main(int argc, char **argv) {
             c.clickSquare("h1");
             check(c.state()["node"].toInt() == 1, "Chess960 castle by clicking own rook");
             c.newGame();
+            c.startLocalGame(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 0, true);
+            check(c.state()["tags"].toMap()["TimeControl"] == "10800+120",
+                  "Clock metadata uses bounded values without integer overflow");
+            c.stopPlaying();
             c.startLocalGame(1, 2, 0, true);
             QTest::qWait(150);
             check(c.state()["clockRunning"].toBool(), "Local clock starts");
@@ -777,8 +782,13 @@ int main(int argc, char **argv) {
             check(savedExport.open(QIODevice::ReadOnly), "Read previous repertoire export");
             const auto originalBytes = savedExport.readAll();
             savedExport.close();
+            // Cancel before dispatch: a tiny export may commit before the next UI statement.
+            const auto cancelExport = QObject::connect(&c, &Controller::repertoireTaskChanged, &c, [&] {
+                if (c.repertoireTask()["running"].toBool())
+                    c.cancelTask();
+            });
             c.exportRepertoire(id, output);
-            c.cancelTask();
+            QObject::disconnect(cancelExport);
             waitRepertoire();
             check(c.repertoireTask()["canceled"].toBool() && savedExport.open(QIODevice::ReadOnly) &&
                       savedExport.readAll() == originalBytes,
@@ -897,6 +907,23 @@ int main(int argc, char **argv) {
             QFile original(recovery + "/" + originals.first());
             check(original.open(QIODevice::ReadOnly) && original.readAll() == "{\"tabs\":[",
                   "Recovery preserves exact unreadable bytes");
+        }
+        for (const auto &bytes : QList<QByteArray>{
+                 "{}", "{\"tabs\":{}}", "{\"tabs\":[]}",
+                 R"({"tabs":[{"pgn":"1.e4 *","path":["d2d4"]}]})",
+                 R"({"tabs":[{"pgn":"1.e4 *","path":"invalid"}]})",
+                 R"({"tabs":[{"pgn":"1.e4 *"}]})"}) {
+            QTemporaryDir recovery;
+            QFile session(recovery.path() + "/session.json");
+            check(session.open(QIODevice::WriteOnly) && session.write(bytes) == bytes.size(),
+                  "Create structurally invalid session fixture");
+            session.close();
+            { Controller recovered(recovery.path()); }
+            const auto originals = QDir(recovery.path()).entryList({"session.json.unreadable-*"}, QDir::Files);
+            check(originals.size() == 1, "Invalid session structure is preserved before replacement");
+            QFile original(recovery.path() + '/' + originals.first());
+            check(original.open(QIODevice::ReadOnly) && original.readAll() == bytes,
+                  "Invalid session structure keeps its exact original bytes");
         }
         std::cout << checks << " desktop interaction checks passed\n";
         return 0;

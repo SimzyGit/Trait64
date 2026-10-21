@@ -77,6 +77,21 @@ Updater::Updater(const QString &path, QObject *parent, QNetworkAccessManager *ne
             fail("Impossible de lancer l’installateur système (pkexec / apt-get).");
     });
 }
+Updater::~Updater() {
+    ++epoch_;
+    // QProcess destruction can emit signals after our QString members have been destroyed.
+    disconnect(&auth_, nullptr, this, nullptr);
+    disconnect(&installer_, nullptr, this, nullptr);
+    if (reply_) {
+        disconnect(reply_, nullptr, this, nullptr);
+        reply_->abort();
+        reply_->deleteLater();
+    }
+    if (auth_.state() != QProcess::NotRunning) {
+        auth_.kill();
+        auth_.waitForFinished(1000);
+    }
+}
 QString Updater::channel() const {
     return settings_.value("updates/channel", "stable").toString();
 }

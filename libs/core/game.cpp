@@ -38,6 +38,26 @@ std::string stripCheck(std::string s) {
 }
 } // namespace
 
+void checkBoardCounters(const chess::Board &board) {
+    require(board.halfMoveClock() <= 255 && board.fullMoveNumber() <= 32000,
+            "Limite des compteurs FEN atteinte (255 demi-coups sans prise/pion, coup 32000).");
+}
+
+std::pair<chess::GameResultReason, chess::GameResult> gameResult(const chess::Board &board) {
+    using Reason = chess::GameResultReason;
+    using Result = chess::GameResult;
+    if (!chess::movegen::anylegalmoves(board))
+        return board.inCheck() ? std::pair{Reason::CHECKMATE, Result::LOSE}
+                               : std::pair{Reason::STALEMATE, Result::DRAW};
+    if (board.isInsufficientMaterial())
+        return {Reason::INSUFFICIENT_MATERIAL, Result::DRAW};
+    if (board.isHalfMoveDraw())
+        return {Reason::FIFTY_MOVE_RULE, Result::DRAW};
+    if (board.isRepetition())
+        return {Reason::THREEFOLD_REPETITION, Result::DRAW};
+    return {Reason::NONE, Result::NONE};
+}
+
 chess::Board checkedBoard(const std::string &fen, bool variant960) {
     require(fen.size() < 256, "FEN trop longue.");
     std::istringstream input(fen);
@@ -185,6 +205,7 @@ int Game::play(int parent, const std::string &uci) {
         n.uci = uci;
         n.san = chess::uci::moveToSan(board, m);
         board.makeMove(m);
+        checkBoardCounters(board);
         n.fen = board.getFen();
         const int id = int(nodes.size());
         nodes[parent].children.push_back(id);

@@ -189,7 +189,7 @@ void Database::saveAnalysisResult(qint64 id, int ordinal, int node, const QStrin
         run(q);
         if (!cacheKey.isEmpty()) {
             q.prepare("INSERT INTO analysis_cache(key,lines) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET "
-                      "used=strftime('%Y-%m-%dT%H:%M:%fZ','now')");
+                      "lines=excluded.lines,used=strftime('%Y-%m-%dT%H:%M:%fZ','now')");
             q.addBindValue(cacheKey);
             q.addBindValue(data);
             run(q);

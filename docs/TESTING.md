@@ -1,9 +1,10 @@
 # Vérification 0.3
 
-`ctest --test-dir build --output-on-failure` exécute dix suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une onzième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
+`ctest --test-dir build --output-on-failure` exécute onze suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une douzième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
 
 | Suite | Scénarios vérifiés |
 |---|---|
+| `robustness` | Graine `0x64302026`, 80 études classiques/Chess960, variantes/notes/suppressions, round trip et fusion idempotente ; parseurs en flux et parallèle (1/2/8 workers), offsets croissants ; 3 000 mutations FEN/PGN |
 | `core` | Perft initiale profondeur 4 = 197281, Kiwipete profondeur 3 = 97862, finale profondeur 4 = 43238 ; coups spéciaux, répétition et mat ; 960 départs distincts, roque Chess960 avec roi immobile, PGN variante ; arbre PGN et lecture en flux, commentaires/RAV imbriqués, round trip, fusion idempotente, EPD et rejets d’entrées invalides |
 | `content` | Catalogue hors ligne, HTTPS/hôtes, SHA-256, annulation, extraction bornée, chemins et liens dangereux, permissions et reçus |
 | `updates` | SemVer, canaux, préversions/drafts, ignorance, absence de digest, hôtes trompeurs, absence de fuite du jeton sur redirection, erreur réseau/JSON, annulation, empreinte incorrecte, installation atomique, ancien binaire conservé et sauvegarde échouée bloquante |
@@ -17,11 +18,11 @@
 
 Le test moteur est **skipped**, pas réussi, si Stockfish est absent. Les tests GUI utilisent `QT_QPA_PLATFORM=offscreen` et `QT_QUICK_BACKEND=software`. Ils ne remplacent pas un essai sur le GPU et l’écran du PC cible. Le cœur compile sans Qt avec `-DT64_BUILD_GUI=OFF`. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
 
-La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les onze suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Une tâche séparée vérifie le cœur avec les sanitizers. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
+La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les douze suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Deux tâches préalables vérifient le cœur seul et tous les modules Qt avec ASan/UBSan. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
 
 Vérification historique avant catalogue : **6 suites sur 6 réussies** ; les vérifications du lot actuel sont détaillées plus bas. Le redimensionnement après sauvegarde, les dialogues et les captures 960 × 720 sont vérifiés. La chaîne GitHub complète a effectivement publié `v0.3.0-dev.6` ; consulter les exécutions suivantes pour la version finale enrichie.
 
-Le développement utilise Ubuntu 24.04 x86_64, GCC 13.3, Qt 6.4.2 et Stockfish 16. Localement LeakSanitizer doit être désactivé (`ASAN_OPTIONS=detect_leaks=0`) car l’environnement bloque son inspection de `/proc` ; cela ne valide pas l’absence de fuites. La tâche CI conserve sa configuration par défaut.
+Le développement utilise Ubuntu 24.04 x86_64, GCC 13.3, Qt 6.4.2 et Stockfish 16. Localement LeakSanitizer doit être désactivé (`ASAN_OPTIONS=detect_leaks=0`) car l’environnement bloque son inspection de `/proc` ; cela ne valide pas l’absence de fuites. La tâche CI du cœur conserve sa configuration par défaut ; celle de tous les modules Qt désactive LeakSanitizer mais arrête les tests sur toute erreur ASan/UBSan. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) pour les régressions de session, UCI, mémoire, annulation, cadence et fin de partie.
 
 Le bilan est une heuristique à seuils fixes, pas un estimateur Elo. Syzygy est une option transmise au moteur : aucun jeu complet de fichiers de tablebases n’est embarqué ou qualifié. Pas de certification pour des millions de parties, tous les moteurs UCI, chaque GPU/Wayland/X11, les PGN non UTF-8, Windows/macOS ou l’arbitrage FIDE complet. Les tests de récupération ne remplacent pas des coupures électriques matérielles.
 

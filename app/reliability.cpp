@@ -67,8 +67,8 @@ void Controller::automaticBackup(bool force) {
         return;
     if (!force &&
         (!settings_.value("autoBackup", true).toBool() ||
-         settings_.value("backup/last").toDateTime().isValid() &&
-             settings_.value("backup/last").toDateTime().secsTo(QDateTime::currentDateTimeUtc()) < 6 * 3600))
+         (settings_.value("backup/last").toDateTime().isValid() &&
+          settings_.value("backup/last").toDateTime().secsTo(QDateTime::currentDateTimeUtc()) < 6 * 3600)))
         return;
     try {
         writeSession();

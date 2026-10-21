@@ -28,6 +28,10 @@ struct Game {
     void merge(const Game &other);
 };
 chess::Board checkedBoard(const std::string &fen, bool chess960 = false);
+// Keep every generated position within the same serializable limits as imported FENs.
+void checkBoardCounters(const chess::Board &board);
+// Resolve forced endings before draws that a player may claim.
+std::pair<chess::GameResultReason, chess::GameResult> gameResult(const chess::Board &board);
 std::string chess960Fen(int number);
 std::vector<Game> parseEpd(const std::string &text);
 std::string exportEpd(const Game &game, int node = 0);

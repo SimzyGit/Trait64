@@ -130,6 +130,10 @@ int main(int argc, char **argv) {
         variation.removeVariation(vn);
         db.save(variation, variantId);
         check(db.rebuildIndexes() == 4, "Rebuild all indexes transactionally");
+        const auto beforeCanceledRebuild = db.exportPgn();
+        rejects([&] { db.rebuildIndexes([](int count) { return count < 4; }); });
+        check(db.exportPgn() == beforeCanceledRebuild && db.integrity() == "ok",
+              "Cancellation at the final reindex checkpoint preserves the library");
         check(db.stats()["todayReviews"].toInt() == 3, "Review history tracks today's work");
         db.deleteCard(cardId);
         check(db.stats()["todayReviews"].toInt() == 3, "Deleting card preserves activity history");

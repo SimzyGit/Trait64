@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonDocument>
 #include <QProcess>
 #include <QSignalSpy>
 #include <QSqlQuery>
@@ -233,9 +234,9 @@ int main(int argc, char **argv) {
         complete(queue, frcId);
         check(db.analysisResults(frcId).size() == 2,
               "Chess960 analysis includes a legal stationary-king castle");
-        t64::Game longGame;
+        t64::Game longGame("7k/8/8/8/8/8/8/K7 w - - 0 1");
         int node = 0;
-        const std::vector<std::string> cycle{"g1f3", "g8f6", "f3g1", "f6g8"};
+        const std::vector<std::string> cycle{"a1a2", "h8h7", "a2a1", "h7h8"};
         for (int i = 0; i < 208; ++i)
             node = longGame.play(node, cycle[i % 4]);
         queue.enqueue(QString::fromStdString(longGame.pgn()), profile, true);
@@ -250,6 +251,57 @@ int main(int argc, char **argv) {
         queue.select(pagesId, 200);
         check(waitFor([&] { return queue.results().size() == 9 && !queue.state()["hasNext"].toBool(); }),
               "Second result page has exact remaining positions");
+        for (const auto &study : std::vector<t64::Game>{
+                 t64::Game("4k3/8/8/8/8/8/8/R3K3 w - - 100 1"),
+                 t64::parsePgn("1.Nf3 Nf6 2.Ng1 Ng8 3.Nf3 Nf6 4.Ng1 Ng8 *").front()}) {
+            const int count = queue.jobs().size();
+            queue.enqueue(QString::fromStdString(study.pgn()), profile, false);
+            const auto claimId = added(queue, count + 1);
+            complete(queue, claimId);
+            const auto lines = db.analysisResults(claimId).last().toMap()["lines"].toList();
+            check(!lines.empty() && !lines.first().toMap()["terminal"].toBool() &&
+                      lines.first().toMap()["nodes"].toULongLong() > 0,
+                  "A claimable draw still receives a real engine evaluation, not a fabricated terminal score");
+            // Reproduce a cache written by the old terminal-draw behavior, without duplicating key logic.
+            const auto claimFen = QString::fromStdString(study.nodes[study.mainline().back()].fen);
+            {
+                auto legacy = QSqlDatabase::addDatabase("QSQLITE", "legacy-terminal-cache");
+                legacy.setDatabaseName(path);
+                check(legacy.open(), "Open legacy cache fixture");
+                QSqlQuery read(legacy);
+                check(read.exec("SELECT key,lines FROM analysis_cache"), "Read existing cache keys");
+                QString key;
+                while (read.next()) {
+                    const auto saved = QJsonDocument::fromJson(read.value(1).toByteArray()).toVariant().toList();
+                    if (!saved.empty() && saved.first().toMap()["fen"].toString() == claimFen)
+                        key = read.value(0).toString();
+                }
+                read.finish();
+                check(!key.isEmpty(), "Real evaluation was cached");
+                QVariantList oldLines{QVariantMap{{"rank", 1}, {"fen", claimFen}, {"scoreType", "cp"},
+                                                   {"cp", 0}, {"nodes", 0}, {"depth", 0},
+                                                   {"bound", false}, {"terminal", true}}};
+                QSqlQuery write(legacy);
+                write.prepare("UPDATE analysis_cache SET lines=? WHERE key=?");
+                write.addBindValue(QString::fromUtf8(QJsonDocument::fromVariant(oldLines).toJson(QJsonDocument::Compact)));
+                write.addBindValue(key);
+                check(write.exec() && write.numRowsAffected() == 1, "Seed exact legacy terminal cache entry");
+                write.finish();
+                legacy.close();
+            }
+            QSqlDatabase::removeDatabase("legacy-terminal-cache");
+            for (bool expectCached : {false, true}) {
+                const int total = queue.jobs().size();
+                queue.enqueue(QString::fromStdString(study.pgn()), profile, false);
+                const auto repairedId = added(queue, total + 1);
+                complete(queue, repairedId);
+                const auto result = db.analysisResults(repairedId).last().toMap();
+                const auto score = result["lines"].toList().first().toMap();
+                check(!score["terminal"].toBool() && score["nodes"].toULongLong() > 0 &&
+                          result["cached"].toBool() == expectCached,
+                      "Legacy terminal score is recomputed, replaced and then safely reused");
+            }
+        }
         queue.shutdown();
         const auto first = all.first().toMap();
         db.setAnalysisStatus(id, "running");

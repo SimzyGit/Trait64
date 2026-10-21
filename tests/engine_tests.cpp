@@ -3,6 +3,7 @@
 #include "game.h"
 #include "uci.h"
 #include <QCoreApplication>
+#include <QDir>
 #include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
@@ -44,6 +45,9 @@ int main(int argc, char **argv) {
             rejected = true;
         }
         check(rejected, "Reject out of range UCI value");
+        check(t64::Uci::optionValue(spin, 5000, true) == "3190" &&
+                  t64::Uci::optionValue(spin, 1000, true) == "1320",
+              "Managed spin values honor engine-declared limits");
         const auto combo = t64::Uci::parseOption(
             "option name Style type combo default Very solid var Normal var Very solid");
         check(t64::Uci::optionValue(combo, "Very solid") == "Very solid", "UCI multi-word combo");
@@ -55,7 +59,9 @@ int main(int argc, char **argv) {
         }
         check(rejected, "Reject undeclared combo");
         const auto string = t64::Uci::parseOption("option name Eval File type string default <empty>");
-        check(t64::Uci::optionValue(string, "") == "<empty>", "Empty UCI string");
+        check(t64::Uci::optionValue(string, "").isEmpty() &&
+                  t64::Uci::optionValue(string, "<empty>").isEmpty(),
+              "Empty UCI strings and legacy markers are sent as empty values");
         rejected = false;
         try {
             t64::Uci::optionValue(string, "net\nquit");
@@ -65,6 +71,24 @@ int main(int argc, char **argv) {
         check(rejected && t64::Uci::parseOption("option name Bad\nquit type button").isEmpty(),
               "Reject UCI injection");
         t64::Uci engine;
+        {
+            QTemporaryDir dir;
+            QFile fake(dir.path() + "/bounded-engine");
+            check(fake.open(QIODevice::WriteOnly), "Create isolated UCI fixture");
+            fake.write("#!/bin/sh\nwhile IFS= read -r line; do\ncase \"$line\" in\n"
+                       "uci) printf '%s\\n' 'id name Bounded fixture' "
+                       "'option name Threads type spin default 1 min 1 max 1' "
+                       "'option name Hash type spin default 16 min 1 max 32' 'uciok';;\n"
+                       "'setoption name Threads value 1'|'setoption name Hash value 32') ;;\n"
+                       "setoption*) exit 42;;\nisready) printf 'readyok\\n';;\nquit) exit;;\nesac\ndone\n");
+            fake.close();
+            check(fake.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner),
+                  "Make UCI fixture executable");
+            t64::Uci bounded;
+            bounded.start(fake.fileName(), 32, 4096, 1);
+            check(waitFor([&] { return bounded.ready(); }), "Handshake adapts to bounded engine options");
+            bounded.shutdown();
+        }
         QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines),
             complete(&engine, &t64::Uci::completed);
         QString path = qEnvironmentVariable("T64_STOCKFISH");
@@ -77,6 +101,23 @@ int main(int argc, char **argv) {
             return 77;
         }
         auto start = QString::fromStdString(chess::constants::STARTPOS);
+        {
+            QTemporaryDir dir;
+            const auto isolatedEngine = dir.path() + "/stockfish";
+            check(QFile::copy(path, isolatedEngine), "Copy actual Stockfish into isolated test directory");
+            check(QDir(dir.path()).mkdir("<empty>"), "Block the unintended literal debug filename");
+            for (const auto &empty : QStringList{QString(), QStringLiteral("<empty>")}) {
+                t64::Uci logging;
+                QSignalSpy replies(&logging, &t64::Uci::bestMove);
+                logging.start(isolatedEngine, 1, 16, 1, 20, {}, {{"Debug Log File", empty}});
+                check(waitFor([&] { return logging.ready(); }),
+                      "Disabling debug output cannot open a literal <empty> file or stop the engine");
+                logging.analyse(start, "position startpos", true, 100);
+                check(waitFor([&] { return !replies.empty(); }), "Engine still analyzes with debug logging disabled");
+                logging.shutdown();
+                check(QFileInfo(dir.path() + "/<empty>").isDir(), "Debug filename guard remains untouched");
+            }
+        }
         for (const auto &bad : QStringList{"score cp abc", "score cp 2147483648", "score bananas 10",
                                            "score mate -2147483648", "depth 5", "score cp 1 multipv abc"})
             check(t64::Uci::parseInfo("info " + bad + " pv e2e4", start).isEmpty(),
@@ -139,6 +180,34 @@ int main(int argc, char **argv) {
         t64::Game frcGame(frc.toStdString(), true);
         frcGame.play(0, best.last()[0].toString().toStdString());
         engine.shutdown();
+        {
+            t64::Uci chained;
+            QObject::connect(&chained, &t64::Uci::completed, &app,
+                             [&](const QString &completedFen, const QVariantList &) {
+                if (completedFen == start)
+                    chained.analyse(fen, "position startpos moves e2e4", true, 100);
+            });
+            QSignalSpy searches(&chained, &t64::Uci::completed), replies(&chained, &t64::Uci::bestMove);
+            chained.start(path, 1, 16, 1);
+            chained.analyse(start, "position startpos", true, 100);
+            check(waitFor([&] { return searches.size() >= 2; }), "Chained searches finish");
+            check(searches.first()[0].toString() == start && searches.last()[0].toString() == fen,
+                  "Completion signal keeps its original FEN when a receiver starts another search");
+            check(replies.size() == 1 && replies.first()[1].toString() == fen,
+                  "A superseded completion cannot deliver its old move as the new position's move");
+            chained.shutdown();
+        }
+        {
+            t64::Uci stopped;
+            QObject::connect(&stopped, &t64::Uci::completed, &app,
+                             [&](const QString &, const QVariantList &) { stopped.stop(); });
+            QSignalSpy searches(&stopped, &t64::Uci::completed), replies(&stopped, &t64::Uci::bestMove);
+            stopped.start(path, 1, 16, 1);
+            stopped.analyse(start, "position startpos", true, 100);
+            check(waitFor([&] { return !searches.empty(); }), "Stop at completion received");
+            check(replies.empty(), "Stopping in a completion callback cancels move delivery");
+            stopped.shutdown();
+        }
         t64::Comparison comparison;
         QVariantMap profile{{"name", "Stockfish A"},
                             {"enginePath", path},

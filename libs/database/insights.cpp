@@ -111,8 +111,8 @@ int Database::rebuildIndexes(const std::function<bool(int)> &progress) {
             save(load(id), id);
             ++count;
         }
-        if (progress)
-            progress(count);
+        if (progress && !progress(count))
+            throw std::runtime_error("Réindexation interrompue ; anciens index conservés.");
         sql("RELEASE rebuild");
     } catch (...) {
         sql("ROLLBACK TO rebuild");

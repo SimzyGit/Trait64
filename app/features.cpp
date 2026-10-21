@@ -221,17 +221,30 @@ void Controller::initFeatures() {
     QFile f(sessionPath_);
     if (f.open(QIODevice::ReadOnly) && f.size() <= 64 * 1024 * 1024) {
         try {
-            auto json = QJsonDocument::fromJson(f.readAll()).object();
+            QJsonParseError error;
+            const auto document = QJsonDocument::fromJson(f.readAll(), &error);
+            // The constructor already preserved malformed JSON; do not create a second recovery copy.
+            const auto json = error.error == QJsonParseError::NoError && document.isObject()
+                                  ? document.object() : QJsonObject();
             auto tabs = json["tabs"].toArray();
-            if (!tabs.empty() && tabs.size() <= 16) {
+            if (json.contains("tabs")) {
+                need(json["tabs"].isArray() && !tabs.empty() && tabs.size() <= 16,
+                     "Liste des onglets de session invalide.");
                 std::vector<Study> recovered;
                 for (auto v : tabs) {
                     auto tab = v.toObject();
                     auto games = t64::parsePgn(tab["pgn"].toString().toStdString());
                     need(games.size() == 1, "Onglet de session invalide.");
                     int node = 0;
-                    for (auto m : tab["path"].toArray())
-                        node = games[0].play(node, m.toString().toStdString());
+                    need(tab["path"].isArray(), "Chemin de session invalide.");
+                    for (auto m : tab["path"].toArray()) {
+                        const auto &children = games[0].nodes[node].children;
+                        const auto found = std::find_if(children.begin(), children.end(), [&](int child) {
+                            return m.isString() && games[0].nodes[child].uci == m.toString().toStdString();
+                        });
+                        need(found != children.end(), "Position absente de l’étude enregistrée.");
+                        node = *found;
+                    }
                     qint64 id =
                         json["library"].toString() == db_->path() ? tab["id"].toVariant().toLongLong() : 0;
                     recovered.push_back(
@@ -568,8 +581,10 @@ void Controller::requestReviewPosition() {
     }
     const int node = reviewNodes_[reviewIndex_];
     auto board = reviewGame_.boardAt(node);
-    auto end = board.isGameOver();
-    if (end.second != chess::GameResult::NONE) {
+    auto end = t64::gameResult(board);
+    if (end.first == chess::GameResultReason::CHECKMATE ||
+        end.first == chess::GameResultReason::STALEMATE ||
+        end.first == chess::GameResultReason::INSUFFICIENT_MATERIAL) {
         double score = end.first == chess::GameResultReason::CHECKMATE
                            ? (board.sideToMove() == chess::Color::WHITE ? -100. : 100.)
                            : 0.;
@@ -802,8 +817,10 @@ void Controller::startLocalGame(int minutes, int increment, int opponent, bool h
     emit reviewChanged();
     game_.tags["Result"] = "*";
     clockResult_.clear();
-    whiteMs_ = blackMs_ = std::clamp(minutes, 1, 180) * 60000;
-    incrementMs_ = std::clamp(increment, 0, 120) * 1000;
+    minutes = std::clamp(minutes, 1, 180);
+    increment = std::clamp(increment, 0, 120);
+    whiteMs_ = blackMs_ = minutes * 60000;
+    incrementMs_ = increment * 1000;
     localGame_ = opponent == 0;
     playing_ = !localGame_;
     humanWhite_ = humanWhite;
@@ -868,7 +885,7 @@ void Controller::claimDraw() {
     if (!playing_ && !localGame_)
         return;
     auto b = game_.boardAt(node_);
-    auto e = b.isGameOver();
+    auto e = t64::gameResult(b);
     if (e.second == chess::GameResult::NONE) {
         emit message("Aucune nulle réclamable dans cette position.");
         return;

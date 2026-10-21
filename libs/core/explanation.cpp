@@ -42,6 +42,7 @@ LineFacts explainLine(chess::Board board, const std::vector<std::string> &moves)
             fact.promotion = move.promotionType();
         const auto before = board;
         board.makeMove(move);
+        checkBoardCounters(board);
         fact.tactics = explainTactics(before, board);
         fact.fen = board.getFen();
         fact.material = material(board);
