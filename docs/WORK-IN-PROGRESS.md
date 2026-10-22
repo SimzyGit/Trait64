@@ -1,6 +1,14 @@
-# Point de reprise — audit global, 20 octobre 2026
+# Point de reprise — audit global vérifié le 22 octobre 2026
 
-**Priorité utilisateur : débogage massif avant tout ajout.** Audit en cours sur la branche `audit/full-debug`, base `4e4cd3d`. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) pour les défauts reproduits et les validations restant à terminer. Ne pas reprendre les ajouts tant que ce lot n’est pas validé. La version distribuée reste dev.46.
+**Audit intégré et publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) corrige dix groupes de défauts sans ajout fonctionnel ni changement du schéma 7. Fusion `e301ddb694562cead329e6b6f3ff3099c27f9ec3`, arbre `40e388e8ea15b53a85004357267338a7b41e94e8` identique au commit testé `8eada72f4e94a15f4334d970d4b4a1972a46c538`.
+
+Corrections : récupération des sessions, annulation finale de réindexation, compteurs FEN, réponses UCI réentrantes, destruction de l’updater pendant l’authentification, nulles réclamables, cache terminal hérité, cadence PGN et options UCI. Stockfish pouvait s’arrêter lorsqu’une chaîne de journal vide était envoyée comme le nom de fichier `<empty>` ; les anciens profils contenant ce marqueur sont également corrigés.
+
+Validation locale : 12/12 suites avec Stockfish réel, 80 études et 3 000 mutations FEN/PGN. [CI de la PR 39564062699](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699) réussie : cœur ASan/UBSan 2/2, Qt ASan/UBSan 12/12, Debian 12 12/12 (58,70 s), Debian 13 12/12 (73,99 s), DEB installés, AppImage et manifeste.
+
+**Publication confirmée le 21 octobre à 10 h 24, heure de Paris ; vérifiée le 22 octobre.** [CI de main 39566807355](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355) réussie : cœur ASan/UBSan 94,35 s, Qt 12/12 en 104,70 s, Debian 12 12/12 en 60,21 s, Debian 13 12/12 en 75,45 s ; paquets installés et AppImage démarrés. Le tag vise la fusion testée. Les cinq fichiers correspondent exactement au manifeste en noms/tailles/SHA-256 ; zéro archive Actions. Le sélecteur réel reconnaît les trois paquets depuis dev.46 sur Développement, avec exclusions de canaux et versions vérifiées.
+
+Rapport : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Mesures : [verification-debug-2026-10-22.json](verification-debug-2026-10-22.json). Les anciens bilans restent historiques ; lancer une nouvelle analyse applique la réparation du cache. Aucun essai sur le PC Voyager n’est revendiqué. Repartir de main pour le prochain lot ; préserver les anciens checkouts non committés. Les sections suivantes conservent l’historique et la feuille de route.
 
 ## État précédent conservé
 
@@ -38,13 +46,13 @@ n’a pas survécu à la restauration de l’environnement, repartir de main ou 
 branche `feat/tactical-explanations`, sans reconstituer le code depuis le chat.
 Ne pas modifier les anciens checkouts non committés.
 
-## État faisant autorité
+## Historique des PR #6 et #7
 
 La PR #6 est intégrée à `main` au commit `31ac8803cb7d6e7e0f98ca0c3cf7eeea1b6e5eaa`. Elle apporte la file d’analyses persistante, les variantes, le cache avec provenance et les scores UCI typés. La CI de cette PR a réussi les 11 suites sur Debian 12 et 13, le cœur ASan/UBSan et les essais des paquets installés.
 
 La [PR #7](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/7), commit testé `e2191937041460508507ffff4ab5c0a20afe9a70`, est **fusionnée** dans main le 16 octobre au commit `d8c49243f961ae20dfb33e11231a69cbc898f428`. Son arbre de fichiers est identique à celui validé en PR. Schéma toujours **7**, aucune migration existante réécrite. Le prochain changement structurel nécessite une migration **8** sauvegardée.
 
-## Nouveau lot : explications du bilan
+## Historique : explications du bilan
 
 Après dev.42, ajout de `libs/core/explanation.*` : relecture légale bornée à 128
 demi-coups, faits de captures/promotions/roques/échecs/mats/pats et matériel
@@ -97,7 +105,7 @@ Nettoyage effectué le 15 octobre à 05:59 UTC : **58 archives / 8 371 207 728 o
 
 ## Reprise suivante
 
-1. Lot tactique publié et vérifié dans dev.46. Poursuivre avec un corpus tactique sous licence ouverte et progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
+1. Audit global terminé et publié dans dev.52. La suite de la feuille de route peut reprendre depuis main, avec un corpus tactique sous licence ouverte et une progression par thème ; distinguer attaque observée et gain prouvé, sans inventer d’équivalences ni de niveau Elo.
 2. Couverture probabiliste et comparaison de répertoires. L’édition de coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones ; le lookup des coups de la position actuelle est indexé et reste sur le thread UI.
 3. Qualification de 1/2/5/10 millions de parties **réelles**. Seules 10 000 parties / 661 314 positions sont mesurées dans `performance-pgn-2026-10-15.json` ; le million de métadonnées synthétiques ne valide pas un million de PGN complets.
 4. Module Syzygy local, OCR licencié avec validation de FEN, rapports pédagogiques/répertoires, restauration guidée et essais Voyager X11/Wayland/Polkit. Le backlog complet reste dans ROADMAP ; il n’est pas terminé.

@@ -1,4 +1,4 @@
-## Audit global de fiabilité — 20 octobre 2026
+## Audit global de fiabilité — dev.52, 21 octobre 2026
 
 - Récupération des sessions endommagées sans perte de l’original ; chemins restaurés uniquement depuis les variantes enregistrées.
 - Annulation de réindexation atomique, même au dernier signal de progression.
@@ -11,7 +11,7 @@
 - Cadence PGN cohérente avec l’horloge et protégée des dépassements entiers.
 - Stress FEN/PGN reproductible et contrôles ASan/UBSan étendus à tous les modules dans la CI.
 
-Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Schéma 7 conservé. Publication en attente de validation complète.
+Publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52). Douze suites réussies sur Debian 12 et 13, contrôles ASan/UBSan, paquets installés et AppImage validés. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Schéma 7 conservé.
 
 ## Motifs tactiques et repères sur l’échiquier
 

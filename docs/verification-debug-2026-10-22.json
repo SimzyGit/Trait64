@@ -1,0 +1,256 @@
+{
+  "date": "2026-10-22",
+  "test_dates": [
+    "2026-10-20",
+    "2026-10-21"
+  ],
+  "base_commit": "4e4cd3d36711c98a5952d26dca4b2531bc4c6264",
+  "code_commit": "8eada72f4e94a15f4334d970d4b4a1972a46c538",
+  "merge_commit": "e301ddb694562cead329e6b6f3ff3099c27f9ec3",
+  "tested_and_merged_tree": "40e388e8ea15b53a85004357267338a7b41e94e8",
+  "schema": 7,
+  "fixed_defect_groups": 10,
+  "local": {
+    "compiler": "GCC 13.3",
+    "qt": "6.4.2",
+    "stockfish": "16 (real executable)",
+    "suites_passed": 12,
+    "suites_total": 12,
+    "first_invocation_seconds": 84.12,
+    "smoke_rerun_seconds": 2.96,
+    "note": "Eleven suites passed in the first invocation on October 21. A restored generated executable was incomplete and lacked execute permission; it was relinked, then desktop_smoke passed. This was an environment artifact, not a source fix.",
+    "core_checks": 3269,
+    "desktop_checks": 683,
+    "analysis_checks": 121,
+    "update_checks": 45,
+    "storage_checks": 158,
+    "repertoire_checks": 51,
+    "resumable_import_checks": 24,
+    "robustness": {
+      "seed": "0x64302026",
+      "checks": 4414,
+      "generated_studies": 80,
+      "mutations": 3000,
+      "accepted": 330,
+      "rejected": 2670
+    },
+    "earlier_complete_pass": {
+      "date": "2026-10-20",
+      "tree": "9188d1192223bc8ef2f87e348c0a5a5a510750b9",
+      "debug": {
+        "passed": 12,
+        "total": 12,
+        "seconds": 92.78
+      },
+      "asan_ubsan": {
+        "passed": 12,
+        "total": 12,
+        "seconds": 120.18,
+        "leak_detection": false
+      }
+    }
+  },
+  "regressions": {
+    "updater_use_after_free": "Reproduced by AddressSanitizer before the destructor fix.",
+    "legacy_terminal_cache": "Regression failed before ignoring and replacing incorrect terminal cache entries.",
+    "empty_uci_option": "Actual Stockfish exited 1 with a literal <empty> debug filename, and exited 0 with an empty value, while a directory of that name blocked file creation."
+  },
+  "previous_ci": [
+    {
+      "run_id": 39393905485,
+      "head": "672dd497c748beafd22dbb2121dc5d0fb58446e7",
+      "core_sanitizers": "2/2 passed in 78.03 s",
+      "desktop_sanitizers": "10/12; persistent_analysis and desktop_interactions failed due to the literal <empty> filename",
+      "resolution_commit": "de41134a004be05be01dc82c08afe39019d568a4"
+    },
+    {
+      "run_id": 39563408828,
+      "head": "de41134a004be05be01dc82c08afe39019d568a4",
+      "core_sanitizers": "core passed in 14.84 s; robustness timed out after 120.14 s",
+      "resolution": "Timeout raised to 300 s only with sanitizers; unchanged corpus and checks",
+      "resolution_commit": "8eada72f4e94a15f4334d970d4b4a1972a46c538"
+    }
+  ],
+  "ci": {
+    "run_id": 39564062699,
+    "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699",
+    "status": "success",
+    "core_sanitizers": {
+      "passed": 2,
+      "total": 2,
+      "seconds": 139.75,
+      "core_seconds": 13.84,
+      "robustness_seconds": 125.86,
+      "leak_detection": "default enabled"
+    },
+    "desktop_sanitizers": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 112.5,
+      "leak_detection": false,
+      "stockfish": "real"
+    },
+    "debian12": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 58.7,
+      "installed_deb_smoke": "passed",
+      "appimage_smoke": "passed"
+    },
+    "debian13": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 73.99,
+      "installed_deb_smoke": "passed"
+    },
+    "publisher_tests": 17,
+    "cleanup_tests": 9,
+    "package_manifest": "passed",
+    "actions_artifacts": 0
+  },
+  "release": {
+    "version": "v0.3.0-dev.52",
+    "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52",
+    "run_id": 39566807355,
+    "run_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355",
+    "status": "published",
+    "published_at": "2026-10-21T08:24:00Z",
+    "verified_date": "2026-10-22",
+    "draft": false,
+    "prerelease": true,
+    "tag_commit_verified": true,
+    "assets_match_runner_manifest": true,
+    "actions_artifacts": 0,
+    "core_sanitizers": {
+      "passed": 2,
+      "total": 2,
+      "seconds": 94.35,
+      "core_seconds": 9.32,
+      "robustness_seconds": 84.86,
+      "leak_detection": "default enabled"
+    },
+    "desktop_sanitizers": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 104.7,
+      "leak_detection": false,
+      "stockfish": "real"
+    },
+    "debian12": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 60.21,
+      "installed_deb_smoke": "passed",
+      "appimage_smoke": "passed"
+    },
+    "debian13": {
+      "passed": 12,
+      "total": 12,
+      "seconds": 75.45,
+      "installed_deb_smoke": "passed"
+    },
+    "publisher_tests": 17,
+    "cleanup_tests": 9,
+    "assets": [
+      {
+        "id": 661836165,
+        "name": "SHA256SUMS",
+        "size": 415,
+        "digest": "sha256:307a5c9df1e38f65bb12095b8e254e4657e4dad0c790d6ed0fe49caf83e19234",
+        "state": "uploaded"
+      },
+      {
+        "id": 661836162,
+        "name": "Trait64-0.3.0-dev.52-linux-x86_64.AppImage",
+        "size": 36862456,
+        "digest": "sha256:e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2",
+        "state": "uploaded"
+      },
+      {
+        "id": 661836158,
+        "name": "Trait64-runtime-sources.tar",
+        "size": 291573760,
+        "digest": "sha256:24aba64acbf22c1ce76001f7301876ee444e2776e57fc746c0ceb5a81828064a",
+        "state": "uploaded"
+      },
+      {
+        "id": 661836164,
+        "name": "trait64_0.3.0-dev.52_debian12_amd64.deb",
+        "size": 1043920,
+        "digest": "sha256:d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece",
+        "state": "uploaded"
+      },
+      {
+        "id": 661836159,
+        "name": "trait64_0.3.0-dev.52_debian13_amd64.deb",
+        "size": 1051410,
+        "digest": "sha256:70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4",
+        "state": "uploaded"
+      }
+    ],
+    "runner_manifest": {
+      "Trait64-0.3.0-dev.52-linux-x86_64.AppImage": {
+        "size": 36862456,
+        "digest": "sha256:e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2"
+      },
+      "Trait64-runtime-sources.tar": {
+        "size": 291573760,
+        "digest": "sha256:24aba64acbf22c1ce76001f7301876ee444e2776e57fc746c0ceb5a81828064a"
+      },
+      "trait64_0.3.0-dev.52_debian12_amd64.deb": {
+        "size": 1043920,
+        "digest": "sha256:d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece"
+      },
+      "trait64_0.3.0-dev.52_debian13_amd64.deb": {
+        "size": 1051410,
+        "digest": "sha256:70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4"
+      },
+      "SHA256SUMS": {
+        "size": 415,
+        "digest": "sha256:307a5c9df1e38f65bb12095b8e254e4657e4dad0c790d6ed0fe49caf83e19234"
+      }
+    },
+    "updater_probe": {
+      "from_version": "0.3.0-dev.46",
+      "source_commit": "e301ddb694562cead329e6b6f3ff3099c27f9ec3",
+      "development_channel": true,
+      "ignored_version_rejection": true,
+      "same_version_and_downgrade_rejection": true,
+      "selected": [
+        {
+          "asset_id": 661836162,
+          "bytes": 36862456,
+          "name": "Trait64-0.3.0-dev.52-linux-x86_64.AppImage",
+          "sha256": "e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2"
+        },
+        {
+          "asset_id": 661836164,
+          "bytes": 1043920,
+          "name": "trait64_0.3.0-dev.52_debian12_amd64.deb",
+          "sha256": "d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece"
+        },
+        {
+          "asset_id": 661836159,
+          "bytes": 1051410,
+          "name": "trait64_0.3.0-dev.52_debian13_amd64.deb",
+          "sha256": "70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4"
+        }
+      ],
+      "stable_and_beta_exclusion": true,
+      "tag": "v0.3.0-dev.52"
+    }
+  },
+  "observed_build_messages": [
+    "Two GCC 13 -Wmaybe-uninitialized warnings in libstdc++ regex/std_function headers during optimized sanitizer builds; no runtime ASan/UBSan finding in the completed suites.",
+    "linuxdeployqt dependency scanning reports missing Windows/macOS/iOS and QtQuick.Shapes modules. Trait64 does not import these modules; the packaged AppImage startup tests pass."
+  ],
+  "limits": [
+    "Deterministic stress testing is not exhaustive proof of robustness.",
+    "Qt GUI tests use offscreen software rendering; no test on the user's Voyager PC or GPU.",
+    "LeakSanitizer disabled for local and Qt runs; core CI retains default leak detection.",
+    "No extension to automatic 75-move/fivefold-repetition adjudication or all complex dead positions.",
+    "Previously completed analysis reports are historical; launching a new analysis applies cache corrections.",
+    "Third-party dependencies were not exhaustively audited line by line.",
+    "Release asset names, sizes and GitHub-provided digests were compared with the runner manifest; binaries were installed and tested in CI, not on the user's PC."
+  ]
+}

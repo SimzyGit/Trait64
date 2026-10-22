@@ -1,7 +1,9 @@
-# Audit de débogage global — 20–21 octobre 2026
+# Audit de débogage global — 20–22 octobre 2026
 
 Demande utilisateur : suspendre les ajouts et déboguer tout le logiciel.
 Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
+
+**Audit intégré dans la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Publication le 21 octobre 2026, vérification finale le 22 octobre. Dix groupes de défauts corrigés. Mesures et références : [verification-debug-2026-10-22.json](verification-debug-2026-10-22.json).
 
 ## Corrections et preuves de régression
 
@@ -20,15 +22,35 @@ Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 
 ## Vérification
 
-- Référence avant modification : **11/11 suites, 55,76 s**, GCC 13.3 / Qt 6.4.2, Stockfish 16 réel.
-- Avertissements `-Wall -Wextra -Wpedantic -Wformat=2` étendus à tous les modules ; trois expressions logiques parenthésées sans changement de comportement.
-- Nouvelle suite déterministe `robustness` : 80 études légales classiques/Chess960 avec variantes, notes, suppressions et fusions ; ordre et offsets du parseur en flux et parallèle ; 3 000 mutations FEN/PGN, avec round trip des entrées acceptées.
-- Tests de publication (17) et de nettoyage (9), plus syntaxe des scripts de distribution.
-- Test d’annulation d’export rendu déterministe : annulation avant dispatch. Un export minuscule peut légitimement être terminé avant l’instruction UI suivante ; le test ne suppose plus que l’annulation gagne cette course.
-- CI étendue aux douze suites avec ASan/UBSan, Qt et Stockfish avant les paquets Debian 12/13. Le contrôle mémoire du cœur sans Qt est conservé.
-- Délai du stress porté à 300 s uniquement sous sanitizers, contre 120 s dans les autres builds. L’exécution CI 39563408828 a atteint 120 s en Debug non optimisé ; la précédente passait ce même corpus en 70,44 s. Aucun cas, contrôle ni sanitizer retiré.
-- Résultats complets après correction et liens CI : en cours de validation. Ce fichier n’annonce pas une publication avant réussite des contrôles.
-- Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La CI Ubuntu de la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), [exécution 39393905485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39393905485), a ensuite révélé le défaut des chaînes UCI vides ci-dessus ; cet échec n’est pas masqué par une relance sans correction. Validation du correctif du 21 octobre en cours.
+Référence avant modification : **11/11 suites, 55,76 s**, GCC 13.3 / Qt 6.4.2, Stockfish 16 réel. Après correction : **12/12 suites locales validées** le 21 octobre, onze dans la passe de 84,12 s, puis le démarrage en 2,96 s après régénération d’un exécutable local incomplet restauré par l’environnement. Ce dernier incident ne nécessitait pas de modification du code.
+
+Contrôles locaux : cœur **3 269**, robustesse **4 414**, interface **683**, analyses persistantes **121**, mises à jour **45**, stockage **158**, répertoires **51**, imports reprenables **24**. Le stress déterministe couvre **80 études classiques/Chess960 et 3 000 mutations FEN/PGN** : 330 acceptées avec round trip vérifié, 2 670 rejetées. Les parseurs en flux et parallèle vérifient aussi l’ordre des parties et leurs offsets.
+
+| Contrôle | [PR, CI 39564062699](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699) | [Publication, CI 39566807355](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355) |
+|---|---|---|
+| Cœur ASan/UBSan | 2/2, 139,75 s | 2/2, 94,35 s |
+| Tous les modules Qt ASan/UBSan, Stockfish réel | 12/12, 112,50 s | 12/12, 104,70 s |
+| Debian 12 Release | 12/12, 58,70 s | 12/12, 60,21 s |
+| Debian 13 Release | 12/12, 73,99 s | 12/12, 75,45 s |
+| Deux DEB installés et démarrés, AppImage démarrée | Réussis | Réussis |
+| Tests de publication / nettoyage, syntaxe Bash | 17 / 9 réussis | 17 / 9 réussis |
+| Manifeste des cinq fichiers | Vérifié | Vérifié |
+
+Le commit testé est `8eada72f4e94a15f4334d970d4b4a1972a46c538`. La fusion `e301ddb694562cead329e6b6f3ff3099c27f9ec3` possède exactement le même arbre `40e388e8ea15b53a85004357267338a7b41e94e8`. Les contrôles mémoire de tous les modules sont désormais requis avant la distribution, en complément du contrôle du cœur.
+
+Les avertissements `-Wall -Wextra -Wpedantic -Wformat=2` sont étendus à tous les modules ; trois expressions logiques ont été parenthésées. Deux avertissements GCC 13 `-Wmaybe-uninitialized` subsistent dans les en-têtes regex/std_function de libstdc++ lors du build optimisé avec sanitizers ; aucune erreur mémoire ou de comportement indéfini n’est détectée dans les suites terminées. Le scan linuxdeployqt signale des modules Windows/macOS/iOS et QtQuick.Shapes absents ; Trait64 ne les importe pas et le démarrage de l’AppImage réussit.
+
+### Échecs ayant conduit aux corrections
+
+- Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La [CI 39393905485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39393905485) a ensuite révélé l’arrêt de Stockfish lié aux chaînes UCI vides. Le comportement a été reproduit avec le moteur réel, puis corrigé au commit `de41134a`.
+- La [CI 39563408828](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39563408828) a atteint le délai de 120 s du stress en Debug non optimisé avec sanitizers. Le délai passe à **300 s uniquement sous sanitizers**, et reste 120 s sinon. Le même corpus termine ensuite en 125,86 s dans la PR et 84,86 s dans la publication ; aucun cas, contrôle ni sanitizer retiré.
+- Le test d’annulation d’export est rendu déterministe en annulant avant dispatch. Un export minuscule peut déjà être terminé à l’instruction UI suivante ; ce test ne suppose plus que l’annulation gagne cette course.
+
+## Publication vérifiée
+
+La préversion **dev.52**, publiée le 21 octobre à **10 h 24, heure de Paris**, vise le commit de fusion testé. Les cinq noms, tailles et SHA-256 fournis par GitHub correspondent exactement au manifeste produit par la CI. Aucune archive Actions n’a été créée.
+
+Le 22 octobre, le sélecteur de mises à jour compilé depuis le code exact publié a relu les métadonnées réelles : AppImage, Debian 12 et Debian 13 sont proposés depuis dev.46 sur Développement ; Stable/Bêta, version ignorée, identique et rétrogradation restent exclus. Les paquets sont installés et testés dans la CI ; aucune installation sur le PC utilisateur n’a été effectuée.
 
 ## Périmètre et limites
 

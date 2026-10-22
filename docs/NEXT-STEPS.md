@@ -1,8 +1,8 @@
-# Reprise du développement — audit du 20 octobre 2026
+# Reprise du développement — audit vérifié le 22 octobre 2026
 
-**Priorité : terminer l’audit de débogage global avant tout ajout.** Branche `audit/full-debug`, rapport [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Les correctifs sont en validation locale puis CI ; la référence distribuée reste dev.46 jusqu’à publication confirmée. Les paragraphes suivants conservent l’état antérieur et la feuille de route.
+**Audit global terminé, intégré dans la PR #9 et publié dans [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Dix groupes de défauts corrigés, 12/12 suites locales et CI Debian 12/13, contrôles ASan/UBSan de tous les modules, 3 000 mutations FEN/PGN. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Aucun ajout de la feuille de route n’a été entrepris pendant cet audit.
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 (stockage), #5 (imports parallèles), #6 (analyses persistantes) et #7 (répertoires asynchrones/publication sans archives Actions) sont intégrées à main. Les 11 suites et paquets passent sur Debian 12 et 13. La version distribuée est [v0.3.0-dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46), vérifiée sans archive Actions. Le schéma reste 7. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #9 sont intégrées à main. La version distribuée dev.52 et son tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 22 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 La PR #8 est également intégrée et publiée dans dev.46 : motifs tactiques et
 repères PGN, 11 suites Debian 12/13 et paquets validés. Tag, cinq fichiers et

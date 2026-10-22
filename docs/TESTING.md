@@ -1,5 +1,17 @@
 # Vérification 0.3
 
+## Audit global — validation finale du 22 octobre 2026
+
+La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) ajoute des régressions sur les sessions et chemins restaurés, l’annulation finale de réindexation, les compteurs FEN, les réponses moteur réentrantes, la destruction pendant l’authentification, les nulles réclamables, le cache hérité et les cadences extrêmes.
+
+Les options UCI sont vérifiées avec un moteur déclarant des bornes strictes et Stockfish réel. Un dossier nommé `<empty>` empêche la création du fichier de journal erroné, y compris en exécution privilégiée ; les chaînes vides et les anciens marqueurs doivent permettre le démarrage et l’analyse.
+
+Le stress conserve 80 études et 3 000 mutations pour tous les builds. Son délai est de 300 s sous sanitizers et 120 s sinon : le passage CI non optimisé a pris 125,86 s dans la PR. Douze suites passent localement, sous ASan/UBSan avec Qt, puis sur Debian 12 et 13. Les DEB installés et l’AppImage démarrent. La publication dev.52, le tag, les cinq fichiers et la sélection des mises à jour ont été vérifiés.
+
+Résultats, échecs initiaux et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md) ; mesures exactes : [verification-debug-2026-10-22.json](verification-debug-2026-10-22.json).
+
+## Suites actuelles
+
 `ctest --test-dir build --output-on-failure` exécute onze suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une douzième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
 
 | Suite | Scénarios vérifiés |
