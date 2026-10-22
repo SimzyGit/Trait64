@@ -5,8 +5,11 @@
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QSqlDriver>
 #include <QSqlQuery>
 #include <QTemporaryDir>
+#include <sqlite3.h>
+#include <cstring>
 #include <iostream>
 #include <thread>
 int checks = 0;
@@ -28,6 +31,63 @@ int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     QTemporaryDir dir;
     try {
+        {
+            // No ANALYZE statistics: this is the normal state of a fresh import.
+            // Count SQLite VM work on the real save() lookup, not wall-clock time
+            // or a separately reconstructed query that could drift from production.
+            t64::Database large(dir.filePath("dedup.sqlite"));
+            QSqlDatabase connection;
+            for (const auto &name : QSqlDatabase::connectionNames()) {
+                auto candidate = QSqlDatabase::database(name);
+                if (candidate.databaseName() == large.path())
+                    connection = candidate;
+            }
+            QSqlQuery seed(connection);
+            check(seed.exec(
+                      "WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4096) "
+                      "INSERT INTO games(uuid,white,black,event,date,result,pgn,digest,updated) "
+                      "SELECT 'seed-'||x,'White','Black','','2026.10.22','*','*','seed-'||x,"
+                      "'2026-10-22T00:00:00Z' FROM n"),
+                  "Seed a populated library without query-planner statistics");
+            auto native = connection.driver()->handle();
+            check(native.isValid() && QByteArray(native.typeName()) == "sqlite3*", "Native SQLite handle");
+            auto *handle = *static_cast<sqlite3 **>(native.data());
+            struct LookupWork {
+                int calls = 0, maximum = 0;
+            } work;
+            sqlite3_trace_v2(
+                handle, SQLITE_TRACE_PROFILE,
+                [](unsigned, void *context, void *statement, void *) {
+                    auto *stmt = static_cast<sqlite3_stmt *>(statement);
+                    const char *sql = sqlite3_sql(stmt);
+                    if (sql && std::strncmp(sql, "SELECT id FROM games ", 21) == 0 &&
+                        std::strstr(sql, "digest=")) {
+                        auto &work = *static_cast<LookupWork *>(context);
+                        ++work.calls;
+                        work.maximum =
+                            std::max(work.maximum, sqlite3_stmt_status(stmt, SQLITE_STMTSTATUS_VM_STEP, 0));
+                    }
+                    return 0;
+                },
+                &work);
+            qint64 first = 0, duplicate = 0, restored = 0;
+            const auto game = t64::parsePgn("[White \"Real game\"]\n1.e4 e5 *").front();
+            try {
+                first = large.save(game);
+                duplicate = large.save(game);
+                large.trash(first, true);
+                restored = large.save(game);
+            } catch (...) {
+                sqlite3_trace_v2(handle, 0, nullptr, nullptr);
+                throw;
+            }
+            sqlite3_trace_v2(handle, 0, nullptr, nullptr);
+            check(work.calls == 3 && work.maximum < 100,
+                  "Digest lookups stay bounded despite thousands of unrelated active games");
+            check(first == duplicate && restored != first && large.load(first).pgn() == game.pgn() &&
+                      large.load(restored).pgn() == game.pgn() && large.stats()["games"].toInt() == 4097,
+                  "Bounded deduplication preserves active copies and games in the trash");
+        }
         t64::Database db(dir.path() + "/test.sqlite");
         auto games = t64::parsePgn("[White \"Alice\"]\n[Black \"Bob\"]\n[Result \"1-0\"]\n1.e4 e5 2.Nf3 "
                                    "(2.Bc4) Nc6 1-0\n\n[White \"Carol\"]\n1.d4 d5 *");

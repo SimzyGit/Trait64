@@ -146,7 +146,10 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         QString::fromLatin1(QCryptographicHash::hash(pgn.toUtf8(), QCryptographicHash::Sha256).toHex());
     if (!id) {
         QSqlQuery q(db_);
-        q.prepare("SELECT id FROM games WHERE digest=? AND deleted=0 LIMIT 1");
+        // With no ANALYZE statistics SQLite can prefer an index starting with
+        // deleted, scanning every active game for each new PGN (quadratic import).
+        // This mandatory schema-1 index bounds the lookup to the matching digest.
+        q.prepare("SELECT id FROM games INDEXED BY games_digest WHERE digest=? AND deleted=0 LIMIT 1");
         q.addBindValue(digest);
         run(q);
         if (q.next())
