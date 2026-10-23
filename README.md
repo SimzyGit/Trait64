@@ -9,13 +9,13 @@
 ![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 [![Linux CI](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml)
 
-[**Fonctionnalités**](#ce-qui-fonctionne) · [**Comparaison**](#comparaison-avec-des-logiciels-similaires) · [**Roadmap**](docs/ROADMAP.md) · [**Releases**](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) · [**Compilation**](#compiler-sans-linstallateur)
+[**Fonctionnalités**](#ce-qui-fonctionne) · [**État actuel**](docs/PROJECT-STATUS.md) · [**Comparaison**](#comparaison-avec-des-logiciels-similaires) · [**Roadmap**](docs/ROADMAP.md) · [**Releases**](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) · [**Compilation**](#compiler-sans-linstallateur)
 
 Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèques de parties, moteurs UCI, analyse, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
 
 **English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Série 0.3 en développement.** C++23 / Qt6, conçue d’abord pour Linux Voyager / Debian. Trait64 est actuellement en phase alpha : de nombreuses fonctions sont déjà utilisables, mais le périmètre prévu reste plus large. La dernière préversion validée est toujours disponible dans [les Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases). Voir aussi [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Version publiée vérifiée : [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) (21 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
 
 ### Principes du projet
 
@@ -33,7 +33,16 @@ L’interface adopte un carnet d’étude : sept sections numérotées, un échi
 
 ## Nouveautés récentes — série 0.3
 
-Les dernières étapes complètent le travail multi-moteurs, les bases de parties et la préparation personnelle :
+### Fiabilité et analyse tactique (dev.46 → dev.52)
+
+- **Grand audit de robustesse (dev.52)** : dix groupes de défauts corrigés, dont la récupération des sessions endommagées, la fin de réindexation annulée, les réponses UCI périmées, la fermeture pendant l’authentification GitHub et les cas limites de nullité. Les anciennes analyses en cache incorrectement classées comme terminées sont recalculées lors d’une nouvelle analyse.
+- **Vérification automatisée renforcée** : 12 suites réussies sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN. Les paquets Debian et l’AppImage démarrent dans la CI ; **aucun essai sur l’ordinateur Voyager de l’utilisateur n’est revendiqué**. [Audit détaillé](docs/DEBUG-AUDIT.md).
+- **Motifs tactiques illustrés (dev.46)** : attaques multiples, clouages et enfilades impliquant le roi, échecs à la découverte et doubles échecs ; les repères graphiques sont conservés dans une copie PGN annotée. Une attaque observée ne constitue pas une preuve de gain forcé. [Portée et limites](docs/TACTICAL-MOTIFS.md).
+- **Comprendre ce coup (dev.43)** : comparaison des suites avant/après le coup, vérification de leur légalité, captures, promotions, roques, échecs, mats/pats, matériel et contexte du moteur, avec ouverture d’une étude indépendante.
+
+### Outils de travail livrés auparavant
+
+Les autres fonctionnalités majeures de la série 0.3 comprennent :
 
 - **Moteurs téléchargeables et vérifiés** : Stockfish 19, Arasan 26 et PlentyChess 8, avec contrôle de compatibilité, SHA-256, progression et annulation.
 - **Profils UCI indépendants** : plusieurs réglages par moteur, avec Threads, Hash, MultiPV, Syzygy et options découvertes directement depuis le handshake UCI.
@@ -48,7 +57,7 @@ Les dernières étapes complètent le travail multi-moteurs, les bases de partie
 - **Préparation filtrée** : statistiques par position, base, adversaire/couleur, période et Elo connu ; calcul annulable et export CSV contextualisé.
 - **SQLite schéma 7** : migrations sauvegardées et conservation des données existantes.
 
-➡️ [Guide moteurs, bases et recherches](docs/ENGINES-DATABASES.md) · [Imports, répertoires et préparation](docs/REPERTOIRES-IMPORTS.md) · [File d’analyses](docs/ANALYSIS-QUEUE.md) · [Comprendre les coups](docs/MOVE-EXPLANATIONS.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
+➡️ [État actuel (23/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
