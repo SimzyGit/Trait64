@@ -1,4 +1,35 @@
-# Point de reprise — audit global vérifié le 22 octobre 2026
+# Point de reprise — qualification des imports, 23 octobre 2026
+
+**Lot de performances en cours, PR #10 ; version distribuée encore dev.52.**
+Les correctifs d'audit restent présents. Première correction : index des
+empreintes (`69250f0`). Deuxième : filtrage direct du matériel et tests de
+compatibilité (`e21e8d3`, branche `perf/material-indexing`). Les modifications
+du dossier `Trait64-perf` doivent être reprises depuis GitHub, jamais depuis
+un ancien checkout modifié. Aucun schéma ni migration réécrit.
+
+Les mesures successives sur 10 000 parties sont conservées dans
+`docs/benchmarks/2026-10-23` : 93,114 → 57,649 → 42,498 s. Les quatre suites
+ciblées passent. Le mode opt-in `desktop_tests --benchmark-import` mesure la
+boucle Qt réelle, la navigation et les avertissements QML dans un dossier
+jetable ; il reste à exécuter sur le corpus. La première CI de la PR
+[39911426839](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39911426839)
+a réussi sur `69250f0`. Elle ne valide pas encore le second correctif.
+
+Comparaison logique réussie : les trois imports et la restauration ont les mêmes
+parties, positions, clés matérielles et agrégats ; SHA-256 conservés dans
+`logical-equivalence.json`.
+
+À terminer : compilation et
+suites complètes du dernier code, palier 100 000 avec sauvegarde/restauration,
+mesure de la réactivité Qt, CI finale puis fusion/publication. Sauvegarder les
+petits rapports JSON dans Git dès leur obtention ; garder corpus et SQLite hors
+Git. Ne pas réannoncer le résultat d'une tâche interrompue sans son rapport.
+
+L'espace disponible doit être mesuré avant chaque palier. Une base de 10 000
+parties approche 372 Mo : les volumes supérieurs exigent aussi de la place
+pour les copies, journaux et sauvegardes. Une extrapolation n'est pas un test.
+
+## Audit terminé — état précédent conservé
 
 **Audit intégré et publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) corrige dix groupes de défauts sans ajout fonctionnel ni changement du schéma 7. Fusion `e301ddb694562cead329e6b6f3ff3099c27f9ec3`, arbre `40e388e8ea15b53a85004357267338a7b41e94e8` identique au commit testé `8eada72f4e94a15f4334d970d4b4a1972a46c538`.
 

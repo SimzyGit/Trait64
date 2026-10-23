@@ -1,5 +1,43 @@
 # Mesures de lecture et limites de qualification
 
+## Import réel : deux optimisations ciblées — 23 octobre 2026
+
+Trois exécutions successives sur les mêmes **10 000 parties / 661 314 positions**
+Lichess de janvier 2013 (CC0), Release GCC 13.3 / Qt 6.4.2. Quatre lecteurs,
+transactions de 250, pause/fermeture/reprise à 5 000. Même outil de mesure dans
+les trois exécutables ; seule l'implémentation de `database.cpp` change.
+
+| Code mesuré | Import complet | Pic RSS du processus | SQLite et journaux |
+|---|---:|---:|---:|
+| Avant les deux corrections (`06a4321`) | 93,114 s | 18 788 Kio | 371 650 560 octets |
+| Index des empreintes (`69250f0`) | 57,649 s | 18 684 Kio | 371 662 848 octets |
+| Index + matériel (`e21e8d3`) | 42,498 s | 18 304 Kio | 371 658 752 octets |
+
+Temps réduit de **54,4 %** dans cet essai (26,3 % supplémentaires par rapport
+au seul dédoublonnage). Hôte partagé, une mesure par variante, caches du système
+non purgés ; pas d'intervalle de confiance ni de promesse de débit sur Voyager.
+Les tailles peuvent différer légèrement : UUID et dates d'import sont propres
+à chaque exécution. L'intégrité, les sauvegardes et les restaurations passent.
+La sauvegarde du dernier état prend 3,090 s ; la restauration avec ouverture et
+contrôle prend 3,525 s. Le parsing et SHA-256 canonique prennent 11,063 s avec
+un lecteur, 3,345 s avec quatre, avec mêmes parties/positions et empreinte.
+
+La première correction contraint la recherche de doublons à l'index `games_digest`
+existant : sans statistiques ANALYZE, SQLite parcourait parfois toutes les
+parties actives à chaque insertion. La seconde évite la compilation répétée
+d'une expression régulière pour chaque position ; un filtrage des lettres FEN
+suivi du même tri conserve exactement la clé matérielle historique. Les deux
+corrections conservent le schéma 7 et les protections transactionnelles.
+
+**Palier 100 000 et réactivité Qt : en cours de qualification.** Aucun résultat
+à 500 000/1/2/5/10 millions de parties réelles n'est revendiqué. Les anciens
+résultats d'une session interrompue ne sont pas utilisés comme preuve.
+
+Rapports : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
+Protocole : [REPRODUCE.md](benchmarks/2026-10-23/REPRODUCE.md).
+
+## Mesures historiques conservées
+
 Mesure du 10 octobre 2026 sur l’environnement de développement Linux x86_64 partagé, GCC 13.3 et Qt 6.4.2, compilation **Debug**. 11 lectures consécutives par opération, médiane et maximum observé ; la médiane représente surtout les lectures avec cache chaud.
 
 Le générateur prépare **1 000 000 lignes de métadonnées synthétiques et 1 000 000 arêtes d’ouverture** avec les mêmes index, FTS5 et déclencheurs que l’application. Il ne charge pas toutes les positions de longues parties et ne mesure pas le parseur/importateur PGN. Ce résultat n’est donc **pas une certification de gestion de millions de parties complètes**.

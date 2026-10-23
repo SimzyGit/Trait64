@@ -1,5 +1,18 @@
 # Périmètre livré et travaux restants
 
+## Qualification en cours — 23 octobre 2026
+
+Deux corrections mesurées de l'import (choix de l'index des doublons, calcul du
+matériel), sans migration. Sur 10 000 parties réelles : 93,114 → 42,498 s dans
+la comparaison conservée. Validation finale et livraison encore en cours ;
+voir PERFORMANCE et WORK-IN-PROGRESS. L'interface pendant un import important
+fait l'objet d'une mesure Qt séparée, pas d'une déduction depuis SQLite.
+
+Paliers conservés : **10 000, 100 000, 500 000, 1, 2, 5 et 10 millions**. Seul le
+premier possède actuellement des rapports terminés pour ce lot. Les modèles
+incrémentaux, l'export asynchrone, les migrations volumineuses, la fusion et la
+réparation restent des travaux distincts. Les autres objectifs restent prévus.
+
 La version 0.3 est une nouvelle étape de l’application locale. Elle n’achève pas le catalogue d’environ 245 fonctions envisagé pour Trait64. Les fonctions ci-dessous sont celles réellement présentes dans le code.
 
 | Domaine | Fonctions présentes après 0.3 | Travaux restants |

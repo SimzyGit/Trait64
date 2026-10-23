@@ -34,6 +34,7 @@ QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
             return found;
     return nullptr;
 }
+#include "import_gui_probe.h"
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv);
     app.setOrganizationName("Trait64Tests");
@@ -43,6 +44,8 @@ int main(int argc, char **argv) {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, dir.path());
     QQuickStyle::setStyle("Basic");
     try {
+        if (app.arguments().contains("--benchmark-import"))
+            return importGuiProbe(app, dir.path());
         QString expectedFen;
         qint64 savedId = 0;
         {
