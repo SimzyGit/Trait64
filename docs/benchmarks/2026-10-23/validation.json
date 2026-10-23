@@ -1,0 +1,29 @@
+{
+  "tested_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
+  "tree": "1fe413a2e3d665dc9ff7299576e637cdd1efcb7d",
+  "build": "Release GCC 13.3, Qt 6.4.2",
+  "local_suites": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 62.33
+  },
+  "checks": {
+    "core": 3269,
+    "robustness": 4414,
+    "storage": 192,
+    "persistent_analysis": 121,
+    "desktop": 683,
+    "repertoires": 51,
+    "resumable_import": 24,
+    "updates": 45
+  },
+  "stockfish": "real Stockfish 16",
+  "qml": "offscreen software",
+  "limitations": [
+    "No Voyager hardware test",
+    "Large GUI probe not yet completed"
+  ],
+  "ci_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40010927047",
+  "ci_status": "in_progress"
+}
