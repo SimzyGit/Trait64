@@ -55,6 +55,7 @@ def main():
         'workflow_run': os.environ.get('GITHUB_RUN_ID', ''),
         'compiler': subprocess.check_output(['c++', '--version'], text=True).splitlines()[0],
         'build': 'Release -O3 -DNDEBUG',
+        'free_disk_bytes_before_runs': shutil.disk_usage(out).free,
         'binary_sha256': {p.name: sha256(p) for p in [bench, gui]},
         'conditions': 'Sequential runs after compilation, GitHub ubuntu-24.04 runner, caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.',
     }
@@ -69,8 +70,9 @@ def main():
     emit('method', method)
 
     def run(name, command, stdout_json=False):
-        if shutil.disk_usage(out).free < 14 * 1024**3:
-            raise RuntimeError('Insufficient free disk for this qualification')
+        available = shutil.disk_usage(out).free
+        if available < 14 * 1024**3:
+            raise RuntimeError(f'Insufficient free disk: {available} bytes; need 14 GiB')
         started = time.monotonic()
         started_utc = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
         print('START ' + name, flush=True)
