@@ -20,8 +20,17 @@ Ce mode est opt-in et ne remplace pas les tests habituels. Exécution sans écra
 Wayland ni la cadence d'affichage du PC Voyager.
 
 Mesures et protocole : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
-La compilation complète, ce mode Qt et le palier 100 000 restent à valider sur le
-dernier commit. Ne pas confondre la CI réussie de `69250f0` avec cette validation.
+Le commit `26ba77d` a passé les **12 suites locales** avec Stockfish (62,33 s),
+puis la CI PR avec cœur/Qt ASan/UBSan et Debian 12/13. La fusion `550f28f` et
+la publication dev.55 ont également passé ces contrôles, les paquets installés
+et l'AppImage. Le sélecteur de mise à jour réel reconnaît les trois paquets depuis
+dev.52 et respecte les exclusions de canaux/versions.
+
+Le palier CLI de 100 000 parties a passé intégrité, sauvegarde et restauration ;
+le maximum de lecture concurrente de 4,031 s est documenté, sans prétendre qu'il
+mesure la réactivité Qt. La qualification Qt et le contrôle complet des PGN
+restaurés s'exécutent séparément dans GitHub ; suivre WORK-IN-PROGRESS.
+Rapport de livraison : [verification-performance-2026-10-24.json](verification-performance-2026-10-24.json).
 
 ## Audit global — validation finale du 22 octobre 2026
 

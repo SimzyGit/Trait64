@@ -26,8 +26,8 @@ L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
 
 ## Exécution indépendante du chat — à suivre, pas à relancer
 
-[Qualification GitHub 40097515232](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097515232),
-branche `perf/qt-corpus-qualification`, commit `7f96643`.
+[Qualification GitHub 40097867485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097867485),
+branche `perf/qt-corpus-qualification`, commit `e34e545`.
 Le code produit reste identique à dev.55 ; seuls le workflow de mesure et son
 script s'ajoutent. Accès GitHub en lecture, aucun téléversement d'archive Actions.
 Corpus réel CC0 épinglé par taille et SHA-256.
@@ -35,6 +35,9 @@ Corpus réel CC0 épinglé par taille et SHA-256.
 Ordre : Qt 100k → réindexation 10k → import/restauration 100k → comparaison de
 tous les PGN restaurés et profil SQLite. Les JSON terminés sont encadrés dans
 les journaux par `TRAIT64_REPORT_BEGIN nom` / `TRAIT64_REPORT_END nom`.
+Le premier lancement s’est arrêté avant les mesures, faute de disque libre.
+Le second libère seulement les SDK préinstallés inutilisés du runner jetable et
+conserve le seuil de 14 Gio ; aucune donnée du dépôt ou release supprimée.
 Lire les journaux du job après sa fin, archiver les rapports dans
 `benchmarks/2026-10-24/github`, distinguer l'hôte GitHub de l'hôte local, puis
 actualiser PERFORMANCE, TESTING, ROADMAP, NEXT-STEPS et PROJECT-STATUS.

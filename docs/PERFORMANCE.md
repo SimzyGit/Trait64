@@ -29,12 +29,59 @@ d'une expression régulière pour chaque position ; un filtrage des lettres FEN
 suivi du même tri conserve exactement la clé matérielle historique. Les deux
 corrections conservent le schéma 7 et les protections transactionnelles.
 
-**Palier 100 000 et réactivité Qt : en cours de qualification.** Aucun résultat
-à 500 000/1/2/5/10 millions de parties réelles n'est revendiqué. Les anciens
-résultats d'une session interrompue ne sont pas utilisés comme preuve.
+Les corrections sont intégrées à **dev.55**. Le palier CLI de 100 000 est mesuré
+ci-dessous ; la réactivité Qt est qualifiée séparément. Aucun résultat à
+500 000/1/2/5/10 millions ni sur le PC Voyager n'est revendiqué.
 
 Rapports : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
 Protocole : [REPRODUCE.md](benchmarks/2026-10-23/REPRODUCE.md).
+
+## 100 000 parties réelles — hôte local, 24 octobre 2026
+
+Même fichier source : 100 000 parties / 6 817 385 positions, quatre lecteurs,
+pause à 50 000, réouverture/reprise et une lecture concurrente toutes les 100 ms.
+Ce protocole et la charge de l'hôte partagé diffèrent de la comparaison de 10k
+ci-dessus : ne pas transformer leur rapport en facteur de ralentissement ou
+d'accélération du code. Une observation, caches non purgés, SQLite 3.45.1,
+Qt 6.4.2, Release GCC 13.3 ; aucune compilation locale simultanée.
+
+| Opération | Résultat observé |
+|---|---:|
+| Import avec tous les index, vérifications et reprise | 1 250,857 s (20 min 51 s) |
+| Réouverture SQLite, après import | 2,785 ms |
+| Contrôle d'intégrité de l'original | 110,028 s ; OK |
+| Sauvegarde complète | 36,032 s ; copie vérifiée ensuite |
+| Restauration, ouverture et contrôle | 228,293 s ; OK |
+| Pic RSS du processus d'import | 18 352 Kio |
+| Base et journaux | 3 836 055 552 octets |
+
+La RSS ne comprend pas le cache de fichiers du noyau. L'import s'arrête
+volontairement en pause à 100 000 sur les 121 332 parties du fichier. Aucune
+partie n'est dupliquée pour atteindre le volume.
+
+Lectures finales, cinq échantillons avec cache non purgé :
+
+| Lecture | Médiane | Maximum |
+|---|---:|---:|
+| Première page de 200 parties | 1,768 ms | 2,231 ms |
+| Page suivante par curseur | 2,378 ms | 3,630 ms |
+| Joueur exact | 1,453 ms | 4,489 ms |
+| Fragment de joueur | 2,411 ms | 6,274 ms |
+| Chargement d'une partie | 2,549 ms | 2,953 ms |
+| Position finale d'une partie | 18,269 ms | 45,731 ms |
+| Arbre depuis le départ | 0,142 ms | 0,198 ms |
+
+Pendant l'import, **11 045 lectures** donnent une médiane de **3,014 ms**, un
+p95 de **12,506 ms** et un maximum de **4 031,415 ms**. Cette longue attente
+reste à caractériser avec des traces horodatées et des répétitions contrôlées ;
+elle ne doit pas être masquée par la médiane. Ce n'est pas une mesure de Qt.
+Les filtres peu sélectifs, matériaux fréquents, pages éloignées et combinaisons
+complexes ne sont pas couverts exhaustivement par ces lectures.
+
+Rapport complet : [material-100k.json](benchmarks/2026-10-24/material-100k.json).
+Les valeurs ont été récupérées depuis la sortie complète observée avant la
+réinitialisation du dossier temporaire, puis enregistrées dans Git ; provenance
+et limites : [recovery-provenance.json](benchmarks/2026-10-24/recovery-provenance.json).
 
 ## Mesures historiques conservées
 
