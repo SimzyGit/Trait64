@@ -1,15 +1,16 @@
 # Périmètre livré et travaux restants
 
-## Qualification en cours — 23 octobre 2026
+## Performances — dev.55, 24 octobre 2026
 
 Deux corrections mesurées de l'import (choix de l'index des doublons, calcul du
 matériel), sans migration. Sur 10 000 parties réelles : 93,114 → 42,498 s dans
-la comparaison conservée. Validation finale et livraison encore en cours ;
+la comparaison conservée. Corrections intégrées et publiées dans dev.55 ;
 voir PERFORMANCE et WORK-IN-PROGRESS. L'interface pendant un import important
 fait l'objet d'une mesure Qt séparée, pas d'une déduction depuis SQLite.
 
-Paliers conservés : **10 000, 100 000, 500 000, 1, 2, 5 et 10 millions**. Seul le
-premier possède actuellement des rapports terminés pour ce lot. Les modèles
+Paliers conservés : **10 000, 100 000, 500 000, 1, 2, 5 et 10 millions**. Les deux
+premiers possèdent des rapports CLI terminés pour ce lot ; la mesure Qt est
+suivie séparément. Les modèles
 incrémentaux, l'export asynchrone, les migrations volumineuses, la fusion et la
 réparation restent des travaux distincts. Les autres objectifs restent prévus.
 

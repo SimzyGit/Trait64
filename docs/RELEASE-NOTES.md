@@ -1,3 +1,12 @@
+## Import PGN accéléré — dev.55, 24 octobre 2026
+
+- Recherche des doublons par l'index des empreintes existant, et calcul du matériel sans expression régulière recompilée pour chaque position. Schéma 7, clés persistées et transactions conservés.
+- Sur les mêmes 10 000 parties réelles, l'essai conservé passe de 93,114 à 42,498 secondes (−54,4 %). Les données échiquéennes et agrégats comparés restent identiques ; ce gain ne prédit pas chaque machine ou corpus.
+- 100 000 parties importées localement avec pause/reprise, intégrité, sauvegarde et restauration contrôlées. Un pic de lecture concurrente de 4,031 secondes reste à caractériser. L'interface fait l'objet d'une mesure Qt distincte.
+- Douze suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés. Fichiers de release et sélection de la mise à jour depuis dev.52 vérifiés. Aucun essai Voyager/Wayland matériel ni de plusieurs millions de parties n'est revendiqué.
+
+Détails et limites : [PERFORMANCE.md](PERFORMANCE.md), [TESTING.md](TESTING.md).
+
 ## Audit global de fiabilité — dev.52, 21 octobre 2026
 
 - Récupération des sessions endommagées sans perte de l’original ; chemins restaurés uniquement depuis les variantes enregistrées.

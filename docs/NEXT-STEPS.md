@@ -1,10 +1,16 @@
-# Reprise du développement — performances, 23 octobre 2026
+# Reprise du développement — performances, 24 octobre 2026
 
-Suivre d'abord [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md) : finir le lot
-performances commencé dans la PR #10, puis poursuivre les goulets d'étranglement
-mesurés. Les premiers gains sur 10 000 PGN réels sont conservés dans PERFORMANCE.
-Le palier de 100 000 reste à terminer ; 500 000, 1, 2, 5 et 10 millions restent
-ouverts, après contrôle du disque, de la RAM et du corpus disponible.
+Dernier lot livré : **dev.55 / PR #10**, deux corrections de l'import sans
+migration. Comparaison 10k conservée ; palier CLI 100k terminé, sauvegarde et
+restauration réussies, pic de lecture concurrente de 4,031 s à caractériser.
+Suivre [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md) pour l'exécution GitHub de la
+sonde Qt, de la réindexation et des vérifications exhaustives de PGN restaurés.
+Ne pas relancer les mesures terminées lors d'une réinitialisation locale.
+
+Paliers 500k et 1/2/5/10 millions encore ouverts : corpus disponible de 121 332
+parties, besoin de stockage à prévoir pour originaux/journaux/copies. Les filtres
+fréquents, combinaisons, pages éloignées et tâches de maintenance restent à
+mesurer séparément. Aucun essai matériel Voyager n'est revendiqué.
 
 Ordre de la consigne du 22 octobre : **performances → explications vérifiables
 → entraînement tactique → répertoires/préparation**, puis le reste de la feuille
@@ -13,7 +19,7 @@ historiques ci-dessous restent des objectifs, avec cet ordre de priorité.
 
 **Audit global terminé, intégré dans la PR #9 et publié dans [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Dix groupes de défauts corrigés, 12/12 suites locales et CI Debian 12/13, contrôles ASan/UBSan de tous les modules, 3 000 mutations FEN/PGN. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Aucun ajout de la feuille de route n’a été entrepris pendant cet audit.
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #9 sont intégrées à main. La version distribuée dev.52 et son tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 22 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #10 sont intégrées à main. La version distribuée dev.55, le tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 24 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 La PR #8 est également intégrée et publiée dans dev.46 : motifs tactiques et
 repères PGN, 11 suites Debian 12/13 et paquets validés. Tag, cinq fichiers et

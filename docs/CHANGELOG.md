@@ -1,12 +1,13 @@
 # Changements
 
-## Optimisation des imports — en cours, 23 octobre 2026
+## Optimisation des imports — dev.55, 24 octobre 2026
 
 - Requête de doublons bornée par l'index des empreintes existant, sans changement du schéma 7.
 - Clés matérielles identiques aux anciennes, calculées sans compiler une expression régulière à chaque position ; même normalisation dans la recherche.
 - Tests du travail SQLite et des clés persistées, captures, variantes, promotions, prise en passant, Chess960 et annulation finale de réindexation.
 - Benchmark enrichi : restauration réelle, réindexation, lectures concurrentes, distributions et mémoire. Mode Qt opt-in pour mesurer les événements/navigation pendant un import réel.
-- Comparaison complète conservée sur 10 000 parties ; validation 100 000 et distribution encore en cours. Aucun corpus ou fichier SQLite ajouté au dépôt.
+- Comparaison complète conservée sur 10 000 parties ; import local de 100 000 avec pause/reprise, intégrité, sauvegarde et restauration validés. Pic de lecture concurrente de 4,031 s documenté, qualification Qt séparée.
+- PR #10 fusionnée, dev.55 publiée : 12 suites Debian 12/13 et Qt ASan/UBSan, paquets et AppImage, cinq fichiers/SHA-256 et sélecteur de mises à jour vérifiés. Aucun corpus, SQLite ou archive Actions ajouté.
 
 ## Explications des suites du bilan — 16 octobre 2026
 

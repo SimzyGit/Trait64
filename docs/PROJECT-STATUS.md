@@ -33,7 +33,7 @@ La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a ét
 
 La comparaison archivée sur **10 000 parties Lichess CC0 / 661 314 positions** passe de **93,114 s à 42,498 s (−54,4 %)**. Elle compare deux versions de Trait64 avec le même protocole sur un hôte partagé ; elle ne démontre pas une supériorité sur un autre logiciel. Les corrections sont livrées dans dev.55.
 
-Le parsing de 100 000 parties est mesuré. L'import complet avec sauvegarde/restauration et la réactivité Qt à ce volume restent en cours de qualification ; suivre [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
+Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité, sauvegarde et restauration sont mesurés. Le rapport conserve un pic de lecture concurrente de 4,031 s, dont la cause reste à établir. La réactivité Qt est mesurée séparément sur GitHub ; suivre [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
 
 ## Principaux travaux restants
 
