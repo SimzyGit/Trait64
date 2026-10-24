@@ -1,38 +1,51 @@
-# Point de reprise — qualification des imports, 24 octobre 2026
+# Point de reprise — performances, 24 octobre 2026
 
-**PR #10 fusionnée ; dev.55 publiée et fichiers vérifiés. Mesures complémentaires en cours.**
-Fusion `550f28f51f174b8d3b1d5f896928c2cfa09e04d4`, code identique au commit testé
-`26ba77de9e2d54c846e2e34bb8c304fef46d7fec`. Les modifications de présentation
-README / PROJECT-STATUS de `4b1361f` sont conservées. Schéma 7 inchangé.
+**dev.55 publiée ; PR #10 fusionnée.** Source intégrée `550f28f`, code validé
+`26ba77d`. Tag exact, cinq fichiers/tailles/SHA-256 vérifiés ; zéro archive Actions.
+Le sélecteur réel reconnaît AppImage et Debian 12/13 depuis dev.52 sur Développement,
+et exclut Stable/Bêta, version ignorée, version identique et rétrogradation.
+Rapport : [verification-performance-2026-10-24.json](verification-performance-2026-10-24.json).
 
-Les imports de 10 000 parties passent de 93,114 à 57,649 puis 42,498 s après
-les corrections de l'index des doublons et des clés matérielles. Les trois bases
-et la restauration ont les mêmes parties, positions et agrégats comparés.
-Rapports complets : `docs/benchmarks/2026-10-23`.
+12/12 suites locales avec Stockfish ; CI PR et publication réussies, cœur et
+modules Qt ASan/UBSan, Debian 12/13, paquets installés et AppImage démarrés.
+L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
 
-Validation locale du 23 octobre : **12/12 suites, aucune ignorée, 62,33 s**, avec
-Stockfish 16. [CI de la PR 40010927047](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40010927047)
-réussie : cœur ASan/UBSan 2/2 (140,58 s), modules Qt 12/12 (131,41 s), Debian 12
-12/12 (59,58 s), Debian 13 12/12 (74,79 s), paquets installés et AppImage démarrés.
+## Résultats acquis
 
-Parsing 100 000 parties / 6 817 385 positions terminé en 35,706 s avec quatre
-lecteurs ; ce temps exclut SQLite. L'import complet interrompu n'a pas de rapport
-final conservé : il est relancé le 24 octobre. Recompilation locale des deux exécutables de mesure terminée ; ne pas lancer
-de compilation pendant les mesures.
+- Comparaison de 10 000 parties : 93,114 → 57,649 → 42,498 s, même contenu
+  échiquéen et agrégats comparés. Rapports : `benchmarks/2026-10-23`.
+- 100 000 parties locales : import 1 250,857 s avec pause/reprise à 50 000,
+  RSS maximale 18 352 Kio, base+journaux 3 836 055 552 octets ; intégrité OK,
+  sauvegarde 36,032 s, restauration et contrôle 228,293 s.
+- Lectures concurrentes : médiane 3,014 ms, p95 12,506 ms, maximum **4 031 ms**.
+  La cause de ce pic n'est pas établie. Ne pas le masquer par la médiane ni le
+  présenter comme un gel de l'interface : la sonde SQL ne mesure pas Qt.
+- Le rapport 100k complet a été récupéré depuis la sortie observée avant la
+  réinitialisation locale, puis conservé dans Git ; voir `recovery-provenance.json`.
+  L'ancien test Qt interrompu n'a pas de résultat exploitable.
 
-À terminer dans cette session : import 100 000 avec lecture concurrente,
-pause/reprise, sauvegarde et restauration ; sonde Qt réelle 100 000 ; reconstruction
-des index de 10 000 parties. Archiver chaque résultat terminé sur GitHub.
-La [CI de publication 40077170390](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40077170390)
-a réussi : dev.55 publiée le 24 octobre à 10 h 34, heure de Paris. Tag exact,
-cinq fichiers/tailles/SHA-256 comparés au manifeste, zéro archive Actions.
-Rapport : `verification-performance-2026-10-24.json`. Le sélecteur de mise à
-jour reste à exercer sur ces métadonnées après les mesures locales.
+## Exécution indépendante du chat — à suivre, pas à relancer
 
-Aucun résultat sur 500 000/1/2/5/10 millions ni sur le PC Voyager n'est revendiqué.
-Le corpus disponible contient 121 332 parties, sans duplication artificielle.
-Vérifier disque et mémoire avant chaque palier, y compris copies et journaux.
-Ne pas reprendre les anciens checkouts modifiés ; restaurer le code depuis GitHub.
+[Qualification GitHub 40097515232](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097515232),
+branche `perf/qt-corpus-qualification`, commit `7f96643`.
+Le code produit reste identique à dev.55 ; seuls le workflow de mesure et son
+script s'ajoutent. Accès GitHub en lecture, aucun téléversement d'archive Actions.
+Corpus réel CC0 épinglé par taille et SHA-256.
+
+Ordre : Qt 100k → réindexation 10k → import/restauration 100k → comparaison de
+tous les PGN restaurés et profil SQLite. Les JSON terminés sont encadrés dans
+les journaux par `TRAIT64_REPORT_BEGIN nom` / `TRAIT64_REPORT_END nom`.
+Lire les journaux du job après sa fin, archiver les rapports dans
+`benchmarks/2026-10-24/github`, distinguer l'hôte GitHub de l'hôte local, puis
+actualiser PERFORMANCE, TESTING, ROADMAP, NEXT-STEPS et PROJECT-STATUS.
+Ne pas refaire la compilation locale ni les mesures déjà terminées après une
+réinitialisation. Conserver cette branche jusqu'à récupération des rapports.
+
+500 000/1/2/5/10 millions et Voyager restent non qualifiés. Le corpus contient
+121 332 parties, sans duplication artificielle. Vérifier stockage, copies et
+mémoire avant tout volume supérieur. La priorité suivante vient des mesures :
+pic de latence concurrente, coût des positions/index et contrôles de grosses
+bases, puis pédagogie, entraînement et répertoires.
 
 ## Audit terminé — état précédent conservé
 

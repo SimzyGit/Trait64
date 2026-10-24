@@ -1,0 +1,27 @@
+{
+    "development_channel": true,
+    "ignored_version_rejection": true,
+    "same_version_and_downgrade_rejection": true,
+    "selected": [
+        {
+            "asset_id": 671722207,
+            "bytes": 36862456,
+            "name": "Trait64-0.3.0-dev.55-linux-x86_64.AppImage",
+            "sha256": "6a5438883933a08c18b3dc934a61608f1b5b4e3aa4b6f16c63c6b808208c9a1f"
+        },
+        {
+            "asset_id": 671722205,
+            "bytes": 1043890,
+            "name": "trait64_0.3.0-dev.55_debian12_amd64.deb",
+            "sha256": "f8be3ca3194ecfe712f08bcea0a5cef028345cafbba01caf2ecfbc8224b26176"
+        },
+        {
+            "asset_id": 671722202,
+            "bytes": 1051226,
+            "name": "trait64_0.3.0-dev.55_debian13_amd64.deb",
+            "sha256": "fff21deb26c86f70ad50e90eaf72fde98c16cb87b8fd59112525295bd5ff8f36"
+        }
+    ],
+    "stable_and_beta_exclusion": true,
+    "tag": "v0.3.0-dev.55"
+}
