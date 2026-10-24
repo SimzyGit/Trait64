@@ -1,0 +1,38 @@
+name: Qualify real PGN corpus without artifacts
+on:
+  push:
+    branches: ['perf/qt-corpus-qualification']
+    paths: ['.github/workflows/corpus-qualification.yml', 'scripts/qualify-real-corpus.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: trait64-corpus-qualification
+  cancel-in-progress: false
+jobs:
+  real-corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install build and corpus dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build libarchive-dev libsqlite3-dev qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 fonts-dejavu-core zstd
+      - name: Build the two real-corpus probes
+        run: |
+          cmake -S . -B build-perf -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON
+          cmake --build build-perf --target pgn_benchmark desktop_tests --parallel 2
+      - name: Fetch the pinned CC0 corpus
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/trait64-corpus"
+          curl --fail --location --retry 2 --max-time 300 --max-filesize 30000000 https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst -o "$RUNNER_TEMP/trait64-corpus/source.pgn.zst"
+          zstd -d "$RUNNER_TEMP/trait64-corpus/source.pgn.zst" -o "$RUNNER_TEMP/trait64-corpus/source.pgn"
+      - name: Measure Qt, reindexing, import and restoration
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: python3 scripts/qualify-real-corpus.py --input "$RUNNER_TEMP/trait64-corpus/source.pgn" --output "$RUNNER_TEMP/trait64-measures"
