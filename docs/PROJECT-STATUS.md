@@ -1,4 +1,4 @@
-# Trait64 — état du projet au 23 octobre 2026
+# Trait64 — état du projet au 24 octobre 2026
 
 > **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux d’abord · AGPL-3.0-or-later**
 
@@ -6,7 +6,9 @@ Ce document présente **le code fusionné dans `main` et les versions réellemen
 
 ## Dernière version publiée et vérifiée
 
-**[v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52)** — publication le **21 octobre 2026** ; audit de publication documenté le 22 octobre. La release contient l’AppImage Linux x86_64, les paquets Debian 12 et 13, les sources de redistribution et les empreintes SHA-256.
+**[v0.3.0-dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55)** — publiée le **24 octobre 2026 à 10 h 34, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](verification-performance-2026-10-24.json).
+
+La [PR #10](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10) est intégrée : doublons recherchés par empreinte et indexation du matériel accélérée, sans migration. Les 12 suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés.
 
 La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a été fusionnée et a livré un **audit global de fiabilité**. Dix groupes de problèmes ont été corrigés : récupération des sessions, réindexation annulable, bornes FEN, réponses UCI réentrantes, fin de partie et nulles réclamables, anciens caches, options UCI, limites de pendule et durée de vie du système de mises à jour pendant l’authentification.
 
@@ -27,11 +29,11 @@ La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a ét
 
 **Limites importantes :** les motifs détectés ne démontrent pas toujours un gain forcé ; les analyses ne prétendent pas attribuer un **niveau Elo fictif**. Le jeu multijoueur en ligne reste hors périmètre.
 
-## Développement en cours : ne pas confondre avec une release
+## Qualification des performances en cours
 
-La [PR #10 — Import PGN et qualification](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10) est **ouverte au moment de ce relevé (23 octobre 2026)** et **n’est pas encore intégrée à `main`**. Elle propose des optimisations du dédoublonnage et de l’analyse du matériel, une mesure plus complète de la restauration et des sondes de réactivité Qt.
+La comparaison archivée sur **10 000 parties Lichess CC0 / 661 314 positions** passe de **93,114 s à 42,498 s (−54,4 %)**. Elle compare deux versions de Trait64 avec le même protocole sur un hôte partagé ; elle ne démontre pas une supériorité sur un autre logiciel. Les corrections sont livrées dans dev.55.
 
-Sa description indique, sur **10 000 parties Lichess CC0 / 661 314 positions**, une évolution de **93,114 s à 42,498 s**, soit **−54,4 % dans ce protocole**. Cette mesure est **un résultat de la branche de travail**, pas une performance certifiée de dev.52 ni une validation sur des millions de parties. Les tests et benchmarks de plus grande ampleur restent à terminer. Suivre les résultats et la fusion de la PR avant d’actualiser le statut publié.
+Le parsing de 100 000 parties est mesuré. L'import complet avec sauvegarde/restauration et la réactivité Qt à ce volume restent en cours de qualification ; suivre [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
 
 ## Principaux travaux restants
 
@@ -48,6 +50,7 @@ Sa description indique, sur **10 000 parties Lichess CC0 / 661 314 positions**, 
 
 | Version | Évolution principale |
 | --- | --- |
+| [dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |
 | [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) | Audit massif, corrections de fiabilité et tests ASan/UBSan élargis |
 | [dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46) | Motifs tactiques, flèches et annotations PGN |
 | [dev.43](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43) | Compréhension des variantes du bilan |

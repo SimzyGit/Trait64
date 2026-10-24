@@ -15,7 +15,7 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 
 **English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Version publiée vérifiée : [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) (21 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
+> **Version publiée vérifiée : [v0.3.0-dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) (24 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
 
 ### Principes du projet
 
@@ -32,6 +32,12 @@ Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leu
 L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
 
 ## Nouveautés récentes — série 0.3
+
+### Imports PGN (dev.55)
+
+- **Deux coûts d'import supprimés** : recherche des doublons par l'index des empreintes et calcul direct des clés matérielles, sans changement du schéma 7.
+- **Mesure conservée sur 10 000 parties réelles** : 93,114 → 42,498 s sur le même hôte et protocole (−54,4 % dans cet essai). Données comparées, sauvegarde et restauration vérifiées ; ce gain ne certifie pas les volumes de plusieurs millions. [Méthode et limites](docs/PERFORMANCE.md).
+- **Validation et distribution** : 12 suites sous Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage testés ; cinq fichiers de release vérifiés, aucune archive Actions. [Publication](docs/verification-performance-2026-10-24.json).
 
 ### Fiabilité et analyse tactique (dev.46 → dev.52)
 
@@ -57,7 +63,7 @@ Les autres fonctionnalités majeures de la série 0.3 comprennent :
 - **Préparation filtrée** : statistiques par position, base, adversaire/couleur, période et Elo connu ; calcul annulable et export CSV contextualisé.
 - **SQLite schéma 7** : migrations sauvegardées et conservation des données existantes.
 
-➡️ [État actuel (23/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
+➡️ [État actuel (24/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 

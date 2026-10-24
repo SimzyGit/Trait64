@@ -17,3 +17,20 @@ Cette lecture identifie des pistes, pas une supériorité de Trait64. Aucun code
 | [ChessTempo — manuel](https://chesstempo.com/manual/en/manual.html) | Documentation des répertoires et modes de révision. | Concevoir nos critères de répétition et solutions acceptées ; ne pas recopier leur corpus d’exercices. |
 
 Les choix livrés dans ce lot utilisent surtout les dépendances déjà présentes, les options réellement déclarées via UCI, le catalogue CC0 d’ouvertures et libarchive. Les corpus réels de 1/2/5/10 millions de parties et une comparaison reproductible avec Pragma restent à réaliser ; voir [PERFORMANCE.md](PERFORMANCE.md).
+
+## Relecture des mesures Pragma — 24 octobre 2026
+
+Révision observée : [`08c9d3c`](https://github.com/francescobianco/pragma-chess/commit/08c9d3c9ea2e91dd32ac710ad639d1ff24aaff47).
+Le [README](https://github.com/francescobianco/pragma-chess/blob/08c9d3c9ea2e91dd32ac710ad639d1ff24aaff47/README.md)
+décrit des recherches de positions rapides sur de gros volumes. La relecture
+du README, des guides bases/liste/conversion et de DESIGN.md n'a pas permis
+d'identifier un protocole chiffré reproductible précisant ensemble corpus,
+matériel, version, index construits et mesures brutes. Ce constat se limite
+aux documents examinés ; il ne dit pas qu'aucune publication n'existe ailleurs.
+
+Aucune mesure de Pragma n'a été exécutée sur cet hôte. Le gain de 54,4 % mesuré
+pour Trait64 compare ses propres versions. Il ne classe pas les deux logiciels.
+Une comparaison ultérieure doit importer le même PGN, vérifier les mêmes parties
+et positions, décrire les index et variantes conservés, puis mesurer séparément
+import, ouverture, recherches, mémoire et disque avec les mêmes ressources.
+Références de cette vérification : `benchmarks/2026-10-24/pragma-comparison.json`.

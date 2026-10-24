@@ -1,6 +1,6 @@
 # Point de reprise — qualification des imports, 24 octobre 2026
 
-**PR #10 fusionnée ; construction de la préversion en cours.**
+**PR #10 fusionnée ; dev.55 publiée et fichiers vérifiés. Mesures complémentaires en cours.**
 Fusion `550f28f51f174b8d3b1d5f896928c2cfa09e04d4`, code identique au commit testé
 `26ba77de9e2d54c846e2e34bb8c304fef46d7fec`. Les modifications de présentation
 README / PROJECT-STATUS de `4b1361f` sont conservées. Schéma 7 inchangé.
@@ -17,15 +17,17 @@ réussie : cœur ASan/UBSan 2/2 (140,58 s), modules Qt 12/12 (131,41 s), Debian 
 
 Parsing 100 000 parties / 6 817 385 positions terminé en 35,706 s avec quatre
 lecteurs ; ce temps exclut SQLite. L'import complet interrompu n'a pas de rapport
-final conservé : il est relancé le 24 octobre. Recompilation locale limitée aux
-deux exécutables de mesure ; ne pas lancer de compilation pendant les mesures.
+final conservé : il est relancé le 24 octobre. Recompilation locale des deux exécutables de mesure terminée ; ne pas lancer
+de compilation pendant les mesures.
 
 À terminer dans cette session : import 100 000 avec lecture concurrente,
 pause/reprise, sauvegarde et restauration ; sonde Qt réelle 100 000 ; reconstruction
 des index de 10 000 parties. Archiver chaque résultat terminé sur GitHub.
 La [CI de publication 40077170390](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40077170390)
-construit dev.55 ; ne pas annoncer sa disponibilité avant vérification de la
-release, du tag, des cinq fichiers et de leurs empreintes.
+a réussi : dev.55 publiée le 24 octobre à 10 h 34, heure de Paris. Tag exact,
+cinq fichiers/tailles/SHA-256 comparés au manifeste, zéro archive Actions.
+Rapport : `verification-performance-2026-10-24.json`. Le sélecteur de mise à
+jour reste à exercer sur ces métadonnées après les mesures locales.
 
 Aucun résultat sur 500 000/1/2/5/10 millions ni sur le PC Voyager n'est revendiqué.
 Le corpus disponible contient 121 332 parties, sans duplication artificielle.

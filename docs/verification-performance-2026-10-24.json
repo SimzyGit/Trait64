@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-24",
+  "release": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55",
+  "version": "v0.3.0-dev.55",
+  "published_at": "2026-10-24T08:34:39Z",
+  "pr": "https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10",
+  "tested_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
+  "merge_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "release_tag_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "runtime_sources_equal": true,
+  "documentation_changes_preserved": [
+    "README.md",
+    "docs/PROJECT-STATUS.md"
+  ],
+  "local_suites": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 62.33,
+    "stockfish": "16"
+  },
+  "publication_ci": {
+    "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40077170390",
+    "conclusion": "success",
+    "core_sanitizers": {
+      "passed": 2,
+      "seconds": 151.25
+    },
+    "qt_sanitizers": {
+      "passed": 12,
+      "seconds": 134.59
+    },
+    "debian12": {
+      "passed": 12,
+      "seconds": 59.31
+    },
+    "debian13": {
+      "passed": 12,
+      "seconds": 73.41
+    },
+    "installed_debian12_smoke": true,
+    "installed_debian13_smoke": true,
+    "appimage_smoke": true
+  },
+  "assets_match_ci_manifest": true,
+  "assets": {
+    "Trait64-0.3.0-dev.55-linux-x86_64.AppImage": {
+      "size": 36862456,
+      "digest": "sha256:6a5438883933a08c18b3dc934a61608f1b5b4e3aa4b6f16c63c6b808208c9a1f"
+    },
+    "Trait64-runtime-sources.tar": {
+      "size": 291573760,
+      "digest": "sha256:52d6cb01d4ec13c1f7bae2cea2e4734b982da03533e05f76a3adcd84b1bbcb18"
+    },
+    "trait64_0.3.0-dev.55_debian12_amd64.deb": {
+      "size": 1043890,
+      "digest": "sha256:f8be3ca3194ecfe712f08bcea0a5cef028345cafbba01caf2ecfbc8224b26176"
+    },
+    "trait64_0.3.0-dev.55_debian13_amd64.deb": {
+      "size": 1051226,
+      "digest": "sha256:fff21deb26c86f70ad50e90eaf72fde98c16cb87b8fd59112525295bd5ff8f36"
+    },
+    "SHA256SUMS": {
+      "size": 415,
+      "digest": "sha256:5d92dfaf5218c26f9ca2d72281b38428aeab118160463ba5e649b94853d9cafc"
+    }
+  },
+  "actions_artifacts": {
+    "pull_request": 0,
+    "publication": 0
+  },
+  "update_selector": "pending verification against published metadata",
+  "limitations": [
+    "No Voyager hardware/GPU test",
+    "500000 and millions of real games not qualified"
+  ]
+}

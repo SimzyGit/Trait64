@@ -1,0 +1,15 @@
+{
+  "checked_on": "2026-10-24",
+  "repository": "https://github.com/francescobianco/pragma-chess",
+  "revision": "08c9d3c9ea2e91dd32ac710ad639d1ff24aaff47",
+  "documents": [
+    "README.md",
+    "docs/en/guide/databases/index.html",
+    "docs/en/guide/games-list/index.html",
+    "docs/en/guide/convert/index.html",
+    "DESIGN.md"
+  ],
+  "finding": "No reproducible numeric benchmark protocol identified in the inspected README, database/list/conversion guides and design document. This is not an assertion about every publication or release.",
+  "comparison_performed": false,
+  "reason": "No same-host/same-corpus measurement of Pragma was run. Do not infer relative performance from our internal before/after result."
+}
