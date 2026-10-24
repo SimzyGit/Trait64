@@ -1,0 +1,22 @@
+{
+    "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+    "concurrent_reader": false,
+    "cpu_arch": "x86_64",
+    "elapsed_ms": 3345,
+    "end_rss_kib": 9672,
+    "games": 10000,
+    "games_per_second": 2989.536621823617,
+    "hash_ms": 554,
+    "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "input_bytes": 92811021,
+    "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+    "limit": 10000,
+    "mode": "parse + canonical PGN hash (no database)",
+    "nodes": 661314,
+    "os": "Ubuntu 24.04.3 LTS",
+    "peak_rss_kib": 11264,
+    "qt": "6.4.2",
+    "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "version": "0.3.0-dev.1",
+    "workers": 4
+}

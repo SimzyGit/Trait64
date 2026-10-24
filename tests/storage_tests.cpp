@@ -5,8 +5,13 @@
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QRegularExpression>
+#include <QSet>
+#include <QSqlDriver>
 #include <QSqlQuery>
 #include <QTemporaryDir>
+#include <sqlite3.h>
+#include <cstring>
 #include <iostream>
 #include <thread>
 int checks = 0;
@@ -28,6 +33,123 @@ int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     QTemporaryDir dir;
     try {
+        {
+            // No ANALYZE statistics: this is the normal state of a fresh import.
+            // Count SQLite VM work on the real save() lookup, not wall-clock time
+            // or a separately reconstructed query that could drift from production.
+            t64::Database large(dir.filePath("dedup.sqlite"));
+            QSqlDatabase connection;
+            for (const auto &name : QSqlDatabase::connectionNames()) {
+                auto candidate = QSqlDatabase::database(name);
+                if (candidate.databaseName() == large.path())
+                    connection = candidate;
+            }
+            QSqlQuery seed(connection);
+            check(seed.exec(
+                      "WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4096) "
+                      "INSERT INTO games(uuid,white,black,event,date,result,pgn,digest,updated) "
+                      "SELECT 'seed-'||x,'White','Black','','2026.10.22','*','*','seed-'||x,"
+                      "'2026-10-22T00:00:00Z' FROM n"),
+                  "Seed a populated library without query-planner statistics");
+            auto native = connection.driver()->handle();
+            check(native.isValid() && QByteArray(native.typeName()) == "sqlite3*", "Native SQLite handle");
+            auto *handle = *static_cast<sqlite3 **>(native.data());
+            struct LookupWork {
+                int calls = 0, maximum = 0;
+            } work;
+            sqlite3_trace_v2(
+                handle, SQLITE_TRACE_PROFILE,
+                [](unsigned, void *context, void *statement, void *) {
+                    auto *stmt = static_cast<sqlite3_stmt *>(statement);
+                    const char *sql = sqlite3_sql(stmt);
+                    if (sql && std::strncmp(sql, "SELECT id FROM games ", 21) == 0 &&
+                        std::strstr(sql, "digest=")) {
+                        auto &work = *static_cast<LookupWork *>(context);
+                        ++work.calls;
+                        work.maximum =
+                            std::max(work.maximum, sqlite3_stmt_status(stmt, SQLITE_STMTSTATUS_VM_STEP, 0));
+                    }
+                    return 0;
+                },
+                &work);
+            qint64 first = 0, duplicate = 0, restored = 0;
+            const auto game = t64::parsePgn("[White \"Real game\"]\n1.e4 e5 *").front();
+            try {
+                first = large.save(game);
+                duplicate = large.save(game);
+                large.trash(first, true);
+                restored = large.save(game);
+            } catch (...) {
+                sqlite3_trace_v2(handle, 0, nullptr, nullptr);
+                throw;
+            }
+            sqlite3_trace_v2(handle, 0, nullptr, nullptr);
+            check(work.calls == 3 && work.maximum < 100,
+                  "Digest lookups stay bounded despite thousands of unrelated active games");
+            check(first == duplicate && restored != first && large.load(first).pgn() == game.pgn() &&
+                      large.load(restored).pgn() == game.pgn() && large.stats()["games"].toInt() == 4097,
+                  "Bounded deduplication preserves active copies and games in the trash");
+        }
+        {
+            t64::Database materialDb(dir.filePath("material.sqlite"));
+            const auto specimens = t64::parsePgn(
+                "[Event \"Capture and variation\"]\n1.e4 d5 2.exd5 (2.e5) *\n\n"
+                "[SetUp \"1\"]\n[FEN \"8/P6k/8/8/8/8/6p1/4K3 w - - 0 1\"]\n"
+                "1.a8=N g1=R+ *\n\n"
+                "[SetUp \"1\"]\n[FEN \"4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1\"]\n"
+                "1.exd6 *\n\n"
+                "[Variant \"Chess960\"]\n[SetUp \"1\"]\n"
+                "[FEN \"4k3/8/8/8/8/8/8/RK5R w HA - 0 1\"]\n1.O-O *");
+            QMap<QString, QSet<qint64>> matching;
+            QMap<QPair<qint64, int>, QString> expected;
+            for (const auto &game : specimens) {
+                const auto id = materialDb.save(game);
+                for (size_t node = 0; node < game.nodes.size(); ++node) {
+                    // The old persisted representation is the compatibility oracle.
+                    auto key = QString::fromStdString(game.nodes[node].fen).section(' ', 0, 0);
+                    key.remove(QRegularExpression("[^prnbqkPRNBQK]"));
+                    std::sort(key.begin(), key.end());
+                    expected.insert({id, int(node)}, key);
+                    matching[key].insert(id);
+                }
+            }
+            auto verify = [&] {
+                QSqlDatabase connection;
+                for (const auto &name : QSqlDatabase::connectionNames()) {
+                    auto candidate = QSqlDatabase::database(name);
+                    if (candidate.databaseName() == materialDb.path())
+                        connection = candidate;
+                }
+                QSqlQuery query(connection);
+                check(query.exec("SELECT game_id,node,material FROM all_positions"),
+                      "Read persisted material index");
+                QMap<QPair<qint64, int>, QString> actual;
+                while (query.next())
+                    actual.insert({query.value(0).toLongLong(), query.value(1).toInt()},
+                                  query.value(2).toString());
+                check(actual == expected,
+                      "Material keys preserve the legacy format for variants, special moves and colours");
+                for (auto it = matching.cbegin(); it != matching.cend(); ++it) {
+                    auto input = it.key();
+                    std::reverse(input.begin(), input.end());
+                    input += QString::fromUtf8(" 123/.-É♔");
+                    QSet<qint64> ids;
+                    for (const auto &row : materialDb.search({}, {}, false, {}, false,
+                                                           {{"material", input}}))
+                        ids.insert(row.toMap()["id"].toLongLong());
+                    check(ids == it.value(),
+                          "Material search keeps counts, colours, variants and ignored characters");
+                }
+            };
+            verify();
+            check(materialDb.rebuildIndexes() == int(specimens.size()), "Rebuild material fixtures");
+            verify();
+            rejects([&] {
+                materialDb.rebuildIndexes([&](int count) { return count < int(specimens.size()); });
+            });
+            verify();
+            check(materialDb.integrity() == "ok", "Material indexes remain valid after canceled rebuild");
+        }
         t64::Database db(dir.path() + "/test.sqlite");
         auto games = t64::parsePgn("[White \"Alice\"]\n[Black \"Bob\"]\n[Result \"1-0\"]\n1.e4 e5 2.Nf3 "
                                    "(2.Bc4) Nc6 1-0\n\n[White \"Carol\"]\n1.d4 d5 *");

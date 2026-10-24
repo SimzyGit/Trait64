@@ -1,0 +1,107 @@
+[
+  {
+    "name": "parse-10k-1",
+    "command": [
+      "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+      "--input",
+      "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "--source-url",
+      "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+      "--threads",
+      "1",
+      "--limit",
+      "10000",
+      "--report",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/parse-10k-1.json"
+    ],
+    "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+    "process_seconds": 11.749449729919434
+  },
+  {
+    "name": "parse-10k-4",
+    "command": [
+      "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+      "--input",
+      "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "--source-url",
+      "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+      "--threads",
+      "4",
+      "--limit",
+      "10000",
+      "--report",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/parse-10k-4.json"
+    ],
+    "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+    "process_seconds": 3.9082894325256348
+  },
+  {
+    "name": "before-10k",
+    "command": [
+      "/workspace/scratch/a60c9ae04ffb/perf-baselines/before/pgn_benchmark",
+      "--input",
+      "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "--source-url",
+      "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+      "--threads",
+      "4",
+      "--limit",
+      "10000",
+      "--pause-at",
+      "5000",
+      "--database",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/before-10k.sqlite",
+      "--backup",
+      "--report",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/before-10k.json"
+    ],
+    "binary_sha256": "c3beba44446a345498b2a0b94b5da65dc6eef9ab84c9d68efaba31204a33bfb3",
+    "process_seconds": 106.5810182094574
+  },
+  {
+    "name": "digest-10k",
+    "command": [
+      "/workspace/scratch/a60c9ae04ffb/perf-baselines/digest/pgn_benchmark",
+      "--input",
+      "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "--source-url",
+      "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+      "--threads",
+      "4",
+      "--limit",
+      "10000",
+      "--pause-at",
+      "5000",
+      "--database",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/digest-10k.sqlite",
+      "--backup",
+      "--report",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/digest-10k.json"
+    ],
+    "binary_sha256": "9ababd4ebf193727f78054b3a5d08103b2216f1d180f9e01a93daf445994e968",
+    "process_seconds": 72.15607857704163
+  },
+  {
+    "name": "material-10k",
+    "command": [
+      "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+      "--input",
+      "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+      "--source-url",
+      "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+      "--threads",
+      "4",
+      "--limit",
+      "10000",
+      "--pause-at",
+      "5000",
+      "--database",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/material-10k.sqlite",
+      "--backup",
+      "--report",
+      "/workspace/scratch/a60c9ae04ffb/material-measures/material-10k.json"
+    ],
+    "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+    "process_seconds": 55.49070167541504
+  }
+]

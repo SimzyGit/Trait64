@@ -1,5 +1,28 @@
 # Vérification 0.3
 
+## Qualification des imports — 23 octobre 2026
+
+Le test de stockage compte les instructions SQLite de la vraie recherche de
+doublons dans une base sans statistiques ANALYZE ; il vérifie les doublons actifs
+et la corbeille. Les clés matérielles réellement enregistrées sont comparées à
+l'ancienne représentation, puis recherchées et réindexées, y compris après
+rollback. Fixtures : captures/variantes, sous-promotions, prise en passant et
+roque Chess960. Quatre suites ciblées passent après restauration du commit
+`e21e8d3` : core, storage, resumable_import et pgn_benchmark_safety (1,55 s).
+
+Le mode `desktop_tests --benchmark-import /chemin/corpus.pgn --benchmark-games 100000`
+utilise une bibliothèque temporaire, quatre lecteurs, un timer de 10 ms et des
+changements de page toutes les secondes. Le JSON donne le nombre réellement
+traité, les latences des événements et les avertissements QML. Le seuil déclenche
+une demande de pause ; le lot déjà validé peut dépasser légèrement ce seuil.
+Ce mode est opt-in et ne remplace pas les tests habituels. Exécution sans écran :
+`QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`. Cela ne mesure pas le GPU,
+Wayland ni la cadence d'affichage du PC Voyager.
+
+Mesures et protocole : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
+La compilation complète, ce mode Qt et le palier 100 000 restent à valider sur le
+dernier commit. Ne pas confondre la CI réussie de `69250f0` avec cette validation.
+
 ## Audit global — validation finale du 22 octobre 2026
 
 La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) ajoute des régressions sur les sessions et chemins restaurés, l’annulation finale de réindexation, les compteurs FEN, les réponses moteur réentrantes, la destruction pendant l’authentification, les nulles réclamables, le cache hérité et les cadences extrêmes.

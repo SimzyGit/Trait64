@@ -1,4 +1,15 @@
-# Reprise du développement — audit vérifié le 22 octobre 2026
+# Reprise du développement — performances, 23 octobre 2026
+
+Suivre d'abord [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md) : finir le lot
+performances commencé dans la PR #10, puis poursuivre les goulets d'étranglement
+mesurés. Les premiers gains sur 10 000 PGN réels sont conservés dans PERFORMANCE.
+Le palier de 100 000 reste à terminer ; 500 000, 1, 2, 5 et 10 millions restent
+ouverts, après contrôle du disque, de la RAM et du corpus disponible.
+
+Ordre de la consigne du 22 octobre : **performances → explications vérifiables
+→ entraînement tactique → répertoires/préparation**, puis le reste de la feuille
+de route. L'audit dev.52 est acquis, à préserver sans le recommencer. Les listes
+historiques ci-dessous restent des objectifs, avec cet ordre de priorité.
 
 **Audit global terminé, intégré dans la PR #9 et publié dans [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Dix groupes de défauts corrigés, 12/12 suites locales et CI Debian 12/13, contrôles ASan/UBSan de tous les modules, 3 000 mutations FEN/PGN. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Aucun ajout de la feuille de route n’a été entrepris pendant cet audit.
 

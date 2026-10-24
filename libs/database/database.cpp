@@ -34,6 +34,31 @@ QString tag(const Game &g, const char *name) {
     const auto it = g.tags.find(name);
     return it == g.tags.end() ? QString() : s(it->second);
 }
+QString materialKey(QStringView pieces) {
+    // Keep the schema-2 key byte-for-byte, without compiling a regular
+    // expression for every indexed position. Only FEN piece letters count.
+    QString key;
+    key.reserve(32);
+    for (const auto piece : pieces) {
+        switch (piece.unicode()) {
+        case 'p':
+        case 'r':
+        case 'n':
+        case 'b':
+        case 'q':
+        case 'k':
+        case 'P':
+        case 'R':
+        case 'N':
+        case 'B':
+        case 'Q':
+        case 'K':
+            key.append(piece);
+        }
+    }
+    std::sort(key.begin(), key.end());
+    return key;
+}
 } // namespace
 Database::Database(const QString &path) : connection_(QUuid::createUuid().toString()), path_(path) {
     try {
@@ -146,7 +171,10 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         QString::fromLatin1(QCryptographicHash::hash(pgn.toUtf8(), QCryptographicHash::Sha256).toHex());
     if (!id) {
         QSqlQuery q(db_);
-        q.prepare("SELECT id FROM games WHERE digest=? AND deleted=0 LIMIT 1");
+        // With no ANALYZE statistics SQLite can prefer an index starting with
+        // deleted, scanning every active game for each new PGN (quadratic import).
+        // This mandatory schema-1 index bounds the lookup to the matching digest.
+        q.prepare("SELECT id FROM games INDEXED BY games_digest WHERE digest=? AND deleted=0 LIMIT 1");
         q.addBindValue(digest);
         run(q);
         if (q.next())
@@ -229,9 +257,7 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             int n = pending.back();
             pending.pop_back();
             const auto &node = game.nodes[n];
-            QString material = s(node.fen).section(' ', 0, 0);
-            material.remove(QRegularExpression("[^prnbqkPRNBQK]"));
-            std::sort(material.begin(), material.end());
+            const auto material = materialKey(s(node.fen).section(' ', 0, 0));
             all.bindValue(0, id);
             all.bindValue(1, n);
             all.bindValue(2, s(positionKey(node.fen)));
@@ -371,11 +397,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         args << filters["maxPlies"];
     }
     if (!filters.value("material").toString().isEmpty()) {
-        QString material = filters["material"].toString();
-        material.remove(QRegularExpression("[^prnbqkPRNBQK]"));
-        std::sort(material.begin(), material.end());
         statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE material=?)";
-        args << material;
+        args << materialKey(filters["material"].toString());
     }
     struct SortField {
         QString column, key;
