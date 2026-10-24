@@ -8,8 +8,8 @@ du dossier `Trait64-perf` doivent être reprises depuis GitHub, jamais depuis
 un ancien checkout modifié. Aucun schéma ni migration réécrit.
 
 Les mesures successives sur 10 000 parties sont conservées dans
-`docs/benchmarks/2026-10-23` : 93,114 → 57,649 → 42,498 s. Les quatre suites
-ciblées passent. Le mode opt-in `desktop_tests --benchmark-import` mesure la
+`docs/benchmarks/2026-10-23` : 93,114 → 57,649 → 42,498 s. Les **12 suites locales passent, aucune ignorée**, en 62,33 s avec Stockfish 16
+réel ; rapports `local-tests.txt` et `validation.json`. Le mode opt-in `desktop_tests --benchmark-import` mesure la
 boucle Qt réelle, la navigation et les avertissements QML dans un dossier
 jetable ; il reste à exécuter sur le corpus. La première CI de la PR
 [39911426839](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39911426839)
@@ -19,8 +19,10 @@ Comparaison logique réussie : les trois imports et la restauration ont les mêm
 parties, positions, clés matérielles et agrégats ; SHA-256 conservés dans
 `logical-equivalence.json`.
 
-À terminer : compilation et
-suites complètes du dernier code, palier 100 000 avec sauvegarde/restauration,
+Parsing 100 000 parties / 6 817 385 positions achevé en 35,706 s avec quatre
+lecteurs (`parse-100k-4.json`). Ce temps exclut SQLite.
+
+À terminer : palier 100 000 avec sauvegarde/restauration,
 mesure de la réactivité Qt, CI finale puis fusion/publication. Sauvegarder les
 petits rapports JSON dans Git dès leur obtention ; garder corpus et SQLite hors
 Git. Ne pas réannoncer le résultat d'une tâche interrompue sans son rapport.
