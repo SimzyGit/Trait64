@@ -24,19 +24,26 @@ L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
   réinitialisation locale, puis conservé dans Git ; voir `recovery-provenance.json`.
   L'ancien test Qt interrompu n'a pas de résultat exploitable.
 
-## Correctif complémentaire en validation locale
+## Vérification d'intégrité asynchrone — PR #12 en CI
 
-Branche `perf/async-integrity-check`, premier commit
-`b360717c2699ba852b77f9e08bf1c45ab47b74e3` : le bouton de vérification d'intégrité utilisait
-encore la connexion du fil UI. Le contrôle local 100k prenait 110,028 s.
-Le correctif utilise un worker avec sa propre connexion, interruption SQLite,
-état de tâche explicite, refus de chevauchement et attente à la fermeture.
-Tests déterministes de file Qt et d'interruption au début de la vraie requête.
-La compilation locale est en cours ; ce correctif n'est pas encore intégré ni publié.
-Checkout isolé `Trait64-maintenance`, ancien checkout préservé. La qualification
-GitHub ci-dessous porte toujours sur dev.55, indépendamment de ce changement.
-Après compilation, revoir la capture du résultat avant émission de `busyChanged`
-dans le callback de fin (réentrance), puis suites ciblées/complètes et CI PR.
+[PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12), branche
+`perf/async-integrity-check`, tête `685cce343dcfd95b06576d04629906fd64a7c534`.
+Le bouton de vérification utilisait encore la connexion du fil UI ; le contrôle
+local 100k prenait 110,028 s. Le correctif utilise un worker avec sa propre
+connexion, interruption SQLite, état explicite et attente à la fermeture.
+Le résultat est capturé avant la notification de fin pour supporter une relance
+réentrante. Tests d'annulation préalable/en cours, événements Qt, chevauchement,
+étude conservée, reprise, réentrance et destruction.
+
+**12/12 suites locales réussies en 62,73 s avec Stockfish, aucune ignorée.**
+[CI PR 40181527836](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836) en cours :
+attendre les suites Debian 12/13, ASan/UBSan et paquets avant fusion, puis vérifier
+la publication. Ce correctif n'est pas encore intégré. Schéma 7 inchangé.
+Détails sur la branche : `docs/ASYNC-INTEGRITY.md` et
+`docs/verification-integrity-2026-10-25.json`. Checkout isolé
+`Trait64-maintenance`, anciens checkouts préservés.
+La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones.
+La qualification ci-dessous porte sur dev.55, pas sur le nouveau correctif.
 
 ## Qualification complémentaire — 25 octobre, à suivre sans relancer
 
