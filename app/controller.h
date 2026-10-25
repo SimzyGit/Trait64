@@ -48,6 +48,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
+    Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
     Q_PROPERTY(QVariantList review READ review NOTIFY reviewChanged)
     Q_PROPERTY(QVariantMap reviewState READ reviewState NOTIFY reviewChanged)
@@ -116,6 +117,10 @@ class Controller : public QObject {
     QVariantMap preferences() const;
     bool busy() const { return busy_; }
     int taskProgress() const { return taskProgress_->load(); }
+    QString taskStatus() const {
+        return verifying_ ? QString("Vérification de la bibliothèque…")
+                          : QString("Traitement en cours · %1 parties lues").arg(taskProgress());
+    }
     Q_INVOKABLE void cancelTask() { cancelTask_->store(true); }
     t64::Updater *updater() const { return updater_.get(); }
     t64::Comparison *comparison() { return &comparison_; }
@@ -288,7 +293,8 @@ class Controller : public QObject {
     QVariantMap openingFilters(const QVariantMap &filters) const;
     struct ImportResult {
         int count = 0, duplicates = 0;
-        QString error, operation = "import";
+        QString error, detail, operation = "import";
+        bool canceled = false;
         QVariantMap job;
     };
     struct ImportView {
@@ -296,7 +302,7 @@ class Controller : public QObject {
         t64::ImportProgress progress;
         qint64 elapsed = 0, startBytes = 0;
     };
-    bool resumableImport_ = false;
+    bool resumableImport_ = false, verifying_ = false;
     QVariantList importJobs_;
     std::shared_ptr<ImportView> importView_ = std::make_shared<ImportView>();
     std::unique_ptr<t64::Updater> updater_;

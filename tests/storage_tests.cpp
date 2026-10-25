@@ -89,6 +89,30 @@ int main(int argc, char **argv) {
             check(first == duplicate && restored != first && large.load(first).pgn() == game.pgn() &&
                       large.load(restored).pgn() == game.pgn() && large.stats()["games"].toInt() == 4097,
                   "Bounded deduplication preserves active copies and games in the trash");
+            auto canceled = std::make_shared<std::atomic_bool>(true);
+            rejects([&] { large.integrity(canceled); });
+            canceled->store(false);
+            // Cancel after SQLite has begun preparing the actual integrity check,
+            // without sleeps or a race against the speed of this machine.
+            sqlite3_set_authorizer(
+                handle,
+                [](void *flag, int action, const char *name, const char *, const char *, const char *) {
+                    if (action == SQLITE_PRAGMA && name && std::strcmp(name, "integrity_check") == 0)
+                        static_cast<std::atomic_bool *>(flag)->store(true);
+                    return SQLITE_OK;
+                },
+                canceled.get());
+            QString interruption;
+            try {
+                large.integrity(canceled);
+            } catch (const std::exception &e) {
+                interruption = QString::fromUtf8(e.what());
+            }
+            sqlite3_set_authorizer(handle, nullptr, nullptr);
+            check(canceled->load() && interruption.contains("interrupt", Qt::CaseInsensitive),
+                  "SQLite interrupts an executing integrity check, never reporting partial success");
+            check(large.integrity() == "ok" && large.stats()["games"].toInt() == 4097,
+                  "Cancellation leaves data intact and removes the temporary progress handler");
         }
         {
             t64::Database materialDb(dir.filePath("material.sqlite"));

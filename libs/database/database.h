@@ -80,7 +80,7 @@ class Database {
     void exportPgn(QIODevice &output) const;
     void validateOutputPath(const QString &path) const;
     void backup(const QString &path);
-    QString integrity() const;
+    QString integrity(const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void addCard(const QString &title, const QString &fen, const QString &moves);
     QVariantList cards() const;
     void review(qint64 id, bool success);
