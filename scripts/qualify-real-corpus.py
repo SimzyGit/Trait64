@@ -32,6 +32,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--scenario', required=True, choices=['gui', 'storage'])
     args = parser.parse_args()
     corpus = args.input.resolve(strict=True)
     if corpus.stat().st_size != 92811021 or sha256(corpus) != CORPUS_SHA:
@@ -53,11 +54,12 @@ def main():
         'tested_runtime_commit': '550f28f51f174b8d3b1d5f896928c2cfa09e04d4',
         'measurement_commit': os.environ.get('GITHUB_SHA', ''),
         'workflow_run': os.environ.get('GITHUB_RUN_ID', ''),
+        'scenario': args.scenario,
         'compiler': subprocess.check_output(['c++', '--version'], text=True).splitlines()[0],
         'build': 'Release -O3 -DNDEBUG',
         'free_disk_bytes_before_runs': shutil.disk_usage(out).free,
         'binary_sha256': {p.name: sha256(p) for p in [bench, gui]},
-        'conditions': 'Sequential runs after compilation, GitHub ubuntu-24.04 runner, caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.',
+        'conditions': 'Separate GitHub ubuntu-24.04 runners for GUI and storage; scenarios within one runner are sequential after compilation. Caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.',
     }
     for line in Path('/proc/cpuinfo').read_text().splitlines():
         if line.startswith('model name'):
@@ -90,18 +92,25 @@ def main():
             'resource_method': 'Linux os.wait4 child rusage', 'returncode': child.returncode,
         }
         emit(name + '-process', resources)
+        path = stdout_path if stdout_json else out / (name + '.json')
+        report = None
+        if path.exists() and path.stat().st_size:
+            report = json.loads(path.read_text())
+            emit(name, report)
         if child.returncode:
             print(stderr_path.read_text()[-10000:], flush=True)
             raise RuntimeError(name + ' failed')
-        path = stdout_path if stdout_json else out / (name + '.json')
-        report = json.loads(path.read_text())
-        emit(name, report)
+        if report is None:
+            raise RuntimeError(name + ' produced no report')
         return report
 
-    gui_report = run('gui-100k', [str(gui), '--benchmark-import', str(corpus),
-                                '--benchmark-games', '100000'], stdout_json=True)
-    if gui_report['stored_games'] < 100000 or gui_report['qml_warnings']:
-        raise RuntimeError('GUI qualification did not meet its requested corpus size')
+    if args.scenario == 'gui':
+        gui_report = run('gui-100k', [str(gui), '--benchmark-import', str(corpus),
+                                    '--benchmark-games', '100000',
+                                    '--benchmark-timeout-seconds', '5400'], stdout_json=True)
+        if gui_report['stored_games'] < 100000 or gui_report['qml_warnings']:
+            raise RuntimeError('GUI qualification did not meet its requested corpus size')
+        return
     reindex = run('reindex-10k', [str(bench), '--input', str(corpus), '--threads', '4',
                                '--limit', '10000', '--database', str(out / 'reindex.sqlite'),
                                '--reindex', '--source-url', SOURCE,
