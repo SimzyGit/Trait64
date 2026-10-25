@@ -1,3 +1,12 @@
+## Vérification de la base en arrière-plan — 25 octobre 2026
+
+- « Vérifier la base » utilise désormais une connexion SQLite dédiée en arrière-plan. L'état est affiché et le bouton « Interrompre » permet d'annuler, en conservant l'étude ouverte.
+- Les tâches qui se chevauchent sont refusées. Une interruption ou une erreur ne peut pas être présentée comme une vérification réussie. La relance immédiate depuis une notification de fin conserve le bon résultat.
+- Douze suites locales et CI Debian 12/13 réussissent, avec contrôles ASan/UBSan et démarrage des paquets. Schéma 7 inchangé.
+- La qualification séparée de dev.55 a importé 100 000 parties avec Qt sans avertissement QML, réindexé 10 000 parties et vérifié tous les PGN de la sauvegarde et de la restauration. Résultats et limites dans `docs/benchmarks/2026-10-25/RESULTS.md` ; aucun essai Voyager ni de plusieurs millions de parties n'est revendiqué.
+
+La sauvegarde manuelle et le contrôle préalable à l'ouverture d'une bibliothèque restent des opérations synchrones distinctes. Détails : `docs/ASYNC-INTEGRITY.md`.
+
 ## Import PGN accéléré — dev.55, 24 octobre 2026
 
 - Recherche des doublons par l'index des empreintes existant, et calcul du matériel sans expression régulière recompilée pour chaque position. Schéma 7, clés persistées et transactions conservés.

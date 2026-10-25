@@ -1,0 +1,383 @@
+{
+  "method": "SQLite dbstat after all timed runs; excludes WAL/SHM",
+  "objects": [
+    {
+      "name": "all_positions",
+      "bytes": 630185984,
+      "payload_bytes": 574491595,
+      "unused_bytes": 7366357,
+      "pages": 153854
+    },
+    {
+      "name": "opening_edges",
+      "bytes": 538144768,
+      "payload_bytes": 453383072,
+      "unused_bytes": 63081804,
+      "pages": 131383
+    },
+    {
+      "name": "positions",
+      "bytes": 526028800,
+      "payload_bytes": 473079426,
+      "unused_bytes": 5070772,
+      "pages": 128425
+    },
+    {
+      "name": "positions_fen",
+      "bytes": 483487744,
+      "payload_bytes": 400163551,
+      "unused_bytes": 61455574,
+      "pages": 118039
+    },
+    {
+      "name": "all_positions_fen",
+      "bytes": 483487744,
+      "payload_bytes": 400163551,
+      "unused_bytes": 61455574,
+      "pages": 118039
+    },
+    {
+      "name": "opening_stats",
+      "bytes": 477237248,
+      "payload_bytes": 396120334,
+      "unused_bytes": 62096756,
+      "pages": 116513
+    },
+    {
+      "name": "all_positions_material",
+      "bytes": 247255040,
+      "payload_bytes": 197032400,
+      "unused_bytes": 29046109,
+      "pages": 60365
+    },
+    {
+      "name": "games",
+      "bytes": 150044672,
+      "payload_bytes": 124762652,
+      "unused_bytes": 23982358,
+      "pages": 36632
+    },
+    {
+      "name": "sqlite_autoindex_positions_1",
+      "bytes": 106618880,
+      "payload_bytes": 72640349,
+      "unused_bytes": 13214020,
+      "pages": 26030
+    },
+    {
+      "name": "sqlite_autoindex_all_positions_1",
+      "bytes": 106618880,
+      "payload_bytes": 72640349,
+      "unused_bytes": 13214020,
+      "pages": 26030
+    },
+    {
+      "name": "games_fts_data",
+      "bytes": 16293888,
+      "payload_bytes": 16023631,
+      "unused_bytes": 150227,
+      "pages": 3978
+    },
+    {
+      "name": "games_digest",
+      "bytes": 8327168,
+      "payload_bytes": 7067105,
+      "unused_bytes": 935671,
+      "pages": 2033
+    },
+    {
+      "name": "games_fingerprint",
+      "bytes": 8302592,
+      "payload_bytes": 7067105,
+      "unused_bytes": 911167,
+      "pages": 2027
+    },
+    {
+      "name": "games_collection",
+      "bytes": 6938624,
+      "payload_bytes": 3134210,
+      "unused_bytes": 3484090,
+      "pages": 1694
+    },
+    {
+      "name": "games_recent",
+      "bytes": 6717440,
+      "payload_bytes": 3034210,
+      "unused_bytes": 3363554,
+      "pages": 1640
+    },
+    {
+      "name": "games_eco_recent",
+      "bytes": 6000640,
+      "payload_bytes": 3434210,
+      "unused_bytes": 2248854,
+      "pages": 1465
+    },
+    {
+      "name": "games_white_recent",
+      "bytes": 5038080,
+      "payload_bytes": 3916063,
+      "unused_bytes": 807261,
+      "pages": 1230
+    },
+    {
+      "name": "sqlite_autoindex_games_1",
+      "bytes": 5033984,
+      "payload_bytes": 4167105,
+      "unused_bytes": 552135,
+      "pages": 1229
+    },
+    {
+      "name": "games_black_recent",
+      "bytes": 5005312,
+      "payload_bytes": 3923938,
+      "unused_bytes": 766714,
+      "pages": 1222
+    },
+    {
+      "name": "games_date",
+      "bytes": 4694016,
+      "payload_bytes": 2034210,
+      "unused_bytes": 2346058,
+      "pages": 1146
+    },
+    {
+      "name": "games_filter",
+      "bytes": 3186688,
+      "payload_bytes": 2480309,
+      "unused_bytes": 397047,
+      "pages": 778
+    },
+    {
+      "name": "games_players",
+      "bytes": 2879488,
+      "payload_bytes": 2238686,
+      "unused_bytes": 332370,
+      "pages": 703
+    },
+    {
+      "name": "games_black_rating",
+      "bytes": 2322432,
+      "payload_bytes": 1756607,
+      "unused_bytes": 259025,
+      "pages": 567
+    },
+    {
+      "name": "games_white_rating",
+      "bytes": 2306048,
+      "payload_bytes": 1748826,
+      "unused_bytes": 250470,
+      "pages": 563
+    },
+    {
+      "name": "games_fts_docsize",
+      "bytes": 1495040,
+      "payload_bytes": 900000,
+      "unused_bytes": 5415,
+      "pages": 365
+    },
+    {
+      "name": "source_games_game",
+      "bytes": 995328,
+      "payload_bytes": 567105,
+      "unused_bytes": 125311,
+      "pages": 243
+    },
+    {
+      "name": "source_games",
+      "bytes": 995328,
+      "payload_bytes": 567105,
+      "unused_bytes": 125311,
+      "pages": 243
+    },
+    {
+      "name": "player_counts",
+      "bytes": 94208,
+      "payload_bytes": 51463,
+      "unused_bytes": 20936,
+      "pages": 23
+    },
+    {
+      "name": "player_counts_rank",
+      "bytes": 86016,
+      "payload_bytes": 64283,
+      "unused_bytes": 8537,
+      "pages": 21
+    },
+    {
+      "name": "sqlite_autoindex_player_counts_1",
+      "bytes": 77824,
+      "payload_bytes": 55888,
+      "unused_bytes": 8764,
+      "pages": 19
+    },
+    {
+      "name": "games_fts_idx",
+      "bytes": 28672,
+      "payload_bytes": 16656,
+      "unused_bytes": 7145,
+      "pages": 7
+    },
+    {
+      "name": "sqlite_schema",
+      "bytes": 24576,
+      "payload_bytes": 15345,
+      "unused_bytes": 8745,
+      "pages": 6
+    },
+    {
+      "name": "sqlite_autoindex_sources_1",
+      "bytes": 4096,
+      "payload_bytes": 74,
+      "unused_bytes": 4011,
+      "pages": 1
+    },
+    {
+      "name": "sources",
+      "bytes": 4096,
+      "payload_bytes": 182,
+      "unused_bytes": 3901,
+      "pages": 1
+    },
+    {
+      "name": "review_log_date",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "review_log",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoires",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoire_targets",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoire_reviews",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoire_positions",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoire_moves",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "repertoire_due",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "library_counts",
+      "bytes": 4096,
+      "payload_bytes": 18,
+      "unused_bytes": 4066,
+      "pages": 1
+    },
+    {
+      "name": "import_jobs",
+      "bytes": 4096,
+      "payload_bytes": 177,
+      "unused_bytes": 3906,
+      "pages": 1
+    },
+    {
+      "name": "import_history_recent",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "import_history",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "games_fts_config",
+      "bytes": 4096,
+      "payload_bytes": 11,
+      "unused_bytes": 4074,
+      "pages": 1
+    },
+    {
+      "name": "cards_due",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "cards",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "analysis_results",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "analysis_pending",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "analysis_jobs",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "analysis_cache_used",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    },
+    {
+      "name": "analysis_cache",
+      "bytes": 4096,
+      "payload_bytes": 0,
+      "unused_bytes": 4088,
+      "pages": 1
+    }
+  ]
+}
