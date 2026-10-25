@@ -117,6 +117,28 @@ int main(int argc, char **argv) {
             check(!c.busy() && messages.last()[0].toString() == "Vérification SQLite : ok" &&
                       !messages.last()[1].toBool(),
                   "A new verification succeeds after cancellation");
+            messages.clear();
+            bool restarted = false;
+            const auto restart = QObject::connect(&c, &Controller::busyChanged, &c, [&] {
+                if (!c.busy() && !restarted) {
+                    restarted = true;
+                    c.verifyDatabase();
+                }
+            });
+            {
+                PoolGate gate;
+                c.verifyDatabase();
+                c.cancelTask();
+                gate.open();
+            }
+            wait.restart();
+            while (c.busy() && wait.elapsed() < 5000)
+                QTest::qWait(5);
+            QObject::disconnect(restart);
+            check(restarted && !c.busy() && messages.size() == 2 &&
+                      messages[0][0].toString().contains("interrompue") &&
+                      messages[1][0].toString() == "Vérification SQLite : ok",
+                  "Reentrant restart retains the distinct results of both verifications");
         }
         {
             Controller closing(dir.path() + "/integrity-close");

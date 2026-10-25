@@ -100,12 +100,14 @@ Controller::Controller(const QString &path, QObject *parent)
         }
     });
     connect(&importer_, &QFutureWatcher<ImportResult>::finished, this, [this] {
+        // A busyChanged receiver may immediately start another task and replace
+        // this watcher's future. Capture the completed result before notifying it.
+        const auto r = importer_.result();
         busy_ = false;
         resumableImport_ = false;
         verifying_ = false;
         taskPoll_.stop();
         emit busyChanged();
-        const auto r = importer_.result();
         if (r.operation == "verify") {
             if (r.canceled)
                 emit message("Vérification interrompue.");
