@@ -1,4 +1,4 @@
-# Point de reprise — performances, 24 octobre 2026
+# Point de reprise — performances, 25 octobre 2026
 
 **dev.55 publiée ; PR #10 fusionnée.** Source intégrée `550f28f`, code validé
 `26ba77d`. Tag exact, cinq fichiers/tailles/SHA-256 vérifiés ; zéro archive Actions.
@@ -24,25 +24,36 @@ L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
   réinitialisation locale, puis conservé dans Git ; voir `recovery-provenance.json`.
   L'ancien test Qt interrompu n'a pas de résultat exploitable.
 
-## Exécution indépendante du chat — à suivre, pas à relancer
+## Qualification complémentaire — 25 octobre, à suivre sans relancer
 
-[Qualification GitHub 40097867485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097867485),
-branche `perf/qt-corpus-qualification`, commit `e34e545`.
-Le code produit reste identique à dev.55 ; seuls le workflow de mesure et son
-script s'ajoutent. Accès GitHub en lecture, aucun téléversement d'archive Actions.
-Corpus réel CC0 épinglé par taille et SHA-256.
+[Qualification GitHub 40179661406](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406),
+branche `perf/qt-corpus-qualification`, commit `67f49eefbfabb0f635752ca1cdea7a1cb6056e45`.
+Deux runners indépendants : Qt 100k et stockage (réindexation 10k, import/restauration
+100k, empreinte de tous les PGN restaurés, profil SQLite). Un échec ne bloque
+plus l'autre scénario. Limite du test Qt : 90 minutes ; plafond de chaque job :
+110 minutes, compilation comprise. Ce sont des limites d'arrêt, pas des performances promises.
 
-Ordre : Qt 100k → réindexation 10k → import/restauration 100k → comparaison de
-tous les PGN restaurés et profil SQLite. Les JSON terminés sont encadrés dans
-les journaux par `TRAIT64_REPORT_BEGIN nom` / `TRAIT64_REPORT_END nom`.
-Le premier lancement s’est arrêté avant les mesures, faute de disque libre.
-Le second libère seulement les SDK préinstallés inutilisés du runner jetable et
-conserve le seuil de 14 Gio ; aucune donnée du dépôt ou release supprimée.
-Lire les journaux du job après sa fin, archiver les rapports dans
-`benchmarks/2026-10-24/github`, distinguer l'hôte GitHub de l'hôte local, puis
-actualiser PERFORMANCE, TESTING, ROADMAP, NEXT-STEPS et PROJECT-STATUS.
-Ne pas refaire la compilation locale ni les mesures déjà terminées après une
-réinitialisation. Conserver cette branche jusqu'à récupération des rapports.
+L'essai précédent [40097867485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097867485)
+a échoué sur la garde de 30 minutes de la sonde Qt (1 801,689 s pour le processus,
+123 536 Kio de RSS). Aucun compte final ni distribution Qt n'a été émis : on ne
+peut pas conclure à un gel, à un nombre de parties traité, ni à une qualification 100k.
+Les étapes suivantes n'avaient pas commencé. Les rapports disponibles sont archivés
+dans `benchmarks/2026-10-24/github/40097867485`.
+Le premier essai avait manqué de disque ; le second disposait de 31 570 042 880
+octets avant mesure après retrait des seuls SDK inutilisés du runner jetable.
+
+Le nouveau test conserve le rapport même en cas de délai dépassé et échantillonne
+la progression chaque minute. Les changements exécutables depuis dev.55 concernent
+uniquement le workflow, son script et la sonde optionnelle `tests/import_gui_probe.h`.
+Les sources produit `app/`, `libs/`, `ui/` et les ressources sont inchangées.
+Pas de publication ni d'archive Actions ; PGN et SQLite restent temporaires.
+
+Jobs à lire après leur fin : stockage `121127791436`, Qt `121127791517`.
+Extraire les JSON encadrés par `TRAIT64_REPORT_BEGIN nom` /
+`TRAIT64_REPORT_END nom`, les archiver dans `benchmarks/2026-10-25`,
+puis actualiser PERFORMANCE, TESTING, ROADMAP, NEXT-STEPS et PROJECT-STATUS.
+Ne pas refaire les mesures locales acquises après réinitialisation.
+Conserver cette branche jusqu'à récupération des rapports.
 
 500 000/1/2/5/10 millions et Voyager restent non qualifiés. Le corpus contient
 121 332 parties, sans duplication artificielle. Vérifier stockage, copies et
