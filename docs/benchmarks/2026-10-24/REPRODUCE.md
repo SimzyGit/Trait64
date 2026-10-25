@@ -1,5 +1,9 @@
 # Qualification des 100 000 parties — 24 octobre 2026
 
+**Protocole historique :** les essais Qt de ce jour ne sont pas qualifiés.
+La suite avec jobs indépendants et rapport conservé en cas de délai dépassé
+est décrite dans [le protocole du 25 octobre](../2026-10-25/REPRODUCE.md).
+
 Deux hôtes sont distingués : le rapport local `material-100k.json` et les
 rapports du runner GitHub dans `github/`. Aucun gain de performance n'est déduit
 en comparant ces machines. La comparaison avant/après sur 10 000 parties reste
@@ -47,7 +51,7 @@ donnée du dépôt, release, archive Actions ou dossier utilisateur.
 - `method` décrit le compilateur, la machine, les versions et les empreintes des binaires.
 - `*-process` mesure le processus complet, initialisation et nettoyage compris, avec `os.wait4` ; RSS du processus, hors cache de fichiers du noyau.
 - `gui-100k` utilise une vraie fenêtre Qt/QML sans écran, en rendu logiciel, un timer demandé à 10 ms et des changements programmatiques entre Accueil et Analyse chaque seconde. Vérifier le nombre réellement traité, les avertissements, la médiane, le p95 et le maximum. Ce n'est pas un test de clic humain, de GPU ou de cadence d'images. Son démarrage part d'une bibliothèque vide.
-- `material-100k` inclut parsing, tous les index et vérifications de reprise. La réouverture mesurée est celle de SQLite après import, pas celle de toute l'application avec une grosse bibliothèque. Cinq lectures finales par opération ; une première page de 200 résultats toutes les 100 ms pendant l'import. Les distributions SQL ne mesurent pas la latence Qt.
+- `material-100k` inclut parsing, tous les index et vérifications de reprise. La réouverture mesurée est celle de SQLite après import, pas celle de toute l'application avec une grosse bibliothèque. Cinq lectures finales par opération ; une première page de 200 résultats, suivie d’une attente de 100 ms avant la lecture suivante pendant l’import. Les distributions SQL ne mesurent pas la latence Qt.
 - `reindex-10k` sépare le temps de reconstruction complète des index du temps d'import initial.
 - `restored-content-100k` compare le SHA-256 de **tous** les PGN canoniques dans l'ordre des identifiants, ainsi que les comptes des deux tables de positions, sur l'original et ses deux copies. L'intégrité SQLite a déjà été vérifiée. Ce n'est pas une comparaison de chaque octet de tous les index.
 - `storage-profile-100k` relève les tailles réelles des tables/index après les mesures ; il exclut WAL/SHM.
