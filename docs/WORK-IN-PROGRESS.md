@@ -24,6 +24,20 @@ L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
   réinitialisation locale, puis conservé dans Git ; voir `recovery-provenance.json`.
   L'ancien test Qt interrompu n'a pas de résultat exploitable.
 
+## Correctif complémentaire en validation locale
+
+Branche `perf/async-integrity-check`, premier commit
+`b360717c2699ba852b77f9e08bf1c45ab47b74e3` : le bouton de vérification d'intégrité utilisait
+encore la connexion du fil UI. Le contrôle local 100k prenait 110,028 s.
+Le correctif utilise un worker avec sa propre connexion, interruption SQLite,
+état de tâche explicite, refus de chevauchement et attente à la fermeture.
+Tests déterministes de file Qt et d'interruption au début de la vraie requête.
+La compilation locale est en cours ; ce correctif n'est pas encore intégré ni publié.
+Checkout isolé `Trait64-maintenance`, ancien checkout préservé. La qualification
+GitHub ci-dessous porte toujours sur dev.55, indépendamment de ce changement.
+Après compilation, revoir la capture du résultat avant émission de `busyChanged`
+dans le callback de fin (réentrance), puis suites ciblées/complètes et CI PR.
+
 ## Qualification complémentaire — 25 octobre, à suivre sans relancer
 
 [Qualification GitHub 40179661406](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406),
