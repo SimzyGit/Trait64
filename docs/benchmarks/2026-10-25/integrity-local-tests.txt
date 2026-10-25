@@ -1,0 +1,30 @@
+Internal ctest changing into directory: /workspace/scratch/a60c9ae04ffb/Trait64-maintenance/build
+Test project /workspace/scratch/a60c9ae04ffb/Trait64-maintenance/build
+      Start  1: core
+ 1/12 Test  #1: core .............................   Passed    0.19 sec
+      Start  2: robustness
+ 2/12 Test  #2: robustness .......................   Passed    2.06 sec
+      Start  3: pgn_benchmark_safety
+ 3/12 Test  #3: pgn_benchmark_safety .............   Passed    0.29 sec
+      Start  4: content
+ 4/12 Test  #4: content ..........................   Passed    0.02 sec
+      Start  5: updates
+ 5/12 Test  #5: updates ..........................   Passed    0.11 sec
+      Start  6: storage
+ 6/12 Test  #6: storage ..........................   Passed    0.49 sec
+      Start  7: repertoires
+ 7/12 Test  #7: repertoires ......................   Passed    0.15 sec
+      Start  8: resumable_import
+ 8/12 Test  #8: resumable_import .................   Passed    0.11 sec
+      Start  9: persistent_analysis
+ 9/12 Test  #9: persistent_analysis ..............   Passed   39.86 sec
+      Start 10: engine
+10/12 Test #10: engine ...........................   Passed    2.62 sec
+      Start 11: desktop_smoke
+11/12 Test #11: desktop_smoke ....................   Passed    2.69 sec
+      Start 12: desktop_interactions
+12/12 Test #12: desktop_interactions .............   Passed   14.15 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Total Test time (real) =  62.73 sec
