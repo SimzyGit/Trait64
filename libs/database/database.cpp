@@ -674,13 +674,16 @@ void Database::backup(const QString &path) {
         throw;
     }
 }
-QString Database::integrity() const {
+QString Database::integrity(const std::shared_ptr<std::atomic_bool> &canceled) const {
+    const QueryCancellation cancellation(db_, canceled);
     QSqlQuery q(db_);
     if (!q.exec("PRAGMA integrity_check"))
         throw std::runtime_error(q.lastError().text().toStdString());
     QStringList out;
     while (q.next())
         out << q.value(0).toString();
+    check(!q.lastError().isValid(), q.lastError().text());
+    check(!canceled || !canceled->load(), "Vérification interrompue.");
     return out.join('\n');
 }
 void Database::addCard(const QString &title, const QString &fen, const QString &moves) {

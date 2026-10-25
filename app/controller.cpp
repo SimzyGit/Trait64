@@ -100,11 +100,23 @@ Controller::Controller(const QString &path, QObject *parent)
         }
     });
     connect(&importer_, &QFutureWatcher<ImportResult>::finished, this, [this] {
+        // A busyChanged receiver may immediately start another task and replace
+        // this watcher's future. Capture the completed result before notifying it.
+        const auto r = importer_.result();
         busy_ = false;
         resumableImport_ = false;
+        verifying_ = false;
         taskPoll_.stop();
         emit busyChanged();
-        const auto r = importer_.result();
+        if (r.operation == "verify") {
+            if (r.canceled)
+                emit message("Vérification interrompue.");
+            else if (!r.error.isEmpty())
+                emit message(r.error, true);
+            else
+                emit message("Vérification SQLite : " + r.detail, r.detail != "ok");
+            return;
+        }
         if (r.operation == "source" && content_)
             content_->reportImport(r.error.isEmpty()
                                        ? QString("Base importée : %1 nouvelles parties, %2 déjà présentes.")
@@ -1123,7 +1135,27 @@ void Controller::loadExamples() {
 }
 void Controller::verifyDatabase() {
     try {
-        emit message("Vérification SQLite : " + db_->integrity());
+        require(!busy_, "Attendez la fin du traitement.");
+        const auto path = db_->path();
+        const auto canceled = cancelTask_;
+        canceled->store(false);
+        auto future = QtConcurrent::run([path, canceled] {
+            ImportResult r;
+            r.operation = "verify";
+            try {
+                t64::Database database(path);
+                r.detail = database.integrity(canceled);
+            } catch (const std::exception &e) {
+                r.error = QString::fromUtf8(e.what());
+            }
+            r.canceled = canceled->load();
+            return r;
+        });
+        busy_ = verifying_ = true;
+        taskProgress_->store(0);
+        taskPoll_.start();
+        importer_.setFuture(std::move(future));
+        emit busyChanged();
     } catch (const std::exception &e) {
         fail(e);
     }

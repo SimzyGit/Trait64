@@ -426,7 +426,7 @@ ApplicationWindow {
                                 Label {text:"Intégrité & diagnostic";font.pixelSize:18;font.weight:Font.DemiBold}
                                 Label {text:"Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.";wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
-                                RowLayout {TButton {text:"Vérifier la base";onClicked:controller.verifyDatabase()} TButton {text:"Réindexer";enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
+                                RowLayout {TButton {text:"Vérifier la base";enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:"Réindexer";enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
                         Rectangle {Layout.fillWidth:true;implicitHeight:192;radius:2;color:win.panel;border.color:win.line
@@ -454,7 +454,7 @@ ApplicationWindow {
         height:32;color:win.bg
         Rectangle {width:parent.width;height:1;color:win.line}
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
-            Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  Traitement en cours · "+controller.taskProgress+" parties lues":controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
+            Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  "+controller.taskStatus:controller.state.dirty?"●  Modifications · récupération de session automatique":"●  Prêt";font.pixelSize:10;color:win.muted}
             Item {Layout.fillWidth:true}
             TButton {visible:controller.busy;text:controller.resumableImport?"Mettre en pause":"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
             Label {text:controller.state.training?"Entraînement local":"Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir";font.pixelSize:10;color:win.muted;visible:win.width>=1100}

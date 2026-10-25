@@ -18,6 +18,9 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QThreadPool>
+#include <QtConcurrent>
+#include <future>
 #include <iostream>
 
 int checks = 0;
@@ -35,6 +38,39 @@ QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
     return nullptr;
 }
 #include "import_gui_probe.h"
+// Hold the global pool so the queued verification cannot finish before we
+// exercise the UI and request cancellation. Release safely on assertion failure.
+class PoolGate {
+  public:
+    PoolGate() : oldMaximum_(QThreadPool::globalInstance()->maxThreadCount()) {
+        QThreadPool::globalInstance()->setMaxThreadCount(1);
+        std::promise<void> ready;
+        auto started = ready.get_future();
+        auto release = release_.get_future();
+        worker_ = QtConcurrent::run([ready = std::move(ready), release = std::move(release)]() mutable {
+            ready.set_value();
+            release.wait();
+        });
+        started.wait();
+    }
+    void open() {
+        if (!opened_) {
+            release_.set_value();
+            opened_ = true;
+        }
+    }
+    ~PoolGate() {
+        open();
+        worker_.waitForFinished();
+        QThreadPool::globalInstance()->setMaxThreadCount(oldMaximum_);
+    }
+
+  private:
+    int oldMaximum_;
+    bool opened_ = false;
+    std::promise<void> release_;
+    QFuture<void> worker_;
+};
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv);
     app.setOrganizationName("Trait64Tests");
@@ -46,6 +82,68 @@ int main(int argc, char **argv) {
     try {
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
+        {
+            Controller c(dir.path() + "/integrity-ui");
+            c.move("e2e4");
+            const auto original = c.state();
+            QSignalSpy messages(&c, &Controller::message);
+            {
+                PoolGate gate;
+                c.verifyDatabase();
+                check(c.busy() && c.taskStatus().contains("Vérification"),
+                      "Integrity check returns immediately with a visible verification status");
+                bool eventHandled = false;
+                QTimer::singleShot(0, &c, [&] { eventHandled = true; });
+                QTest::qWait(20);
+                check(eventHandled && c.busy(), "GUI events run while verification is pending");
+                c.verifyDatabase();
+                check(c.busy() && messages.last()[1].toBool(), "Overlapping maintenance is rejected");
+                c.cancelTask();
+                gate.open();
+            }
+            QElapsedTimer wait;
+            wait.start();
+            while (c.busy() && wait.elapsed() < 5000)
+                QTest::qWait(5);
+            check(!c.busy() && messages.last()[0].toString().contains("interrompue") &&
+                      !messages.last()[1].toBool(),
+                  "Canceled verification finishes without claiming integrity success");
+            check(c.state()["fen"] == original["fen"] && c.state()["dirty"] == original["dirty"],
+                  "Read-only maintenance preserves the unsaved study");
+            c.verifyDatabase();
+            wait.restart();
+            while (c.busy() && wait.elapsed() < 5000)
+                QTest::qWait(5);
+            check(!c.busy() && messages.last()[0].toString() == "Vérification SQLite : ok" &&
+                      !messages.last()[1].toBool(),
+                  "A new verification succeeds after cancellation");
+            messages.clear();
+            bool restarted = false;
+            const auto restart = QObject::connect(&c, &Controller::busyChanged, &c, [&] {
+                if (!c.busy() && !restarted) {
+                    restarted = true;
+                    c.verifyDatabase();
+                }
+            });
+            {
+                PoolGate gate;
+                c.verifyDatabase();
+                c.cancelTask();
+                gate.open();
+            }
+            wait.restart();
+            while (c.busy() && wait.elapsed() < 5000)
+                QTest::qWait(5);
+            QObject::disconnect(restart);
+            check(restarted && !c.busy() && messages.size() == 2 &&
+                      messages[0][0].toString().contains("interrompue") &&
+                      messages[1][0].toString() == "Vérification SQLite : ok",
+                  "Reentrant restart retains the distinct results of both verifications");
+        }
+        {
+            Controller closing(dir.path() + "/integrity-close");
+            closing.verifyDatabase(); // Destructor cancels and joins the worker before releasing state.
+        }
         QString expectedFen;
         qint64 savedId = 0;
         {

@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-25",
+  "code_commit": "ac30a2490705cedbdffee1e4fa6f2ab07ad21bdf",
+  "schema": 7,
+  "local": {
+    "configuration": "Release, Qt 6.4.2, GCC 13.3, Stockfish 16",
+    "suites_passed": 12,
+    "suites_failed": 0,
+    "suites_skipped": 0,
+    "total_seconds": 62.73,
+    "storage_seconds": 0.49,
+    "desktop_interactions_seconds": 14.15
+  },
+  "coverage": [
+    "SQL pre-cancellation",
+    "Actual SQLite integrity-check interruption",
+    "Connection reuse and unchanged game count",
+    "UI event processing while worker queued",
+    "Overlap rejection",
+    "Canceled result not success",
+    "Unsaved study preserved",
+    "Restart after cancellation",
+    "Reentrant completion signal preserves old result",
+    "Shutdown with active verification"
+  ],
+  "ci_status": "pending",
+  "limits": [
+    "No new real-corpus throughput measurement",
+    "No Voyager hardware test",
+    "Manual backup and library-opening validation remain synchronous"
+  ]
+}
