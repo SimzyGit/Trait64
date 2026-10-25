@@ -1,5 +1,14 @@
 # Changements
 
+## Vérification d'intégrité — dev.57, 25 octobre 2026
+
+- Contrôle manuel déplacé dans un worker avec sa connexion SQLite et annulation pendant la requête ; état de tâche visible et étude non enregistrée conservée.
+- Refus du chevauchement, attente à la fermeture, absence de faux succès après erreur/interruption ; résultat capturé avant le signal de fin pour préserver les relances réentrantes.
+- Tests déterministes SQL/Qt et 12 suites locales/CI, contrôles ASan/UBSan, DEB installés et AppImage démarrés ; schéma 7 inchangé.
+- Qualification séparée de dev.55 terminée : Qt 100k, 1 842 navigations sans avertissement QML, contenu de tous les PGN sauvegardés/restaurés identique, réindexation 10k et profil SQLite.
+- Pic SQL local de 4,031 s non reproduit sur un autre hôte ; cause inconnue. Pas de qualification Voyager, 500k ou plusieurs millions. Sauvegarde manuelle et contrôle préalable d'ouverture encore synchrones.
+- PR #12 fusionnée ; release, tag, cinq fichiers, SHA-256 et sélecteur réel depuis dev.55 vérifiés. Aucune archive Actions.
+
 ## Optimisation des imports — dev.55, 24 octobre 2026
 
 - Requête de doublons bornée par l'index des empreintes existant, sans changement du schéma 7.

@@ -29,7 +29,8 @@ peut lancer immédiatement une nouvelle tâche sans remplacer le résultat encor
   refus du chevauchement, annulation, étude conservée, reprise réussie,
   relance depuis le signal de fin et destruction avec une tâche active.
 - 12/12 suites locales réussies en 62,73 s, Stockfish réel ; aucune suite ignorée.
-  La CI de la PR complète les contrôles locaux avant fusion.
+  Les CI de la PR et de publication confirment ces contrôles sous Debian 12/13
+  et avec ASan/UBSan ; voir `verification-integrity-2026-10-25.json`.
 
 Le schéma reste 7. La sauvegarde manuelle, la sauvegarde avant mise à jour et le
 contrôle préalable à l'ouverture d'une bibliothèque sont des chemins distincts,

@@ -1,32 +1,36 @@
 # Point de reprise — performances et vérification, 25 octobre 2026
 
-## PR #12 intégrée ; publication à vérifier
+## Dev.57 publiée et vérifiée ; PR #12 intégrée
 
-[PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12) fusionnée :
-`078bbaf64c866e1a697a704f59e2198ce9d2b8cc`, tête testée
-`685cce343dcfd95b06576d04629906fd64a7c534`.
-Le diff entre les deux ne contient que la documentation et les rapports conservés
-sur main. Les sources produit testées sont identiques.
+**[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)**,
+publiée le 25 octobre 2026 à 16 h 31, heure de Paris. [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12)
+fusionnée en `078bbaf64c866e1a697a704f59e2198ce9d2b8cc`, tête testée
+`685cce343dcfd95b06576d04629906fd64a7c534`. Entre les deux, seuls les documents
+et rapports ajoutés sur main diffèrent. Le tag vise exactement la fusion.
 
-« Vérifier la base » utilise maintenant un worker et une connexion SQLite propre,
-avec annulation et état explicite. Étude non enregistrée conservée, chevauchement
+« Vérifier la base » utilise un worker et une connexion SQLite propre, avec
+annulation et état explicite. Étude non enregistrée conservée, chevauchement
 refusé, fermeture attendue et résultat capturé avant une notification réentrante.
 Schéma 7 inchangé. Guide : ASYNC-INTEGRITY.md.
 
 12/12 suites locales en 62,73 s avec Stockfish 16, aucune ignorée.
-[CI PR 40181527836](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836)
-réussie : cœur ASan/UBSan 2/2 (80,08 s), Qt ASan/UBSan 12/12 (125,71 s),
-Debian 12 12/12 (50,22 s), Debian 13 12/12 (59,96 s), DEB installés et AppImage
-démarrés. Zéro archive Actions.
+[CI PR 40181527836](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836) réussie :
+cœur ASan/UBSan 2/2 (80,08 s), Qt ASan/UBSan 12/12 (125,71 s),
+Debian 12 12/12 (50,22 s), Debian 13 12/12 (59,96 s).
+[CI publication 40205667259](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40205667259)
+réussie : cœur 2/2 (153,59 s), Qt 12/12 (129,60 s), Debian 12 12/12 (58,89 s),
+Debian 13 12/12 (73,43 s), DEB installés et AppImage démarrés.
 
-**[CI de publication 40205667259](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40205667259)
-en cours ; version attendue dev.57.** Ne pas la présenter comme publiée avant
-vérification. Suivre les jobs, vérifier la cible du tag, les cinq fichiers/tailles/
-SHA-256 contre le manifeste des logs, l'absence d'archives Actions et le sélecteur
-réel depuis dev.55. Ensuite actualiser README, PROJECT-STATUS, TESTING, ROADMAP,
-NEXT-STEPS, CHANGELOG et le rapport verification-integrity-2026-10-25.json.
-Ne pas refaire compilation ni tests locaux déjà terminés après réinitialisation.
-Le helper du sélecteur est compilé dans `Trait64-delivery` si ce dossier subsiste.
+Les cinq fichiers distants correspondent au manifeste de cette construction :
+noms, tailles et SHA-256. Zéro archive Actions en PR, publication et qualification.
+Le sélecteur réel compilé depuis les sources reconnaît AppImage et Debian 12/13
+depuis dev.55 sur Développement ; Stable/Bêta, version ignorée, version identique
+et rétrogradation sont exclus. Rapport : verification-integrity-2026-10-25.json.
+
+**Le lot est livré.** Ne pas relancer ces compilations, tests ni mesures après
+réinitialisation. Repartir du main actuel pour le prochain lot ; préserver les
+anciens checkouts non committés. Les sections suivantes distinguent résultats
+acquis et travaux restants.
 
 ## Qualification 100k terminée et archivée
 

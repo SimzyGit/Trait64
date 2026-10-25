@@ -39,7 +39,7 @@ Protocole : [REPRODUCE.md](benchmarks/2026-10-23/REPRODUCE.md).
 ## 100 000 parties réelles — hôte local, 24 octobre 2026
 
 Même fichier source : 100 000 parties / 6 817 385 positions, quatre lecteurs,
-pause à 50 000, réouverture/reprise et une lecture concurrente toutes les 100 ms.
+pause à 50 000, réouverture/reprise et une lecture concurrente suivie d'une attente de 100 ms avant la suivante.
 Ce protocole et la charge de l'hôte partagé diffèrent de la comparaison de 10k
 ci-dessus : ne pas transformer leur rapport en facteur de ralentissement ou
 d'accélération du code. Une observation, caches non purgés, SQLite 3.45.1,
@@ -82,6 +82,58 @@ Rapport complet : [material-100k.json](benchmarks/2026-10-24/material-100k.json)
 Les valeurs ont été récupérées depuis la sortie complète observée avant la
 réinitialisation du dossier temporaire, puis enregistrées dans Git ; provenance
 et limites : [recovery-provenance.json](benchmarks/2026-10-24/recovery-provenance.json).
+
+## Qualification GitHub terminée — 25 octobre 2026
+
+[Résultats, JSON bruts et protocole](benchmarks/2026-10-25/RESULTS.md).
+Code produit dev.55 (`550f28f`), sonde instrumentée `67f49ee`.
+**Deux runners différents** pour Qt et le stockage, chacun avec deux CPU logiques ;
+une mesure par scénario, caches non purgés. Ne pas comparer ces temps entre eux
+ou avec l'hôte local pour en déduire un gain du code.
+
+| Mesure | Résultat |
+|---|---:|
+| Qt : import réel de 100 000 parties | 1 842,604 s (30 min 42 s) |
+| Qt : intervalle du timer de 10 ms, médiane / p95 / maximum | 10,106 / 10,786 / 32,742 ms |
+| Qt : changements Accueil/Analyse / avertissements QML | 1 842 réussis / 0 |
+| Qt : pic RSS du processus entier | 125 400 Kio |
+| CLI : 100k avec pause/reprise à 50k | 2 224,097 s (37 min 4 s) |
+| CLI : 21 961 lectures concurrentes, médiane / p95 / maximum | 1,068 / 1,487 / 7,506 ms |
+| CLI : intégrité / sauvegarde / restauration contrôlée | 37,774 / 98,014 / 92,731 s ; OK |
+| CLI : pic RSS du processus entier | 22 736 Kio |
+| Réindexation complète de 10 000 parties | 49,642 s ; intégrité OK |
+
+Qt utilise un rendu logiciel sans écran. Le timer mesure des intervalles entre
+événements, pas la latence d'un clic ni la cadence d'images. Le démarrage sur
+bibliothèque vide prend 729,219 ms ; l'ouverture complète de l'application sur
+100k n'est pas mesurée. La garde de la sonde a été portée de 30 à 90 minutes et
+le rapport est émis avant les assertions ; la cible est atteinte sans expiration.
+
+Les 100 000 PGN de l'original, de la sauvegarde et de la restauration ont tous
+l'empreinte canonique attendue, avec 6 817 385 lignes dans chacune des deux tables
+de positions. Il ne s'agit pas d'une comparaison de chaque octet des index.
+Original fermé : 3 836 047 360 octets ; copies compactées par sauvegarde :
+3 530 797 056 octets chacune.
+
+Le profil `dbstat` attribue **93,82 % des pages** aux positions, ouvertures et
+index associés. Réduire ce coût exige de préserver les recherches exactes,
+variantes, agrégats et clés historiques ; un changement du schéma nécessitera
+une migration 8 sauvegardée. Les paliers 500k et plusieurs millions ne sont
+toujours pas qualifiés.
+
+Le pic SQL local de 4,031 s n'a pas été reproduit sur ce runner différent.
+Sa cause reste inconnue ; les nouvelles valeurs ne remplacent pas l'ancienne
+observation. Aucun essai matériel Voyager n'est revendiqué.
+
+## Vérification manuelle d'intégrité — dev.57
+
+La durée locale de 110,028 s a conduit à retirer le contrôle manuel du fil UI.
+La [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12)
+utilise un worker et une connexion dédiée, avec annulation SQLite, état visible
+et fermeture attendue. Les tests d'interruption et de relance réentrante passent
+localement et en CI. Ce correctif ne constitue pas une nouvelle mesure 100k.
+La sauvegarde manuelle et le contrôle préalable à l'ouverture restent synchrones.
+Voir [ASYNC-INTEGRITY.md](ASYNC-INTEGRITY.md).
 
 ## Mesures historiques conservées
 

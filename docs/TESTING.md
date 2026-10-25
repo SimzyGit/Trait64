@@ -1,5 +1,20 @@
 # Vérification 0.3
 
+## Intégrité asynchrone — dev.57, 25 octobre 2026
+
+La PR #12 vérifie l'annulation avant et pendant la vraie requête SQLite, la
+réutilisation de la connexion, les données intactes, les événements Qt pendant
+l'attente, le refus du chevauchement, l'étude non enregistrée conservée, la
+relance après annulation, la réentrance depuis le signal de fin et la fermeture
+avec un worker actif. Les scénarios déterministes ne dépendent pas d'une grosse
+base ni d'une fenêtre de temps aléatoire.
+
+12/12 suites locales en 62,73 s avec Stockfish 16, sans suite ignorée. CI PR :
+cœur ASan/UBSan 2/2, Qt ASan/UBSan 12/12, Debian 12/13 12/12, DEB installés
+et AppImage démarrés. Publication et fichiers vérifiés dans
+[verification-integrity-2026-10-25.json](verification-integrity-2026-10-25.json).
+Schéma 7 inchangé ; portée précise dans [ASYNC-INTEGRITY.md](ASYNC-INTEGRITY.md).
+
 ## Qualification des imports — 23 octobre 2026
 
 Le test de stockage compte les instructions SQLite de la vraie recherche de
@@ -10,7 +25,7 @@ rollback. Fixtures : captures/variantes, sous-promotions, prise en passant et
 roque Chess960. Quatre suites ciblées passent après restauration du commit
 `e21e8d3` : core, storage, resumable_import et pgn_benchmark_safety (1,55 s).
 
-Le mode `desktop_tests --benchmark-import /chemin/corpus.pgn --benchmark-games 100000`
+Le mode `desktop_tests --benchmark-import /chemin/corpus.pgn --benchmark-games 10000`
 utilise une bibliothèque temporaire, quatre lecteurs, un timer de 10 ms et des
 changements de page toutes les secondes. Le JSON donne le nombre réellement
 traité, les latences des événements et les avertissements QML. Le seuil déclenche
@@ -28,8 +43,12 @@ dev.52 et respecte les exclusions de canaux/versions.
 
 Le palier CLI de 100 000 parties a passé intégrité, sauvegarde et restauration ;
 le maximum de lecture concurrente de 4,031 s est documenté, sans prétendre qu'il
-mesure la réactivité Qt. La qualification Qt et le contrôle complet des PGN
-restaurés s'exécutent séparément dans GitHub ; suivre WORK-IN-PROGRESS.
+mesure la réactivité Qt. La qualification GitHub a désormais réussi Qt 100k, la réindexation 10k et
+le contrôle de tous les PGN des trois bases. Pour reproduire le palier Qt 100k,
+utiliser la sonde instrumentée et sa garde de 90 minutes au commit `67f49ee` :
+[protocole du 25 octobre](benchmarks/2026-10-25/REPRODUCE.md). La sonde de main
+conserve sa garde de 30 minutes. Les mesures portent sur le code produit dev.55 ;
+les tests fonctionnels du correctif d'intégrité sont distincts.
 Rapport de livraison : [verification-performance-2026-10-24.json](verification-performance-2026-10-24.json).
 
 ## Audit global — validation finale du 22 octobre 2026

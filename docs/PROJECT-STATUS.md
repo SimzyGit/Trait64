@@ -1,4 +1,4 @@
-# Trait64 — état du projet au 24 octobre 2026
+# Trait64 — état du projet au 25 octobre 2026
 
 > **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux d’abord · AGPL-3.0-or-later**
 
@@ -6,7 +6,9 @@ Ce document présente **le code fusionné dans `main` et les versions réellemen
 
 ## Dernière version publiée et vérifiée
 
-**[v0.3.0-dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55)** — publiée le **24 octobre 2026 à 10 h 34, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](verification-performance-2026-10-24.json).
+**[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](verification-integrity-2026-10-25.json).
+
+La [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12) rend le contrôle manuel d'intégrité asynchrone et annulable. L'étude non enregistrée est conservée ; chevauchements, relances réentrantes et fermeture sont testés. La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones. [Détails](ASYNC-INTEGRITY.md).
 
 La [PR #10](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10) est intégrée : doublons recherchés par empreinte et indexation du matériel accélérée, sans migration. Les 12 suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés.
 
@@ -33,11 +35,11 @@ La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a ét
 
 La comparaison archivée sur **10 000 parties Lichess CC0 / 661 314 positions** passe de **93,114 s à 42,498 s (−54,4 %)**. Elle compare deux versions de Trait64 avec le même protocole sur un hôte partagé ; elle ne démontre pas une supériorité sur un autre logiciel. Les corrections sont livrées dans dev.55.
 
-Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité, sauvegarde et restauration sont mesurés. Le rapport conserve un pic de lecture concurrente de 4,031 s, dont la cause reste à établir. La réactivité Qt est mesurée séparément sur GitHub ; suivre [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
+Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité, sauvegarde et restauration sont mesurés. Le rapport conserve un pic de lecture concurrente de 4,031 s, dont la cause reste à établir. La qualification GitHub a réussi : 100 000 parties importées via Qt, 1 842 navigations, zéro avertissement QML, empreinte identique de tous les PGN dans les trois bases et réindexation 10k. Le pic local n'a pas été reproduit sur l'autre hôte, sans cause établie. Les positions/ouvertures et leurs index occupent 93,82 % des pages de la base ; voir [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
 
 ## Principaux travaux restants
 
-1. **Grandes bases réelles** : qualifier 100 000 puis 1/2/5/10 millions de parties, indexations, mémoire, recherches, sauvegardes et restauration ; optimiser à partir des mesures.
+1. **Grandes bases réelles** : qualifier 500 000 puis 1/2/5/10 millions de parties, indexations, mémoire, recherches, sauvegardes et restauration ; optimiser à partir des mesures.
 2. **Pédagogie** : compléter les explications tactiques démontrables, variantes justifiées, thèmes et exercices ; développer un véritable corpus tactique libre et sa progression.
 3. **Répertoires et adversaires** : couverture probabiliste, comparaison de répertoires, tendances et dossiers de préparation.
 4. **Interopérabilité** : import volontaire Lichess/Chess.com, études, Polyglot, formats compatibles SCID/ChessBase.
@@ -50,6 +52,7 @@ Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité,
 
 | Version | Évolution principale |
 | --- | --- |
+| [dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57) | Vérification d'intégrité en arrière-plan et annulable, relance réentrante protégée |
 | [dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |
 | [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) | Audit massif, corrections de fiabilité et tests ASan/UBSan élargis |
 | [dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46) | Motifs tactiques, flèches et annotations PGN |

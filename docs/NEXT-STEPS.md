@@ -1,16 +1,26 @@
-# Reprise du développement — performances, 24 octobre 2026
+# Reprise du développement — performances, 25 octobre 2026
 
-Dernier lot livré : **dev.55 / PR #10**, deux corrections de l'import sans
-migration. Comparaison 10k conservée ; palier CLI 100k terminé, sauvegarde et
-restauration réussies, pic de lecture concurrente de 4,031 s à caractériser.
-Suivre [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md) pour l'exécution GitHub de la
-sonde Qt, de la réindexation et des vérifications exhaustives de PGN restaurés.
-Ne pas relancer les mesures terminées lors d'une réinitialisation locale.
+Dernier lot livré : **dev.57 / PR #12**, vérification manuelle d'intégrité en
+arrière-plan, annulable et protégée contre les relances réentrantes. Douze suites
+locales et CI réussies, schéma 7 conservé. Les optimisations d'import de dev.55
+et la comparaison 10k restent acquises.
 
-Paliers 500k et 1/2/5/10 millions encore ouverts : corpus disponible de 121 332
-parties, besoin de stockage à prévoir pour originaux/journaux/copies. Les filtres
-fréquents, combinaisons, pages éloignées et tâches de maintenance restent à
-mesurer séparément. Aucun essai matériel Voyager n'est revendiqué.
+**Qualification 100k terminée** : Qt avec navigation et sans avertissement QML,
+CLI avec pause/reprise, intégrité, sauvegarde/restauration, comparaison de tous
+les PGN des trois bases ; réindexation 10k séparée. Rapports et limites dans
+[benchmarks/2026-10-25/RESULTS.md](benchmarks/2026-10-25/RESULTS.md).
+Ne pas relancer ces mesures ni les essais locaux lors d'une réinitialisation.
+
+Le profil réel attribue 93,82 % des pages aux positions/ouvertures et à leurs
+index. Priorités : coût du stockage, filtres fréquents, tris/pages éloignées,
+export et migrations ; sauvegarde manuelle et validation d'ouverture encore
+synchrones. Le pic local SQL de 4,031 s n'a pas été reproduit sur l'autre hôte,
+sans cause établie.
+
+500k et 1/2/5/10 millions restent ouverts : corpus actuel de 121 332 parties,
+dimensionnement à prévoir pour les bases, journaux et copies. Pas de duplication
+artificielle ni de qualification matériel Voyager. Toute évolution du schéma
+exige une migration 8 sauvegardée.
 
 Ordre de la consigne du 22 octobre : **performances → explications vérifiables
 → entraînement tactique → répertoires/préparation**, puis le reste de la feuille
@@ -19,7 +29,7 @@ historiques ci-dessous restent des objectifs, avec cet ordre de priorité.
 
 **Audit global terminé, intégré dans la PR #9 et publié dans [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Dix groupes de défauts corrigés, 12/12 suites locales et CI Debian 12/13, contrôles ASan/UBSan de tous les modules, 3 000 mutations FEN/PGN. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Aucun ajout de la feuille de route n’a été entrepris pendant cet audit.
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #10 sont intégrées à main. La version distribuée dev.55, le tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 24 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #10 et #12 sont intégrées à main. La version distribuée dev.57, le tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 25 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 La PR #8 est également intégrée et publiée dans dev.46 : motifs tactiques et
 repères PGN, 11 suites Debian 12/13 et paquets validés. Tag, cinq fichiers et

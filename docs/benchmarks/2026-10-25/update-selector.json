@@ -1,0 +1,29 @@
+{
+  "from_version": "v0.3.0-dev.55",
+  "code_commit": "078bbaf64c866e1a697a704f59e2198ce9d2b8cc",
+  "development_channel": true,
+  "ignored_version_rejection": true,
+  "same_version_and_downgrade_rejection": true,
+  "selected": [
+    {
+      "asset_id": 675392923,
+      "bytes": 36866552,
+      "name": "Trait64-0.3.0-dev.57-linux-x86_64.AppImage",
+      "sha256": "6aa73a039573e1ae642c7b151a6a374bf72bd11eddba28ee7a338a04e8a6d61e"
+    },
+    {
+      "asset_id": 675392920,
+      "bytes": 1045718,
+      "name": "trait64_0.3.0-dev.57_debian12_amd64.deb",
+      "sha256": "50ec511ac6edc5afa26a1afb6b4fd3e4829fd2841983ee67596339b06c712cdd"
+    },
+    {
+      "asset_id": 675392921,
+      "bytes": 1053654,
+      "name": "trait64_0.3.0-dev.57_debian13_amd64.deb",
+      "sha256": "3a230ba8c14f9fff26e6112d17a0990536e89962fa1951f4f7de8237706b2edc"
+    }
+  ],
+  "stable_and_beta_exclusion": true,
+  "tag": "v0.3.0-dev.57"
+}

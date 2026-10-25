@@ -6,6 +6,10 @@ Code de mesure : `67f49eefbfabb0f635752ca1cdea7a1cb6056e45`, branche
 par objet Git et permissions ; voir `source-provenance.json`. Seuls la sonde
 optionnelle Qt, le workflow et son script changent côté exécution.
 
+Les sondes sont compilées depuis ces sources en dehors de la publication. Le
+champ `version: 0.3.0-dev.1` du rapport CLI est l'étiquette CMake par défaut ;
+l'identité du code mesuré est donnée par les commits et empreintes ci-dessus.
+
 ## Reproduction
 
 Utiliser un worktree au commit de mesure, avec C++23, Qt6/QML, SQLite3,

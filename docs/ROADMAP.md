@@ -1,16 +1,18 @@
 # Périmètre livré et travaux restants
 
-## Performances — dev.55, 24 octobre 2026
+## Performances et intégrité — dev.55 / dev.57, 25 octobre 2026
 
 Deux corrections mesurées de l'import (choix de l'index des doublons, calcul du
 matériel), sans migration. Sur 10 000 parties réelles : 93,114 → 42,498 s dans
 la comparaison conservée. Corrections intégrées et publiées dans dev.55 ;
-voir PERFORMANCE et WORK-IN-PROGRESS. L'interface pendant un import important
-fait l'objet d'une mesure Qt séparée, pas d'une déduction depuis SQLite.
+voir PERFORMANCE et WORK-IN-PROGRESS. La qualification Qt séparée a réussi sur 100 000 parties, avec 1 842 navigations
+et zéro avertissement QML ; tous les PGN restaurés et la réindexation 10k sont
+contrôlés. La vérification manuelle d'intégrité est asynchrone et annulable dans
+dev.57 (PR #12), sans changement du schéma.
 
 Paliers conservés : **10 000, 100 000, 500 000, 1, 2, 5 et 10 millions**. Les deux
-premiers possèdent des rapports CLI terminés pour ce lot ; la mesure Qt est
-suivie séparément. Les modèles
+premiers possèdent des rapports CLI terminés ; Qt est également mesuré sur 100k,
+en rendu logiciel sans écran. Les modèles
 incrémentaux, l'export asynchrone, les migrations volumineuses, la fusion et la
 réparation restent des travaux distincts. Les autres objectifs restent prévus.
 
@@ -30,7 +32,7 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Préparation | Fiches joueurs ; statistiques par position, source, nom exact/couleur, période et Elo ; requête annulable, parties exemples et export CSV | Styles d’adversaires, tendances par période, préparation et gestion de tournois |
 | Interface | 7 espaces, personnalisation, petites fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traductions complètes |
 | Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées sans archives Actions | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
-| Fiabilité | Sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
+| Fiabilité | Vérification manuelle d'intégrité asynchrone et annulable, sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
 | Fonctions avancées | Études PDF/PNG, bilan moteur expliqué par suites légales et événements matériels, copies annotées, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 

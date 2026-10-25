@@ -15,7 +15,7 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 
 **English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Version publiée vérifiée : [v0.3.0-dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) (24 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
+> **Version publiée vérifiée : [v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57) (25 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
 
 ### Principes du projet
 
@@ -32,6 +32,12 @@ Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leu
 L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
 
 ## Nouveautés récentes — série 0.3
+
+### Vérification de la base et qualification 100k (dev.57)
+
+- **Vérification en arrière-plan et annulable** : le contrôle d'intégrité ne retient plus le fil de l'interface ; l'étude ouverte est conservée. Relance et fermeture protégées. [Portée du correctif](docs/ASYNC-INTEGRITY.md).
+- **100 000 parties réelles qualifiées** sur le code d'import dev.55 : navigation Qt pendant l'import, sauvegarde/restauration et empreinte de tous les PGN ; réindexation de 10 000 parties. Les mesures sans écran ne remplacent pas un essai Voyager ni la qualification de plusieurs millions. [Résultats](docs/benchmarks/2026-10-25/RESULTS.md).
+- **12 suites réussies** localement et en CI Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage démarrés. [Publication vérifiée](docs/verification-integrity-2026-10-25.json).
 
 ### Imports PGN (dev.55)
 
