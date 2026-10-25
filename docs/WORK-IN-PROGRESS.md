@@ -1,86 +1,80 @@
-# Point de reprise — performances, 25 octobre 2026
+# Point de reprise — performances et vérification, 25 octobre 2026
 
-**dev.55 publiée ; PR #10 fusionnée.** Source intégrée `550f28f`, code validé
-`26ba77d`. Tag exact, cinq fichiers/tailles/SHA-256 vérifiés ; zéro archive Actions.
-Le sélecteur réel reconnaît AppImage et Debian 12/13 depuis dev.52 sur Développement,
-et exclut Stable/Bêta, version ignorée, version identique et rétrogradation.
-Rapport : [verification-performance-2026-10-24.json](verification-performance-2026-10-24.json).
+## PR #12 intégrée ; publication à vérifier
 
-12/12 suites locales avec Stockfish ; CI PR et publication réussies, cœur et
-modules Qt ASan/UBSan, Debian 12/13, paquets installés et AppImage démarrés.
-L'audit dev.52 reste acquis ; aucune migration ni refonte graphique dans ce lot.
+[PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12) fusionnée :
+`078bbaf64c866e1a697a704f59e2198ce9d2b8cc`, tête testée
+`685cce343dcfd95b06576d04629906fd64a7c534`.
+Le diff entre les deux ne contient que la documentation et les rapports conservés
+sur main. Les sources produit testées sont identiques.
 
-## Résultats acquis
+« Vérifier la base » utilise maintenant un worker et une connexion SQLite propre,
+avec annulation et état explicite. Étude non enregistrée conservée, chevauchement
+refusé, fermeture attendue et résultat capturé avant une notification réentrante.
+Schéma 7 inchangé. Guide : ASYNC-INTEGRITY.md.
 
-- Comparaison de 10 000 parties : 93,114 → 57,649 → 42,498 s, même contenu
-  échiquéen et agrégats comparés. Rapports : `benchmarks/2026-10-23`.
-- 100 000 parties locales : import 1 250,857 s avec pause/reprise à 50 000,
-  RSS maximale 18 352 Kio, base+journaux 3 836 055 552 octets ; intégrité OK,
-  sauvegarde 36,032 s, restauration et contrôle 228,293 s.
-- Lectures concurrentes : médiane 3,014 ms, p95 12,506 ms, maximum **4 031 ms**.
-  La cause de ce pic n'est pas établie. Ne pas le masquer par la médiane ni le
-  présenter comme un gel de l'interface : la sonde SQL ne mesure pas Qt.
-- Le rapport 100k complet a été récupéré depuis la sortie observée avant la
-  réinitialisation locale, puis conservé dans Git ; voir `recovery-provenance.json`.
-  L'ancien test Qt interrompu n'a pas de résultat exploitable.
+12/12 suites locales en 62,73 s avec Stockfish 16, aucune ignorée.
+[CI PR 40181527836](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836)
+réussie : cœur ASan/UBSan 2/2 (80,08 s), Qt ASan/UBSan 12/12 (125,71 s),
+Debian 12 12/12 (50,22 s), Debian 13 12/12 (59,96 s), DEB installés et AppImage
+démarrés. Zéro archive Actions.
 
-## Vérification d'intégrité asynchrone — PR #12 en CI
+**[CI de publication 40205667259](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40205667259)
+en cours ; version attendue dev.57.** Ne pas la présenter comme publiée avant
+vérification. Suivre les jobs, vérifier la cible du tag, les cinq fichiers/tailles/
+SHA-256 contre le manifeste des logs, l'absence d'archives Actions et le sélecteur
+réel depuis dev.55. Ensuite actualiser README, PROJECT-STATUS, TESTING, ROADMAP,
+NEXT-STEPS, CHANGELOG et le rapport verification-integrity-2026-10-25.json.
+Ne pas refaire compilation ni tests locaux déjà terminés après réinitialisation.
+Le helper du sélecteur est compilé dans `Trait64-delivery` si ce dossier subsiste.
 
-[PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12), branche
-`perf/async-integrity-check`, tête `685cce343dcfd95b06576d04629906fd64a7c534`.
-Le bouton de vérification utilisait encore la connexion du fil UI ; le contrôle
-local 100k prenait 110,028 s. Le correctif utilise un worker avec sa propre
-connexion, interruption SQLite, état explicite et attente à la fermeture.
-Le résultat est capturé avant la notification de fin pour supporter une relance
-réentrante. Tests d'annulation préalable/en cours, événements Qt, chevauchement,
-étude conservée, reprise, réentrance et destruction.
+## Qualification 100k terminée et archivée
 
-**12/12 suites locales réussies en 62,73 s avec Stockfish, aucune ignorée.**
-[CI PR 40181527836](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836) en cours :
-attendre les suites Debian 12/13, ASan/UBSan et paquets avant fusion, puis vérifier
-la publication. Ce correctif n'est pas encore intégré. Schéma 7 inchangé.
-Détails sur la branche : `docs/ASYNC-INTEGRITY.md` et
-`docs/verification-integrity-2026-10-25.json`. Checkout isolé
-`Trait64-maintenance`, anciens checkouts préservés.
-La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones.
-La qualification ci-dessous porte sur dev.55, pas sur le nouveau correctif.
+[Exécution 40179661406](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406) :
+**les deux jobs réussissent**, zéro archive Actions. Code produit dev.55
+(`550f28f`), sonde `67f49ee` ; la sonde diffère seulement par sa garde et son
+rapport, pas par le comportement produit. Tous les JSON et méthodes sont dans
+`benchmarks/2026-10-25`, voir RESULTS.md. Ne pas relancer ces essais.
 
-## Qualification complémentaire — 25 octobre, à suivre sans relancer
+- Qt : exactement 100 000 parties, 1 842,604 s ; 1 842 navigations, zéro erreur
+  ou avertissement QML ; timer 10 ms, médiane 10,106, p95 10,786, maximum 32,742 ms.
+  Rendu logiciel sans écran, pas un test de FPS ou clic humain ; démarrage vide.
+- CLI : 100 000 parties / 6 817 385 positions, 2 224,097 s avec pause/reprise
+  à 50k ; intégrité, sauvegarde et restauration réussies. RSS 22 736 Kio.
+- Les 100 000 PGN de chacune des trois bases ont la même empreinte canonique
+  que le parsing initial ; comptes identiques des deux tables de positions.
+- Réindexation 10k : 49,642 s, 10 000 parties, intégrité OK.
+- 21 961 lectures concurrentes : médiane 1,068 ms, p95 1,487, max 7,506 ms.
+  Le pic local antérieur de 4,031 s n'est pas reproduit sur ce runner différent ;
+  sa cause reste inconnue. Ne pas l'effacer ni comparer ces hôtes comme un avant/après.
+- Profil dbstat : 93,82 % des pages occupées par positions/ouvertures et leurs index.
+  Original fermé 3 836 047 360 octets ; copies compactées 3 530 797 056 chacune.
 
-[Qualification GitHub 40179661406](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406),
-branche `perf/qt-corpus-qualification`, commit `67f49eefbfabb0f635752ca1cdea7a1cb6056e45`.
-Deux runners indépendants : Qt 100k et stockage (réindexation 10k, import/restauration
-100k, empreinte de tous les PGN restaurés, profil SQLite). Un échec ne bloque
-plus l'autre scénario. Limite du test Qt : 90 minutes ; plafond de chaque job :
-110 minutes, compilation comprise. Ce sont des limites d'arrêt, pas des performances promises.
+L'essai du 24 octobre était arrêté par une garde de 30 minutes sans compte final ;
+ses seules données sont archivées sous `benchmarks/2026-10-24/github/40097867485`.
+La sonde a désormais une garde bornée de 90 minutes et conserve les rapports
+avant assertions. Le nouvel essai s'achève sans expiration.
 
-L'essai précédent [40097867485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40097867485)
-a échoué sur la garde de 30 minutes de la sonde Qt (1 801,689 s pour le processus,
-123 536 Kio de RSS). Aucun compte final ni distribution Qt n'a été émis : on ne
-peut pas conclure à un gel, à un nombre de parties traité, ni à une qualification 100k.
-Les étapes suivantes n'avaient pas commencé. Les rapports disponibles sont archivés
-dans `benchmarks/2026-10-24/github/40097867485`.
-Le premier essai avait manqué de disque ; le second disposait de 31 570 042 880
-octets avant mesure après retrait des seuls SDK inutilisés du runner jetable.
+## Résultats précédents et suite
 
-Le nouveau test conserve le rapport même en cas de délai dépassé et échantillonne
-la progression chaque minute. Les changements exécutables depuis dev.55 concernent
-uniquement le workflow, son script et la sonde optionnelle `tests/import_gui_probe.h`.
-Les sources produit `app/`, `libs/`, `ui/` et les ressources sont inchangées.
-Pas de publication ni d'archive Actions ; PGN et SQLite restent temporaires.
+dev.55 / PR #10 publiée et vérifiée : comparaison des mêmes 10k
+93,114 → 57,649 → 42,498 s (−54,4 %), données logiques comparées et schéma 7 conservé.
+Rapports du 23 octobre ; 12 suites locales et CI, paquets, manifeste et updater
+contrôlés. La mesure locale 100k du 24 octobre (20 min 51 s) reste distincte des
+runners GitHub ; provenance de récupération explicitée dans son dossier.
 
-Jobs à lire après leur fin : stockage `121127791436`, Qt `121127791517`.
-Extraire les JSON encadrés par `TRAIT64_REPORT_BEGIN nom` /
-`TRAIT64_REPORT_END nom`, les archiver dans `benchmarks/2026-10-25`,
-puis actualiser PERFORMANCE, TESTING, ROADMAP, NEXT-STEPS et PROJECT-STATUS.
-Ne pas refaire les mesures locales acquises après réinitialisation.
-Conserver cette branche jusqu'à récupération des rapports.
+Priorités : réduire le coût des positions/index à partir du profil réel ;
+qualifier filtres fréquents, tris, pages éloignées, export et migrations.
+Sauvegarde manuelle, pré-mise à jour et validation d'ouverture de bibliothèque
+encore synchrones. Toute évolution du schéma doit passer par une migration 8
+sauvegardée, jamais réécrire les migrations historiques.
 
-500 000/1/2/5/10 millions et Voyager restent non qualifiés. Le corpus contient
-121 332 parties, sans duplication artificielle. Vérifier stockage, copies et
-mémoire avant tout volume supérieur. La priorité suivante vient des mesures :
-pic de latence concurrente, coût des positions/index et contrôles de grosses
-bases, puis pédagogie, entraînement et répertoires.
+500k et 1/2/5/10 millions, ainsi que le PC Voyager, restent non qualifiés.
+Corpus de 121 332 parties réelles, sans duplication artificielle ; prévoir
+stockage/journaux/copies avant les volumes supérieurs. Aucune refonte graphique
+dans ce lot ; les travaux de design préparés dans l'autre discussion attendent.
+L'ordre de la feuille de route reste performances, pédagogie vérifiable,
+entraînement tactique puis répertoires/préparation.
 
 ## Audit terminé — état précédent conservé
 
