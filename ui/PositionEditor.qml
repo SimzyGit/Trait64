@@ -7,7 +7,7 @@ Dialog {
     property var pieces: []
     property string brush: "wP"
     property bool flipped: false
-    title: "Éditeur de position"
+    title: qsTr("Éditeur de position")
     anchors.centerIn: parent
     width: Math.min(780,parent ? parent.width-24 : 780)
     height: Math.min(650,parent ? parent.height-24 : 650)
@@ -49,13 +49,13 @@ Dialog {
             }
             RowLayout {Layout.fillWidth:true
                 TButton {text:"Initiale";onClicked:root.loadFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")}
-                TButton {text:"Vider";onClicked:{var empty=[];for(var i=0;i<64;i++)empty.push("");root.pieces=empty;castles.text="-";ep.text="-"}}
+                TButton {text:qsTr("Vider");onClicked:{var empty=[];for(var i=0;i<64;i++)empty.push("");root.pieces=empty;castles.text="-";ep.text="-"}}
                 TButton {text:"Retourner";onClicked:root.flipped=!root.flipped}
             }
         }
         ScrollView {Layout.preferredWidth:244;Layout.fillHeight:true;contentWidth:availableWidth;clip:true
             ColumnLayout {width:parent.width;spacing:12
-                Label {text:"Pièce à placer";font.bold:true}
+                Label {text:qsTr("Pièce à placer");font.bold:true}
                 GridLayout {columns:6;rowSpacing:3;columnSpacing:1
                     Repeater {model:["wK","wQ","wR","wB","wN","wP","bK","bQ","bR","bB","bN","bP"]
                         delegate:Button {required property string modelData;Layout.preferredWidth:38;Layout.preferredHeight:42
@@ -65,18 +65,18 @@ Dialog {
                         }
                     }
                 }
-                TButton {text:"Gomme (ou clic droit)";onClicked:root.brush="";Layout.fillWidth:true}
-                ComboBox {id:side;model:["Trait aux Blancs","Trait aux Noirs"];Layout.fillWidth:true}
-                CheckBox {id:variant;text:"Règles Chess960"}
-                Label {text:"Roques : KQkq ou lettres des tours (960)";font.pixelSize:11;wrapMode:Text.WordWrap;Layout.fillWidth:true}
+                TButton {text:qsTr("Gomme (ou clic droit)");onClicked:root.brush="";Layout.fillWidth:true}
+                ComboBox {id:side;model:[qsTr("Trait aux Blancs"),qsTr("Trait aux Noirs")];Layout.fillWidth:true}
+                CheckBox {id:variant;text:qsTr("Règles Chess960")}
+                Label {text:qsTr("Roques : KQkq ou lettres des tours (960)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
                 TextField {id:castles;Layout.fillWidth:true;maximumLength:4;selectByMouse:true}
-                Label {text:"Case en passant (ou -)";font.pixelSize:11}
+                Label {text:qsTr("Case en passant (ou -)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 TextField {id:ep;Layout.fillWidth:true;maximumLength:2}
-                Label {text:"Demi-coups sans prise ni pion";font.pixelSize:11}
+                Label {text:qsTr("Demi-coups sans prise ni pion");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 SpinBox {id:half;from:0;to:255;editable:true;Layout.fillWidth:true}
-                Label {text:"Numéro du coup";font.pixelSize:11}
+                Label {text:qsTr("Numéro du coup");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 SpinBox {id:full;from:1;to:32000;value:1;editable:true;Layout.fillWidth:true}
-                TButton {text:"Créer l’étude";accent:true;Layout.fillWidth:true;onClicked:root.backend.setPosition(root.fen(),variant.checked)}
+                TButton {text:qsTr("Créer l’étude");accent:true;Layout.fillWidth:true;onClicked:root.backend.setPosition(root.fen(),variant.checked)}
             }
         }
     }

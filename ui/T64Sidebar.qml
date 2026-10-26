@@ -48,14 +48,14 @@ Item {
                 text: "♗"
                 color: root.preferences.accentColor
                 font.family: "DejaVu Serif"
-                font.pixelSize: 30
+                font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale)
                 Accessible.name: qsTr("Trait64")
             }
             Label {
                 visible: !root.collapsed
                 text: "Trait64"
                 color: root.preferences.foreground
-                font.pixelSize: 21
+                font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale)
                 font.weight: Font.DemiBold
             }
         }
@@ -102,7 +102,7 @@ Item {
                             Layout.fillWidth: true
                             text: navButton.modelData.text
                             color: navButton.active ? root.preferences.foreground : root.preferences.muted
-                            font.pixelSize: 13
+                            font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale)
                             font.weight: navButton.active ? Font.DemiBold : Font.Normal
                             elide: Text.ElideRight
                         }

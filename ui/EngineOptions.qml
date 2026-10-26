@@ -8,14 +8,14 @@ ColumnLayout {
     required property var backend
     Layout.fillWidth: true
     spacing: 8
-    Label { text: "Options déclarées par le moteur"; font.bold: true }
+    Label { text: qsTr("Options déclarées par le moteur"); font.bold: true }
     Label {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: root.backend.engineOptions.length === 0
-              ? "Démarrez le moteur pour lire ses options."
-              : "Appliquez les changements avec « Démarrer / appliquer », puis mémorisez le profil. La limitation de force est réservée au jeu."
-        font.pixelSize: 11
+              ? qsTr("Démarrez le moteur pour lire ses options.")
+              : qsTr("Appliquez les changements avec « Démarrer / appliquer », puis mémorisez le profil. La limitation de force est réservée au jeu.")
+        font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
     }
     Repeater {
         model: root.backend.engineOptions
@@ -38,7 +38,7 @@ ColumnLayout {
                 visible: row.kind === "spin" || row.kind === "string"
                 text: row.current
                 selectByMouse: true
-                placeholderText: row.kind === "spin" ? row.modelData.min + " … " + row.modelData.max : "Valeur vide"
+                placeholderText: row.kind === "spin" ? row.modelData.min + " … " + row.modelData.max : qsTr("Valeur vide")
                 onEditingFinished: root.backend.setEngineOption(row.modelData.name, text)
             }
             ComboBox {
@@ -50,7 +50,7 @@ ColumnLayout {
             }
             TButton {
                 visible: row.kind === "button"
-                text: "Exécuter"
+                text: qsTr("Exécuter")
                 onClicked: root.backend.pressEngineOption(row.modelData.name)
             }
         }

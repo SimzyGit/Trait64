@@ -4,7 +4,7 @@ import QtQuick.Controls
 
 TabButton {
     id: control
-    implicitHeight: 36
+    implicitHeight: Math.max(36*controller.preferences.uiScale,contentItem.implicitHeight+18)
     hoverEnabled: true
     contentItem: Text {
         text: control.text

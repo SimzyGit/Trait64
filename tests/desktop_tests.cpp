@@ -38,6 +38,7 @@ QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
     return nullptr;
 }
 #include "import_gui_probe.h"
+#include "ui_layout_probe.h"
 // Hold the global pool so the queued verification cannot finish before we
 // exercise the UI and request cancellation. Release safely on assertion failure.
 class PoolGate {
@@ -80,6 +81,7 @@ int main(int argc, char **argv) {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, dir.path());
     QQuickStyle::setStyle("Basic");
     try {
+        if (app.arguments().contains("--ui-layout")) return uiLayoutProbe(dir.path());
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
         {

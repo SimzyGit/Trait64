@@ -17,7 +17,7 @@ ScrollView {
     contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
     ColumnLayout {
         width:root.availableWidth;spacing:16
-        Label {text:qsTr("Un échiquier, tous vos outils.");font.pixelSize:26;font.weight:Font.DemiBold;Layout.fillWidth:true;wrapMode:Text.WordWrap}
+        Label {text:qsTr("Un échiquier, tous vos outils.");font.pixelSize:Math.round(26*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold;Layout.fillWidth:true;wrapMode:Text.WordWrap}
         Flow {Layout.fillWidth:true;spacing:8
             TButton {text:qsTr("Nouvelle étude");accent:true;onClicked:root.newStudy()}
             TButton {text:qsTr("Importer un PGN");onClicked:root.importStudy()}
@@ -66,7 +66,7 @@ ScrollView {
                                 background:Rectangle {radius:4;color:parent.hovered||parent.visualFocus?root.p.raised:"transparent";border.color:parent.visualFocus?root.p.accentColor:"transparent"}
                                 contentItem:ColumnLayout {id:recentText;spacing:3
                                     Label {text:(game.white||"")+" — "+(game.black||"");elide:Text.ElideRight;Layout.fillWidth:true}
-                                    Label {text:(game.event||qsTr("Étude personnelle"))+" · "+(game.result||"*");elide:Text.ElideRight;Layout.fillWidth:true;color:root.p.muted;font.pixelSize:11}
+                                    Label {text:(game.event||qsTr("Étude personnelle"))+" · "+(game.result||"*");elide:Text.ElideRight;Layout.fillWidth:true;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                 }
                                 onClicked:root.backend.loadGame(game.id)
                             }

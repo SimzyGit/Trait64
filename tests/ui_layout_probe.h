@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#pragma once
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <cmath>
+// Exercise the real application with an isolated library, including live preference changes.
+int uiLayoutProbe(const QString &directory) {
+    Controller c(directory + "/layout");
+    c.move("e2e4"); c.move("c7c5"); c.saveGame(); c.setComment("Unsaved note — preserved during appearance changes");
+    const auto original = c.state();
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("controller", &c);
+    QSignalSpy warnings(&engine, &QQmlEngine::warnings);
+    engine.load(QUrl("qrc:/ui/Main.qml"));
+    check(!engine.rootObjects().isEmpty(), "Layout: QML loads");
+    auto *window=qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+    check(window, "Layout: application window exists");
+    struct Scenario {int width,height;double text,ui;bool light;const char *language;};
+    const Scenario scenarios[]={{960,640,1,1,false,"fr"},{1366,768,1,1,false,"fr"},{1440,940,1,1,false,"fr"},{1920,1080,1,1,true,"en"},{2560,1600,1,1,false,"en"},{960,640,1.5,1,true,"en"},{1366,768,1.5,1.25,false,"fr"},{1440,940,1.5,1.25,true,"en"}};
+    const auto output=qEnvironmentVariable("T64_UI_SCREENSHOTS");
+    if(!output.isEmpty()) QDir().mkpath(output);
+    QJsonArray report;
+    auto capture=[&](const QString &name) {
+        if(output.isEmpty())return;
+        auto grab=window->contentItem()->grabToImage();
+        check(bool(grab), "Layout: screenshot initiated");
+        QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+        check(ready.wait(3000), "Layout: screenshot ready");
+        check(grab->saveToFile(output+"/"+name+".png"), "Layout: screenshot saved");
+    };
+    int index=0;
+    for(const auto &s:scenarios) {
+        c.setPreference("fontScale",s.text);c.setPreference("uiScale",s.ui);c.setPreference("lightTheme",s.light);c.setPreference("language",s.language);
+        window->resize(s.width,s.height);QTest::qWait(80);
+        for(int page=0;page<7;++page) {
+            auto *nav=visualItem(window->contentItem(),"sectionNav"+QString::number(page));
+            check(nav, "Layout: navigation is present");nav->forceActiveFocus(Qt::TabFocusReason);QTest::qWait(10);QTest::keyClick(window,Qt::Key_Space);QTest::qWait(60);
+            check(window->property("page").toInt()==page, "Layout: keyboard navigation works");
+            QJsonObject row{{"scenario",index},{"width",s.width},{"height",s.height},{"textScale",s.text},{"uiScale",s.ui},{"page",page},{"language",s.language},{"light",s.light}};
+            if(page==0||page==2) {
+                auto *board=visualItem(window->contentItem(),page==0?"homeBoard":"chessboard");
+                check(board&&board->width()>=160&&std::abs(board->width()-board->height())<1, "Layout: usable square chessboard");
+                auto pos=board->mapToScene(QPointF());
+                check(pos.x()>=0 && pos.x()+board->width()<=window->width()+1, "Layout: board stays within horizontal viewport");
+                row["boardWidth"]=board->width();
+                if(page==2) {
+                    auto *save=visualItem(window->contentItem(),"saveStudy");check(save, "Layout: save action exists");
+                    auto p=save->mapToScene(QPointF());check(p.x()>=0&&p.x()+save->width()<=window->width()+1, "Layout: save action remains reachable");
+                    check(save->property("text").toString()==(QString(s.language)=="en"?"Save":"Enregistrer"), "Layout: live language applies to save action");
+                }
+            }
+            capture(QString("case%1-page%2").arg(index).arg(page)); report.append(row);
+        }
+        if(index==0||index==5||index==7) {
+            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","analysisQueueDialog","updatesDialog","commandsDialog"}) {
+                auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
+                check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
+                check(dialog->property("visible").toBool(), "Layout: dialog visible");
+                check(dialog->property("width").toDouble()<=s.width&&dialog->property("height").toDouble()<=s.height, "Layout: dialog fits viewport");
+                capture(QString("case%1-%2").arg(index).arg(name));QMetaObject::invokeMethod(dialog,"close");QTest::qWait(25);
+            }
+        }
+        ++index;
+    }
+    check(c.state()["fen"]==original["fen"]&&c.state()["comment"]==original["comment"]&&c.state()["dirty"]==original["dirty"], "Layout: preferences preserve unsaved chess study");
+    c.setPreference("fontScale",std::numeric_limits<double>::infinity());check(c.preferences()["fontScale"].toDouble()==1.5,"Layout: non-finite scale rejected");
+    c.setPreference("fontFamily","Trait64MissingFont_abcdef");check(c.preferences()["fontFamily"].toString()!="Trait64MissingFont_abcdef","Layout: unavailable font falls back");
+    c.setPreference("highContrast",true);check(c.preferences()["foreground"].toString()=="#000000","Layout: high contrast is applied");
+    c.setPreference("reduceMotion",true);c.setPreference("sidebarCompact",true);QTest::qWait(30);
+    check(warnings.isEmpty(), "Layout: no QML warnings");
+    if(!output.isEmpty()){QFile file(output+"/matrix.json");check(file.open(QIODevice::WriteOnly),"Layout: report opened");file.write(QJsonDocument(QJsonObject{{"cases",report},{"checks",checks},{"qmlWarnings",warnings.count()}}).toJson());}
+    std::cout<<"UI layout: "<<checks<<" checks, 8 scenarios, 56 page views, 39 dialog views, "<<warnings.count()<<" QML warnings\n";
+    return 0;
+}
