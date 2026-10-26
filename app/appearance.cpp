@@ -5,6 +5,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImageReader>
+#include <QFontDatabase>
+#include <QGuiApplication>
+#include <QQmlEngine>
 #include <QUuid>
 #include <algorithm>
 #include <cmath>
@@ -21,6 +24,11 @@ QVariantMap Controller::preferences() const {
                          {"importWorkers", 2},
                          {"syzygyPath", ""},
                          {"lightTheme", false},
+                         {"fontFamily", QGuiApplication::font().family()},
+                         {"fontScale", 1.0}, {"uiScale", 1.0},
+                         {"sidebarCompact", false}, {"highContrast", false},
+                         {"reduceMotion", false}, {"language", "fr"},
+                         {"analysisPanelRatio", .58},
                          {"coordinates", true},
                          {"pieceStyle", "cburnett"},
                          {"customPiecePath", ""},
@@ -38,6 +46,14 @@ QVariantMap Controller::preferences() const {
     for (auto it = defaults.begin(); it != defaults.end(); ++it)
         it.value() = settings_.value(it.key(), it.value());
     defaults["dataPath"] = dataPath_;
+    static const auto fonts = QFontDatabase::families();
+    for (const auto &key : {"fontScale", "uiScale", "analysisPanelRatio"}) {
+        const double value = defaults[key].toDouble();
+        const bool ratio = key == QString("analysisPanelRatio");
+        defaults[key] = std::isfinite(value) ? std::clamp(value, ratio ? .3 : .9, ratio ? .75 : key == QString("fontScale") ? 1.5 : 1.25) : ratio ? .58 : 1.0;
+    }
+    if (!fonts.contains(defaults["fontFamily"].toString())) defaults["fontFamily"] = QGuiApplication::font().family();
+    defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
         bg = QColor(defaults["lightTheme"].toBool() ? "#f3efe6" : "#171b21");
@@ -59,6 +75,11 @@ QVariantMap Controller::preferences() const {
     defaults["line"] = blend(.17);
     defaults["foreground"] = light ? "#242930" : "#f1ede4";
     defaults["muted"] = light ? "#565b63" : "#b6bac2";
+    if (defaults["highContrast"].toBool()) {
+        defaults["foreground"] = light ? "#000000" : "#ffffff";
+        defaults["muted"] = light ? "#202020" : "#eeeeee";
+        defaults["line"] = light ? "#656565" : "#b0b0b0";
+    }
     if (!settings_.contains("accentColor"))
         defaults["accentColor"] = light ? "#a1442b" : "#ef997a";
     return defaults;
@@ -76,7 +97,15 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!ok)
                 throw std::runtime_error("Nombre invalide.");
             clean = std::clamp(n, limits[key].first, limits[key].second);
-        } else if (QStringList{"lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
+        } else if (key == "fontScale" || key == "uiScale" || key == "analysisPanelRatio") {
+            bool ok = false; const double number = value.toDouble(&ok);
+            if (!ok || !std::isfinite(number)) throw std::runtime_error("Échelle invalide.");
+            clean = key == "analysisPanelRatio" ? std::clamp(number,.3,.75) : std::clamp(number,.9,key == "fontScale" ? 1.5 : 1.25);
+        } else if (key == "fontFamily") {
+            clean = QFontDatabase::families().contains(value.toString()) ? value.toString() : QGuiApplication::font().family();
+        } else if (key == "language") {
+            if (!QStringList{"auto","fr","en"}.contains(value.toString())) return;
+        } else if (QStringList{"sidebarCompact", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
                        key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
@@ -107,6 +136,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             emit engineChanged();
         }
         settings_.setValue(key, clean);
+        if (key == "language") translator_->setLanguage(clean.toString());
         if (key == "enginePath")
             emit engineChanged();
         emit preferencesChanged();
@@ -129,9 +159,12 @@ void Controller::applyBoardPreset(const QString &name) {
     settings_.setValue("boardHighlight", c[2]);
     emit preferencesChanged();
 }
+void Controller::retranslateUi(QObject *window) {
+    if (auto *engine = qmlEngine(window)) engine->retranslate();
+}
 void Controller::resetAppearance() {
     for (const auto &key :
-         QStringList{"lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
+         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion", "analysisPanelRatio", "lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
                      "backgroundColor", "accentColor", "coordinates", "legalMoves", "lastMove"})
         settings_.remove(key);
     emit preferencesChanged();

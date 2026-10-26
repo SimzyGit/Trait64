@@ -28,9 +28,10 @@ ApplicationWindow {
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
     palette.placeholderText: muted
+    palette.dark: muted;palette.light:fg;palette.midlight:line;palette.shadow:line;palette.brightText:fg
     color: bg
-    font.family: "DejaVu Sans"
-    font.pixelSize: 13
+    font.family: controller.preferences.fontFamily
+    font.pixelSize: Math.round(13*textScale)
     function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#171b21":"#ffffff"}
     property double selectedBaseId:0
     property var advanced:({})
@@ -39,20 +40,42 @@ ApplicationWindow {
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
 
-    header: Rectangle {
-        height: 116; color: win.bg
+    property real uiScale: controller.preferences.uiScale
+    property real textScale: controller.preferences.fontScale * uiScale
+    property string uiLanguage: controller.preferences.language
+    onUiLanguageChanged: controller.retranslateUi(win)
+    readonly property bool compactSidebar: controller.preferences.sidebarCompact || width < 1180 * uiScale
+    function systemText(text) { var language=controller.preferences.language; return controller.uiText(text) }
+    function sidebarAction(action) {
+        if(action === "preparationDialog") preparationDialog.open()
+        else if(action === "engineSettings") settingsDialog.open()
+        else appearanceDialog.open()
+    }
+    Rectangle {anchors.fill: parent; color: win.bg}
+    RowLayout {
+        anchors.fill: parent; spacing: 0
+        T64Sidebar {
+            objectName:"sidebar";Layout.preferredWidth:implicitWidth;Layout.fillHeight:true
+            currentPage:win.page;preferences:controller.preferences;collapsed:win.compactSidebar
+            onPageRequested:function(index){win.page=index}
+            onActionRequested:function(action){win.sidebarAction(action)}
+        }
         ColumnLayout {
-            anchors.fill: parent; anchors.leftMargin: 32; anchors.rightMargin: 32; spacing: 0
-            RowLayout {
-                Layout.fillWidth: true; Layout.preferredHeight: 62; spacing: 18
-                Label {text: "Trait"; font.family: "DejaVu Serif"; font.pixelSize: 30; font.letterSpacing: -1.2}
-                Rectangle {width: 2; height: 29; rotation: 24; color: win.accent; Layout.leftMargin: -9; Layout.rightMargin: -9}
-                Label {text: "64"; font.family: "DejaVu Sans Mono"; font.pixelSize: 24; color: win.accent}
-                Label {text: "L’ATELIER DES ÉCHECS"; font.pixelSize: 9; font.letterSpacing: 2; color: win.muted; Layout.leftMargin: 18; visible: win.width >= 1100}
-                Item {Layout.fillWidth: true}
-                TButton {text: "Apparence"; flat: true; onClicked: appearanceDialog.open()}
-                TButton {text: "Commandes  /  Ctrl K"; onClicked: commands.open()}
-                TButton {id: appMenuButton; objectName: "appMenuButton"; text: "Menu  ≡"; flat: true; onClicked: appMenu.open()
+            Layout.fillWidth:true;Layout.fillHeight:true;spacing:0
+            Rectangle {
+                Layout.fillWidth:true;Layout.preferredHeight:Math.max(68*win.uiScale,topbar.implicitHeight+16);color:win.bg
+                Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line}
+                RowLayout {
+                    id:topbar;anchors.fill:parent;anchors.margins:12;spacing:8
+                    TButton {objectName:"sidebarToggle";text:"☰";implicitWidth:40;Accessible.name:qsTr("Réduire ou développer la navigation");onClicked:controller.setPreference("sidebarCompact",!controller.preferences.sidebarCompact)}
+                    ColumnLayout {Layout.fillWidth:true;Layout.minimumWidth:0;spacing:2
+                        Label {text:win.nav[win.page];Layout.fillWidth:true;elide:Text.ElideRight;font.weight:Font.DemiBold}
+                        Label {text:controller.state.title;Layout.fillWidth:true;elide:Text.ElideRight;color:win.muted;font.pixelSize:11}
+                    }
+                    TButton {objectName:"commandPaletteButton";text:win.width>1250*win.textScale?qsTr("Rechercher une commande…")+"   Ctrl K":"Ctrl K";onClicked:commands.open()}
+                    TButton {objectName:"themeToggle";text:win.light?"☾":"☀";implicitWidth:40;Accessible.name:qsTr("Changer le thème");onClicked:{controller.setPreference("lightTheme",!win.light);controller.setPreference("backgroundColor","")}}
+                    TButton {objectName:"appearanceButton";text:"⚙";implicitWidth:40;Accessible.name:qsTr("Apparence et langue");onClicked:appearanceDialog.open()}
+                    TButton {id:appMenuButton;objectName:"appMenuButton";text:qsTr("Menu");onClicked:appMenu.open()
                     Menu {id: appMenu; y: appMenuButton.height
                         MenuItem {text: "Préparation par position"; onTriggered: preparationDialog.open()}
                         MenuItem {text: "Mes répertoires"; onTriggered: repertoiresDialog.open()}
@@ -64,43 +87,13 @@ ApplicationWindow {
                         MenuSeparator {}
                         MenuItem {text: "Aide & raccourcis"; onTriggered: helpDialog.open()}
                     }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
-                Repeater {
-                    model: win.nav
-                    delegate: Button {
-                        id: sectionNav
-                        required property string modelData
-                        required property int index
-                        objectName: "sectionNav" + index
-                        Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.fillHeight: true
-                        hoverEnabled: true; text: modelData
-                        Accessible.name: modelData; Accessible.role: Accessible.PageTab
-                        Accessible.selected: win.page === index
-                        contentItem: RowLayout {
-                            spacing: 9
-                            Label {text: "0" + (index + 1); font.family: "DejaVu Sans Mono"; font.pixelSize: 10; color: win.page === index ? win.accent : win.muted}
-                            Label {text: modelData; font.pixelSize: win.width < 1100 ? 12 : 13; font.weight: win.page === index ? Font.DemiBold : Font.Normal; color: win.page === index ? win.fg : win.muted; Layout.fillWidth: true; elide: Text.ElideRight}
-                        }
-                        background: Rectangle {
-                            color: sectionNav.hovered || sectionNav.visualFocus ? win.panel : "transparent"
-                            Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: win.page === index ? 3 : 1; color: win.page === index ? win.accent : win.line}
-                        }
-                        onClicked: win.page = index
                     }
                 }
             }
-        }
-    }
-    Rectangle {anchors.fill: parent; color: win.bg}
-    RowLayout {
-        anchors.fill: parent; spacing: 0
         StackLayout {
             id: pages
             Layout.fillWidth: true; Layout.fillHeight: true; currentIndex: win.page
-            Layout.leftMargin: 32; Layout.rightMargin: 32; Layout.topMargin: win.height < 820 ? 14 : 24; Layout.bottomMargin: 16
+            Layout.leftMargin:16;Layout.rightMargin:16;Layout.topMargin:12;Layout.bottomMargin:12
 
             Home {
                 backend: controller
@@ -109,6 +102,9 @@ ApplicationWindow {
                 onResumeStudy: win.page = 2
                 onShowLibrary: win.page = 1
                 onShowTraining: win.page = 4
+                onShowRepertoires: repertoiresDialog.open()
+                onShowPreparation: preparationDialog.open()
+                onShowEngines: settingsDialog.open()
             }
 
             // LIBRARY
@@ -448,6 +444,7 @@ ApplicationWindow {
                 }
             }
             Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)}}
+        }
         }
     }
     footer:Rectangle {

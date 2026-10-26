@@ -2,134 +2,87 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
 ScrollView {
-    id: root
+    id:root
     required property var backend
-    property var p: backend.preferences
+    property var p:backend.preferences
     signal newStudy()
     signal importStudy()
     signal resumeStudy()
     signal showLibrary()
     signal showTraining()
-    clip: true
-    contentWidth: availableWidth
-
+    signal showRepertoires()
+    signal showPreparation()
+    signal showEngines()
+    contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
     ColumnLayout {
-        width: root.availableWidth
-        spacing: 24
-        RowLayout {
-            Layout.fillWidth: true; spacing: 36; Layout.topMargin: 12
-            ColumnLayout {
-                Layout.fillWidth: true; spacing: 16
-                Label {text: "VOTRE CARNET / 01"; color: root.p.accentColor; font.family: "DejaVu Sans Mono"; font.pixelSize: 10; font.letterSpacing: 1.5}
-                Label {text: "À vous\nle trait."; font.family: "DejaVu Serif"; font.pixelSize: root.width > 1150 ? 76 : 60; lineHeight: 0.95; font.letterSpacing: -2}
-                Label {text: "Une position. Des idées. Votre chemin."; color: root.p.muted; font.pixelSize: 14; Layout.topMargin: 2}
-                RowLayout {
-                    spacing: 8; Layout.topMargin: 8
-                    TButton {text: "Nouvelle étude  +"; accent: true; onClicked: root.newStudy()}
-                    TButton {text: "Importer un PGN"; flat: true; onClicked: root.importStudy()}
-                }
-            }
-            ColumnLayout {
-                visible: root.width >= 1050
-                Layout.preferredWidth: 330; Layout.rightMargin: 40; spacing: 10
-                Item {
-                    Layout.preferredWidth: 308; Layout.preferredHeight: 308; Layout.alignment: Qt.AlignHCenter
-                    Rectangle {anchors.fill: parent; anchors.margins: -7; color: "transparent"; border.color: root.p.line}
-                    Board {anchors.fill: parent; backend: root.backend; enabled: false; coordinates: false}
-                    Button {
-                        anchors.fill: parent; hoverEnabled: true
-                        Accessible.name: "Reprendre l’étude sur l’échiquier"
-                        background: Rectangle {color: "transparent"; border.width: parent.visualFocus ? 3 : 0; border.color: root.p.accentColor}
-                        onClicked: root.resumeStudy()
-                        ToolTip.visible: hovered; ToolTip.text: "Reprendre cette position"
+        width:root.availableWidth;spacing:16
+        Label {text:qsTr("Un échiquier, tous vos outils.");font.pixelSize:26;font.weight:Font.DemiBold;Layout.fillWidth:true;wrapMode:Text.WordWrap}
+        Flow {Layout.fillWidth:true;spacing:8
+            TButton {text:qsTr("Nouvelle étude");accent:true;onClicked:root.newStudy()}
+            TButton {text:qsTr("Importer un PGN");onClicked:root.importStudy()}
+            TButton {text:qsTr("Ouvrir la bibliothèque");onClicked:root.showLibrary()}
+        }
+        GridLayout {
+            id:workspace;columns:root.availableWidth>=760*root.p.uiScale?2:1;Layout.fillWidth:true;columnSpacing:16;rowSpacing:16
+            Rectangle {
+                Layout.fillWidth:true;Layout.preferredWidth:root.availableWidth*.58;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop
+                implicitHeight:homeBoard.height+boardCommands.implicitHeight+homeTitle.implicitHeight+56
+                color:root.p.panel;border.color:root.p.line;radius:8
+                ColumnLayout {
+                    anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:12
+                    Label {id:homeTitle;text:root.backend.state.title;Layout.fillWidth:true;elide:Text.ElideRight;color:root.p.muted}
+                    Board {id:homeBoard;objectName:"homeBoard";backend:root.backend;coordinates:root.p.coordinates;Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:Math.max(160,Math.min(parent.width,Math.max(300,root.height-210),720));Layout.preferredHeight:Layout.preferredWidth}
+                    RowLayout {id:boardCommands;Layout.fillWidth:true;spacing:8
+                        TButton {text:"|◀";implicitWidth:40;enabled:root.backend.state.canBack&&!root.backend.state.training;Accessible.name:qsTr("Début de la partie");onClicked:root.backend.step(-2)}
+                        TButton {text:"◀";implicitWidth:40;enabled:root.backend.state.canBack&&!root.backend.state.training;Accessible.name:qsTr("Coup précédent");onClicked:root.backend.step(-1)}
+                        TButton {text:"▶";implicitWidth:40;enabled:root.backend.state.canForward&&!root.backend.state.training;Accessible.name:qsTr("Coup suivant");onClicked:root.backend.step(1)}
+                        TButton {text:"▶|";implicitWidth:40;enabled:root.backend.state.canForward&&!root.backend.state.training;Accessible.name:qsTr("Fin de la variante");onClicked:root.backend.step(2)}
+                        Item {Layout.fillWidth:true}
+                        TButton {text:"⇅";implicitWidth:40;Accessible.name:qsTr("Retourner l’échiquier");onClicked:root.backend.flip()}
                     }
                 }
-                Label {text: root.backend.state.title; color: root.p.muted; elide: Text.ElideRight; Layout.fillWidth: true; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter}
             }
             ColumnLayout {
-                Layout.preferredWidth: root.width >= 1050 ? 195 : 275; spacing: 16
-                Rectangle {width: 38; height: 3; color: root.p.accentColor}
-                Label {text: "L’étude\nen cours"; font.family: "DejaVu Serif"; font.pixelSize: 26}
-                Label {text: root.backend.state.title; color: root.p.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true}
-                Label {text: root.backend.state.dirty ? "Modifications conservées\ndans votre session." : "Votre position vous attend."; color: root.p.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 11}
-                TButton {text: "Reprendre  →"; onClicked: root.resumeStudy()}
-            }
-        }
-
-        Rectangle {Layout.fillWidth: true; height: 1; color: root.p.line; Layout.topMargin: 6}
-        RowLayout {
-            Layout.fillWidth: true; spacing: 0
-            Repeater {
-                model: [{name: "Parties", key: "games", destination: 1}, {name: "Favoris", key: "favorites", destination: 1}, {name: "À réviser", key: "due", destination: 4}]
-                delegate: ItemDelegate {
-                    required property var modelData
-                    Layout.fillWidth: true; Layout.preferredWidth: 1; implicitHeight: 64
-                    Accessible.name: modelData.name + " : " + (root.backend.stats[modelData.key] || 0)
-                    background: Rectangle {color: parent.hovered || parent.visualFocus ? root.p.panel : "transparent"}
-                    contentItem: RowLayout {
-                        spacing: 18
-                        Label {text: root.backend.stats[modelData.key] || 0; font.family: "DejaVu Serif"; font.pixelSize: 36; color: root.p.accentColor}
-                        Label {text: modelData.name; font.pixelSize: 12; Layout.fillWidth: true}
-                        Label {text: "↗"; font.pixelSize: 18; color: root.p.muted; Layout.rightMargin: 26}
+                Layout.fillWidth:true;Layout.preferredWidth:root.availableWidth*.42;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop;spacing:16
+                Rectangle {
+                    Layout.fillWidth:true;implicitHeight:currentStudy.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                    ColumnLayout {id:currentStudy;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:12
+                        Label {text:qsTr("Étude en cours");font.weight:Font.DemiBold}
+                        Label {text:root.backend.state.title;wrapMode:Text.WordWrap;Layout.fillWidth:true}
+                        Label {text:root.backend.state.dirty?qsTr("Modifications conservées dans votre session."):qsTr("Votre position vous attend.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:root.p.muted}
+                        TButton {text:qsTr("Analyser la position");accent:true;Layout.fillWidth:true;onClicked:root.resumeStudy()}
                     }
-                    onClicked: modelData.destination === 4 ? root.showTraining() : root.showLibrary()
                 }
-            }
-        }
-        Rectangle {Layout.fillWidth: true; height: 1; color: root.p.line}
-
-        RowLayout {
-            Layout.fillWidth: true; spacing: 38; Layout.bottomMargin: 20
-            ColumnLayout {
-                Layout.fillWidth: true; spacing: 4
-                RowLayout {
-                    Layout.fillWidth: true; Layout.bottomMargin: 14
-                    Label {text: "Les pages à rouvrir"; font.family: "DejaVu Serif"; font.pixelSize: 23}
-                    Item {Layout.fillWidth: true}
-                    TButton {text: "Bibliothèque  →"; flat: true; onClicked: root.showLibrary()}
-                }
-                Label {visible: root.backend.games.length === 0; text: "Importez vos parties pour écrire la suite."; color: root.p.muted}
-                TButton {visible: root.backend.games.length === 0; text: "Découvrir les parties d’exemple"; onClicked: root.backend.loadExamples()}
-                Repeater {
-                    model: Math.min(3, root.backend.games.length)
-                    delegate: ItemDelegate {
-                        required property int index
-                        property var game: root.backend.games[index] || ({})
-                        Layout.fillWidth: true; implicitHeight: 68
-                        Accessible.name: (game.white || "") + " contre " + (game.black || "")
-                        background: Rectangle {
-                            color: parent.hovered || parent.visualFocus ? root.p.panel : "transparent"
-                            Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.p.line}
-                        }
-                        contentItem: RowLayout {
-                            spacing: 16
-                            Label {text: "0" + (index + 1); color: root.p.accentColor; font.family: "DejaVu Sans Mono"; font.pixelSize: 11}
-                            ColumnLayout {
-                                Layout.fillWidth: true; spacing: 5
-                                Label {text: (game.white || "") + " — " + (game.black || ""); font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true}
-                                Label {text: game.event || "Étude personnelle"; color: root.p.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true}
+                Rectangle {
+                    Layout.fillWidth:true;implicitHeight:recent.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                    ColumnLayout {id:recent;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:10
+                        Label {text:qsTr("Parties de la bibliothèque");font.weight:Font.DemiBold;wrapMode:Text.WordWrap;Layout.fillWidth:true}
+                        Label {visible:root.backend.games.length===0;text:qsTr("Importez vos parties pour commencer.");color:root.p.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
+                        Repeater {model:Math.min(3,root.backend.games.length)
+                            delegate:ItemDelegate {required property int index;property var game:root.backend.games[index]||({})
+                                Layout.fillWidth:true;implicitHeight:Math.max(52,recentText.implicitHeight+12)
+                                Accessible.name:(game.white||"")+" — "+(game.black||"")
+                                background:Rectangle {radius:4;color:parent.hovered||parent.visualFocus?root.p.raised:"transparent";border.color:parent.visualFocus?root.p.accentColor:"transparent"}
+                                contentItem:ColumnLayout {id:recentText;spacing:3
+                                    Label {text:(game.white||"")+" — "+(game.black||"");elide:Text.ElideRight;Layout.fillWidth:true}
+                                    Label {text:(game.event||qsTr("Étude personnelle"))+" · "+(game.result||"*");elide:Text.ElideRight;Layout.fillWidth:true;color:root.p.muted;font.pixelSize:11}
+                                }
+                                onClicked:root.backend.loadGame(game.id)
                             }
-                            Label {text: game.result || "*"; color: root.p.muted; font.family: "DejaVu Sans Mono"; font.pixelSize: 11}
-                            Label {text: "→"; color: root.p.accentColor; font.pixelSize: 20}
                         }
-                        onClicked: root.backend.loadGame(game.id)
+                        TButton {text:qsTr("Afficher la bibliothèque")+"  →";flat:true;Layout.fillWidth:true;onClicked:root.showLibrary()}
                     }
                 }
-                Item {Layout.fillHeight: true}
-            }
-            Rectangle {Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.p.line}
-            ColumnLayout {
-                Layout.preferredWidth: 275; Layout.alignment: Qt.AlignTop; spacing: 15
-                Label {text: "DE L’IDÉE AU RÉFLEXE"; color: root.p.accentColor; font.pixelSize: 9; font.letterSpacing: 1.5; Layout.topMargin: 12}
-                Label {text: "Ce qui s’apprend\nse retrouve."; font.family: "DejaVu Serif"; font.pixelSize: 25}
-                Label {text: (root.backend.stats.due || 0) + " cartes à revoir · " + (root.backend.stats.todayReviews || 0) + " révisions aujourd’hui"; color: root.p.muted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true}
-                ProgressBar {id: progress; Layout.fillWidth: true; from: 0; to: root.p.dailyGoal; value: root.backend.stats.todayReviews || 0
-                    background: Rectangle {implicitHeight: 3; color: root.p.line}
-                    contentItem: Item {implicitHeight: 3; Rectangle {width: parent.width * progress.visualPosition; height: parent.height; color: root.p.accentColor}}
+                Rectangle {Layout.fillWidth:true;implicitHeight:shortcuts.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                    ColumnLayout {id:shortcuts;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:8
+                        Label {text:qsTr("Accès rapides");font.weight:Font.DemiBold}
+                        TButton {text:qsTr("Mes répertoires");Layout.fillWidth:true;onClicked:root.showRepertoires()}
+                        TButton {text:qsTr("Préparer une position");Layout.fillWidth:true;onClicked:root.showPreparation()}
+                        TButton {text:qsTr("Moteurs et profils");Layout.fillWidth:true;onClicked:root.showEngines()}
+                        TButton {text:qsTr("Entraînement")+" · "+(root.backend.stats.due||0)+" "+qsTr("à réviser");Layout.fillWidth:true;onClicked:root.showTraining()}
+                    }
                 }
-                TButton {text: "Ouvrir mon entraînement  →"; flat: true; onClicked: root.showTraining()}
             }
         }
     }

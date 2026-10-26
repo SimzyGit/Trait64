@@ -44,6 +44,8 @@ void atomicWrite(const QString &path, const QByteArray &bytes) {
 Controller::Controller(const QString &path, QObject *parent)
     : QObject(parent), dataPath_(path), sessionPath_(path + "/session.json"), engine_(this),
       comparison_(this) {
+    translator_ = std::make_unique<t64::UiTranslator>();
+    translator_->setLanguage(settings_.value("language", "fr").toString());
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     flipped_ = settings_.value("flipped", false).toBool();
