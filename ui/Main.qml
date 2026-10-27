@@ -185,8 +185,8 @@ ApplicationWindow {
 ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisViewport.availableHeight,implicitHeight);
                 Layout.margins:0;spacing:win.height<820?8:14
                 RowLayout {Layout.fillWidth:true
-                    ColumnLayout {spacing:3;Layout.fillWidth:true
-                        Label {text:controller.state.training?(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne")):qsTr("Sur l’échiquier.");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(24*win.textScale)}
+                    ColumnLayout {spacing:3;Layout.fillWidth:true;Layout.minimumWidth:0
+                        Label {Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;text:controller.state.training?(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne")):qsTr("Sur l’échiquier.");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(24*win.textScale)}
                         Label {visible:win.height>=820||controller.state.training;text:controller.state.training?qsTr("Jouez les coups de votre répertoire · ")+controller.state.trainingProgress:controller.state.title;color:win.muted;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale);elide:Text.ElideRight;Layout.fillWidth:true}
                     }
                     Item {Layout.fillWidth:true}
@@ -209,14 +209,14 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                 SplitView {
                     id:analysisSplit;Layout.minimumHeight:365*win.textScale;
                     property real savedRatio:controller.preferences.analysisPanelRatio
-                    onSavedRatioChanged:if(boardPanel&&!resizing)boardPanel.SplitView.preferredWidth=width*savedRatio
-                    onWidthChanged:if(boardPanel&&!resizing)boardPanel.SplitView.preferredWidth=width*savedRatio
+                    readonly property real fittedBoardWidth:Math.max(290,Math.min(width*savedRatio,width-312))
+                    onFittedBoardWidthChanged:if(boardPanel&&!resizing)boardPanel.SplitView.preferredWidth=fittedBoardWidth
 objectName:"analysisSplit"
                     Layout.fillWidth:true;Layout.fillHeight:true;orientation:Qt.Horizontal
                     onResizingChanged:if(!resizing&&width>0)controller.setPreference("analysisPanelRatio",boardPanel.width/width)
                     handle:Rectangle {implicitWidth:12;color:"transparent";Rectangle {anchors.centerIn:parent;width:2;height:36;radius:1;color:win.line}}
                     ColumnLayout {
-                        id:boardPanel;SplitView.preferredWidth:analysisSplit.width*controller.preferences.analysisPanelRatio;SplitView.minimumWidth:290;spacing:win.height<820?5:10
+                        id:boardPanel;SplitView.preferredWidth:analysisSplit.fittedBoardWidth;SplitView.minimumWidth:290;spacing:win.height<820?5:10
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.White||qsTr("Blancs")):(controller.state.tags.Black||qsTr("Noirs"));font.weight:Font.DemiBold}
                             Item {Layout.fillWidth:true}

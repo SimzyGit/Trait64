@@ -98,12 +98,13 @@ int uiLayoutProbe(const QString &directory) {
     toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(40);
     check(!window->property("compactSidebar").toBool(),"Layout: navigation can be expanded in a small window");
     window->setProperty("page",2);QTest::qWait(60);
+    capture("case8-expanded-sidebar");
     for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton"}) {
         auto *button=visualItem(window->contentItem(),name);check(button,"Layout: expanded navigation leaves controls available");
         const auto point=button->mapToScene(QPointF());
+        if(point.x()<0||point.x()+button->width()>window->width()+1)qWarning()<<"Clipped expanded sidebar action"<<name<<point<<button->width()<<window->width();
         check(point.x()>=0&&point.x()+button->width()<=window->width()+1,"Layout: expanded navigation keeps controls inside the viewport");
     }
-    capture("case8-expanded-sidebar");
     toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(30);
     QSettings saved;
     check(saved.value("fontScale").toDouble()==1.5&&saved.value("uiScale").toDouble()==1.25&&saved.value("language").toString()=="en","Layout: appearance preferences are persisted");
