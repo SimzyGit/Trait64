@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-Dialog {
+TDialog {
     id: root
     property var backend
     property var pieces: []
@@ -47,14 +47,14 @@ Dialog {
                     }
                 }
             }
-            RowLayout {Layout.fillWidth:true
-                TButton {text:"Initiale";onClicked:root.loadFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")}
+            Flow {Layout.fillWidth:true;spacing:6
+                TButton {text:qsTr("Initiale");onClicked:root.loadFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")}
                 TButton {text:qsTr("Vider");onClicked:{var empty=[];for(var i=0;i<64;i++)empty.push("");root.pieces=empty;castles.text="-";ep.text="-"}}
-                TButton {text:"Retourner";onClicked:root.flipped=!root.flipped}
+                TButton {text:qsTr("Retourner");onClicked:root.flipped=!root.flipped}
             }
         }
-        ScrollView {Layout.preferredWidth:244;Layout.fillHeight:true;contentWidth:availableWidth;clip:true
-            ColumnLayout {width:parent.width;spacing:12
+        ScrollView {id:editorScroll;Layout.preferredWidth:Math.min(root.width*.48,Math.max(244,244*controller.preferences.fontScale));Layout.fillHeight:true;contentWidth:availableWidth;clip:true
+            ColumnLayout {width:editorScroll.availableWidth;spacing:12
                 Label {text:qsTr("Pièce à placer");font.bold:true}
                 GridLayout {columns:6;rowSpacing:3;columnSpacing:1
                     Repeater {model:["wK","wQ","wR","wB","wN","wP","bK","bQ","bR","bB","bN","bP"]
@@ -66,13 +66,13 @@ Dialog {
                     }
                 }
                 TButton {text:qsTr("Gomme (ou clic droit)");onClicked:root.brush="";Layout.fillWidth:true}
-                ComboBox {id:side;model:[qsTr("Trait aux Blancs"),qsTr("Trait aux Noirs")];Layout.fillWidth:true}
+                TComboBox {id:side;model:["Trait aux Blancs","Trait aux Noirs"];Layout.fillWidth:true}
                 CheckBox {id:variant;text:qsTr("Règles Chess960")}
                 Label {text:qsTr("Roques : KQkq ou lettres des tours (960)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
                 TextField {id:castles;Layout.fillWidth:true;maximumLength:4;selectByMouse:true}
                 Label {text:qsTr("Case en passant (ou -)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 TextField {id:ep;Layout.fillWidth:true;maximumLength:2}
-                Label {text:qsTr("Demi-coups sans prise ni pion");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                Label {text:qsTr("Demi-coups sans prise ni pion");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 SpinBox {id:half;from:0;to:255;editable:true;Layout.fillWidth:true}
                 Label {text:qsTr("Numéro du coup");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 SpinBox {id:full;from:1;to:32000;value:1;editable:true;Layout.fillWidth:true}

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs as Native
-Dialog {
+TDialog {
     id: root
     property var backend
     title: qsTr("Apparence et langue")
@@ -25,7 +25,7 @@ Dialog {
             Label {text:qsTr("INTERFACE");font.bold:true}
             GridLayout {columns:2;Layout.fillWidth:true;columnSpacing:16;rowSpacing:10
                 Label {text:qsTr("Langue")}
-                ComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English",qsTr("Système")];property var values:["fr","en","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
+                TComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English","Système"];property var values:["fr","en","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
                 Label {text:qsTr("Police")}
                 ComboBox {objectName:"fontSelector";Layout.fillWidth:true;model:root.backend.preferences.fontFamilies;currentIndex:model.indexOf(root.backend.preferences.fontFamily);onActivated:root.backend.setPreference("fontFamily",currentText)}
                 Label {text:qsTr("Taille du texte")}
@@ -39,7 +39,7 @@ Dialog {
             TButton {text:qsTr("Rétablir la largeur des panneaux");onClicked:root.backend.setPreference("analysisPanelRatio",.58)}
             Label {text:qsTr("JEU DE PIÈCES");font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
-                Repeater {model:[{key:"cburnett",label:qsTr("Classique")},{key:"merida",label:"Merida"},{key:"spatial",label:"Spatial"},{key:"pixel",label:"Pixel"},{key:"unicode",label:"Unicode"}]
+                Repeater {model:[{key:"cburnett",label:"Classique"},{key:"merida",label:"Merida"},{key:"spatial",label:"Spatial"},{key:"pixel",label:"Pixel"},{key:"unicode",label:"Unicode"}]
                     delegate:Button {
                         required property var modelData
                         width:Math.max(122,122*root.backend.preferences.fontScale);height:Math.max(106,106*root.backend.preferences.fontScale)
@@ -48,7 +48,7 @@ Dialog {
                             Rectangle {Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:96;Layout.preferredHeight:52;color:root.backend.preferences.boardLight;radius:1
                                 Row {anchors.centerIn:parent;Piece {code:"wN";pieceStyle:modelData.key;width:45;height:49} Piece {code:"bQ";pieceStyle:modelData.key;width:45;height:49}}
                             }
-                            Label {text:modelData.label;Layout.alignment:Qt.AlignHCenter}
+                            Label {text:controller.uiText(modelData.label);Layout.alignment:Qt.AlignHCenter}
                         }
                         onClicked:root.backend.setPreference("pieceStyle",modelData.key)
                     }
@@ -69,7 +69,7 @@ Dialog {
                     delegate:RowLayout {
                         required property var modelData
                         Layout.columnSpan:3;Layout.fillWidth:true
-                        Label {text:modelData.label;Layout.preferredWidth:180}
+                        Label {text:controller.uiText(modelData.label);Layout.preferredWidth:180}
                         TextField {Layout.fillWidth:true;text:root.backend.preferences[modelData.key]||root.backend.preferences.background;onEditingFinished:root.backend.setPreference(modelData.key,text);selectByMouse:true;maximumLength:7}
                         Button {Layout.preferredWidth:46;implicitHeight:32
                             background:Rectangle {color:root.backend.preferences[modelData.key]||root.backend.preferences.background;radius:5;border.color:root.backend.preferences.foreground}

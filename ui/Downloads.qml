@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+TDialog {
     id: root
     required property var backend
     property var manager: backend.content
@@ -25,10 +25,9 @@ Dialog {
     ScrollView {id:downloadsViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsViewport.availableHeight,implicitHeight);
         spacing: 10
-        RowLayout {
-            Layout.fillWidth: true
-            ComboBox { id: category; objectName:"contentCategory"; model: [qsTr("Moteurs"), qsTr("Champions du monde"), qsTr("Championnes du monde"), qsTr("Histoire"), qsTr("Ouvertures"), qsTr("Historique des imports")]; Layout.preferredWidth: 245 }
-            TextField { id: search; Layout.fillWidth: true; placeholderText: qsTr("Chercher dans le catalogue…"); visible: category.currentIndex < 5 }
+        Flow {Layout.fillWidth:true;spacing:8
+            TComboBox { id: category; objectName:"contentCategory"; model: ["Moteurs", "Champions du monde", "Championnes du monde", "Histoire", "Ouvertures", "Historique des imports"]; width:Math.min(parent.width,245*controller.preferences.fontScale*controller.preferences.uiScale) }
+            TextField { id: search; width:Math.min(parent.width,260*controller.preferences.fontScale*controller.preferences.uiScale); placeholderText: qsTr("Chercher dans le catalogue…"); visible: category.currentIndex < 5 }
             TButton {text: qsTr("Profils moteurs"); onClicked: {root.close(); root.configureEngines()} }
         }
         Label {
@@ -37,7 +36,7 @@ ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsVi
         }
         ListView {
             id: list; objectName:"contentList"
-            Layout.fillWidth: true; Layout.fillHeight: true
+            Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight:180
             clip: true; spacing: 8; visible: category.currentIndex < 5
             model: root.manager.catalog.filter(function(item) { return item.category === category.currentText && (item.title + " " + item.description).toLowerCase().indexOf(search.text.toLowerCase()) >= 0 })
             ScrollBar.vertical: ScrollBar {}
@@ -90,7 +89,7 @@ ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsVi
         }
         ListView {
             id: history
-            Layout.fillWidth: true; Layout.fillHeight: true; visible: category.currentIndex === 5
+            Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight:180; visible: category.currentIndex === 5
             clip: true; spacing: 10; model: root.backend.importHistory
             ScrollBar.vertical: ScrollBar {}
             delegate: ColumnLayout {
@@ -111,7 +110,7 @@ ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsVi
         }
     }
 }
-    Dialog {
+    TDialog {
         id: confirmRemove; anchors.centerIn: parent; title: qsTr("Supprimer ") + root.removeTitle + " ?"
         width: Math.min(560, root.width-40); height: 205; modal: true; standardButtons: Dialog.Yes | Dialog.No
         contentItem: Label {wrapMode: Text.WordWrap; text: qsTr("Les fichiers téléchargés seront supprimés. Les parties importées et les réglages des profils seront conservés. Un profil dont le moteur est supprimé nécessitera un nouvel exécutable.")}

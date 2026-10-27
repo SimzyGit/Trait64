@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs as Native
 
-Dialog {
+TDialog {
     id: root
     required property var backend
     property var task: backend.importProgress
@@ -26,8 +26,8 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
             Layout.fillWidth: true; wrapMode: Text.WordWrap
             text: qsTr("Les parties sont conservées par lots de 250. Après une pause ou un plantage, la reprise repart du dernier lot validé. Le fichier entier est vérifié par SHA-256 avant chaque reprise.")
         }
-        RowLayout {
-            TButton {objectName:"newResumableImport"; text:qsTr("Choisir un PGN"); enabled:!root.backend.busy; onClicked:{root.relocateId=0; choose.open()} }
+        Flow {Layout.fillWidth:true;spacing:8
+TButton {objectName:"newResumableImport"; text:qsTr("Choisir un PGN"); enabled:!root.backend.busy; onClicked:{root.relocateId=0; choose.open()} }
             Label {text:qsTr("Lecteurs parallèles")}
             SpinBox {from:1;to:8;value:root.backend.preferences.importWorkers||2;enabled:!root.backend.busy;onValueModified:root.backend.setPreference("importWorkers",value)}
             Item {Layout.fillWidth: true}
@@ -45,7 +45,7 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
         }
         ListView {
             id: jobs; objectName:"importJobsList"
-            Layout.fillWidth:true; Layout.fillHeight:true; clip:true; spacing:10
+            Layout.fillWidth:true; Layout.fillHeight:true; Layout.minimumHeight:180; clip:true; spacing:10
             model:root.backend.importJobs
             ScrollBar.vertical:ScrollBar {}
             delegate:Rectangle {
@@ -55,10 +55,10 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
                     id:body; anchors.left:parent.left; anchors.right:parent.right; anchors.top:parent.top; anchors.margins:12; spacing:6
                     Label {text:modelData.title || modelData.file; font.bold:true; Layout.fillWidth:true; elide:Text.ElideMiddle}
                     Label {text:modelData.file; Layout.fillWidth:true; elide:Text.ElideMiddle; font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                    Label {text:root.statusText(modelData.status)+" · "+modelData.processed+qsTr(" parties validées · ")+modelData.added+" nouvelles"; Layout.fillWidth:true; wrapMode:Text.WordWrap}
+                    Label {text:root.statusText(modelData.status)+" · "+modelData.processed+qsTr(" parties validées · ")+modelData.added+qsTr(" nouvelles"); Layout.fillWidth:true; wrapMode:Text.WordWrap}
                     Label {text:modelData.error; visible:text.length>0; Layout.fillWidth:true; wrapMode:Text.WordWrap}
-                    RowLayout {
-                        TButton {text:qsTr("Reprendre"); visible:modelData.status!=="completed"; enabled:!root.backend.busy; onClicked:root.backend.resumeImport(modelData.id)}
+                    Flow {Layout.fillWidth:true;spacing:8
+TButton {text:qsTr("Reprendre"); visible:modelData.status!=="completed"; enabled:!root.backend.busy; onClicked:root.backend.resumeImport(modelData.id)}
                         TButton {text:qsTr("Retrouver le PGN"); visible:modelData.status!=="completed"; enabled:!root.backend.busy; onClicked:{root.relocateId=modelData.id; choose.open()}}
                         TButton {text:qsTr("Retirer de cette liste"); enabled:!root.backend.busy; onClicked:root.backend.forgetImport(modelData.id)}
                     }

@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+TDialog {
     id: root
     required property var backend
     property var selected: []

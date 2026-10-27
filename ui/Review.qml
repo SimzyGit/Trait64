@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-Dialog {
+TDialog {
     id: root
     property var backend
     function explain(index) {explanation.rowIndex=index;choice.currentIndex=0;explanation.open()}
@@ -16,8 +16,8 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
         spacing:12
         RowLayout {Layout.fillWidth:true
             Label {text:qsTr("Temps par position")}
-            ComboBox {id:budget;model:["0,2 s","0,5 s","1 s","2 s","5 s"];currentIndex:1;enabled:!root.backend.reviewState.running}
-            TButton {text:root.backend.reviewState.running?"Interrompre":qsTr("Analyser la partie");accent:true;onClicked:root.backend.reviewState.running?root.backend.cancelReview():root.backend.analyseGame([200,500,1000,2000,5000][budget.currentIndex])}
+            TComboBox {id:budget;model:["0,2 s","0,5 s","1 s","2 s","5 s"];currentIndex:1;enabled:!root.backend.reviewState.running}
+            TButton {text:root.backend.reviewState.running?qsTr("Interrompre"):qsTr("Analyser la partie");accent:true;onClicked:root.backend.reviewState.running?root.backend.cancelReview():root.backend.analyseGame([200,500,1000,2000,5000][budget.currentIndex])}
             Item {Layout.fillWidth:true}
             Label {text:root.backend.reviewState.done+" / "+root.backend.reviewState.total}
         }
@@ -37,22 +37,22 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
                 MouseArea {anchors.fill:parent;onClicked:function(mouse){var rows=root.backend.review;if(rows.length){var index=Math.round(Math.max(0,Math.min(1,mouse.x/width))*(rows.length-1));root.backend.navigate(rows[index].node)}}}
             }
         }
-        Label {text:qsTr("Perte moyenne (centipions) — Blancs : ")+root.average(true)+qsTr(" · Noirs : ")+root.average(false);font.bold:true}
-        ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}
+        Label {text:qsTr("Perte moyenne (centipions) — Blancs : ")+root.average(true)+qsTr(" · Noirs : ")+root.average(false);Layout.fillWidth:true;wrapMode:Text.WordWrap;font.bold:true}
+        ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:170;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}
             currentIndex:-1
-            delegate:ItemDelegate {required property var modelData;required property int index;width:rows.width;implicitHeight:36;highlighted:ListView.isCurrentItem
+            delegate:ItemDelegate {required property var modelData;required property int index;width:rows.width;implicitHeight:36*controller.preferences.fontScale*controller.preferences.uiScale;highlighted:ListView.isCurrentItem
                 text:(index+1)+".  "+modelData.move+"    "+modelData.eval+"    "+modelData.label+(modelData.lossKnown?"    (−"+modelData.loss+" cp)":"");onClicked:{rows.currentIndex=index;root.backend.navigate(modelData.node)}
             }
         }
-        RowLayout {Layout.fillWidth:true
-            TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enabled:rows.currentIndex>=0&&rows.currentIndex<root.backend.review.length;onClicked:root.explain(rows.currentIndex)}
+        Flow {Layout.fillWidth:true;spacing:8
+TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enabled:rows.currentIndex>=0&&rows.currentIndex<root.backend.review.length;onClicked:root.explain(rows.currentIndex)}
             TButton {text:qsTr("Annoter le PGN");enabled:!root.backend.reviewState.running&&root.backend.review.length>0;onClicked:root.backend.annotateReview()}
             TButton {text:qsTr("Créer des exercices des erreurs");enabled:!root.backend.reviewState.running&&root.backend.review.length>0;onClicked:root.backend.createMistakeCards()}
         }
         Label {text:qsTr("Seuils indicatifs : 50 / 100 / 250 centipions. Les résultats dépendent du moteur et du temps accordé ; les exercices suivent sa variante principale.");wrapMode:Text.WordWrap;Layout.fillWidth:true;opacity:.7;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
     }
 }
-    Dialog {
+    TDialog {
         id:explanation;objectName:"reviewExplanationDialog";parent:Overlay.overlay
         property int rowIndex:-1
         property var details:visible&&root.backend.review.length>rowIndex&&rowIndex>=0?root.backend.explainReview(rowIndex,choice.currentIndex===1):({available:false,error:qsTr("Sélectionnez un coup analysé.")})
@@ -60,8 +60,8 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
         width:Math.min(760,parent?parent.width-24:760);height:Math.min(660,parent?parent.height-24:660)
         ColumnLayout {
             anchors.fill:parent;spacing:10
-            Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+explanation.details.label+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+" (Blancs)":explanation.details.error;wrapMode:Text.WordWrap}
-            ComboBox {id:choice;objectName:"reviewLineChoice";Layout.fillWidth:true;model:[qsTr("Coup joué et réponse moteur"), qsTr("Proposition moteur avant le coup")]}
+            Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+explanation.details.label+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+qsTr(" (Blancs)"):explanation.details.error;wrapMode:Text.WordWrap}
+            TComboBox {id:choice;objectName:"reviewLineChoice";Layout.fillWidth:true;model:["Coup joué et réponse moteur", "Proposition moteur avant le coup"]}
             Label {Layout.fillWidth:true;visible:explanation.details.available;text:explanation.details.available?explanation.details.engine+" · "+explanation.details.milliseconds+qsTr(" ms par position · profondeur ")+explanation.details.depth:"";wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
             Label {Layout.fillWidth:true;visible:explanation.details.available;text:explanation.details.available?qsTr("Matériel (Blancs − Noirs) : ")+explanation.details.initialMaterial+" → "+explanation.details.finalMaterial+qsTr(". Pion = 1, cavalier/fou = 3, tour = 5, dame = 9. Ce compte ne mesure pas la qualité de la position."):"";wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
             ListView {

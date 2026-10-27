@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-Dialog {
+TDialog {
     id: root
     property var backend
     property var info: backend.state
@@ -10,12 +10,12 @@ Dialog {
     height: Math.min(680,parent ? parent.height-32 : 680)
     anchors.centerIn:parent;modal:true
     closePolicy: info.status==="installing" ? Popup.NoAutoClose : Popup.CloseOnEscape
-    ScrollView {anchors.fill:parent;contentWidth:availableWidth;clip:true
-        ColumnLayout {width:parent.width;spacing:14
+    ScrollView {id:updatesScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
+        ColumnLayout {width:updatesScroll.availableWidth;spacing:14
             Label {text:qsTr("Version installée : ")+root.info.current;font.bold:true;font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale)}
-            RowLayout {Layout.fillWidth:true
-                Label {text:"Canal"}
-                ComboBox {model:["Stable",qsTr("Bêta"),qsTr("Développement")];currentIndex:["stable","beta","development"].indexOf(root.info.channel);enabled:!root.info.busy;onActivated:root.backend.setChannel(["stable","beta","development"][currentIndex])}
+            Flow {Layout.fillWidth:true;spacing:8
+                Label {text:qsTr("Canal")}
+                TComboBox {model:["Stable","Bêta","Développement"];currentIndex:["stable","beta","development"].indexOf(root.info.channel);enabled:!root.info.busy;onActivated:root.backend.setChannel(["stable","beta","development"][currentIndex])}
                 TButton {text:qsTr("Vérifier maintenant");enabled:!root.info.busy;onClicked:root.backend.check()}
             }
             CheckBox {text:qsTr("Vérifier au lancement");checked:root.info.automatic;onToggled:root.backend.setAutomatic(checked)}
@@ -26,7 +26,7 @@ Dialog {
                     Label {text:qsTr("Connectez gh avec « gh auth login », puis activez cette option. Autre possibilité : un jeton limité à Trait64, permission Contents en lecture, conservé uniquement pour cette session.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                     RowLayout {Layout.fillWidth:true
                         TextField {id:token;Layout.fillWidth:true;echoMode:TextInput.Password;placeholderText:root.info.authenticated?qsTr("Accès configuré"):qsTr("Jeton de session");enabled:!root.info.busy}
-                        TButton {text:"Utiliser";enabled:!root.info.busy && token.text.length>0;onClicked:{root.backend.setSessionToken(token.text);token.clear();root.backend.check()}}
+                        TButton {text:qsTr("Utiliser");enabled:!root.info.busy && token.text.length>0;onClicked:{root.backend.setSessionToken(token.text);token.clear();root.backend.check()}}
                     }
                 }
             }
@@ -35,14 +35,14 @@ Dialog {
             TextArea {visible:root.info.available;Layout.fillWidth:true;Layout.preferredHeight:160;readOnly:true;wrapMode:TextEdit.Wrap;text:root.info.notes;textFormat:TextEdit.PlainText;selectByMouse:true}
             ProgressBar {visible:root.info.status==="downloading";Layout.fillWidth:true;value:root.info.progress}
             Label {visible:root.info.available;text:qsTr("Installation : ")+root.info.kind+qsTr(" · sauvegarde automatique des données avant remplacement.");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-            RowLayout {Layout.fillWidth:true
+            Flow {Layout.fillWidth:true;spacing:8
                 TButton {text:qsTr("Mettre à jour");accent:true;visible:root.info.available&&root.info.status!=="installed";enabled:!root.info.busy;onClicked:root.backend.downloadAndInstall()}
                 TButton {text:qsTr("Plus tard");visible:root.info.available&&root.info.status!=="installed";enabled:!root.info.busy;onClicked:{root.backend.later();root.close()}}
-                TButton {text:"Ignorer";visible:root.info.available&&root.info.status!=="installed";enabled:!root.info.busy;onClicked:{root.backend.ignore();root.close()}}
+                TButton {text:qsTr("Ignorer");visible:root.info.available&&root.info.status!=="installed";enabled:!root.info.busy;onClicked:{root.backend.ignore();root.close()}}
                 TButton {text:qsTr("Annuler");visible:root.info.busy&&root.info.status!=="installing";onClicked:root.backend.cancel()}
                 TButton {text:qsTr("Redémarrer");visible:root.info.status==="installed";accent:true;onClicked:root.backend.restart()}
                 Item {Layout.fillWidth:true}
-                TButton {text:"Fermer";enabled:root.info.status!=="installing";onClicked:root.close()}
+                TButton {text:qsTr("Fermer");enabled:root.info.status!=="installing";onClicked:root.close()}
             }
         }
     }

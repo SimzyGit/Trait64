@@ -26,14 +26,17 @@ ScrollView {
         GridLayout {
             id:workspace;columns:root.availableWidth>=760*root.p.uiScale?2:1;Layout.fillWidth:true;columnSpacing:16;rowSpacing:16
             Rectangle {
+                id:boardCard;objectName:"homeBoardCard"
+                readonly property real boardExtent:Math.max(160,Math.min(width-32,Math.max(300,root.height-210),720))
                 Layout.fillWidth:true;Layout.preferredWidth:root.availableWidth*.58;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop
-                implicitHeight:homeBoard.height+boardCommands.implicitHeight+homeTitle.implicitHeight+56
+                implicitHeight:boardExtent+boardCommands.implicitHeight+homeTitle.implicitHeight+56
+                Layout.preferredHeight:implicitHeight
                 color:root.p.panel;border.color:root.p.line;radius:8
                 ColumnLayout {
                     anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:12
                     Label {id:homeTitle;text:root.backend.state.title;Layout.fillWidth:true;elide:Text.ElideRight;color:root.p.muted}
-                    Board {id:homeBoard;objectName:"homeBoard";backend:root.backend;coordinates:root.p.coordinates;Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:Math.max(160,Math.min(parent.width,Math.max(300,root.height-210),720));Layout.preferredHeight:Layout.preferredWidth}
-                    RowLayout {id:boardCommands;Layout.fillWidth:true;spacing:8
+                    Board {id:homeBoard;objectName:"homeBoard";backend:root.backend;coordinates:root.p.coordinates;Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:boardCard.boardExtent;Layout.preferredHeight:Layout.preferredWidth}
+                    RowLayout {id:boardCommands;objectName:"homeBoardCommands";Layout.fillWidth:true;spacing:8
                         TButton {text:"|◀";implicitWidth:40;enabled:root.backend.state.canBack&&!root.backend.state.training;Accessible.name:qsTr("Début de la partie");onClicked:root.backend.step(-2)}
                         TButton {text:"◀";implicitWidth:40;enabled:root.backend.state.canBack&&!root.backend.state.training;Accessible.name:qsTr("Coup précédent");onClicked:root.backend.step(-1)}
                         TButton {text:"▶";implicitWidth:40;enabled:root.backend.state.canForward&&!root.backend.state.training;Accessible.name:qsTr("Coup suivant");onClicked:root.backend.step(1)}

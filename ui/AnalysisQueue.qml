@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-Dialog {
+TDialog {
     id: root
     parent: Overlay.overlay
     property var backend
@@ -19,7 +19,7 @@ Dialog {
         return ({queued:qsTr("En attente"), running:qsTr("En cours"), paused:qsTr("En pause"), completed:qsTr("Terminée"), failed:qsTr("À reprendre")})[value] || value
     }
     function profiles() {
-        var names = [qsTr("Moteur courant")]
+        var names = ["Moteur courant"]
         var saved = backend.preferences.engineProfiles || []
         for (var i = 0; i < saved.length; ++i) names.push(saved[i].name)
         return names
@@ -30,8 +30,8 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
         Label { text: qsTr("Ajouter une copie de l’étude ouverte à la file"); font.bold: true }
         RowLayout {
             Layout.fillWidth: true
-            ComboBox { id: profile; model: root.profiles(); Layout.fillWidth: true }
-            ComboBox { id: budget; Layout.preferredWidth: 190; model: [qsTr("0,1 s / position"), qsTr("0,5 s / position"), "1 s / position", "2 s / position", "5 s / position", "10 s / position"]; currentIndex: 1 }
+            TComboBox { id: profile; onlyFirstOption:true; model: root.profiles(); Layout.fillWidth: true }
+            TComboBox { id: budget; Layout.preferredWidth: 190; model: ["0,1 s / position", "0,5 s / position", "1 s / position", "2 s / position", "5 s / position", "10 s / position"]; currentIndex: 1 }
         }
         RowLayout {
             Layout.fillWidth: true
@@ -54,8 +54,8 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
             }
         }
         ProgressBar { Layout.fillWidth: true; from: 0; to: Math.max(1, root.job.total || 0); value: root.job.done || 0 }
-        RowLayout {
-            TButton { text: qsTr("Pause"); enabled: root.job.status === "running" || root.job.status === "queued"; onClicked: root.queue.pause(root.selectedId) }
+        Flow {Layout.fillWidth:true;spacing:8
+TButton { text: qsTr("Pause"); enabled: root.job.status === "running" || root.job.status === "queued"; onClicked: root.queue.pause(root.selectedId) }
             TButton { text: qsTr("Reprendre"); enabled: root.job.status === "paused" || root.job.status === "failed"; onClicked: root.queue.resume(root.selectedId) }
             TButton { text: qsTr("Tout suspendre"); enabled: !!root.queue.state.ready; onClicked: root.queue.pauseAll() }
             Item { Layout.fillWidth: true }
@@ -85,8 +85,8 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
                 }
             }
         }
-        RowLayout {
-            TButton { text: "←"; enabled: (root.queue.state.offset || 0) > 0; onClicked: root.queue.select(root.selectedId, root.queue.state.offset - 200) }
+        Flow {Layout.fillWidth:true;spacing:8
+TButton { text: "←"; enabled: (root.queue.state.offset || 0) > 0; onClicked: root.queue.select(root.selectedId, root.queue.state.offset - 200) }
             Label { text: qsTr("Page ") + (root.queue.state.page || 1) }
             TButton { text: "→"; enabled: !!root.queue.state.hasNext; onClicked: root.queue.select(root.selectedId, root.queue.state.offset + 200) }
             TButton { text: qsTr("Vider le cache"); enabled: !!root.queue.state.ready; onClicked: root.queue.clearCache() }
@@ -99,8 +99,8 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
     }
 }
     FileDialog { id: exportDialog; property var jobId: 0; title: qsTr("Exporter l’analyse"); fileMode: FileDialog.SaveFile; nameFilters: ["Partie PGN (*.pgn)"]; defaultSuffix: "pgn"; onAccepted: root.queue.exportPgn(jobId, selectedFile.toString()) }
-    Dialog { id: removeDialog; property var jobId: 0; title: qsTr("Retirer cette analyse ?"); modal: true; anchors.centerIn: parent; standardButtons: Dialog.Ok | Dialog.Cancel
-        Label { text: qsTr("Les résultats seront retirés de la file. La partie d’origine est conservée."); wrapMode: Text.WordWrap; width: 350 }
+    TDialog { id: removeDialog; width:Math.min(580,root.width-32); property var jobId: 0; title: qsTr("Retirer cette analyse ?"); modal: true; anchors.centerIn: parent; standardButtons: Dialog.Ok | Dialog.Cancel
+        Label { text: qsTr("Les résultats seront retirés de la file. La partie d’origine est conservée."); wrapMode: Text.WordWrap; width: parent.width }
         onAccepted: root.queue.forget(jobId)
     }
 }

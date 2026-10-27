@@ -31,8 +31,15 @@ int uiLayoutProbe(const QString &directory) {
     };
     int index=0;
     for(const auto &s:scenarios) {
+        auto *language=window->findChild<QObject *>("languageSelector");
+        auto *category=window->findChild<QObject *>("contentCategory");
+        const int selectedCategory=category->property("currentIndex").toInt();
         c.setPreference("fontScale",s.text);c.setPreference("uiScale",s.ui);c.setPreference("lightTheme",s.light);c.setPreference("language",s.language);
         window->resize(s.width,s.height);QTest::qWait(80);
+        check(language&&language->property("currentIndex").toInt()==(QString(s.language)=="en"?1:0),"Layout: language selector agrees with active language");
+        check(category->property("currentIndex").toInt()==selectedCategory,"Layout: language changes preserve catalog selection");
+        auto *catalog=window->findChild<QObject *>("contentList");
+        check(catalog&&catalog->property("count").toInt()>0,"Layout: translated catalog still displays engines");
         for(int page=0;page<7;++page) {
             auto *nav=visualItem(window->contentItem(),"sectionNav"+QString::number(page));
             check(nav, "Layout: navigation is present");nav->forceActiveFocus(Qt::TabFocusReason);QTest::qWait(10);QTest::keyClick(window,Qt::Key_Space);QTest::qWait(60);
@@ -44,6 +51,12 @@ int uiLayoutProbe(const QString &directory) {
                 auto pos=board->mapToScene(QPointF());
                 check(pos.x()>=0 && pos.x()+board->width()<=window->width()+1, "Layout: board stays within horizontal viewport");
                 row["boardWidth"]=board->width();
+                if(page==0) {
+                    auto *card=visualItem(window->contentItem(),"homeBoardCard");
+                    auto *actions=visualItem(window->contentItem(),"homeBoardCommands");
+                    check(card&&actions,"Layout: home board card and controls exist");
+                    check(actions->mapToItem(card,QPointF(0,actions->height())).y()<=card->height()+1,"Layout: home board controls stay inside their card after resize");
+                }
                 if(page==2) {
                     auto *save=visualItem(window->contentItem(),"saveStudy");check(save, "Layout: save action exists");
                     auto p=save->mapToScene(QPointF());check(p.x()>=0&&p.x()+save->width()<=window->width()+1, "Layout: save action remains reachable");
@@ -63,6 +76,13 @@ int uiLayoutProbe(const QString &directory) {
         }
         ++index;
     }
+    auto *palette=window->findChild<QObject *>("commandsDialog");
+    QMetaObject::invokeMethod(palette,"open");QTest::qWait(30);
+    auto *search=window->findChild<QObject *>("commandSearch");search->setProperty("text","repertoire");QTest::qWait(30);
+    check(window->findChild<QObject *>("commandResults")->property("count").toInt()==1,"Layout: command palette filters translated actions");
+    QMetaObject::invokeMethod(palette,"close");
+    QSettings saved;
+    check(saved.value("fontScale").toDouble()==1.5&&saved.value("uiScale").toDouble()==1.25&&saved.value("language").toString()=="en","Layout: appearance preferences are persisted");
     check(c.state()["fen"]==original["fen"]&&c.state()["comment"]==original["comment"]&&c.state()["dirty"]==original["dirty"], "Layout: preferences preserve unsaved chess study");
     c.setPreference("fontScale",std::numeric_limits<double>::infinity());check(c.preferences()["fontScale"].toDouble()==1.5,"Layout: non-finite scale rejected");
     c.setPreference("fontFamily","Trait64MissingFont_abcdef");check(c.preferences()["fontFamily"].toString()!="Trait64MissingFont_abcdef","Layout: unavailable font falls back");

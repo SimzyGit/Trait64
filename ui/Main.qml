@@ -44,7 +44,8 @@ ApplicationWindow {
     property real textScale: controller.preferences.fontScale * uiScale
     property string uiLanguage: controller.preferences.language
     onUiLanguageChanged: controller.retranslateUi(win)
-    readonly property bool compactSidebar: controller.preferences.sidebarCompact || width < 1180 * uiScale
+    property bool sidebarExpanded: false
+    readonly property bool compactSidebar: !sidebarExpanded && (controller.preferences.sidebarCompact || width < 1180 * uiScale)
     function systemText(text) { var language=controller.preferences.language; return controller.uiText(text) }
     function sidebarAction(action) {
         if(action === "preparationDialog") preparationDialog.open()
@@ -67,7 +68,7 @@ ApplicationWindow {
                 Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line}
                 RowLayout {
                     id:topbar;anchors.fill:parent;anchors.margins:12;spacing:8
-                    TButton {objectName:"sidebarToggle";text:"☰";implicitWidth:40;Accessible.name:qsTr("Réduire ou développer la navigation");onClicked:controller.setPreference("sidebarCompact",!controller.preferences.sidebarCompact)}
+                    TButton {objectName:"sidebarToggle";text:"☰";implicitWidth:40;Accessible.name:qsTr("Réduire ou développer la navigation");onClicked:{var expand=win.compactSidebar;win.sidebarExpanded=expand;controller.setPreference("sidebarCompact",!expand)}}
                     ColumnLayout {Layout.fillWidth:true;Layout.minimumWidth:0;spacing:2
                         Label {text:win.nav[win.page];Layout.fillWidth:true;elide:Text.ElideRight;font.weight:Font.DemiBold}
                         Label {text:controller.state.title;Layout.fillWidth:true;elide:Text.ElideRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -118,13 +119,13 @@ ApplicationWindow {
                     TButton {text:qsTr("+  Importer");accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
                 }
                 Flow {Layout.fillWidth:true;spacing:8
-                    ComboBox {id:baseBox;objectName:"baseSelector";width:Math.min(parent.width,260*win.textScale);textRole:"title";valueRole:"id";model:[{id:0,title:qsTr("Toutes les bases")}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";width:Math.min(parent.width,260*win.textScale);textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
                     TButton {text:qsTr("Imports reprenables");objectName:"showImports";onClicked:importsDialog.open()}
                     TButton {text:qsTr("Exporter cette base");enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
                     TextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
-                    ComboBox {id:resultBox;model:[qsTr("Tous résultats"),"1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:155*win.textScale}
+                    TComboBox {id:resultBox;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:155*win.textScale}
                 }
                 Flow {Layout.fillWidth:true;spacing:8
                     CheckBox {id:favoriteCheck;text:qsTr("Favoris");onToggled:win.filterLibrary()}
@@ -201,12 +202,16 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                             TButton {text:"×";implicitWidth:27*win.textScale;implicitHeight:32*win.textScale;Accessible.name:qsTr("Fermer l’étude");onClicked:controller.closeTab(index)}
                         }
                     }
-                    TButton {text:"↶";Accessible.name:qsTr("Annuler");enabled:controller.state.canUndo;onClicked:controller.undo();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Annuler")}
+                    TButton {text:"↶";Accessible.name:qsTr("Annuler le coup");enabled:controller.state.canUndo;onClicked:controller.undo();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Annuler le coup")}
                     TButton {text:"↷";Accessible.name:qsTr("Rétablir");enabled:controller.state.canRedo;onClicked:controller.redo();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Rétablir")}
                     TButton {text:qsTr("Bilan");enabled:!controller.state.training;onClicked:reviewDialog.open()}
                 }
                 SplitView {
-                    id:analysisSplit;Layout.minimumHeight:365*win.textScale;objectName:"analysisSplit"
+                    id:analysisSplit;Layout.minimumHeight:365*win.textScale;
+                    property real savedRatio:controller.preferences.analysisPanelRatio
+                    onSavedRatioChanged:if(boardPanel&&!resizing)boardPanel.SplitView.preferredWidth=width*savedRatio
+                    onWidthChanged:if(boardPanel&&!resizing)boardPanel.SplitView.preferredWidth=width*savedRatio
+objectName:"analysisSplit"
                     Layout.fillWidth:true;Layout.fillHeight:true;orientation:Qt.Horizontal
                     onResizingChanged:if(!resizing&&width>0)controller.setPreference("analysisPanelRatio",boardPanel.width/width)
                     handle:Rectangle {implicitWidth:12;color:"transparent";Rectangle {anchors.centerIn:parent;width:2;height:36;radius:1;color:win.line}}
@@ -246,7 +251,7 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                             }
                             TButton {text:controller.state.playing?qsTr("Arrêter"):qsTr("Jouer");visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
-                        Label {text:controller.state.clockResult||controller.state.status;color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
+                        Label {text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
                     }
                     ColumnLayout {
                         objectName:"analysisPanel"
@@ -254,13 +259,13 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                         Rectangle {
                             Layout.fillWidth:true;implicitHeight:(controller.state.analysis?(win.height<760?152:204):88)*win.textScale;color:win.panel
                             Rectangle {width:3;height:parent.height;color:win.accent}
-                            ColumnLayout {anchors.margins:14;spacing:8
+                            ColumnLayout {anchors.fill:parent;anchors.margins:14;spacing:8
                                 RowLayout {Layout.fillWidth:true
                                     Label {text:qsTr("01  /  ANALYSE MOTEUR");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);font.letterSpacing:1.1;color:win.muted}
                                     Item {Layout.fillWidth:true}
                                     TButton {text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;implicitHeight:30;onClicked:controller.toggleAnalysis()}
                                 }
-                                Label {text:controller.engineStatus+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
                                 ListView {
                                     Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:5
                                     delegate:RowLayout {
@@ -308,7 +313,7 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                                     }
                                 }
                                 RowLayout {Layout.fillWidth:true;visible:!controller.state.training
-                                    ComboBox {id:nagBox;model:[qsTr("Annotation"),qsTr("! Bon coup"),qsTr("? Erreur"),qsTr("!! Excellent"),qsTr("?? Gaffe"),qsTr("!? Intéressant"),qsTr("?! Douteux")];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    TComboBox {id:nagBox;model:["Annotation","! Bon coup","? Erreur","!! Excellent","?? Gaffe","!? Intéressant","?! Douteux"];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     TButton {text:"↑";enabled:controller.state.node>0;onClicked:controller.promote();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Promouvoir en ligne principale")}
                                 }
                                 Label {text:qsTr("03  /  NOTES DE POSITION");font.pixelSize:Math.round(9*controller.preferences.fontScale*controller.preferences.uiScale);font.letterSpacing:1;color:win.muted;Layout.topMargin:6}
@@ -338,7 +343,7 @@ ColumnLayout {width:openingsViewport.availableWidth;height:Math.max(openingsView
                     delegate:Rectangle {
                         required property var modelData
                         width:openingList.width;height:62;radius:2;color:win.panel
-                        RowLayout {anchors.margins:12;spacing:18
+                        RowLayout {anchors.fill:parent;anchors.margins:12;spacing:18
                             TButton {text:modelData.san;Layout.preferredWidth:76;onClicked:controller.move(modelData.uci)}
                             Label {text:modelData.count;Layout.preferredWidth:66;font.weight:Font.DemiBold}
                             Row {Layout.fillWidth:true;Layout.preferredHeight:25
@@ -368,10 +373,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     Item {Layout.fillWidth:true}
                     TButton {text:qsTr("+  Créer une carte");accent:true;onClicked:cardDialog.open()}
                 }
-                RowLayout {Layout.fillWidth:true;spacing:16
-                    Repeater {model:[{title:qsTr("À réviser"),key:"due"},{title:qsTr("Révisions effectuées"),key:"reviews"},{title:qsTr("Réussites"),key:"successes"}]
-                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;height:102*win.textScale;radius:2;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.margins:20;Label {text:modelData.title;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:controller.stats[modelData.key]||0;font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.Normal}}
+                Row {Layout.fillWidth:true;spacing:16
+                    Repeater {model:[{title:"À réviser",key:"due"},{title:"Révisions effectuées",key:"reviews"},{title:"Réussites",key:"successes"}]
+                        delegate:Rectangle {required property var modelData;width:(parent.width-32)/3;height:102*win.textScale;radius:2;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:win.systemText(modelData.title);Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:controller.stats[modelData.key]||0;font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.Normal}}
                         }
                     }
                 }
@@ -460,11 +465,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         height:Math.max(32,32*win.textScale);color:win.bg
         Rectangle {width:parent.width;height:1;color:win.line}
         RowLayout {anchors.fill:parent;anchors.leftMargin:22;anchors.rightMargin:22
-            Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  "+controller.taskStatus:controller.state.dirty?qsTr("●  Modifications · récupération de session automatique"):qsTr("●  Prêt");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
-            Item {Layout.fillWidth:true}
-            TButton {visible:controller.busy;text:controller.resumableImport?qsTr("Mettre en pause"):"Interrompre";implicitHeight:24;onClicked:controller.cancelTask()}
+            Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  "+controller.taskStatus:controller.state.dirty?qsTr("●  Modifications · récupération de session automatique"):qsTr("●  Prêt");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight}
+            TButton {visible:controller.busy;text:controller.resumableImport?qsTr("Mettre en pause"):qsTr("Interrompre");implicitHeight:Math.max(24,24*win.textScale);onClicked:controller.cancelTask()}
             Label {text:controller.state.training?qsTr("Entraînement local"):qsTr("Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;visible:win.width>=1350*win.textScale}
-            TButton {text:"Trait64 / "+controller.updater.state.current;flat:true;implicitHeight:26;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);onClicked:updatesDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Versions et mises à jour")}
+            TButton {text:"Trait64 / "+controller.updater.state.current;flat:true;implicitHeight:Math.max(26,26*win.textScale);font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);onClicked:updatesDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Versions et mises à jour")}
         }
     }
 
@@ -491,44 +495,44 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Native.FileDialog {id:openDatabaseDialog;title:qsTr("Ouvrir une bibliothèque Trait64");nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.openBackup(selectedFile.toString())}
     Native.FileDialog {id:engineFileDialog;title:qsTr("Choisir l’exécutable Stockfish ou UCI");onAccepted:{controller.setPreference("enginePath",selectedFile.toString());enginePathField.text=controller.preferences.enginePath}}
 
-    Dialog {id:fenDialog;title:qsTr("Charger une position FEN");anchors.centerIn:parent;width:650;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:fenDialog;objectName:"fenDialog";title:qsTr("Charger une position FEN");anchors.centerIn:parent;width:650;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ColumnLayout {anchors.fill:parent;spacing:15
             Label {text:qsTr("Collez une FEN complète. L’étude en cours sera conservée dans votre bibliothèque.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
             TextArea {id:fenField;Layout.fillWidth:true;Layout.preferredHeight:95;wrapMode:TextEdit.Wrap;selectByMouse:true;placeholderText:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}
         }
         onAccepted:controller.setFen(fenField.text)
     }
-    Dialog {id:pgnDialog;title:qsTr("Importer un texte PGN");anchors.centerIn:parent;width:700;height:460;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un texte PGN");anchors.centerIn:parent;width:700;height:460;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *";wrapMode:TextEdit.Wrap;selectByMouse:true}}
         onAccepted:controller.importText(pgnField.text)
     }
-    Dialog {id:promotionDialog;title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
+    TDialog {id:promotionDialog;objectName:"promotionDialog";title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
         RowLayout {spacing:12;Repeater {model:[{label:"♛ Dame",piece:"q"},{label:"♜ Tour",piece:"r"},{label:"♝ Fou",piece:"b"},{label:"♞ Cavalier",piece:"n"}]
             delegate:TButton {required property var modelData;text:modelData.label;onClicked:{controller.move(win.promotionPrefix+modelData.piece);promotionDialog.close()}}
         }}
     }
-    Dialog {id:cardDialog;title:qsTr("Créer une carte d’entraînement");anchors.centerIn:parent;width:520;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:cardDialog;objectName:"cardDialog";title:qsTr("Créer une carte d’entraînement");anchors.centerIn:parent;width:520;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ColumnLayout {anchors.fill:parent;spacing:14
             Label {text:qsTr("La suite principale depuis la position actuelle sera à retrouver (40 demi-coups maximum). Placez-vous avant le premier coup à apprendre.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
             TextField {id:cardTitle;placeholderText:qsTr("Ex. Italienne — mon plan avec les Blancs");Layout.fillWidth:true}
         }
         onAccepted:controller.createCard(cardTitle.text)
     }
-    Dialog {id:deleteCardDialog;property int cardId:0;title:qsTr("Supprimer cette carte ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No
-        Label {text:qsTr("L’activité déjà enregistrée restera dans votre progression.")}
+    TDialog {id:deleteCardDialog;objectName:"deleteCardDialog";width:Math.min(580,win.width-32);property int cardId:0;title:qsTr("Supprimer cette carte ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No
+        Label {text:qsTr("L’activité déjà enregistrée restera dans votre progression.");width:parent.width;wrapMode:Text.WordWrap}
         onAccepted:controller.deleteCard(cardId)
     }
-    Dialog {id:playDialog;title:qsTr("Partie locale");anchors.centerIn:parent;width:470;modal:true
+    TDialog {id:playDialog;objectName:"playDialog";title:qsTr("Partie locale");anchors.centerIn:parent;width:470;modal:true
         ColumnLayout {anchors.fill:parent;spacing:16
-            ComboBox {id:opponent;model:[qsTr("Deux joueurs sur cet ordinateur"),qsTr("Contre le moteur UCI")];currentIndex:1;Layout.fillWidth:true}
-            RowLayout {Label {text:"Minutes"} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
-            ComboBox {id:playSide;model:[qsTr("Je joue les Blancs"),qsTr("Je joue les Noirs")];Layout.fillWidth:true}
+            TComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
+            RowLayout {Label {text:qsTr("Minutes")} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
+            TComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
             TButton {text:qsTr("Démarrer avec pendule");accent:true;Layout.fillWidth:true;onClicked:{controller.startLocalGame(clockMinutes.value,clockIncrement.value,opponent.currentIndex,playSide.currentIndex===0);playDialog.close()}}
             TButton {text:qsTr("Moteur sans pendule");visible:opponent.currentIndex===1;Layout.fillWidth:true;onClicked:{controller.playComputer(playSide.currentIndex===0);playDialog.close()}}
             Label {text:qsTr("La partie démarre depuis la position de l’échiquier. Parcourir les coups arrête la pendule.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
         }
     }
-    Dialog {id:tagsDialog;title:qsTr("Informations sur la partie");anchors.centerIn:parent;width:540;modal:true;standardButtons:Dialog.Close
+    TDialog {id:tagsDialog;objectName:"tagsDialog";title:qsTr("Informations sur la partie");anchors.centerIn:parent;width:540;modal:true;standardButtons:Dialog.Close
         GridLayout {anchors.fill:parent;columns:2;columnSpacing:16;rowSpacing:10
             Repeater {model:["White","Black","Event","Site","Date","Round","Result","ECO","WhiteElo","BlackElo"]
                 delegate:ColumnLayout {required property string modelData;Layout.fillWidth:true;spacing:4
@@ -560,8 +564,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Promouvoir cette variante");enabled:controller.state.node>0;onTriggered:controller.promote()}
         MenuItem {text:qsTr("Supprimer ce coup et sa suite…");enabled:controller.state.node>0;onTriggered:deleteVariationDialog.open()}
     }
-    Dialog {id:deleteVariationDialog;title:qsTr("Supprimer cette variante ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No
-        Label {text:qsTr("Le coup sélectionné et ses continuations seront retirés.")}
+    TDialog {id:deleteVariationDialog;objectName:"deleteVariationDialog";width:Math.min(580,win.width-32);title:qsTr("Supprimer cette variante ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No
+        Label {text:qsTr("Le coup sélectionné et ses continuations seront retirés.");width:parent.width;wrapMode:Text.WordWrap}
         onAccepted:controller.deleteVariation()
     }
     Menu {id:gameMenu;x:win.width-width-40;y:220
@@ -569,7 +573,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Modifier la collection");onTriggered:collectionDialog.open()}
         MenuItem {text:trashCheck.checked?qsTr("Restaurer la partie"):qsTr("Mettre à la corbeille");onTriggered:controller.trash(win.selectedGame,!trashCheck.checked)}
     }
-    Dialog {id:collectionDialog;title:qsTr("Collection de la partie");anchors.centerIn:parent;modal:true;width:440;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:collectionDialog;objectName:"collectionDialog";title:qsTr("Collection de la partie");anchors.centerIn:parent;modal:true;width:440;standardButtons:Dialog.Ok|Dialog.Cancel
         TextField {id:collectionField;anchors.fill:parent;placeholderText:qsTr("Ex. Préparation tournoi, Répertoire Blancs…")}
         onAccepted:controller.setCollection(win.selectedGame,collectionField.text)
     }
@@ -579,12 +583,12 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
-    Dialog {id:chess960Dialog;title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ColumnLayout {Label {text:qsTr("Numéro de la position (518 = position classique)")} SpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}
         onAccepted:controller.newChess960(frcNumber.value)
     }
     Appearance {id:appearanceDialog;objectName:"appearanceDialog";backend:controller}
-    Dialog {id:settingsDialog;objectName:"settingsDialog";title:qsTr("Paramètres");anchors.centerIn:parent;width:700;height:Math.min(690,win.height-32);modal:true;standardButtons:Dialog.Close
+    TDialog {id:settingsDialog;objectName:"settingsDialog";title:qsTr("Paramètres");anchors.centerIn:parent;width:700;height:Math.min(690,win.height-32);modal:true;standardButtons:Dialog.Close
         ScrollView {id:settingsScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:settingsScroll.availableWidth;spacing:18
             Label {text:qsTr("MOTEUR UCI LOCAL");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);font.letterSpacing:1.5;color:win.muted}
@@ -607,10 +611,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             }
             RowLayout {Layout.fillWidth:true
                 ComboBox {id:profileBox;Layout.fillWidth:true;model:controller.preferences.engineProfiles;textRole:"name"}
-                TButton {text:"Charger";enabled:profileBox.currentIndex>=0;onClicked:controller.loadEngineProfile(profileBox.currentIndex)}
+                TButton {text:qsTr("Charger");enabled:profileBox.currentIndex>=0;onClicked:controller.loadEngineProfile(profileBox.currentIndex)}
                 TButton {text:"×";enabled:profileBox.currentIndex>=0;onClicked:controller.removeEngineProfile(profileBox.currentIndex)}
             }
-            RowLayout {TButton {text:qsTr("Démarrer / appliquer");accent:true;onClicked:controller.startEngine()} Label {text:controller.engineStatus;elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}}
+            RowLayout {TButton {text:qsTr("Démarrer / appliquer");accent:true;onClicked:controller.startEngine()} Label {text:win.systemText(controller.engineStatus);elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}}
             Rectangle {Layout.fillWidth:true;height:1;color:win.line}
             RowLayout {CheckBox {text:qsTr("Thème clair");checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} CheckBox {text:qsTr("Coordonnées de l’échiquier");checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
             TButton {text:qsTr("Télécharger d’autres moteurs");onClicked:{settingsDialog.close();downloadsDialog.open()}}
@@ -619,37 +623,38 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         }
     }
     }
-    Dialog {id:helpDialog;title:qsTr("Bienvenue dans Trait64");anchors.centerIn:parent;width:620;modal:true;standardButtons:Dialog.Close
-        ColumnLayout {anchors.fill:parent;spacing:15
+    TDialog {id:helpDialog;objectName:"helpDialog";title:qsTr("Bienvenue dans Trait64");anchors.centerIn:parent;width:Math.min(760,win.width-32);height:Math.min(700,win.height-32);modal:true;standardButtons:Dialog.Close
+        ScrollView {id:helpScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
+        ColumnLayout {width:helpScroll.availableWidth;spacing:15
             Label {text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
-            Label {text:"• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.";wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
-            Label {text:"Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne";color:win.muted;lineHeight:1.6}
+            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
+            Label {text:qsTr("Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne");Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;lineHeight:1.6}
             Label {text:qsTr("Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
-        }
+        }}
     }
-    Dialog {id:advancedDialog;objectName:"advancedDialog";title:qsTr("Recherche avancée");anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:advancedDialog;objectName:"advancedDialog";title:qsTr("Recherche avancée");anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         property var draft:({})
         onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=Math.max(0,["updated","date","players","elo","length"].indexOf(draft.sort||"updated"));colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""))}
-        ScrollView {anchors.fill:parent;contentWidth:availableWidth;clip:true
-        GridLayout {width:parent.width;columns:2;columnSpacing:12;rowSpacing:10
+        ScrollView {id:advancedScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
+        GridLayout {width:advancedScroll.availableWidth;columns:2;columnSpacing:12;rowSpacing:10
             Repeater {model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")}]
                 delegate:ColumnLayout {required property var modelData;Layout.fillWidth:true
-                    Label {text:modelData.label;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                    Label {text:modelData.label;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                     TextField {Layout.fillWidth:true;text:advancedDialog.draft[modelData.key]||"";onTextEdited:advancedDialog.draft[modelData.key]=text}
                 }
             }
-            Label {text:qsTr("Couleur du joueur")} ComboBox {id:colourFilter;model:[qsTr("Les deux couleurs"),qsTr("Blancs"),qsTr("Noirs")]}
-            Label {text:qsTr("Elo minimal des deux joueurs")} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
-            Label {text:qsTr("Elo maximal (0 = sans limite)")} SpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}
-            Label {text:qsTr("Demi-coups maximum (0 = tous)")} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
-            CheckBox {text:qsTr("Correspondance exacte des champs texte");checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
-            Label {text:qsTr("Trier par")} ComboBox {id:sortBy;model:["Modification","Date",qsTr("Joueurs"),"Elo","Longueur"]}
+            Label {text:qsTr("Couleur du joueur")} TComboBox {id:colourFilter;model:["Les deux couleurs","Blancs","Noirs"]}
+            Label {text:qsTr("Elo minimal des deux joueurs");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:qsTr("Elo maximal (0 = sans limite)");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:qsTr("Demi-coups maximum (0 = tous)");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
+            CheckBox {text:qsTr("Correspondance exacte des champs texte");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
+            Label {text:qsTr("Trier par")} TComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
             Label {text:qsTr("Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             TButton {text:qsTr("Effacer les filtres");onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
         }}
         onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.advanced=Object.assign({},draft);win.applyAdvanced()}
     }
-    Dialog {id:commands;objectName:"commandsDialog";title:qsTr("Commandes rapides");anchors.centerIn:parent;width:Math.min(680,win.width-32);height:Math.min(620,win.height-32);modal:true;standardButtons:Dialog.Close
+    TDialog {id:commands;objectName:"commandsDialog";title:qsTr("Commandes rapides");anchors.centerIn:parent;width:Math.min(680,win.width-32);height:Math.min(620,win.height-32);modal:true;standardButtons:Dialog.Close
         readonly property var entries:[
             {title:qsTr("Nouvelle étude"),run:function(){controller.newGame()}},
             {title:qsTr("Enregistrer"),run:function(){controller.saveGame()}},

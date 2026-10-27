@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs as Native
 
-Dialog {
+TDialog {
     id: root
     required property var backend
     property var preparationData: backend.preparation
@@ -24,9 +24,9 @@ ColumnLayout {width:preparationViewport.availableWidth;height:Math.max(preparati
         GridLayout {
             columns:root.width>1050*controller.preferences.fontScale?4:2;Layout.fillWidth:true;columnSpacing:10
             Label {text:qsTr("Base")}
-            ComboBox {id:source;Layout.fillWidth:true;textRole:"title";valueRole:"id";model:[{id:0,title:qsTr("Toute la bibliothèque")}].concat(root.backend.sources)}
+            TComboBox {id:source;onlyFirstOption:true;Layout.fillWidth:true;textRole:"title";valueRole:"id";model:[{id:0,title:"Toute la bibliothèque"}].concat(root.backend.sources)}
             Label {text:qsTr("Couleur du joueur")}
-            ComboBox {id:colour;model:[qsTr("Les deux"),qsTr("Blancs"),qsTr("Noirs")];Layout.fillWidth:true}
+            TComboBox {id:colour;model:["Les deux","Blancs","Noirs"];Layout.fillWidth:true}
             Label {text:qsTr("Joueur / adversaire")}
             TextField {id:player;objectName:"preparationPlayer";placeholderText:qsTr("Nom exact dans la base (vide : tous)");Layout.fillWidth:true;Layout.columnSpan:parent.columns-1;maximumLength:300;onAccepted:root.calculate()}
             Label {text:qsTr("Années (0 : sans limite)")}
@@ -35,8 +35,8 @@ ColumnLayout {width:preparationViewport.availableWidth;height:Math.max(preparati
             RowLayout {SpinBox {id:minElo;from:0;to:4000;stepSize:100;editable:true} Label {text:qsTr("à")} SpinBox {id:maxElo;from:0;to:4000;stepSize:100;editable:true}}
         }
         Label {text:qsTr("Une borne Elo active exclut les parties où l’un des Elo manque ; une période active exclut les années inconnues. Aucun Elo n’est estimé.");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-        RowLayout {
-            TButton {objectName:"calculatePreparation";text:qsTr("Calculer depuis l’échiquier");enabled:!root.backend.busy;onClicked:root.calculate()}
+        Flow {Layout.fillWidth:true;spacing:8
+TButton {objectName:"calculatePreparation";text:qsTr("Calculer depuis l’échiquier");enabled:!root.backend.busy;onClicked:root.calculate()}
             TButton {text:qsTr("Annuler");visible:!!root.preparationData.running;onClicked:root.backend.cancelPreparation()}
             TButton {text:qsTr("Exporter CSV");enabled:!root.preparationData.running && (root.preparationData.rows||[]).length>0;onClicked:exportCsv.open()}
             Label {text:root.preparationData.status||qsTr("Choisissez les filtres puis calculez les statistiques.");Layout.fillWidth:true;wrapMode:Text.WordWrap}

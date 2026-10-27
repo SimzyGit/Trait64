@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs as Native
 
-Dialog {
+TDialog {
     id: root
     parent: Overlay.overlay
     required property var backend
@@ -46,7 +46,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         RowLayout {
             Layout.fillWidth:true
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:root.detail.loading?qsTr("Actualisation des statistiques et des réponses adverses…"):(root.detail.error||"")}
-            TButton {text:root.detail.loading?qsTr("Annuler l’actualisation"):"Actualiser";onClicked:root.detail.loading?root.backend.cancelRepertoireOverview():root.backend.reloadRepertoires()}
+            TButton {text:root.detail.loading?qsTr("Annuler l’actualisation"):qsTr("Actualiser");onClicked:root.detail.loading?root.backend.cancelRepertoireOverview():root.backend.reloadRepertoires()}
         }
         RowLayout {
             Layout.fillWidth:true;visible:!!root.backend.repertoireTask.status
@@ -56,7 +56,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         }
         Label {
             Layout.fillWidth:true;wrapMode:Text.WordWrap
-            text:root.selectedId ? (root.detail.white?qsTr("Répertoire Blancs"):qsTr("Répertoire Noirs")) + (root.detail.chess960?" · Chess960":" · Classique") + " · "+(root.detail.positions||0)+qsTr(" positions à apprendre · ")+(root.detail.due||0)+qsTr(" à réviser") : qsTr("Préparez une étude avec ses variantes, puis créez votre répertoire.")
+            text:root.selectedId ? (root.detail.white?qsTr("Répertoire Blancs"):qsTr("Répertoire Noirs")) + (root.detail.chess960?" · Chess960":qsTr(" · Classique")) + " · "+(root.detail.positions||0)+qsTr(" positions à apprendre · ")+(root.detail.due||0)+qsTr(" à réviser") : qsTr("Préparez une étude avec ses variantes, puis créez votre répertoire.")
         }
         Flow {
             Layout.fillWidth:true; spacing:8; enabled:root.selectedId>0 && root.editable
@@ -64,27 +64,26 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
             TButton {text:qsTr("Importer PGN");onClicked:{importPgn.repertoireId=root.selectedId;importPgn.open()}}
             TButton {text:qsTr("Exporter PGN");onClicked:{exportPgn.repertoireId=root.selectedId;exportPgn.open()}}
             TButton {objectName:"analyseRepertoire";text:qsTr("Analyser le répertoire");enabled:!!root.backend.analysisQueue.state.ready;onClicked:analysisDialog.open()}
-            TButton {text:"Renommer";onClicked:{renameField.text=root.detail.name;renameDialog.open()}}
+            TButton {text:qsTr("Renommer");onClicked:{renameField.text=root.detail.name;renameDialog.open()}}
             TButton {text:qsTr("Supprimer");onClicked:deleteDialog.open()}
         }
-        RowLayout {
-            Layout.fillWidth:true
+        Flow {Layout.fillWidth:true;spacing:8
             TButton {text:qsTr("Réviser les positions dues");enabled:root.editable && (root.detail.due||0)>0;onClicked:{root.backend.startRepertoireTraining(root.selectedId);root.close()}}
             TButton {text:qsTr("Révision libre");enabled:root.editable && (root.detail.positions||0)>0;onClicked:{root.backend.startRepertoireTraining(root.selectedId,true);root.close()}}
             Label {text:(root.detail.successes||0)+qsTr(" rappels réussis / ")+(root.detail.reviews||0);Layout.fillWidth:true;horizontalAlignment:Text.AlignRight}
         }
         TabBar {
             id:section;Layout.fillWidth:true
-            TabButton {text:qsTr("Position actuelle")}
-            TabButton {text:qsTr("Réponses à préparer")}
-            TabButton {text:qsTr("Positions à retravailler")}
+            TTabButton {text:qsTr("Position actuelle")}
+            TTabButton {text:qsTr("Réponses à préparer")}
+            TTabButton {text:qsTr("Positions à retravailler")}
         }
         StackLayout {
             currentIndex:section.currentIndex;Layout.fillWidth:true;Layout.fillHeight:true
             ColumnLayout {
-                RowLayout {
+                Flow {Layout.fillWidth:true;spacing:8
                     TButton {text:qsTr("Racine du répertoire");enabled:root.selectedId>0 && root.editable;onClicked:root.backend.openRepertoirePosition(root.selectedId,root.detail.root)}
-                    TButton {text:"Reculer";enabled:root.editable && root.backend.state.canBack;onClicked:root.backend.step(-1)}
+                    TButton {text:qsTr("Reculer");enabled:root.editable && root.backend.state.canBack;onClicked:root.backend.step(-1)}
                     TButton {text:qsTr("Voir l’échiquier");onClicked:{root.close();root.backend.showAnalysis()}}
                 }
                 Label {text:root.backend.state.fen;Layout.fillWidth:true;elide:Text.ElideMiddle;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -97,7 +96,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
                         ColumnLayout {
                             id:moveBody;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:10
                             RowLayout {
-                                Label {text:modelData.san+(index===0?" · principal":" · alternative");font.bold:true;Layout.fillWidth:true}
+                                Label {text:modelData.san+(index===0?qsTr(" · principal"):qsTr(" · alternative"));font.bold:true;Layout.fillWidth:true}
                                 TButton {text:qsTr("Jouer");enabled:root.editable;onClicked:root.backend.move(modelData.uci)}
                                 TButton {text:qsTr("Note / priorité");enabled:root.editable;onClicked:{root.editFen=root.backend.state.fen;root.editedMove=modelData;noteField.text=modelData.note;mainCheck.checked=index===0;editDialog.open()}}
                                 TButton {text:qsTr("Partie modèle");visible:modelData.model>0;enabled:root.editable;onClicked:{root.backend.loadGame(modelData.model);root.close()}}
@@ -148,26 +147,26 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         }
     }
 }
-    Dialog {
+    TDialog {
         id:createDialog;title:qsTr("Nouveau répertoire depuis l’étude");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:460
         ColumnLayout {anchors.fill:parent
             TextField {id:createName;objectName:"repertoireName";placeholderText:qsTr("Nom du répertoire");Layout.fillWidth:true;maximumLength:200}
-            ComboBox {id:colour;model:[qsTr("Je prépare les Blancs"),qsTr("Je prépare les Noirs")];Layout.fillWidth:true}
+            TComboBox {id:colour;model:["Je prépare les Blancs","Je prépare les Noirs"];Layout.fillWidth:true}
             Label {text:qsTr("Toutes les variantes accessibles de l’étude sont ajoutées. Les transpositions partagent leurs réponses et leurs révisions.");Layout.fillWidth:true;wrapMode:Text.WordWrap}
         }
         onAccepted:root.backend.createRepertoire(createName.text,colour.currentIndex===0)
     }
-    Dialog {id:renameDialog;title:"Renommer";anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:renameDialog;title:qsTr("Renommer");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         TextField {id:renameField;width:350;maximumLength:200} onAccepted:root.backend.renameRepertoire(root.selectedId,renameField.text)
     }
-    Dialog {id:deleteDialog;title:qsTr("Supprimer ce répertoire ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No;width:450
+    TDialog {id:deleteDialog;title:qsTr("Supprimer ce répertoire ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No;width:450
         Label {width:parent.width;wrapMode:Text.WordWrap;text:qsTr("Les coups préparés et leurs révisions seront supprimés. Les parties de la bibliothèque seront conservées.")} onAccepted:root.backend.deleteRepertoire(root.selectedId)
     }
-    Dialog {id:removeMove;title:qsTr("Retirer ce coup ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No;width:450
+    TDialog {id:removeMove;title:qsTr("Retirer ce coup ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No;width:450
         Label {width:parent.width;wrapMode:Text.WordWrap;text:qsTr("Les suites devenues inaccessibles seront retirées. Les transpositions encore accessibles conserveront leurs révisions.")}
         onAccepted:root.backend.removeRepertoireMove(root.selectedId,root.editFen,root.editedMove.uci)
     }
-    Dialog {id:editDialog;title:qsTr("Coup préparé");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:500;height:310
+    TDialog {id:editDialog;title:qsTr("Coup préparé");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:500;height:310
         ColumnLayout {anchors.fill:parent
             CheckBox {id:mainCheck;text:qsTr("Choisir comme coup principal")}
             ScrollView {Layout.fillWidth:true;Layout.fillHeight:true;TextArea {id:noteField;wrapMode:TextEdit.Wrap;placeholderText:qsTr("Idée, plan ou rappel…")}}
@@ -175,7 +174,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         onAccepted:root.backend.editRepertoireMove(root.selectedId,root.editFen,root.editedMove.uci,noteField.text,mainCheck.checked)
     }
     Connections {target:root.backend;function onShowAnalysisQueue(){root.close()}}
-    Dialog {
+    TDialog {
         id:analysisDialog;title:qsTr("Analyser toutes les variantes");anchors.centerIn:parent;modal:true
         standardButtons:Dialog.Ok|Dialog.Cancel;width:500
         ColumnLayout {
@@ -183,10 +182,10 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
             Label {text:qsTr("Profil moteur")}
             ComboBox {
                 id:analysisProfile;Layout.fillWidth:true
-                model: { var names=[qsTr("Réglages actuels")];var saved=root.backend.preferences.engineProfiles||[];for(var i=0;i<saved.length;++i) names.push(saved[i].name);return names }
+                model: { var names=["Réglages actuels"];var saved=root.backend.preferences.engineProfiles||[];for(var i=0;i<saved.length;++i) names.push(saved[i].name);return names }
             }
             Label {text:qsTr("Temps par position")}
-            ComboBox {id:analysisBudget;Layout.fillWidth:true;model:["0,1 seconde","0,5 seconde","1 seconde","2 secondes","5 secondes","10 secondes"];currentIndex:1}
+            TComboBox {id:analysisBudget;Layout.fillWidth:true;model:["0,1 seconde","0,5 seconde","1 seconde","2 secondes","5 secondes","10 secondes"];currentIndex:1}
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Une copie de toutes les variantes est transmise à la file d’analyses. Chaque position de transposition est développée une seule fois. Vos notes et vos révisions restent conservées.")}
         }
         onAccepted:root.backend.analyseRepertoire(root.selectedId,[100,500,1000,2000,5000,10000][analysisBudget.currentIndex],analysisProfile.currentIndex-1)
