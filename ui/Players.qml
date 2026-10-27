@@ -23,26 +23,26 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
             }
         }
         ScrollView {id:profileScroll;SplitView.fillWidth:true;contentWidth:availableWidth;clip:true
-            ColumnLayout {width:profileScroll.availableWidth;spacing:18
-                Label {text:root.profile.name||qsTr("Sélectionnez un joueur");font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;Layout.leftMargin:20}
-                Label {text:root.profile.name?(root.profile.games+qsTr(" parties · Elo récent : ")+(root.profile.elo||qsTr("non renseigné"))):"";color:root.p.muted;Layout.leftMargin:20}
-                Grid {id:profileStats;visible:!!root.profile.name;Layout.fillWidth:true;Layout.leftMargin:20;columns:width>650*root.p.fontScale*root.p.uiScale?4:2;spacing:8
+            Column {id:profileBody;width:Math.max(1,profileScroll.availableWidth);spacing:18
+                Label {text:root.profile.name||qsTr("Sélectionnez un joueur");wrapMode:Text.WordWrap;font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;x:20;width:Math.max(1,profileBody.width-20)}
+                Label {text:root.profile.name?(root.profile.games+qsTr(" parties · Elo récent : ")+(root.profile.elo||qsTr("non renseigné"))):"";wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
+                Grid {id:profileStats;visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);columns:width>650*root.p.fontScale*root.p.uiScale?4:2;spacing:8
                     Repeater {model:[{label:"Victoires",key:"wins"},{label:"Nulles",key:"draws"},{label:"Défaites",key:"losses"},{label:"Score",key:"score"}]
-                        delegate:Rectangle {required property var modelData;width:(profileStats.width-(profileStats.columns-1)*8)/profileStats.columns;height:102*root.p.fontScale*root.p.uiScale;color:root.p.panel;radius:2
-                            ColumnLayout {anchors.fill:parent;anchors.margins:12;Label {text:Math.round(root.profile[modelData.key]||0)+(modelData.key==="score"?" %":"");font.pixelSize:Math.round(25*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true} Label {text:root.systemText(modelData.label);Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}}
+                        delegate:Rectangle {required property var modelData;width:Math.max(1,(profileStats.width-(profileStats.columns-1)*8)/profileStats.columns);height:102*root.p.fontScale*root.p.uiScale;color:root.p.panel;radius:2
+                            Column {width:Math.max(1,parent.width-24);anchors.centerIn:parent;spacing:6;Label {width:parent.width;text:Math.round(root.profile[modelData.key]||0)+(modelData.key==="score"?" %":"");font.pixelSize:Math.round(25*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true} Label {width:parent.width;text:root.systemText(modelData.label);wrapMode:Text.WordWrap;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}}
                         }
                     }
                 }
-                Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+qsTr(" avec les Blancs · ")+(root.profile.blackGames||0)+qsTr(" avec les Noirs · ")+(root.profile.unfinished||0)+qsTr(" inachevées");Layout.leftMargin:20;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                Label {text:qsTr("OUVERTURES JOUÉES");visible:!!root.profile.name;Layout.leftMargin:20;font.bold:true}
+                Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+qsTr(" avec les Blancs · ")+(root.profile.blackGames||0)+qsTr(" avec les Noirs · ")+(root.profile.unfinished||0)+qsTr(" inachevées");wrapMode:Text.WordWrap;x:20;width:Math.max(1,profileBody.width-20);color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                Label {text:qsTr("OUVERTURES JOUÉES");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.openings||[]
-                    delegate:Rectangle {required property var modelData;Layout.fillWidth:true;Layout.leftMargin:20;implicitHeight:40;color:root.p.panel;radius:2
-                        RowLayout {anchors.fill:parent;anchors.margins:10;Label {text:modelData.label;Layout.fillWidth:true} Label {text:modelData.count+qsTr(" parties · ")+(modelData.finished?Math.round(100*modelData.points/modelData.finished)+" %":"—");color:root.p.muted}}
+                    delegate:Rectangle {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);height:Math.max(40,40*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:2
+                        RowLayout {anchors.fill:parent;anchors.margins:10;Label {text:modelData.label;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight} Label {text:modelData.count+qsTr(" parties · ")+(modelData.finished?Math.round(100*modelData.points/modelData.finished)+" %":"—");color:root.p.muted}}
                     }
                 }
-                Label {text:qsTr("PARTIES RÉCENTES");visible:!!root.profile.name;Layout.leftMargin:20;font.bold:true}
+                Label {text:qsTr("PARTIES RÉCENTES");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.recent||[]
-                    delegate:Label {required property var modelData;Layout.leftMargin:20;Layout.fillWidth:true;text:modelData.date+" · "+modelData.opponent+" · "+modelData.result;elide:Text.ElideRight}
+                    delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);text:modelData.date+" · "+modelData.opponent+" · "+modelData.result;elide:Text.ElideRight}
                 }
             }
         }

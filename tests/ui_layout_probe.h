@@ -90,7 +90,21 @@ int uiLayoutProbe(const QString &directory) {
     QMetaObject::invokeMethod(palette,"open");QTest::qWait(30);
     auto *search=window->findChild<QObject *>("commandSearch");search->setProperty("text","repertoire");QTest::qWait(30);
     check(window->findChild<QObject *>("commandResults")->property("count").toInt()==1,"Layout: command palette filters translated actions");
-    QMetaObject::invokeMethod(palette,"close");
+    QTest::keyClick(window,Qt::Key_Return);QTest::qWait(50);
+    auto *repertoires=window->findChild<QObject *>("repertoiresDialog");
+    check(!palette->property("visible").toBool()&&repertoires->property("visible").toBool(),"Layout: command palette executes the selected action");
+    QMetaObject::invokeMethod(repertoires,"close");QTest::qWait(30);
+    auto *toggle=visualItem(window->contentItem(),"sidebarToggle");
+    toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(40);
+    check(!window->property("compactSidebar").toBool(),"Layout: navigation can be expanded in a small window");
+    window->setProperty("page",2);QTest::qWait(60);
+    for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton"}) {
+        auto *button=visualItem(window->contentItem(),name);check(button,"Layout: expanded navigation leaves controls available");
+        const auto point=button->mapToScene(QPointF());
+        check(point.x()>=0&&point.x()+button->width()<=window->width()+1,"Layout: expanded navigation keeps controls inside the viewport");
+    }
+    capture("case8-expanded-sidebar");
+    toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(30);
     QSettings saved;
     check(saved.value("fontScale").toDouble()==1.5&&saved.value("uiScale").toDouble()==1.25&&saved.value("language").toString()=="en","Layout: appearance preferences are persisted");
     check(c.state()["fen"]==original["fen"]&&c.state()["comment"]==original["comment"]&&c.state()["dirty"]==original["dirty"], "Layout: preferences preserve unsaved chess study");
