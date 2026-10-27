@@ -81,6 +81,10 @@ int uiLayoutProbe(const QString &directory) {
                 auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
                 check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
                 check(dialog->property("visible").toBool(), "Layout: dialog visible");
+                if(QString::fromLatin1(name)=="preparationDialog") {
+                    auto *prepare=window->findChild<QObject *>("calculatePreparation");
+                    check(prepare&&prepare->property("accentColor").value<QColor>().name()==QColor(c.preferences()["accentColor"].toString()).name(),"Layout: visible dialog controls follow the application accent");
+                }
                 if(QString::fromLatin1(name)=="helpDialog") {
                     auto *title=visualItem(window->contentItem(),"helpTitle");
                     check(title&&title->property("contentWidth").toDouble()<=title->width()+1,"Layout: help title wraps inside its dialog");

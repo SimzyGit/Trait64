@@ -973,6 +973,8 @@ int main(int argc, char **argv) {
             c.preparePosition({{"player", "Rival"}, {"colour", "black"}, {"fromYear", 2020}});
             waitPreparation();
             auto rows = c.preparation()["rows"].toList();
+            if (rows.size() != 1 || rows.first().toMap()["uci"] != "d2d4")
+                qWarning() << "Unexpected preparation result:" << c.preparation();
             check(rows.size() == 1 && rows.first().toMap()["uci"] == "d2d4",
                   "Latest preparation filters replace stale request");
             const auto csv = dir.path() + "/preparation.csv";

@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-27",
+  "qt": "6.4.2",
+  "rendering": "offscreen/software",
+  "visual_checks": 1180,
+  "scenarios": 9,
+  "page_views": 63,
+  "dialog_views": 100,
+  "expanded_sidebar_views": 1,
+  "screenshots": 164,
+  "qml_warnings": 0,
+  "final_smoke_seconds": 3.3,
+  "final_interactions_seconds": 31.63,
+  "full_suite_previous_head": {
+    "head": "e0e13d97f5bbc1d80655113fc1d7ddb16bebb34f",
+    "passed": 13,
+    "skipped": 0,
+    "seconds": 84.52
+  },
+  "intermittent_failure": {
+    "head": "77521f248f39b575e0be2346989fb440dca8aa82",
+    "assertion": "Latest preparation filters replace stale request",
+    "occurrences": 1,
+    "subsequent_runs": "passed: 29.31 s, then final palette changes: 31.63 s",
+    "cause": "not reproduced; result diagnostics added, assertion unchanged"
+  },
+  "not_tested": [
+    "Voyager hardware",
+    "Wayland GPU rendering",
+    "120 Hz",
+    "million-game benchmarks"
+  ]
+}
