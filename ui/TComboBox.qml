@@ -7,6 +7,7 @@ ComboBox {
     property bool translateOptions:true
     property bool onlyFirstOption:false
     function translated(value,index) {var language=controller.preferences.language;return translateOptions&&(!onlyFirstOption||index===0)?controller.uiText(String(value)):String(value)}
+    Accessible.name:displayText
     displayText:translated(currentText,currentIndex)
     delegate:ItemDelegate {
         required property var modelData

@@ -53,7 +53,7 @@ TDialog {
                 TButton {text:qsTr("Retourner");onClicked:root.flipped=!root.flipped}
             }
         }
-        ScrollView {id:editorScroll;Layout.preferredWidth:Math.min(root.width*.48,Math.max(244,244*controller.preferences.fontScale));Layout.fillHeight:true;contentWidth:availableWidth;clip:true
+        ScrollView {id:editorScroll;Layout.preferredWidth:Math.min(root.width*.48,Math.max(244,244*controller.preferences.fontScale*controller.preferences.uiScale));Layout.fillHeight:true;contentWidth:availableWidth;clip:true
             ColumnLayout {width:editorScroll.availableWidth;spacing:12
                 Label {text:qsTr("Pièce à placer");font.bold:true}
                 GridLayout {columns:6;rowSpacing:3;columnSpacing:1

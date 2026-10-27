@@ -5,6 +5,7 @@ import QtQuick.Dialogs as Native
 TDialog {
     id: root
     property var backend
+    function systemText(value) {var language=backend.preferences.language;return backend.uiText(value)}
     title: qsTr("Apparence et langue")
     width: Math.min(760,parent ? parent.width-32 : 760)
     height: Math.min(700,parent ? parent.height-32 : 700)
@@ -48,7 +49,7 @@ TDialog {
                             Rectangle {Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:96;Layout.preferredHeight:52;color:root.backend.preferences.boardLight;radius:1
                                 Row {anchors.centerIn:parent;Piece {code:"wN";pieceStyle:modelData.key;width:45;height:49} Piece {code:"bQ";pieceStyle:modelData.key;width:45;height:49}}
                             }
-                            Label {text:controller.uiText(modelData.label);Layout.alignment:Qt.AlignHCenter}
+                            Label {text:root.systemText(modelData.label);Layout.alignment:Qt.AlignHCenter}
                         }
                         onClicked:root.backend.setPreference("pieceStyle",modelData.key)
                     }
@@ -69,7 +70,7 @@ TDialog {
                     delegate:RowLayout {
                         required property var modelData
                         Layout.columnSpan:3;Layout.fillWidth:true
-                        Label {text:controller.uiText(modelData.label);Layout.preferredWidth:180}
+                        Label {text:root.systemText(modelData.label);Layout.preferredWidth:180}
                         TextField {Layout.fillWidth:true;text:root.backend.preferences[modelData.key]||root.backend.preferences.background;onEditingFinished:root.backend.setPreference(modelData.key,text);selectByMouse:true;maximumLength:7}
                         Button {Layout.preferredWidth:46;implicitHeight:32
                             background:Rectangle {color:root.backend.preferences[modelData.key]||root.backend.preferences.background;radius:5;border.color:root.backend.preferences.foreground}

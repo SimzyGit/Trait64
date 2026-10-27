@@ -23,14 +23,14 @@ ScrollView {
             TButton {text:qsTr("Importer un PGN");onClicked:root.importStudy()}
             TButton {text:qsTr("Ouvrir la bibliothèque");onClicked:root.showLibrary()}
         }
-        GridLayout {
-            id:workspace;columns:root.availableWidth>=760*root.p.uiScale?2:1;Layout.fillWidth:true;columnSpacing:16;rowSpacing:16
+        Flow {
+            id:workspace;readonly property bool wide:root.availableWidth>=760*root.p.uiScale
+            Layout.fillWidth:true;spacing:16
             Rectangle {
                 id:boardCard;objectName:"homeBoardCard"
                 readonly property real boardExtent:Math.max(160,Math.min(width-32,Math.max(300,root.height-210),720))
-                Layout.fillWidth:true;Layout.preferredWidth:root.availableWidth*.58;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop
+                width:workspace.wide?(workspace.width-16)*.58:workspace.width;height:implicitHeight
                 implicitHeight:boardExtent+boardCommands.implicitHeight+homeTitle.implicitHeight+56
-                Layout.preferredHeight:implicitHeight
                 color:root.p.panel;border.color:root.p.line;radius:8
                 ColumnLayout {
                     anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:12
@@ -46,10 +46,10 @@ ScrollView {
                     }
                 }
             }
-            ColumnLayout {
-                Layout.fillWidth:true;Layout.preferredWidth:root.availableWidth*.42;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop;spacing:16
+            Column {
+                width:workspace.wide?(workspace.width-16)*.42:workspace.width;spacing:16
                 Rectangle {
-                    Layout.fillWidth:true;implicitHeight:currentStudy.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                    width:parent.width;height:implicitHeight;implicitHeight:currentStudy.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
                     ColumnLayout {id:currentStudy;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:12
                         Label {text:qsTr("Étude en cours");font.weight:Font.DemiBold}
                         Label {text:root.backend.state.title;wrapMode:Text.WordWrap;Layout.fillWidth:true}
@@ -58,7 +58,7 @@ ScrollView {
                     }
                 }
                 Rectangle {
-                    Layout.fillWidth:true;implicitHeight:recent.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                    width:parent.width;height:implicitHeight;implicitHeight:recent.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
                     ColumnLayout {id:recent;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:10
                         Label {text:qsTr("Parties de la bibliothèque");font.weight:Font.DemiBold;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                         Label {visible:root.backend.games.length===0;text:qsTr("Importez vos parties pour commencer.");color:root.p.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
@@ -77,7 +77,7 @@ ScrollView {
                         TButton {text:qsTr("Afficher la bibliothèque")+"  →";flat:true;Layout.fillWidth:true;onClicked:root.showLibrary()}
                     }
                 }
-                Rectangle {Layout.fillWidth:true;implicitHeight:shortcuts.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
+                Rectangle {width:parent.width;height:implicitHeight;implicitHeight:shortcuts.implicitHeight+32;radius:8;color:root.p.panel;border.color:root.p.line
                     ColumnLayout {id:shortcuts;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:16;spacing:8
                         Label {text:qsTr("Accès rapides");font.weight:Font.DemiBold}
                         TButton {text:qsTr("Mes répertoires");Layout.fillWidth:true;onClicked:root.showRepertoires()}

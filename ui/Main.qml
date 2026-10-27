@@ -261,9 +261,8 @@ objectName:"analysisSplit"
                             Rectangle {width:3;height:parent.height;color:win.accent}
                             ColumnLayout {anchors.fill:parent;anchors.margins:14;spacing:8
                                 RowLayout {Layout.fillWidth:true
-                                    Label {text:qsTr("01  /  ANALYSE MOTEUR");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);font.letterSpacing:1.1;color:win.muted}
-                                    Item {Layout.fillWidth:true}
-                                    TButton {text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;implicitHeight:30;onClicked:controller.toggleAnalysis()}
+                                    Label {Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;text:qsTr("01  /  ANALYSE MOTEUR");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);font.letterSpacing:1.1;color:win.muted}
+                                    TButton {objectName:"toggleEngineAnalysis";text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;implicitHeight:Math.max(30*win.uiScale,36*win.textScale);onClicked:controller.toggleAnalysis()}
                                 }
                                 Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
                                 ListView {
@@ -277,7 +276,7 @@ objectName:"analysisSplit"
                                             Label {text:modelData.san;elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {text:qsTr("Profondeur ")+modelData.depth+" · "+Math.round(Number(modelData.nps)/1000)+" kN/s";font.pixelSize:Math.round(9*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
                                         }
-                                        TButton {text:"+";implicitWidth:28;implicitHeight:30;onClicked:controller.addEngineLine(index);ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ajouter cette variante")}
+                                        TButton {text:"+";implicitWidth:28;implicitHeight:Math.max(30*win.uiScale,36*win.textScale);onClicked:controller.addEngineLine(index);ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ajouter cette variante")}
                                     }
                                 }
                             }
@@ -298,7 +297,7 @@ objectName:"analysisSplit"
                                             width:moveList.width;implicitHeight:(modelData.comment?52:31)*win.textScale
                                             background:Rectangle {color:modelData.active?win.raised:(parent.hovered?win.bg:"transparent");Rectangle {width:2;height:parent.height;color:win.accent;visible:modelData.active}}
                                             contentItem:ColumnLayout {spacing:1
-                                                Label {text:(modelData.depth>0?"↳  ":"")+modelData.text;Layout.leftMargin:Math.min(modelData.depth*16,80);font.family:"DejaVu Sans Mono";font.weight:modelData.active?Font.Bold:Font.Normal;color:modelData.depth>0?win.muted:win.fg;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                                Label {text:(modelData.depth>0?"↳  ":"")+win.systemText(modelData.text);Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;Layout.leftMargin:Math.min(modelData.depth*16,80);font.family:"DejaVu Sans Mono";font.weight:modelData.active?Font.Bold:Font.Normal;color:modelData.depth>0?win.muted:win.fg;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
                                                 Label {visible:!!modelData.comment;text:modelData.comment;elide:Text.ElideRight;Layout.fillWidth:true;Layout.leftMargin:Math.min(modelData.depth*16,80);font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
                                             }
                                             onClicked:controller.navigate(modelData.id)
@@ -495,26 +494,30 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Native.FileDialog {id:openDatabaseDialog;title:qsTr("Ouvrir une bibliothèque Trait64");nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.openBackup(selectedFile.toString())}
     Native.FileDialog {id:engineFileDialog;title:qsTr("Choisir l’exécutable Stockfish ou UCI");onAccepted:{controller.setPreference("enginePath",selectedFile.toString());enginePathField.text=controller.preferences.enginePath}}
 
-    TDialog {id:fenDialog;objectName:"fenDialog";title:qsTr("Charger une position FEN");anchors.centerIn:parent;width:650;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        ColumnLayout {anchors.fill:parent;spacing:15
+    TDialog {id:fenDialog;objectName:"fenDialog";title:qsTr("Charger une position FEN");anchors.centerIn:parent;width:Math.min(650,win.width-32);height:Math.min(340,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        ScrollView {id:fenDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
+        ColumnLayout {width:fenDialogViewport.availableWidth;spacing:15
             Label {text:qsTr("Collez une FEN complète. L’étude en cours sera conservée dans votre bibliothèque.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
             TextArea {id:fenField;Layout.fillWidth:true;Layout.preferredHeight:95;wrapMode:TextEdit.Wrap;selectByMouse:true;placeholderText:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}
         }
+        }
         onAccepted:controller.setFen(fenField.text)
     }
-    TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un texte PGN");anchors.centerIn:parent;width:700;height:460;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+    TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un texte PGN");anchors.centerIn:parent;width:Math.min(700,win.width-32);height:Math.min(550,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *";wrapMode:TextEdit.Wrap;selectByMouse:true}}
         onAccepted:controller.importText(pgnField.text)
     }
-    TDialog {id:promotionDialog;objectName:"promotionDialog";title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
-        RowLayout {spacing:12;Repeater {model:[{label:"♛ Dame",piece:"q"},{label:"♜ Tour",piece:"r"},{label:"♝ Fou",piece:"b"},{label:"♞ Cavalier",piece:"n"}]
+    TDialog {id:promotionDialog;objectName:"promotionDialog";width:Math.min(650,win.width-32);title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
+        Flow {width:parent.width;spacing:12;Repeater {model:[{label:"♛ Dame",piece:"q"},{label:"♜ Tour",piece:"r"},{label:"♝ Fou",piece:"b"},{label:"♞ Cavalier",piece:"n"}]
             delegate:TButton {required property var modelData;text:modelData.label;onClicked:{controller.move(win.promotionPrefix+modelData.piece);promotionDialog.close()}}
         }}
     }
-    TDialog {id:cardDialog;objectName:"cardDialog";title:qsTr("Créer une carte d’entraînement");anchors.centerIn:parent;width:520;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        ColumnLayout {anchors.fill:parent;spacing:14
+    TDialog {id:cardDialog;objectName:"cardDialog";title:qsTr("Créer une carte d’entraînement");anchors.centerIn:parent;width:Math.min(620,win.width-32);height:Math.min(360,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        ScrollView {id:cardDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
+        ColumnLayout {width:cardDialogViewport.availableWidth;spacing:14
             Label {text:qsTr("La suite principale depuis la position actuelle sera à retrouver (40 demi-coups maximum). Placez-vous avant le premier coup à apprendre.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
             TextField {id:cardTitle;placeholderText:qsTr("Ex. Italienne — mon plan avec les Blancs");Layout.fillWidth:true}
+        }
         }
         onAccepted:controller.createCard(cardTitle.text)
     }
@@ -522,24 +525,28 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         Label {text:qsTr("L’activité déjà enregistrée restera dans votre progression.");width:parent.width;wrapMode:Text.WordWrap}
         onAccepted:controller.deleteCard(cardId)
     }
-    TDialog {id:playDialog;objectName:"playDialog";title:qsTr("Partie locale");anchors.centerIn:parent;width:470;modal:true
-        ColumnLayout {anchors.fill:parent;spacing:16
+    TDialog {id:playDialog;objectName:"playDialog";title:qsTr("Partie locale");anchors.centerIn:parent;width:Math.min(620,win.width-32);height:Math.min(600,win.height-32);modal:true
+        ScrollView {id:playDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
+        ColumnLayout {width:playDialogViewport.availableWidth;spacing:16
             TComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
-            RowLayout {Label {text:qsTr("Minutes")} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
+            GridLayout {columns:2;Layout.fillWidth:true;Label {text:qsTr("Minutes")} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
             TComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
             TButton {text:qsTr("Démarrer avec pendule");accent:true;Layout.fillWidth:true;onClicked:{controller.startLocalGame(clockMinutes.value,clockIncrement.value,opponent.currentIndex,playSide.currentIndex===0);playDialog.close()}}
             TButton {text:qsTr("Moteur sans pendule");visible:opponent.currentIndex===1;Layout.fillWidth:true;onClicked:{controller.playComputer(playSide.currentIndex===0);playDialog.close()}}
             Label {text:qsTr("La partie démarre depuis la position de l’échiquier. Parcourir les coups arrête la pendule.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
         }
+        }
     }
-    TDialog {id:tagsDialog;objectName:"tagsDialog";title:qsTr("Informations sur la partie");anchors.centerIn:parent;width:540;modal:true;standardButtons:Dialog.Close
-        GridLayout {anchors.fill:parent;columns:2;columnSpacing:16;rowSpacing:10
+    TDialog {id:tagsDialog;objectName:"tagsDialog";title:qsTr("Informations sur la partie");anchors.centerIn:parent;width:Math.min(700,win.width-32);height:Math.min(740,win.height-32);modal:true;standardButtons:Dialog.Close
+        ScrollView {id:tagsDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
+        GridLayout {width:tagsDialogViewport.availableWidth;columns:2;columnSpacing:16;rowSpacing:10
             Repeater {model:["White","Black","Event","Site","Date","Round","Result","ECO","WhiteElo","BlackElo"]
                 delegate:ColumnLayout {required property string modelData;Layout.fillWidth:true;spacing:4
                     Label {text:({White:qsTr("Blancs"),Black:qsTr("Noirs"),Event:qsTr("Événement"),Site:qsTr("Lieu"),Date:qsTr("Date (AAAA.MM.JJ)"),Round:qsTr("Ronde"),Result:qsTr("Résultat : 1-0 / 0-1 / 1/2-1/2 / *"),ECO:qsTr("Code ECO"),WhiteElo:qsTr("Elo Blancs"),BlackElo:qsTr("Elo Noirs")})[modelData];font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                     TextField {text:controller.state.tags[modelData]||"";Layout.fillWidth:true;onEditingFinished:{var t={};t[modelData]=text;controller.setTags(t)}}
                 }
             }
+        }
         }
     }
     Menu {id:analysisMenu;x:win.width-width-32;y:172

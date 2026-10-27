@@ -7,7 +7,13 @@
 // Exercise the real application with an isolated library, including live preference changes.
 int uiLayoutProbe(const QString &directory) {
     Controller c(directory + "/layout");
-    c.move("e2e4"); c.move("c7c5"); c.saveGame(); c.setComment("Unsaved note — preserved during appearance changes");
+    c.move("e2e4"); c.move("c7c5"); c.saveGame();
+    c.step(-2);c.createCard("Opening practice");c.step(2);
+    c.createRepertoire("White repertoire",true);QElapsedTimer ready;ready.start();
+    while(c.busy()&&ready.elapsed()<10000)QTest::qWait(10);
+    check(!c.busy(),"Layout: repertoire fixture is ready");
+    c.inspectPlayer("Blancs");c.setPreference("fontFamily","DejaVu Sans");
+    c.setComment("Unsaved note — preserved during appearance changes");
     const auto original = c.state();
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("controller", &c);
@@ -17,7 +23,7 @@ int uiLayoutProbe(const QString &directory) {
     auto *window=qobject_cast<QQuickWindow *>(engine.rootObjects().first());
     check(window, "Layout: application window exists");
     struct Scenario {int width,height;double text,ui;bool light;const char *language;};
-    const Scenario scenarios[]={{960,640,1,1,false,"fr"},{1366,768,1,1,false,"fr"},{1440,940,1,1,false,"fr"},{1920,1080,1,1,true,"en"},{2560,1600,1,1,false,"en"},{960,640,1.5,1,true,"en"},{1366,768,1.5,1.25,false,"fr"},{1440,940,1.5,1.25,true,"en"}};
+    const Scenario scenarios[]={{960,640,1,1,false,"fr"},{1366,768,1,1,false,"fr"},{1440,940,1,1,false,"fr"},{1920,1080,1,1,true,"en"},{2560,1600,1,1,false,"en"},{960,640,1.5,1,true,"en"},{1366,768,1.5,1.25,false,"fr"},{1440,940,1.5,1.25,true,"en"},{960,640,1.5,1.25,true,"en"}};
     const auto output=qEnvironmentVariable("T64_UI_SCREENSHOTS");
     if(!output.isEmpty()) QDir().mkpath(output);
     QJsonArray report;
@@ -37,6 +43,8 @@ int uiLayoutProbe(const QString &directory) {
         c.setPreference("fontScale",s.text);c.setPreference("uiScale",s.ui);c.setPreference("lightTheme",s.light);c.setPreference("language",s.language);
         window->resize(s.width,s.height);QTest::qWait(80);
         check(language&&language->property("currentIndex").toInt()==(QString(s.language)=="en"?1:0),"Layout: language selector agrees with active language");
+        auto *font=window->findChild<QObject *>("fontSelector");
+        check(font&&font->property("currentText").toString()==c.preferences()["fontFamily"].toString(),"Layout: font selector agrees with selected font");
         check(category->property("currentIndex").toInt()==selectedCategory,"Layout: language changes preserve catalog selection");
         auto *catalog=window->findChild<QObject *>("contentList");
         check(catalog&&catalog->property("count").toInt()>0,"Layout: translated catalog still displays engines");
@@ -60,13 +68,15 @@ int uiLayoutProbe(const QString &directory) {
                 if(page==2) {
                     auto *save=visualItem(window->contentItem(),"saveStudy");check(save, "Layout: save action exists");
                     auto p=save->mapToScene(QPointF());check(p.x()>=0&&p.x()+save->width()<=window->width()+1, "Layout: save action remains reachable");
+                    auto *analyse=visualItem(window->contentItem(),"toggleEngineAnalysis");check(analyse,"Layout: engine analysis action exists");
+                    auto a=analyse->mapToScene(QPointF());check(a.x()>=0&&a.x()+analyse->width()<=window->width()+1,"Layout: engine analysis action remains reachable");
                     check(save->property("text").toString()==(QString(s.language)=="en"?"Save":"Enregistrer"), "Layout: live language applies to save action");
                 }
             }
             capture(QString("case%1-page%2").arg(index).arg(page)); report.append(row);
         }
-        if(index==0||index==5||index==7) {
-            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","analysisQueueDialog","updatesDialog","commandsDialog"}) {
+        if(index==0||index==5||index==7||index==8) {
+            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","analysisQueueDialog","updatesDialog","commandsDialog","fenDialog","pgnDialog","cardDialog","playDialog","tagsDialog","helpDialog","collectionDialog","deleteCardDialog","deleteVariationDialog","chess960Dialog","promotionDialog","reviewExplanationDialog"}) {
                 auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
                 check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
                 check(dialog->property("visible").toBool(), "Layout: dialog visible");
@@ -90,6 +100,6 @@ int uiLayoutProbe(const QString &directory) {
     c.setPreference("reduceMotion",true);c.setPreference("sidebarCompact",true);QTest::qWait(30);
     check(warnings.isEmpty(), "Layout: no QML warnings");
     if(!output.isEmpty()){QFile file(output+"/matrix.json");check(file.open(QIODevice::WriteOnly),"Layout: report opened");file.write(QJsonDocument(QJsonObject{{"cases",report},{"checks",checks},{"qmlWarnings",warnings.count()}}).toJson());}
-    std::cout<<"UI layout: "<<checks<<" checks, 8 scenarios, 56 page views, 39 dialog views, "<<warnings.count()<<" QML warnings\n";
+    std::cout<<"UI layout: "<<checks<<" checks, 9 scenarios, 63 page views, 100 dialog views, "<<warnings.count()<<" QML warnings\n";
     return 0;
 }

@@ -5,6 +5,7 @@ ScrollView {id:root
     signal preparePlayer(string name)
     property var backend
     property var p: backend.preferences
+    function systemText(value) {var language=backend.preferences.language;return backend.uiText(value)}
     property var profile: backend.playerProfile
 ;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,implicitHeight);
@@ -25,10 +26,10 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
             ColumnLayout {width:profileScroll.availableWidth;spacing:18
                 Label {text:root.profile.name||qsTr("Sélectionnez un joueur");font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;Layout.leftMargin:20}
                 Label {text:root.profile.name?(root.profile.games+qsTr(" parties · Elo récent : ")+(root.profile.elo||qsTr("non renseigné"))):"";color:root.p.muted;Layout.leftMargin:20}
-                RowLayout {visible:!!root.profile.name;Layout.fillWidth:true;Layout.leftMargin:20
-                    Repeater {model:[{label:qsTr("Victoires"),key:"wins"},{label:qsTr("Nulles"),key:"draws"},{label:qsTr("Défaites"),key:"losses"},{label:"Score",key:"score"}]
-                        delegate:Rectangle {required property var modelData;Layout.fillWidth:true;implicitHeight:98;color:root.p.panel;radius:2
-                            ColumnLayout {anchors.centerIn:parent;Label {text:Math.round(root.profile[modelData.key]||0)+(modelData.key==="score"?" %":"");font.pixelSize:Math.round(25*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true} Label {text:modelData.label;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}}
+                Grid {id:profileStats;visible:!!root.profile.name;Layout.fillWidth:true;Layout.leftMargin:20;columns:width>650*root.p.fontScale*root.p.uiScale?4:2;spacing:8
+                    Repeater {model:[{label:"Victoires",key:"wins"},{label:"Nulles",key:"draws"},{label:"Défaites",key:"losses"},{label:"Score",key:"score"}]
+                        delegate:Rectangle {required property var modelData;width:(profileStats.width-(profileStats.columns-1)*8)/profileStats.columns;height:102*root.p.fontScale*root.p.uiScale;color:root.p.panel;radius:2
+                            ColumnLayout {anchors.fill:parent;anchors.margins:12;Label {text:Math.round(root.profile[modelData.key]||0)+(modelData.key==="score"?" %":"");font.pixelSize:Math.round(25*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true} Label {text:root.systemText(modelData.label);Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}}
                         }
                     }
                 }

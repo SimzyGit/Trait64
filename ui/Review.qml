@@ -58,8 +58,9 @@ TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enable
         property var details:visible&&root.backend.review.length>rowIndex&&rowIndex>=0?root.backend.explainReview(rowIndex,choice.currentIndex===1):({available:false,error:qsTr("Sélectionnez un coup analysé.")})
         title:qsTr("Comprendre le coup");modal:true;standardButtons:Dialog.Close;anchors.centerIn:parent
         width:Math.min(760,parent?parent.width-24:760);height:Math.min(660,parent?parent.height-24:660)
+        ScrollView {id:explanationViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
         ColumnLayout {
-            anchors.fill:parent;spacing:10
+            width:explanationViewport.availableWidth;spacing:10
             Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+explanation.details.label+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+qsTr(" (Blancs)"):explanation.details.error;wrapMode:Text.WordWrap}
             TComboBox {id:choice;objectName:"reviewLineChoice";Layout.fillWidth:true;model:["Coup joué et réponse moteur", "Proposition moteur avant le coup"]}
             Label {Layout.fillWidth:true;visible:explanation.details.available;text:explanation.details.available?explanation.details.engine+" · "+explanation.details.milliseconds+qsTr(" ms par position · profondeur ")+explanation.details.depth:"";wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -75,6 +76,7 @@ TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enable
             }
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:qsTr("Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites.")+(explanation.details.truncated?qsTr(" Suite limitée aux 128 premiers demi-coups."):"")}
             TButton {objectName:"openReviewLineButton";text:qsTr("Ouvrir la suite dans une nouvelle étude");enabled:explanation.details.available&&!root.backend.reviewState.running;onClicked:{if(root.backend.openReviewLine(explanation.rowIndex,choice.currentIndex===1)){explanation.close();root.close()}}}
+        }
         }
     }
 }
