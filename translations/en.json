@@ -582,5 +582,9 @@
   "5 secondes": "5 seconds",
   "10 secondes": "10 seconds",
   "Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne": "Ctrl N: new study    ·    Ctrl O: import\nCtrl S: save    ·    Ctrl K: commands\n← / →: previous / next    ·    F: flip\nHome / End: start / end of line",
-  "• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.": "• Click a piece then its destination, or drag it.\n• Go back in a game and play a different move to create a variation.\n• Right-drag for an arrow; right-click a square for a circle.\n• Save a study to add it to your library.\n• Import PGNs to populate the opening explorer.\n• Create cards from the lines you want to remember."
+  "• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.": "• Click a piece then its destination, or drag it.\n• Go back in a game and play a different move to create a variation.\n• Right-drag for an arrow; right-click a square for a circle.\n• Save a study to add it to your library.\n• Import PGNs to populate the opening explorer.\n• Create cards from the lines you want to remember.",
+  "♛ Dame": "♛ Queen",
+  "♜ Tour": "♜ Rook",
+  "♝ Fou": "♝ Bishop",
+  "♞ Cavalier": "♞ Knight"
 }

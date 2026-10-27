@@ -6,6 +6,7 @@
 #include <cmath>
 // Exercise the real application with an isolated library, including live preference changes.
 int uiLayoutProbe(const QString &directory) {
+    QCoreApplication::setApplicationVersion(T64_VERSION);
     Controller c(directory + "/layout");
     c.move("e2e4"); c.move("c7c5"); c.saveGame();
     c.step(-2);c.createCard("Opening practice");c.step(2);
@@ -80,6 +81,10 @@ int uiLayoutProbe(const QString &directory) {
                 auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
                 check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
                 check(dialog->property("visible").toBool(), "Layout: dialog visible");
+                if(QString::fromLatin1(name)=="helpDialog") {
+                    auto *title=visualItem(window->contentItem(),"helpTitle");
+                    check(title&&title->property("contentWidth").toDouble()<=title->width()+1,"Layout: help title wraps inside its dialog");
+                }
                 check(dialog->property("width").toDouble()<=s.width&&dialog->property("height").toDouble()<=s.height, "Layout: dialog fits viewport");
                 capture(QString("case%1-%2").arg(index).arg(name));QMetaObject::invokeMethod(dialog,"close");QTest::qWait(25);
             }

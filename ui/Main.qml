@@ -508,7 +508,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onAccepted:controller.importText(pgnField.text)
     }
     TDialog {id:promotionDialog;objectName:"promotionDialog";width:Math.min(650,win.width-32);title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
-        Flow {width:parent.width;spacing:12;Repeater {model:[{label:"♛ Dame",piece:"q"},{label:"♜ Tour",piece:"r"},{label:"♝ Fou",piece:"b"},{label:"♞ Cavalier",piece:"n"}]
+        Flow {width:parent.width;spacing:12;Repeater {model:[{label:qsTr("♛ Dame"),piece:"q"},{label:qsTr("♜ Tour"),piece:"r"},{label:qsTr("♝ Fou"),piece:"b"},{label:qsTr("♞ Cavalier"),piece:"n"}]
             delegate:TButton {required property var modelData;text:modelData.label;onClicked:{controller.move(win.promotionPrefix+modelData.piece);promotionDialog.close()}}
         }}
     }
@@ -633,7 +633,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     TDialog {id:helpDialog;objectName:"helpDialog";title:qsTr("Bienvenue dans Trait64");anchors.centerIn:parent;width:Math.min(760,win.width-32);height:Math.min(700,win.height-32);modal:true;standardButtons:Dialog.Close
         ScrollView {id:helpScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:helpScroll.availableWidth;spacing:15
-            Label {text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+            Label {objectName:"helpTitle";Layout.fillWidth:true;Layout.minimumWidth:0;wrapMode:Text.WordWrap;text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
             Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:qsTr("Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne");Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;lineHeight:1.6}
             Label {text:qsTr("Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
