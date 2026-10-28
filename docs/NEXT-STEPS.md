@@ -1,5 +1,11 @@
 # Reprise du développement — après la refonte, 28 octobre 2026
 
+Lot en validation : PR #14, carnet de coups côte à côte, commit produit
+`2d5e894`. Quatorze suites locales réussies, aucune ignorée, captures et
+rapport dans [MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md). Terminer la CI et vérifier la
+publication avant de reprendre le backlog. Préserver le schéma 7 et les acquis
+100k ; aucune nouvelle qualification de grandes bases pour ce lot.
+
 Dernier lot livré : **dev.64 / PR #13**, refonte native et corrections visuelles. Treize suites validées en CI Debian 12/13 et Qt ASan/UBSan ; 1 180 contrôles locaux avec 164 captures. [Rapport](verification-ui-2026-10-28.json) · [Périmètre](UI-REDESIGN.md). Schéma 7 conservé, matériel Voyager non testé.
 
 ## Lot précédent : performances et intégrité

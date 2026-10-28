@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "archive.h"
+#include "move_notation.h"
+#include <QLocale>
 #include <QClipboard>
 #include <QDate>
 #include <QDesktopServices>
@@ -393,6 +395,7 @@ void Controller::refresh(bool content) {
     } catch (const std::exception &e) {
         fail(e);
     }
+    emit notationChanged();
     emit changed();
     if (positionFilter_ && previousFen != s(current.fen))
         requestLibrarySearch();
@@ -400,6 +403,11 @@ void Controller::refresh(bool content) {
         analysisTimer_.start();
     if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
+}
+QVariantList Controller::moveRows() const {
+    const auto language = settings_.value("language", "fr").toString();
+    const bool french = language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French);
+    return t64::moveRows(game_, node_, french);
 }
 void Controller::writeSession() {
     if (trainingActive())

@@ -4,6 +4,13 @@
 
 Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Il ne remplace ni le [suivi technique](NEXT-STEPS.md) ni la [feuille de route complète](ROADMAP.md). L’interface, le moteur et les données utilisateur doivent continuer à fonctionner localement, sans compte ou connexion obligatoire.
 
+## Lot en validation : carnet de coups
+
+PR #14 : Blancs et Noirs côte à côte, variantes séparées, SAN français à
+l'affichage et suivi du coup visible même en petite fenêtre. 14 suites locales
+réussies, aucune ignorée ; CI et publication encore en attente. Voir
+[MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md). Dev.64 reste la version publiée ci-dessous.
+
 ## Dernière version publiée et vérifiée
 
 **[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
