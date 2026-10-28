@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#pragma once
+#include "game.h"
+#include <QVariant>
+#include <functional>
+
+namespace t64 {
+// Presentation only: SAN stored in the game and PGN exports stay standard.
+inline QString displaySan(const std::string &san, bool french) {
+    QString text = QString::fromStdString(san);
+    if (!french) return text;
+    const QString pieces = "NBRQK", translated = "CFTDR";
+    for (int i = 0; i < text.size(); ++i) {
+        if (i != 0 && text[i - 1] != '=') continue;
+        const int piece = pieces.indexOf(text[i]);
+        if (piece >= 0) text[i] = translated[piece];
+    }
+    return text;
+}
+
+inline QVariantList moveRows(const Game &game, int current, bool french) {
+    QVariantList rows;
+    rows << QVariantMap{{"initial", true}, {"depth", 0}, {"active", current == 0},
+                        {"comment", QString::fromStdString(game.nodes[0].comment)}};
+    auto entry = [&](int id) {
+        const auto &node = game.nodes[id];
+        QString text = displaySan(node.san, french);
+        static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
+        for (int nag : node.nags)
+            text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
+        return QVariantMap{{"id", id}, {"parent", node.parent}, {"text", text},
+                           {"active", current == id}, {"comment", QString::fromStdString(node.comment)}};
+    };
+    int visited = 0;
+    // Each recursive call owns one branch. Pair only its direct mainline child;
+    // siblings are emitted as separate blocks after the complete parent row.
+    std::function<void(int, int)> line = [&](int id, int depth) {
+        if (depth > 128) return;
+        while (id > 0 && visited < 10000) {
+            const auto &node = game.nodes[id];
+            const auto board = game.boardAt(node.parent);
+            const int number = board.fullMoveNumber();
+            const bool white = board.sideToMove() == chess::Color::WHITE;
+            int last = id;
+            QVariantMap row{{"initial", false}, {"depth", depth}, {"number", number},
+                            {"white", QVariantMap()}, {"black", QVariantMap()}};
+            row[white ? "white" : "black"] = entry(id);
+            ++visited;
+            if (white && !node.children.empty() && visited < 10000) {
+                last = node.children[0];
+                row["black"] = entry(last);
+                ++visited;
+            }
+            rows << row;
+            auto variations = [&](int move) {
+                const auto &siblings = game.nodes[game.nodes[move].parent].children;
+                if (!siblings.empty() && siblings[0] == move)
+                    for (size_t k = 1; k < siblings.size(); ++k) line(siblings[k], depth + 1);
+            };
+            variations(id);
+            if (last != id) variations(last);
+            const auto &children = game.nodes[last].children;
+            id = children.empty() ? -1 : children[0];
+        }
+    };
+    if (!game.nodes[0].children.empty()) line(game.nodes[0].children[0], 0);
+    return rows;
+}
+} // namespace t64

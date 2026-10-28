@@ -136,7 +136,10 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             emit engineChanged();
         }
         settings_.setValue(key, clean);
-        if (key == "language") translator_->setLanguage(clean.toString());
+        if (key == "language") {
+            translator_->setLanguage(clean.toString());
+            emit notationChanged();
+        }
         if (key == "enginePath")
             emit engineChanged();
         emit preferencesChanged();

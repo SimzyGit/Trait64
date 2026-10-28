@@ -291,17 +291,10 @@ objectName:"analysisSplit"
                                 }
                                 StackLayout {
                                     Layout.fillWidth:true;Layout.fillHeight:true;currentIndex:notationTabs.currentIndex
-                                    ListView {id:moveList;model:controller.notation;clip:true;spacing:2;ScrollBar.vertical:ScrollBar {}
-                                        delegate:ItemDelegate {
-                                            required property var modelData
-                                            width:moveList.width;implicitHeight:(modelData.comment?52:31)*win.textScale
-                                            background:Rectangle {color:modelData.active?win.raised:(parent.hovered?win.bg:"transparent");Rectangle {width:2;height:parent.height;color:win.accent;visible:modelData.active}}
-                                            contentItem:ColumnLayout {spacing:1
-                                                Label {text:(modelData.depth>0?"↳  ":"")+win.systemText(modelData.text);Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;Layout.leftMargin:Math.min(modelData.depth*16,80);font.family:"DejaVu Sans Mono";font.weight:modelData.active?Font.Bold:Font.Normal;color:modelData.depth>0?win.muted:win.fg;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                                Label {visible:!!modelData.comment;text:modelData.comment;elide:Text.ElideRight;Layout.fillWidth:true;Layout.leftMargin:Math.min(modelData.depth*16,80);font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
-                                            }
-                                            onClicked:controller.navigate(modelData.id)
-                                        }
+                                    MoveNotebook {
+                                        backend: controller; textScale: win.textScale
+                                        foreground: win.fg; muted: win.muted; accent: win.accent
+                                        raised: win.raised; lineColor: win.line
                                     }
                                     ListView {id:miniExplorer;model:controller.openings;clip:true;spacing:4
                                         delegate:ItemDelegate {

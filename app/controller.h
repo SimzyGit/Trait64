@@ -39,6 +39,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
     Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
     Q_PROPERTY(QVariantList notation READ notation NOTIFY changed)
+    Q_PROPERTY(QVariantList moveRows READ moveRows NOTIFY notationChanged)
     Q_PROPERTY(QVariantList games READ games NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
@@ -103,6 +104,7 @@ class Controller : public QObject {
     QVariantMap state() const { return state_; }
     QVariantList squares() const { return squares_; }
     QVariantList notation() const { return notation_; }
+    QVariantList moveRows() const;
     QVariantList games() const { return games_; }
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
@@ -217,6 +219,7 @@ class Controller : public QObject {
     void changed();
     void libraryChanged();
     void sourcesChanged();
+    void notationChanged();
     void importsChanged();
     void repertoiresChanged();
     void repertoireTaskChanged();
