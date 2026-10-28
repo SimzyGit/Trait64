@@ -1,5 +1,28 @@
 # Changements
 
+## Carnet de coups côte à côte — 28 octobre 2026
+
+Le lecteur de l'espace Analyse présente désormais une ligne par numéro de coup,
+avec le demi-coup blanc et le demi-coup noir côte à côte. Chaque cellule reste
+cliquable, la sélection suit la bonne position et les variantes restent séparées.
+Les départs FEN avec les Noirs et les lignes incomplètes conservent leur numéro
+et leur colonne. Les commentaires longs et annotations restent accessibles.
+
+Le SAN français est une transformation d'affichage : PGN, études et coups
+internes gardent leur format standard. Les exports existants, les pièces et le
+schéma SQLite 7 sont préservés. Le défilement suit le coup après le calcul de
+mise en page, y compris dans la page entière aux tailles maximales.
+
+Validation locale : 14 suites sans suite ignorée, Stockfish réel, 207 contrôles
+du carnet incluant six captures ; matrice existante de neuf configurations et
+164 captures. Trois passages des interactions ne reproduisent pas l'ancien
+échec isolé des filtres ; sa cause reste inconnue. Rapports et limites :
+https://github.com/feuvrierbernardinisimhon-png/Trait64/blob/main/docs/MOVE-NOTEBOOK.md
+
+À 960 × 640 avec texte 150 % / interface 125 %, la page reste défilante.
+Les essais logiciels hors écran ne valident pas Voyager/Wayland/GPU.
+Aucun benchmark 100k supplémentaire et aucune migration de base.
+
 ## Refonte native — dev.64, 28 octobre 2026
 
 Navigation latérale compacte ou développée, grand échiquier à l’accueil, panneaux adaptables et palette de commandes au clavier. Police, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé, animations réduites et libellés français/anglais sont persistés.
