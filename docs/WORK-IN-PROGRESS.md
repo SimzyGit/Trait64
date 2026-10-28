@@ -5,9 +5,13 @@ Nouveau modèle de présentation `moveRows`, composants QML natifs, variantes
 séparées, commentaires multilignes et SAN français à l'affichage uniquement.
 Schéma 7 et modèle `notation` pour les exports conservés.
 
-Compilation locale et CI en cours ; aucune nouvelle version publiée à ce stade.
-Terminer le test `move_notebook`, les interactions et la matrice existante,
-inspecter les captures puis mettre à jour ce point de reprise avec les résultats.
+Validation locale du commit produit `2d5e894` : 14/14 suites en 157,24 s,
+aucune ignorée, Stockfish réel ; 207 contrôles du carnet (captures comprises),
+6 configurations et zéro avertissement QML. Matrice existante : 9 configurations,
+164 captures. Le suivi du coup tient compte du défilement de la page entière.
+Les captures représentatives sont inspectées. CI 40742429259 en cours ; attendre
+sanitizers, Debian 12/13 et paquets avant fusion/publication. Dev.64 reste la
+version distribuée confirmée. Rapport : `verification-notebook-2026-10-28.json`.
 Procédure matérielle Voyager : [MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md).
 Ne pas relancer les benchmarks 100k ni reprendre les anciens checkouts locaux.
 
