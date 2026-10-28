@@ -1,3 +1,18 @@
+# Lot en cours — carnet de coups côte à côte, 28 octobre 2026
+
+PR #14, branche `ui/paired-move-notebook`, base main `5b41204` / dev.64.
+Nouveau modèle de présentation `moveRows`, composants QML natifs, variantes
+séparées, commentaires multilignes et SAN français à l'affichage uniquement.
+Schéma 7 et modèle `notation` pour les exports conservés.
+
+Compilation locale et CI en cours ; aucune nouvelle version publiée à ce stade.
+Terminer le test `move_notebook`, les interactions et la matrice existante,
+inspecter les captures puis mettre à jour ce point de reprise avec les résultats.
+Procédure matérielle Voyager : [MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md).
+Ne pas relancer les benchmarks 100k ni reprendre les anciens checkouts locaux.
+
+---
+
 # Point de reprise — refonte livrée, 28 octobre 2026
 
 Version **[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)**, publiée le 28 octobre 2026. PR #13 fusionnée ; commit `15708fb857c709af61bbfc56f9f5efa1392ccb87`, arbre `5930f856f4b655e89c893133699172cd46d308ac` identique à la tête testée `dd0e53c674a4043f697577187d190db0fe2c65ef`.

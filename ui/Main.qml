@@ -181,7 +181,7 @@ ApplicationWindow {
             }}
 
             // ANALYSIS
-            ScrollView {id:analysisViewport;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
+            ScrollView {id:analysisViewport;objectName:"analysisViewport";contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisViewport.availableHeight,implicitHeight);
                 Layout.margins:0;spacing:win.height<820?8:14
                 RowLayout {Layout.fillWidth:true
@@ -292,7 +292,7 @@ objectName:"analysisSplit"
                                 StackLayout {
                                     Layout.fillWidth:true;Layout.fillHeight:true;currentIndex:notationTabs.currentIndex
                                     MoveNotebook {
-                                        backend: controller; textScale: win.textScale
+                                        backend: controller; textScale: win.textScale; outerViewport: analysisViewport
                                         foreground: win.fg; muted: win.muted; accent: win.accent
                                         raised: win.raised; lineColor: win.line
                                     }

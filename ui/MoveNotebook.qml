@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    objectName: "notebookRoot"
+    readonly property bool followPending: followTimer.running || pageTimer.running
     required property var backend
     required property real textScale
     required property color foreground
@@ -11,9 +13,33 @@ Item {
     required property color accent
     required property color raised
     required property color lineColor
+    property var outerViewport: null
     property int followedNode: -1
     readonly property real numberWidth: Math.max(32, 40 * textScale)
 
+    property bool forceFollow: false
+    function requestFollow(force) {
+        forceFollow = forceFollow || force
+        followTimer.restart()
+    }
+    // Wait for Qt Quick's layout pass after changing fonts/window geometry.
+    Timer {
+        id: followTimer; interval: 16
+        onTriggered: { var force = root.forceFollow; root.forceFollow = false; root.followSelection(force) }
+    }
+    Timer { id: pageTimer; interval: 16; onTriggered: root.revealInPage() }
+    function revealInPage() {
+        if (!visible || !outerViewport || moves.currentIndex < 0) return
+        var item = moves.itemAtIndex(moves.currentIndex)
+        if (!item) return
+        var top = moves.mapToItem(outerViewport, 0, item.y - moves.contentY).y
+        var bottom = top + item.moveHeight
+        var flick = outerViewport.contentItem
+        var target = flick.contentY
+        if (top < 0) target += top
+        else if (bottom > outerViewport.availableHeight) target += bottom - outerViewport.availableHeight
+        flick.contentY = Math.max(0, Math.min(target, flick.contentHeight - flick.height))
+    }
     function followSelection(force) {
         var node = backend.state.node
         var rows = backend.moveRows
@@ -36,14 +62,17 @@ Item {
             else if (bottom > moves.contentY + moves.height)
                 moves.contentY = Math.min(top, bottom - moves.height)
         }
+        pageTimer.restart()
     }
     Connections {
         target: root.backend
-        function onNotationChanged() { Qt.callLater(function() { root.followSelection(false) }) }
+        function onNotationChanged() { root.requestFollow(false) }
     }
-    onVisibleChanged: if (visible) Qt.callLater(function() { root.followSelection(true) })
-    onHeightChanged: Qt.callLater(function() { root.followSelection(true) })
-    Component.onCompleted: Qt.callLater(function() { root.followSelection(true) })
+    onVisibleChanged: if (visible) requestFollow(true)
+    onHeightChanged: requestFollow(true)
+    onWidthChanged: requestFollow(true)
+    onTextScaleChanged: requestFollow(true)
+    Component.onCompleted: requestFollow(true)
 
     ColumnLayout {
         anchors.fill: parent
@@ -78,11 +107,10 @@ Item {
                 width: Math.max(0, moves.width - 14)
                 spacing: 3
                 property real indent: Math.min(modelData.depth * 12, width * .16)
-                property real moveHeight: modelData.initial ? initialButton.height : cells.height + branchLabel.height
+                property real moveHeight: modelData.initial ? initialButton.height : cells.height + (branchLabel.visible ? branchLabel.implicitHeight + row.spacing : 0)
                 Label {
                     id: branchLabel
                     visible: !row.modelData.initial && row.modelData.depth > 0
-                    height: visible ? implicitHeight : 0
                     width: row.width - row.indent
                     x: row.indent
                     text: "↳ " + qsTr("Variante") + " · " + row.modelData.depth
@@ -164,7 +192,7 @@ Item {
                         x: row.indent + 4
                         text: (modelData.text ? modelData.text + " — " : "") + (modelData.comment || "")
                         textFormat: Text.PlainText
-                        wrapMode: Text.WrapAnywhere
+                        wrapMode: Text.Wrap
                         color: root.muted; font.pixelSize: 10 * root.textScale
                     }
                 }
