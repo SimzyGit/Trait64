@@ -1,6 +1,10 @@
-# Reprise du développement — performances, 25 octobre 2026
+# Reprise du développement — après la refonte, 28 octobre 2026
 
-Dernier lot livré : **dev.57 / PR #12**, vérification manuelle d'intégrité en
+Dernier lot livré : **dev.64 / PR #13**, refonte native et corrections visuelles. Treize suites validées en CI Debian 12/13 et Qt ASan/UBSan ; 1 180 contrôles locaux avec 164 captures. [Rapport](verification-ui-2026-10-28.json) · [Périmètre](UI-REDESIGN.md). Schéma 7 conservé, matériel Voyager non testé.
+
+## Lot précédent : performances et intégrité
+
+Lot précédent : **dev.57 / PR #12**, vérification manuelle d'intégrité en
 arrière-plan, annulable et protégée contre les relances réentrantes. Douze suites
 locales et CI réussies, schéma 7 conservé. Les optimisations d'import de dev.55
 et la comparaison 10k restent acquises.
@@ -29,7 +33,7 @@ historiques ci-dessous restent des objectifs, avec cet ordre de priorité.
 
 **Audit global terminé, intégré dans la PR #9 et publié dans [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Dix groupes de défauts corrigés, 12/12 suites locales et CI Debian 12/13, contrôles ASan/UBSan de tous les modules, 3 000 mutations FEN/PGN. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Aucun ajout de la feuille de route n’a été entrepris pendant cet audit.
 
-**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #10 et #12 sont intégrées à main. La version distribuée dev.57, le tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 25 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
+**État courant : [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).** Les PR #4 à #10, #12 et #13 sont intégrées à main. La version distribuée dev.64, le tag, les cinq fichiers, leurs SHA-256 et la sélection des mises à jour ont été vérifiés le 28 octobre. Schéma 7 conservé, aucune archive Actions créée. Les anciens bilans restent historiques : lancer une nouvelle analyse applique la réparation du cache. Les informations détaillées de la PR #3 ci-dessous décrivent l’historique ; suivre le point de reprise pour les tests et la publication actuels.
 
 La PR #8 est également intégrée et publiée dans dev.46 : motifs tactiques et
 repères PGN, 11 suites Debian 12/13 et paquets validés. Tag, cinq fichiers et
@@ -37,7 +41,7 @@ sélecteur de mises à jour vérifiés ; ne pas refaire ce lot ni reprendre un a
 
 ## État à conserver
 
-Trait64 est une application de bureau C++23/Qt6/QML et SQLite, monolithe modulaire. Ne pas recommencer l’application. L’esthétique est en pause. Les fonctions locales ne nécessitent ni compte ni réseau. La liste détaillée des objectifs et les limites sont dans [ROADMAP.md](ROADMAP.md).
+Trait64 est une application de bureau C++23/Qt6/QML et SQLite, monolithe modulaire. Ne pas recommencer l’application. La refonte demandée le 26 octobre est livrée ; préserver sa validation lors des évolutions fonctionnelles. Les fonctions locales ne nécessitent ni compte ni réseau. La liste détaillée des objectifs et les limites sont dans [ROADMAP.md](ROADMAP.md).
 
 Le lot historique **PR #3 — imports reprenables, répertoires et préparation** a été intégré à main, puis prolongé par les PR #4 à #7. Il succédait à la PR #2 publiée dans `v0.3.0-dev.23`. Les modifications du README ajoutées séparément sur main (2873ed2 puis f85ee26) sont conservées. La version publiée courante est à vérifier dans les [Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases), sans revenir à une ancienne copie locale.
 
@@ -73,7 +77,7 @@ La [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3) conse
 - `app/reliability.cpp` : sauvegardes périodiques, rotation et pré-mise à jour ; sessions atomiques et conservation des fichiers illisibles. Préserver les données utilisateur lors d’une mise à jour.
 - `libs/database/scaling.cpp` : index/FTS5 trigramme facultatif et agrégats transactionnels (schéma 3). `sources.cpp` : bases et historique (schéma 4). `imports.cpp` et `repertoires.cpp` : schémas 5/6.
 - `libs/engine/comparison.*` : 2–4 moteurs, budgets CPU/Hash partagés et PV liées à leur FEN. Profils/options issus du handshake, catalogue de versions épinglées. PlentyChess 8 exige glibc 2.38 ; respecter les minima du catalogue.
-- `ui/Main.qml` conserve les sept espaces et leurs index. `ui/Home.qml`, `TButton`, `TTabButton` et les préférences personnelles sont conservés. Ne pas réintroduire une refonte esthétique dans ce lot.
+- `ui/Main.qml` conserve les sept espaces et leurs index. La refonte PR #13 ajoute la navigation latérale et les préférences de lecture. Préserver `Board.qml`, `Piece.qml`, les pièces Lichess et la suite `desktop_layout`.
 - `packaging/` : DEB Debian 12/13, AppImage, inventaire des bibliothèques/notices et sources correspondantes distribuées. Moteurs et tablebases externes.
 
 ## Vérifier et publier

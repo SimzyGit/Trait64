@@ -63,7 +63,7 @@ Résultats, échecs initiaux et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md) ; mes
 
 ## Suites actuelles
 
-`ctest --test-dir build --output-on-failure` exécute onze suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une douzième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
+`ctest --test-dir build --output-on-failure` exécute douze suites par défaut. Avec `-DT64_BENCHMARKS=ON`, une treizième suite `pgn_benchmark_safety` est ajoutée (Python 3 requis). La CI Debian active cette option :
 
 | Suite | Scénarios vérifiés |
 |---|---|
@@ -77,11 +77,12 @@ Résultats, échecs initiaux et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md) ; mes
 | `persistent_analysis` | Stockfish réel : copie PGN/variantes, MultiPV et WDL, export conservant la ligne jouée, cache et historique, budgets distincts, pause/reprise, binaire modifié, verrou concurrent, Chess960, pages 200/9, transaction idempotente, processus réellement tué puis repris, migration sauvegardée 6 → 7 |
 | `engine` | Véritable Stockfish : handshake, MultiPV, annulation/remplacement, exclusion des anciens bestmove, conservation du dernier score exact, résultats de recherche terminée, coup Chess960 légal, comparaison de deux vrais processus avec changements rapides de position, fermeture |
 | `desktop_smoke` | Chargement et rendu des 7 espaces, enregistrement/réouverture, aucune alerte QML ; dossier temporaire isolé |
+| `desktop_layout` | Neuf configurations, sept pages, 25 dialogues dans quatre configurations, navigation compacte/développée, échiquier et commandes dans la fenêtre, aide, palette des dialogues, langues et préférences ; contrôles de capture si `T64_UI_SCREENSHOTS` est défini |
 | `desktop_interactions` | Événements QtTest clic/glisser, notes et navigation, sauvegarde et entraînement, 48 SVG, styles/couleurs, annuler/rétablir, onglets et session, flèches PGN, profils moteur, bilan et annulation, ECO, exports PDF/PNG, roque 960, pendule/incrément, dialogues et géométrie à 960 × 720, comparaison UCI avec lignes réelles dans QML, sauvegarde pré-mise à jour et automatique, préservation des octets d’une session illisible |
 
 Le test moteur est **skipped**, pas réussi, si Stockfish est absent. Les tests GUI utilisent `QT_QPA_PLATFORM=offscreen` et `QT_QUICK_BACKEND=software`. Ils ne remplacent pas un essai sur le GPU et l’écran du PC cible. Le cœur compile sans Qt avec `-DT64_BUILD_GUI=OFF`. `-DT64_SANITIZERS=ON` active AddressSanitizer et UndefinedBehaviorSanitizer.
 
-La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les douze suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Deux tâches préalables vérifient le cœur seul et tous les modules Qt avec ASan/UBSan. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
+La CI `.github/workflows/linux.yml` construit en Release dans Debian 12 et Debian 13, exécute les treize suites, crée un DEB, l’installe et lance le test de démarrage sur le paquet installé. Elle construit aussi une AppImage dans Debian 12 et exécute son test de démarrage, rassemble les sources des bibliothèques distribuées puis publie une Release complète. Deux tâches préalables vérifient le cœur seul et tous les modules Qt avec ASan/UBSan. Les résultats effectifs sont visibles dans GitHub Actions ; un fichier de pipeline seul n’est pas une preuve de réussite.
 
 Vérification historique avant catalogue : **6 suites sur 6 réussies** ; les vérifications du lot actuel sont détaillées plus bas. Le redimensionnement après sauvegarde, les dialogues et les captures 960 × 720 sont vérifiés. La chaîne GitHub complète a effectivement publié `v0.3.0-dev.6` ; consulter les exécutions suivantes pour la version finale enrichie.
 
@@ -105,19 +106,33 @@ cmake --build build --target database_benchmark --parallel 2
 Les mesures reproductibles et leurs limites sont dans [PERFORMANCE.md](PERFORMANCE.md). Les fichiers temporaires sont supprimés à la sortie du benchmark.
 
 
-### Refonte de l’interface — octobre 2026
+### Refonte de l’interface — 27–28 octobre 2026
 
-Les interactions de bureau cliquent sur les sept onglets à 960 × 640, vérifient l’échiquier et les outils de position au-dessus du pied de page, ainsi que la conservation de l’accent personnel lors d’un changement de thème. Les scénarios existants de clic/glisser, variantes, notes, sauvegarde, onglets, entraînement et dialogues sont conservés.
+La tête `dd0e53c674a4043f697577187d190db0fe2c65ef` a passé les 13 suites en CI Debian 12/13 et Qt ASan/UBSan. La publication dev.64 a été reconstruite et vérifiée sur `15708fb857c709af61bbfc56f9f5efa1392ccb87`, avec le même arbre source. [Rapport](verification-ui-2026-10-28.json) et [périmètre](UI-REDESIGN.md).
 
-Captures reproductibles sans toucher aux données utilisateur :
+La sonde locale a réalisé **1 180 contrôles**, y compris ceux des captures, dans 9 configurations : 63 vues de pages, 100 ouvertures de dialogues et une vue avec la barre latérale développée, soit 164 captures. Aucun avertissement QML. Dimensions : 960 × 640, 1366 × 768, 1440 × 940, 1920 × 1080 et 2560 × 1600 ; français/anglais, clair/sombre, texte jusqu’à 150 % et interface jusqu’à 125 %.
+
+Reproduction dans un dossier temporaire isolé :
+
+```bash
+mkdir -p /tmp/trait64-ui-captures
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+T64_UI_SCREENSHOTS=/tmp/trait64-ui-captures ./build/desktop_tests --ui-layout
+```
+
+Le nombre de contrôles avec captures diffère de celui de la CI, qui ne conserve pas les images. La sonde vérifie géométrie, navigation clavier, exécution d’une commande, préférences et étude non enregistrée. Le démarrage couvre le profil Joueurs vide. Les scénarios clic/glisser, variantes, notes, sauvegarde, entraînement et moteurs restent dans les suites existantes.
+
+Un passage local sur 77521f2 a échoué sur « Latest preparation filters replace stale request ». Les passages suivants et les CI finales ont réussi ; diagnostic du résultat ajouté, assertion inchangée. Cause non établie : [local.json](ui-validation/2026-10-27/local.json).
+
+Captures documentaires :
 
 ```bash
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
 T64_SCREENSHOT=/tmp/trait64.png T64_SCREENSHOT_WIDTH=1440 T64_SCREENSHOT_HEIGHT=940 \
-T64_SCREENSHOT_PAGE=0 ./build/trait64 --smoke-test
+T64_SCREENSHOT_PAGE=2 ./build/trait64 --smoke-test
 ```
 
-`T64_SCREENSHOT_PAGE=2` montre l’analyse ; `T64_SCREENSHOT_THEME=light` sélectionne le thème clair pour cette session temporaire. Les tailles contrôlées visuellement sont 1440 × 940, 1366 × 768 et 960 × 640.
+La page 0 montre l’accueil, la page 2 l’analyse ; `T64_PREVIEW=appearance` ouvre l’apparence, `T64_SCREENSHOT_THEME=light` sélectionne le thème clair. Les deux captures du README proviennent du code fusionné compilé localement avec la version 0.3.0-dev.64. Ces essais hors écran ne remplacent pas Voyager/Wayland, le GPU et l’écran à 120 Hz.
 
 ## Catalogue et sources — 12 octobre 2026
 

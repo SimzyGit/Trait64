@@ -1,5 +1,9 @@
 # Périmètre livré et travaux restants
 
+## Interface native — dev.64, 28 octobre 2026
+
+Navigation latérale, grand échiquier, panneaux adaptables, commandes clavier, police et tailles réglables, contraste renforcé et libellés français/anglais. Débordements, palette des dialogues et profil Joueurs vide corrigés. Treize suites en CI et 1 180 contrôles locaux (captures comprises), schéma 7 conservé. [Périmètre et limites](UI-REDESIGN.md) · [Publication](verification-ui-2026-10-28.json).
+
 ## Performances et intégrité — dev.55 / dev.57, 25 octobre 2026
 
 Deux corrections mesurées de l'import (choix de l'index des doublons, calcul du
@@ -30,13 +34,13 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, rappels espacés par position de répertoire, réponses préparées multiples et suivi des rappels manqués | Équivalences validées par moteur, cours de finales, calcul/visualisation, agenda adaptatif, certification tactique |
 | Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
 | Préparation | Fiches joueurs ; statistiques par position, source, nom exact/couleur, période et Elo ; requête annulable, parties exemples et export CSV | Styles d’adversaires, tendances par période, préparation et gestion de tournois |
-| Interface | 7 espaces, personnalisation, petites fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traductions complètes |
+| Interface | 7 espaces, navigation latérale compacte/développée, commandes clavier, police et tailles réglables, contraste renforcé, libellés français/anglais, fenêtres à partir de 960 × 640 | Panneaux détachables, raccourcis personnalisables, traduction des diagnostics C++ et descriptifs de catalogue |
 | Plateforme | Paquets Debian 12/13 amd64, AppImage, installateur source, tests CI et Releases automatisées sans archives Actions | Qualification sur le PC Voyager cible, Flatpak, Windows/macOS, API/plugins |
 | Fiabilité | Vérification manuelle d'intégrité asynchrone et annulable, sauvegardes périodiques, avant mise à jour/migration, corbeille, session atomique et préservation des sessions illisibles | Restauration guidée de tout le dossier utilisateur, installation et sauvegarde pré-mise à jour entièrement asynchrones |
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
 | Fonctions avancées | Études PDF/PNG, bilan moteur expliqué par suites légales et événements matériels, copies annotées, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 
-Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. L’esthétique est en pause. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
+Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. La refonte demandée le 26 octobre est livrée ; préserver ses contrôles visuels. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
 
 ## Lot explications — 16 octobre 2026
 
@@ -343,8 +347,10 @@ Poursuivre le support Linux, puis préparer :
 - [ ] Flatpak.
 - [ ] Distribution Flathub.
 - [ ] Traductions complètes.
-- [ ] Internationalisation.
-- [ ] Navigation au clavier.
+- [x] Libellés français/anglais de l’interface et changement de langue conservant les valeurs des listes.
+- [ ] Compléter les traductions des diagnostics C++ et descriptifs de catalogue.
+- [x] Navigation principale et palette de commandes au clavier.
+- [ ] Audit exhaustif du parcours clavier et des technologies d’assistance.
 - [ ] Raccourcis personnalisables.
 - [ ] Améliorations d'accessibilité.
 - [ ] Gestion des petites résolutions.

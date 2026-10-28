@@ -1,16 +1,16 @@
-# Point de reprise — refonte fusionnée, publication en cours, 28 octobre 2026
+# Point de reprise — refonte livrée, 28 octobre 2026
 
-La PR #13 est fusionnée au commit `15708fb857c709af61bbfc56f9f5efa1392ccb87`. Son arbre `5930f856f4b655e89c893133699172cd46d308ac` est identique à celui de la tête validée `dd0e53c674a4043f697577187d190db0fe2c65ef`.
+Version **[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)**, publiée le 28 octobre 2026. PR #13 fusionnée ; commit `15708fb857c709af61bbfc56f9f5efa1392ccb87`, arbre `5930f856f4b655e89c893133699172cd46d308ac` identique à la tête testée `dd0e53c674a4043f697577187d190db0fe2c65ef`.
 
-La [CI finale de PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40516973650) a réussi : 13 suites Debian 12/13 et Qt ASan/UBSan, cœur 2/2, paquets installés et AppImage démarrée. Sonde locale : 1 180 contrôles (captures comprises), 9 configurations, 164 captures et zéro avertissement QML. Rapports sous `docs/ui-validation/2026-10-27`.
+[CI de PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40516973650) et [CI de publication](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40644804206) réussies. Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](verification-ui-2026-10-28.json).
 
-La [CI de publication](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40644804206), numéro 64, a déjà validé le cœur (2/2, 77,30 s) et Qt ASan/UBSan (13/13, 181,12 s), sans suite ignorée. Le job Linux `122674212607` est encore en cours de fabrication des paquets. **Ne pas annoncer la release comme publiée avant de vérifier les cinq fichiers et le tag.** Dernière release confirmée à ce point : dev.57.
+Navigation latérale compacte ou développée, grand échiquier à l’accueil, panneaux adaptables et palette de commandes au clavier. Police, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé, animations réduites et libellés français/anglais sont persistés.
 
-Les deux captures documentaires ont été régénérées et inspectées depuis le code fusionné, avec Qt 6.4.2 en rendu logiciel, version locale 0.3.0-dev.64. Le helper `docs/ui-validation/2026-10-27/verify-published-update.cpp` vérifie le sélecteur réel à partir des métadonnées de release, depuis dev.57.
+Corrections : commandes coupées à petite taille ou en grandes polices, blocage du profil Joueurs vide, titre d’aide tronqué, choix de promotion et couleurs des dialogues. Les valeurs des listes restent stables après changement de langue. Board.qml, Piece.qml et le schéma SQLite 7 sont conservés.
 
-À terminer : vérifier la fin de 40644804206, le tag pointant vers 15708fb857c709af61bbfc56f9f5efa1392ccb87, les noms/tailles/SHA-256 des cinq assets comparés au manifeste CI, puis exécuter le helper. Mettre à jour README, PROJECT-STATUS, NEXT-STEPS, ROADMAP, CHANGELOG, RELEASE-NOTES, TESTING et UI-REDESIGN, et conserver le rapport de livraison. Ne pas recommencer la refonte ni les benchmarks 100k. Certains diagnostics restent français ; Voyager/Wayland/120 Hz non testés. Le navigateur est déconnecté du dépôt privé et le connecteur ne propose pas l’édition du texte d’une release ; les notes finales doivent être actualisées dans le dépôt.
+Essais en rendu logiciel hors écran ; aucun essai matériel Voyager/Wayland/120 Hz. Certains diagnostics C++ et descriptifs de catalogue restent français. Un échec local isolé de préparation est documenté dans [local.json](ui-validation/2026-10-27/local.json), non reproduit lors des relances ni dans les CI finales ; diagnostic ajouté, assertion inchangée. Aucun nouveau benchmark de grandes bases.
 
-Les données ci-dessous sont historiques.
+Lors d’une reprise, vérifier d’abord main et les Releases. Ne pas repartir d’une ancienne copie locale ni relancer les benchmarks 100k acquis. Les captures documentaires remplacent les deux images existantes ; les 164 images de contrôle ne sont pas ajoutées au dépôt. Voir [UI-REDESIGN](UI-REDESIGN.md), [résultats locaux](ui-validation/2026-10-27/local.json) et [matrice](ui-validation/2026-10-27/matrix.json). La suite de la feuille de route reste dans NEXT-STEPS. Les informations ci-dessous sont historiques.
 
 ## Historique — performances et vérification, 25 octobre 2026
 
@@ -89,8 +89,8 @@ sauvegardée, jamais réécrire les migrations historiques.
 
 500k et 1/2/5/10 millions, ainsi que le PC Voyager, restent non qualifiés.
 Corpus de 121 332 parties réelles, sans duplication artificielle ; prévoir
-stockage/journaux/copies avant les volumes supérieurs. Aucune refonte graphique
-dans ce lot ; les travaux de design préparés dans l'autre discussion attendent.
+stockage/journaux/copies avant les volumes supérieurs. Le lot du 25 octobre ne contenait pas de refonte graphique ; celle-ci a ensuite
+été demandée le 26 octobre et livrée dans la PR #13, voir le point courant.
 L'ordre de la feuille de route reste performances, pédagogie vérifiable,
 entraînement tactique puis répertoires/préparation.
 

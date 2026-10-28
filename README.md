@@ -15,7 +15,7 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 
 **English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
 
-> **Version publiée vérifiée : [v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57) (25 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
+> **Version publiée vérifiée : [v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64) (28 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
 
 ### Principes du projet
 
@@ -29,9 +29,16 @@ Trait64 est une application de bureau pensée comme une alternative moderne, loc
 
 Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leurs parties**, construire une **base de données d’échecs locale**, travailler leurs **ouvertures**, comparer plusieurs **moteurs UCI** comme Stockfish, rechercher des positions et conserver leurs études sans dépendre d’un service cloud. Le projet privilégie Linux aujourd’hui, tout en gardant une architecture portable pour de futures versions Windows et macOS.
 
-L’interface adopte un carnet d’étude : sept sections numérotées, un échiquier dégagé, des titres à empattements et une palette encre/papier/cuivre. Les préférences personnelles sont conservées.
+L’interface native utilise une navigation latérale compacte ou développée, un grand échiquier et des panneaux redimensionnables. Police, taille du texte, échelle, thème et libellés français/anglais sont réglables ; les préférences personnelles sont conservées.
 
 ## Nouveautés récentes — série 0.3
+
+### Refonte native (dev.64)
+
+- **Navigation latérale et grand échiquier** : accueil réorganisé, panneaux adaptables et palette de commandes au clavier.
+- **Lecture personnalisable** : police système, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé et libellés français/anglais. Certains diagnostics et descriptifs de catalogue restent français.
+- **Corrections visuelles** : commandes coupées, profil Joueurs vide bloquant le démarrage, titre d’aide et couleurs des dialogues ; schéma SQLite 7 conservé.
+- **Validation** : 13 suites Debian 12/13 et Qt ASan/UBSan, 1 180 contrôles locaux avec 164 captures. Paquets installés et AppImage démarrée ; essai matériel Voyager encore à faire. [Périmètre](docs/UI-REDESIGN.md) · [Publication](docs/verification-ui-2026-10-28.json).
 
 ### Vérification de la base et qualification 100k (dev.57)
 
@@ -69,7 +76,7 @@ Les autres fonctionnalités majeures de la série 0.3 comprennent :
 - **Préparation filtrée** : statistiques par position, base, adversaire/couleur, période et Elo connu ; calcul annulable et export CSV contextualisé.
 - **SQLite schéma 7** : migrations sauvegardées et conservation des données existantes.
 
-➡️ [État actuel (24/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
+➡️ [État actuel (28/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
@@ -148,7 +155,7 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 
 ## Ce qui fonctionne
 
-- **Apparence** : cinq styles de pièces (Classique, Merida, Spatial, Pixel, Unicode), import de vos douze SVG, neuf palettes d’échiquier, couleurs personnelles des cases et du fond, thème clair/sombre, coordonnées et repères réglables. Tous les choix sont mémorisés.
+- **Apparence** : cinq styles de pièces (Classique, Merida, Spatial, Pixel, Unicode), import de vos douze SVG, neuf palettes d’échiquier, couleurs personnelles des cases et du fond, thème clair/sombre, police et tailles, contraste renforcé, libellés français/anglais, coordonnées et repères réglables. Tous les choix sont mémorisés.
 - **Échiquier** : clic/glisser, coups légaux, promotion au choix, échecs classiques et Chess960 (960 positions numérotées), éditeur graphique de position, inversion, flèches et cercles persistants dans le PGN.
 - **Études** : arbre de variantes, promotion/suppression de branches, commentaires, NAG, métadonnées, annuler/rétablir, jusqu’à 16 onglets récupérés au redémarrage, duplication et fusion de deux études de même racine.
 - **Fichiers** : PGN multijeux avec variantes, FEN, import/export EPD classique, conteneur T64 expérimental, diagramme PNG avec votre apparence et annotations, étude PDF avec diagramme et notation. L’import PGN depuis un fichier travaille partie par partie, en arrière-plan, avec progression et annulation transactionnelle. Un gestionnaire séparé permet les imports PGN reprenables par lots, avec 1 à 8 lecteurs parallèles. L’export PGN de bibliothèque écrit aussi partie par partie.
@@ -169,7 +176,7 @@ Depuis l’accueil vide, **Découvrir les parties d’exemple**, puis ouvre une 
 
 Dans **Bibliothèque → Téléchargements → Moteurs**, tu peux installer un moteur vérifié, ou sélectionner un moteur UCI déjà présent sur le système depuis **Menu → Paramètres**. Stockfish installé par Debian est souvent détecté dans `/usr/games/stockfish`. Charge ou crée ensuite un profil, clique **Démarrer / appliquer**, puis **Analyser** dans l’atelier. L’analyse utilise toute la force du moteur ; la limitation de force concerne le jeu.
 
-Le bouton **Apparence** personnalise l’échiquier et le fond. Dans l’atelier, **Bilan** analyse la ligne principale ; les seuils de classement sont des repères simples, pas une mesure certifiée du niveau de jeu. Les fichiers Syzygy sont à fournir séparément.
+Le bouton **Apparence** personnalise l’échiquier, le fond, la police, les tailles et la langue de l’interface. Dans l’atelier, **Bilan** analyse la ligne principale ; les seuils de classement sont des repères simples, pas une mesure certifiée du niveau de jeu. Les fichiers Syzygy sont à fournir séparément.
 
 Pour mémoriser une ligne, place-toi **avant** son premier coup, puis **Créer une carte depuis ici**. L’entraînement reprend au maximum 40 demi-coups de la continuation principale. Il vérifie la ligne choisie, et non toutes les solutions équivalentes d’un problème tactique.
 

@@ -1,10 +1,16 @@
-# Trait64 — état du projet au 25 octobre 2026
+# Trait64 — état du projet au 28 octobre 2026
 
 > **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux d’abord · AGPL-3.0-or-later**
 
 Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Il ne remplace ni le [suivi technique](NEXT-STEPS.md) ni la [feuille de route complète](ROADMAP.md). L’interface, le moteur et les données utilisateur doivent continuer à fonctionner localement, sans compte ou connexion obligatoire.
 
 ## Dernière version publiée et vérifiée
+
+**[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
+
+Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](verification-ui-2026-10-28.json).
+
+### Versions précédentes
 
 **[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](verification-integrity-2026-10-25.json).
 
@@ -14,12 +20,13 @@ La [PR #10](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10) est
 
 La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a été fusionnée et a livré un **audit global de fiabilité**. Dix groupes de problèmes ont été corrigés : récupération des sessions, réindexation annulable, bornes FEN, réponses UCI réentrantes, fin de partie et nulles réclamables, anciens caches, options UCI, limites de pendule et durée de vie du système de mises à jour pendant l’authentification.
 
-**Contrôles publiés** : 12/12 suites en CI sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN, installation puis démarrage des deux paquets Debian et test de démarrage AppImage. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) et [TESTING.md](TESTING.md). Ces tests ne remplacent **pas** un essai graphique sur Voyager/Wayland avec le matériel de l’utilisateur.
+**Contrôles historiques de l’audit** : 12/12 suites en CI sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN, installation puis démarrage des deux paquets Debian et test de démarrage AppImage. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) et [TESTING.md](TESTING.md). Ces tests ne remplacent **pas** un essai graphique sur Voyager/Wayland avec le matériel de l’utilisateur.
 
 ## Ce qui est intégré
 
 | Domaine | Capacités réellement développées |
 | --- | --- |
+| Interface | Navigation latérale, panneaux adaptables, commandes clavier, police et tailles persistées, libellés français/anglais |
 | Échiquier et études | Coups légaux, variantes, Chess960, FEN, PGN annoté, flèches/cases, onglets, fusion et sauvegarde |
 | Moteurs | UCI, Stockfish/Arasan/PlentyChess téléchargeables, profils indépendants, MultiPV et comparaison de 2 à 4 moteurs |
 | Analyse | Graphique et bilan, file persistante avec analyses de variantes, pause/reprise, cache contextualisé et export |
@@ -44,7 +51,7 @@ Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité,
 3. **Répertoires et adversaires** : couverture probabiliste, comparaison de répertoires, tendances et dossiers de préparation.
 4. **Interopérabilité** : import volontaire Lichess/Chess.com, études, Polyglot, formats compatibles SCID/ChessBase.
 5. **Entraînement** : finales, calcul, visualisation, solutions équivalentes vérifiées et répétition espacée enrichie.
-6. **Fiabilité et diffusion** : restauration guidée, tests réels sur Voyager/Wayland/X11, Syzygy local, traductions puis éventuels ports Windows/macOS/Flatpak.
+6. **Fiabilité et diffusion** : restauration guidée, tests réels sur Voyager/Wayland/X11, Syzygy local, traduction des diagnostics C++ et descriptifs du catalogue puis éventuels ports Windows/macOS/Flatpak.
 
 **À ne pas annoncer comme livrés :** performances certifiées sur plusieurs millions de PGN complets, OCR, intégration Lichess/Chess.com, format T64 compact définitif, tests matériels Voyager, version stable 1.0 ou compatibilité Windows/macOS.
 
@@ -52,6 +59,7 @@ Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité,
 
 | Version | Évolution principale |
 | --- | --- |
+| [dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64) | Refonte native, navigation latérale, lecture personnalisable et régressions visuelles |
 | [dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57) | Vérification d'intégrité en arrière-plan et annulable, relance réentrante protégée |
 | [dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |
 | [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) | Audit massif, corrections de fiabilité et tests ASan/UBSan élargis |
