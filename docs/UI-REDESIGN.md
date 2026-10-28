@@ -1,27 +1,23 @@
-# Refonte native de Trait64 — 27 octobre 2026
+# Refonte native de Trait64 — intégrée le 28 octobre 2026
 
-L’utilisateur a demandé l’intégration de la refonte le 26 octobre, avec une attention particulière aux bugs visuels. Base : main `f123ec77f60d75d36bf06d4c7e045bdc096d6b3f` (dev.57). Branche `ui/desktop-redesign`, [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13).
+La [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13) est fusionnée dans main (`15708fb857c709af61bbfc56f9f5efa1392ccb87`). Le code est validé ; la [publication automatisée](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40644804206) est en cours. La dernière release confirmée reste dev.57 tant que les paquets ne sont pas vérifiés.
 
 ## Interface réalisée
 
-Navigation latérale de dix entrées, compacte ou développée ; grand échiquier à l’accueil ; espace d’analyse à panneaux redimensionnables ; palette de commandes au clavier. Les actions restent reliées au contrôleur Qt/C++. Board.qml, Piece.qml, pièces Lichess, annotations, index de pages 0–6 et schéma SQLite 7 sont conservés. Aucun HTML de la maquette n’est embarqué, aucune illustration décorative n’est ajoutée.
+Navigation latérale compacte ou développée, grand échiquier à l’accueil, panneaux adaptables et palette de commandes au clavier. Police, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé, animations réduites et libellés français/anglais sont persistés.
 
-Police système au choix, texte de 90 à 150 %, interface de 90 à 125 %, thèmes clair/sombre, contraste renforcé, animations réduites et largeur des panneaux sont persistés. Les libellés de l’interface passent du français à l’anglais sans réinitialiser les valeurs des listes. Les noms et contenus utilisateur restent inchangés. Certains diagnostics C++ et descriptifs du catalogue restent français.
+Corrections : commandes coupées à petite taille ou en grandes polices, blocage du profil Joueurs vide, titre d’aide tronqué, choix de promotion et couleurs des dialogues. Les valeurs des listes restent stables après changement de langue. Board.qml, Piece.qml et le schéma SQLite 7 sont conservés.
 
-## Corrections vérifiées
+Navigation : dix entrées donnant accès aux sept pages et aux dialogues existants du contrôleur Qt/C++. Pièces Lichess, annotations, noms et contenus utilisateur conservés.
 
-- Cadre de l’échiquier recalculé après redimensionnement.
-- Bouton moteur et commandes d’étude accessibles avec les tailles maximales, même avec la navigation développée à 960×640.
-- Profil Joueurs vide : suppression d’une boucle de mise en page Qt qui bloquait le démarrage.
-- Pages et dialogues défilants ; cartes de statistiques adaptables ; sélection du catalogue conservée après traduction.
-- Dernière correction issue des captures : retour à la ligne du titre de l’aide ; traduction des quatre choix de promotion.
+## Validation acquise
 
-## Validation et limites
+Tête `dd0e53c674a4043f697577187d190db0fe2c65ef`, arbre identique au commit fusionné. La [CI de PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40516973650) est entièrement réussie : cœur ASan/UBSan et 13 suites Qt ASan/UBSan, Debian 12 et 13 ; deux paquets installés et AppImage démarrée. Aucune archive Actions.
 
-La tête `e0e13d97f5bbc1d80655113fc1d7ddb16bebb34f` a passé les 13 suites locales avec Stockfish 16 en 84,52 s, sans suite ignorée. La sonde a réalisé 1 172 contrôles (dont les contrôles de capture), 9 configurations, 63 vues de pages, 100 ouvertures de dialogues et une vue avec la barre latérale développée ; 164 captures, zéro avertissement QML. Navigation clavier, exécution d’une commande, préférences persistées et conservation de l’étude non enregistrée sont contrôlées. Le test de démarrage couvre aussi le profil Joueurs vide.
+Sonde locale du 27 octobre : 1 180 contrôles (captures comprises), 9 configurations, 63 vues de pages, 100 dialogues et une vue de navigation développée ; 164 captures, zéro avertissement QML. Géométrie, navigation clavier, commande exécutée, préférences et étude non enregistrée contrôlées. [Rapport](ui-validation/2026-10-27/local.json) · [Matrice](ui-validation/2026-10-27/matrix.json).
 
-[CI de cette tête](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40471131364) réussie : cœur et Qt ASan/UBSan, Debian 12/13, paquets installés, AppImage et manifeste. Les derniers ajustements de l’aide et de la promotion sont soumis à une nouvelle CI avant fusion.
+Deux captures documentaires remplacées depuis le code fusionné, compilé localement comme 0.3.0-dev.64. Dimensions vérifiées dans la matrice : 960 × 640 à 2560 × 1600, français/anglais, clair/sombre, texte jusqu’à 150 % et interface jusqu’à 125 %.
 
-Dimensions : 960×640, 1366×768, 1440×940, 1920×1080, 2560×1600 ; combinaisons français/anglais, clair/sombre et tailles jusqu’à 150 % / 125 %. Tests avec rendu logiciel hors écran. Aucun essai sur le matériel Voyager/Wayland 2560×1600 à 120 Hz n’est revendiqué. Les anciens résultats 100k restent inchangés ; aucun nouveau benchmark ni qualification de plusieurs millions de parties.
+## Limites
 
-La PR n’est pas encore publiée. La documentation de version sera mise à jour uniquement après vérification de la release.
+Essais en rendu logiciel hors écran ; aucun essai matériel Voyager/Wayland/120 Hz. Certains diagnostics C++ et descriptifs de catalogue restent français. Un échec local isolé de préparation est documenté dans [local.json](ui-validation/2026-10-27/local.json), non reproduit lors des relances ni dans les CI finales ; diagnostic ajouté, assertion inchangée. Aucun nouveau benchmark de grandes bases.

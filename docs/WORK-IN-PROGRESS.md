@@ -1,4 +1,18 @@
-# Point de reprise — performances et vérification, 25 octobre 2026
+# Point de reprise — refonte fusionnée, publication en cours, 28 octobre 2026
+
+La PR #13 est fusionnée au commit `15708fb857c709af61bbfc56f9f5efa1392ccb87`. Son arbre `5930f856f4b655e89c893133699172cd46d308ac` est identique à celui de la tête validée `dd0e53c674a4043f697577187d190db0fe2c65ef`.
+
+La [CI finale de PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40516973650) a réussi : 13 suites Debian 12/13 et Qt ASan/UBSan, cœur 2/2, paquets installés et AppImage démarrée. Sonde locale : 1 180 contrôles (captures comprises), 9 configurations, 164 captures et zéro avertissement QML. Rapports sous `docs/ui-validation/2026-10-27`.
+
+La [CI de publication](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40644804206), numéro 64, a déjà validé le cœur (2/2, 77,30 s) et Qt ASan/UBSan (13/13, 181,12 s), sans suite ignorée. Le job Linux `122674212607` est encore en cours de fabrication des paquets. **Ne pas annoncer la release comme publiée avant de vérifier les cinq fichiers et le tag.** Dernière release confirmée à ce point : dev.57.
+
+Les deux captures documentaires ont été régénérées et inspectées depuis le code fusionné, avec Qt 6.4.2 en rendu logiciel, version locale 0.3.0-dev.64. Le helper `docs/ui-validation/2026-10-27/verify-published-update.cpp` vérifie le sélecteur réel à partir des métadonnées de release, depuis dev.57.
+
+À terminer : vérifier la fin de 40644804206, le tag pointant vers 15708fb857c709af61bbfc56f9f5efa1392ccb87, les noms/tailles/SHA-256 des cinq assets comparés au manifeste CI, puis exécuter le helper. Mettre à jour README, PROJECT-STATUS, NEXT-STEPS, ROADMAP, CHANGELOG, RELEASE-NOTES, TESTING et UI-REDESIGN, et conserver le rapport de livraison. Ne pas recommencer la refonte ni les benchmarks 100k. Certains diagnostics restent français ; Voyager/Wayland/120 Hz non testés. Le navigateur est déconnecté du dépôt privé et le connecteur ne propose pas l’édition du texte d’une release ; les notes finales doivent être actualisées dans le dépôt.
+
+Les données ci-dessous sont historiques.
+
+## Historique — performances et vérification, 25 octobre 2026
 
 ## Dev.57 publiée et vérifiée ; PR #12 intégrée
 
