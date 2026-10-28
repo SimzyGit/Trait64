@@ -4,8 +4,10 @@ import QtQuick.Controls
 
 TabButton {
     id: control
-    implicitHeight: 36
+    implicitHeight: Math.max(36*controller.preferences.uiScale,contentItem.implicitHeight+18)
     hoverEnabled: true
+    ToolTip.visible:(hovered||visualFocus)&&contentItem.truncated
+    ToolTip.text:text
     contentItem: Text {
         text: control.text
         font: control.font

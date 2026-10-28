@@ -6,6 +6,7 @@
 #include "queue.h"
 #include "uci.h"
 #include "updater.h"
+#include "ui_translator.h"
 #include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QObject>
@@ -196,6 +197,8 @@ class Controller : public QObject {
     Q_INVOKABLE void setCollection(qint64 id, const QString &collection);
     Q_INVOKABLE void copyText(const QString &what);
     Q_INVOKABLE void setPreference(const QString &key, const QVariant &value);
+    Q_INVOKABLE void retranslateUi(QObject *window);
+    Q_INVOKABLE QString uiText(const QString &text) const { return translator_->display(text); }
     Q_INVOKABLE void startEngine();
     Q_INVOKABLE void toggleAnalysis();
     Q_INVOKABLE void addEngineLine(int index);
@@ -325,6 +328,7 @@ class Controller : public QObject {
     QVariantList squares_, notation_, games_, openings_, cards_, engineLines_;
     QString engineStatus_ = "Moteur déconnecté";
     QSettings settings_;
+    std::unique_ptr<t64::UiTranslator> translator_;
     QTimer autosave_, analysisTimer_;
     t64::Uci engine_;
     t64::Comparison comparison_;
