@@ -133,6 +133,8 @@ ApplicationWindow {
                 Flow {Layout.fillWidth:true;spacing:8
                     TButton {text:qsTr("Téléchargements");onClicked:downloadsDialog.open()}
                     TButton {text:qsTr("Exporter la bibliothèque");onClicked:win.openExport(true)}
+                    TButton {objectName:"exportPolyglot";text:qsTr("Exporter un livre Polyglot");onClicked:polyglotDialog.open()
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Un livre .bin des coups joués au moins deux fois dans la bibliothèque, pondérés par le nombre de parties.")}
                     TButton {text:qsTr("+  Importer");accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
                 }
                 Flow {Layout.fillWidth:true;spacing:8
@@ -595,7 +597,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Dupliquer l’étude");onTriggered:controller.duplicateStudy()}
         MenuItem {text:qsTr("Identifier et renseigner l’ouverture");onTriggered:controller.identifyOpening()}
         MenuItem {text:qsTr("Chercher la nouveauté");onTriggered:controller.findNovelty()}
-        MenuItem {text:qsTr("Exporter le diagramme en PNG");onTriggered:diagramDialog.open()}
+        MenuItem {text:qsTr("Exporter le diagramme (PNG ou SVG)");onTriggered:diagramDialog.open()}
         MenuItem {text:qsTr("Exporter l’étude en PDF");onTriggered:pdfDialog.open()}
         MenuItem {text:qsTr("Effacer les flèches et cercles");onTriggered:controller.clearAnnotations()}
         MenuItem {text:qsTr("Abandonner la partie");visible:controller.state.playing;onTriggered:controller.resignGame()}
@@ -627,7 +629,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
     Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
-    Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
+    Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
+    Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)","Image vectorielle SVG (*.svg)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
     TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ColumnLayout {Label {text:qsTr("Numéro de la position (518 = position classique)")} SpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}

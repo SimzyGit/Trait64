@@ -17,6 +17,8 @@
 #include <QSettings>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QXmlStreamReader>
+#include <QImageReader>
 #include <QTest>
 #include <QThreadPool>
 #include <QtConcurrent>
@@ -205,6 +207,28 @@ int main(int argc, char **argv) {
             c.move("c7c5");
             c.findNovelty();
             check(c.state()["node"].toInt() == 2, "Novelty search jumps to the first unplayed move");
+            for (const auto &style : {QString("cburnett"), QString("merida"), QString("unicode")}) {
+                c.newGame();
+                c.setPreference("pieceStyle", style);
+                c.toggleAnnotation("e2", "e4", "G");
+                c.toggleAnnotation("d4", "d4", "R");
+                const auto svgPath = dir.path() + "/diagram-" + style + ".svg";
+                c.exportDiagram(svgPath);
+                QFile svg(svgPath);
+                check(svg.open(QIODevice::ReadOnly), "SVG diagram written");
+                const auto bytes = svg.readAll();
+                QXmlStreamReader xml(bytes);
+                while (!xml.atEnd()) xml.readNext();
+                check(!xml.hasError(), "SVG diagram is well-formed XML");
+                check(style == "unicode" ? bytes.count("<text") >= 32 : bytes.count("<svg") == 1 && bytes.count("<g transform") == 32, "Every piece is in the SVG");
+                check(bytes.contains("<polygon") && bytes.contains("<circle"), "Arrows and circles are kept");
+                QImageReader reader(svgPath);
+                const auto image = reader.read();
+                check(!image.isNull() && image.width() == 832, "SVG diagram renders");
+                if (!qEnvironmentVariable("T64_DIAGRAM_OUT").isEmpty())
+                    image.save(qEnvironmentVariable("T64_DIAGRAM_OUT") + "/diagram-" + style + ".png");
+            }
+            c.setPreference("pieceStyle", "cburnett");
             Q_UNUSED(first);
             Q_UNUSED(twoRooks);
         }

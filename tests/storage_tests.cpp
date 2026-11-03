@@ -2,6 +2,7 @@
 #include "archive.h"
 #include "database.h"
 #include "legacy_positions.h"
+#include "polyglot.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -387,6 +388,21 @@ int main(int argc, char **argv) {
             found = theory.novelty(theory.load(saved), saved);
             check(found["found"].toBool() && found["san"] == "d6", "A saved game does not count as its own precedent");
             check(theory.novelty(t64::parsePgn("1. e4 e5 *").front())["reason"] == "known", "Fully known line has no novelty");
+            theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 *").front());
+            theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O d6 *").front());
+            const auto bookPath = dir.path() + "/library.bin";
+            check(theory.exportPolyglot(bookPath, 2) > 0, "Library exports a Polyglot book");
+            t64::PolyglotBook book;
+            check(book.open(bookPath.toStdString()), "Exported book opens");
+            const auto first = book.moves(chess::Board());
+            check(first.size() == 1 && chess::uci::moveToUci(first[0].move) == "e2e4" && first[0].weight == 5,
+                  "Book weights are the number of games");
+            chess::Board castle("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4");
+            const auto castling = book.moves(castle);
+            check(castling.size() == 1 && castling[0].move.typeOf() == chess::Move::CASTLING,
+                  "Castling is written the Polyglot way and reads back as castling");
+            const auto sparse = theory.exportPolyglot(dir.path() + "/sparse.bin", 3);
+            check(sparse > 0 && sparse < theory.exportPolyglot(dir.path() + "/all.bin", 1), "Rare moves can be left out");
             check(theory.novelty(t64::parsePgn("1. a3 *").front())["ply"] == 0, "A first move can be the novelty");
             check(theory.novelty(t64::parsePgn("[SetUp \"1\"]\n[FEN \"8/8/8/8/8/8/6k1/4K2R w K - 0 1\"]\n\n1. Ke2 *").front())["reason"] ==
                       "unknownStart",

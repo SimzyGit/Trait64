@@ -1051,9 +1051,114 @@ void Controller::identifyOpening() {
     refresh(true);
     emit message("Ouverture ajoutée aux informations de la partie.");
 }
+QByteArray Controller::diagramSvg() const {
+    // Same geometry, colours, pieces and annotations as the PNG export, as scalable vectors.
+    const auto pref = preferences();
+    const int margin = 32, cell = 96, size = 8 * cell + 2 * margin;
+    auto esc = [](QString text) { return text.replace('&', "&amp;").replace('<', "&lt;").replace('"', "&quot;"); };
+    QString svg = QString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%1\" height=\"%1\" viewBox=\"0 0 %1 %1\">\n"
+                          "<rect width=\"%1\" height=\"%1\" fill=\"%2\"/>\n")
+                      .arg(size).arg(esc(pref["background"].toString()));
+    const auto board = game_.boardAt(node_);
+    const auto style = pref["pieceStyle"].toString();
+    int pieceIndex = 0;
+    for (int row = 0; row < 8; ++row)
+        for (int col = 0; col < 8; ++col) {
+            const int sq = flipped_ ? row * 8 + 7 - col : (7 - row) * 8 + col;
+            const int x = margin + col * cell, y = margin + row * cell;
+            svg += QString("<rect x=\"%1\" y=\"%2\" width=\"%3\" height=\"%3\" fill=\"%4\"/>\n")
+                       .arg(x).arg(y).arg(cell).arg(esc(pref[(row + col) % 2 ? "boardDark" : "boardLight"].toString()));
+            const auto piece = board.at(chess::Square(sq));
+            if (piece == chess::Piece::NONE) continue;
+            const bool white = piece.color() == chess::Color::WHITE;
+            if (style == "unicode") {
+                svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"66\" fill=\"%3\" "
+                               "stroke=\"#26372e\" stroke-width=\"1.5\">%4</text>\n")
+                           .arg(x + 10).arg(y + cell - 18).arg(white ? "#fffaf0" : "#23302e")
+                           .arg(QString("♟♞♝♜♛♚")[int(piece.type())]);
+                continue;
+            }
+            const auto code = (white ? QString("w") : QString("b")) + QString("PNBRQK")[int(piece.type())];
+            QFile file(style == "custom" ? pref["customPiecePath"].toString() + "/" + code + ".svg"
+                                         : ":/assets/pieces/" + style + "/" + code + ".svg");
+            need(file.open(QIODevice::ReadOnly), "Pièce illisible pendant l’export.");
+            QString piece_svg = QString::fromUtf8(file.readAll());
+            piece_svg.remove(QRegularExpression("<\\?xml[^>]*\\?>|<!DOCTYPE[^>]*>"));
+            const auto root = QRegularExpression("<svg\\b[^>]*>").match(piece_svg);
+            const auto end = piece_svg.lastIndexOf("</svg>");
+            need(root.hasMatch() && end > root.capturedEnd(0), "Pièce SVG invalide.");
+            const auto tag = root.captured(0);
+            // A group, not a nested <svg>: SVG Tiny renderers (Qt, many printers) ignore nesting.
+            double box[4] = {0, 0, 45, 45};
+            const auto view = QRegularExpression("viewBox=\"([^\"]+)\"").match(tag);
+            if (view.hasMatch()) {
+                const auto parts = view.captured(1).split(QRegularExpression("[\\s,]+"), Qt::SkipEmptyParts);
+                for (int k = 0; k < 4 && k < parts.size(); ++k) box[k] = parts[k].toDouble();
+            } else {
+                for (const auto &[name, slot] : {std::pair{"width", 2}, std::pair{"height", 3}}) {
+                    const auto m = QRegularExpression(QString("\\b%1=\"([0-9.]+)").arg(name)).match(tag);
+                    if (m.hasMatch()) box[slot] = m.captured(1).toDouble();
+                }
+            }
+            const double scale = (cell - 8) / std::max(1.0, std::max(box[2], box[3]));
+            piece_svg = QString("<g transform=\"translate(%1 %2) scale(%3) translate(%4 %5)\">")
+                            .arg(x + 4).arg(y + 4).arg(scale).arg(-box[0]).arg(-box[1]) +
+                        piece_svg.mid(root.capturedEnd(0), end - root.capturedEnd(0)) + "</g>";
+            // Pieces may define gradients or clip paths: keep their ids unique in the diagram.
+            const auto prefix = QString("p%1-").arg(pieceIndex++);
+            piece_svg.replace(QRegularExpression("\\bid=\"([^\"]+)\""), "id=\"" + prefix + "\\1\"");
+            piece_svg.replace(QRegularExpression("url\\(#([^)]+)\\)"), "url(#" + prefix + "\\1)");
+            piece_svg.replace(QRegularExpression("href=\"#([^\"]+)\""), "href=\"#" + prefix + "\\1\"");
+            svg += piece_svg.trimmed() + "\n";
+        }
+    auto center = [&](const QString &square) {
+        const int n = (square[1].unicode() - '1') * 8 + square[0].unicode() - 'a';
+        const int row = flipped_ ? n / 8 : 7 - n / 8, col = flipped_ ? 7 - n % 8 : n % 8;
+        return QPointF(margin + (col + .5) * cell, margin + (row + .5) * cell);
+    };
+    const QMap<QString, QString> colours{{"G", "#599c46"}, {"R", "#d75050"}, {"B", "#4289cc"}, {"Y", "#dcac35"}};
+    for (const auto &v : annotations()) {
+        const auto a = v.toMap();
+        const auto colour = colours.value(a["color"].toString(), "#599c46");
+        const auto from = center(a["from"].toString()), to = center(a["to"].toString());
+        if (from == to) {
+            svg += QString("<circle cx=\"%1\" cy=\"%2\" r=\"38\" fill=\"none\" stroke=\"%3\" stroke-width=\"10\" "
+                           "stroke-opacity=\".8\"/>\n").arg(from.x()).arg(from.y()).arg(colour);
+            continue;
+        }
+        const double angle = std::atan2(to.y() - from.y(), to.x() - from.x());
+        const QPointF base = to - QPointF(18 * std::cos(angle), 18 * std::sin(angle));
+        const QPointF left = to - QPointF(30 * std::cos(angle - .5), 30 * std::sin(angle - .5));
+        const QPointF right = to - QPointF(30 * std::cos(angle + .5), 30 * std::sin(angle + .5));
+        svg += QString("<g fill=\"%1\" stroke=\"%1\" opacity=\".8\"><line x1=\"%2\" y1=\"%3\" x2=\"%4\" y2=\"%5\" "
+                       "stroke-width=\"10\" stroke-linecap=\"round\"/><polygon stroke=\"none\" points=\"%6,%7 %8,%9 %10,%11\"/></g>\n")
+                   .arg(colour).arg(from.x()).arg(from.y()).arg(base.x()).arg(base.y())
+                   .arg(to.x()).arg(to.y()).arg(left.x()).arg(left.y()).arg(right.x()).arg(right.y());
+    }
+    if (pref["coordinates"].toBool())
+        for (int i = 0; i < 8; ++i) {
+            svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"17\" fill=\"%3\" "
+                           "text-anchor=\"middle\">%4</text>\n")
+                       .arg(margin + i * cell + cell / 2).arg(size - margin / 2 + 6).arg(esc(pref["foreground"].toString()))
+                       .arg(QChar('a' + (flipped_ ? 7 - i : i)));
+            svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"17\" fill=\"%3\" "
+                           "text-anchor=\"middle\">%4</text>\n")
+                       .arg(margin / 2).arg(margin + i * cell + cell / 2 + 6).arg(esc(pref["foreground"].toString()))
+                       .arg(flipped_ ? i + 1 : 8 - i);
+        }
+    return (svg + "</svg>\n").toUtf8();
+}
 void Controller::exportDiagram(const QString &url) {
     try {
         db_->validateOutputPath(localPath(url));
+        if (localPath(url).endsWith(".svg", Qt::CaseInsensitive)) {
+            QSaveFile file(localPath(url));
+            need(file.open(QIODevice::WriteOnly), file.errorString());
+            const auto bytes = diagramSvg();
+            need(file.write(bytes) == bytes.size() && file.commit(), file.errorString());
+            emit message("Diagramme SVG exporté avec votre apparence et vos flèches.");
+            return;
+        }
         const auto pref = preferences();
         const int margin = 32, cell = 96, size = 8 * cell + 2 * margin;
         QImage diagram(size, size, QImage::Format_ARGB32_Premultiplied);

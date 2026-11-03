@@ -4,7 +4,9 @@
 #include "game.h"
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSaveFile>
 #include <QUuid>
+#include <algorithm>
 #include <stdexcept>
 
 namespace t64 {
@@ -74,6 +76,49 @@ QVariantMap Database::novelty(const Game &game, qint64 self) const {
                     {"reached", reached}, {"known", known}};
     }
     return {{"found", false}, {"reason", "known"}};
+}
+
+int Database::exportPolyglot(const QString &path, int minGames) const {
+    // Schema-8 keys are Polyglot keys, so the statistics map onto book entries directly.
+    struct Entry {
+        quint64 key;
+        quint16 move, weight;
+    };
+    std::vector<Entry> entries;
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare("SELECT key,uci,san,count FROM opening_stats WHERE count>=?");
+    q.addBindValue(std::max(1, minGames));
+    run(q);
+    while (q.next()) {
+        const auto uci = q.value(1).toString(), san = q.value(2).toString();
+        if (uci.size() < 4) continue;
+        auto square = [](QStringView s) { return (s[1].unicode() - '1') * 8 + (s[0].unicode() - 'a'); };
+        const int from = square(QStringView(uci).mid(0, 2));
+        int to = square(QStringView(uci).mid(2, 2));
+        // Polyglot stores castling as the king taking its own rook.
+        if (san.startsWith("O-O")) to = (from / 8) * 8 + (san.startsWith("O-O-O") ? 0 : 7);
+        int promotion = 0;
+        if (uci.size() == 5) promotion = QString("nbrq").indexOf(uci[4]) + 1;
+        if (from < 0 || from > 63 || to < 0 || to > 63 || promotion < 0) continue;
+        const auto clamped = quint16(std::clamp(q.value(3).toInt(), 1, 65535));
+        entries.push_back({quint64(q.value(0).toLongLong()), quint16(to | from << 6 | promotion << 12), clamped});
+    }
+    std::sort(entries.begin(), entries.end(), [](const Entry &a, const Entry &b) {
+        return a.key != b.key ? a.key < b.key : a.weight > b.weight;
+    });
+    QSaveFile file(path);
+    check(file.open(QIODevice::WriteOnly), file.errorString());
+    QByteArray bytes;
+    bytes.reserve(int(entries.size() * 16));
+    for (const auto &e : entries) {
+        for (int shift = 56; shift >= 0; shift -= 8) bytes.append(char(e.key >> shift & 0xff));
+        bytes.append(char(e.move >> 8)).append(char(e.move & 0xff));
+        bytes.append(char(e.weight >> 8)).append(char(e.weight & 0xff));
+        bytes.append(4, '\0'); // learn field
+    }
+    check(file.write(bytes) == bytes.size() && file.commit(), file.errorString());
+    return int(entries.size());
 }
 
 void Database::upgradeV8(int originalVersion) {

@@ -48,6 +48,14 @@ void Controller::enqueueLibrary(int milliseconds, int profile, int maxGames) {
         fail(e);
     }
 }
+void Controller::exportPolyglot(const QString &url, int minGames) {
+    try {
+        const int entries = db_->exportPolyglot(localPath(url), minGames);
+        emit message(QString("Livre Polyglot écrit : %1 coup(s) joués au moins %2 fois.").arg(entries).arg(minGames));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::findNovelty() {
     try {
         const auto result = db_->novelty(game_, gameId_);

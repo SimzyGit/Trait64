@@ -94,6 +94,9 @@ class Database {
     // First main-line move no other game of the library played from that position.
     // `self` is the game's own library id (its moves are not counted), 0 if unsaved.
     QVariantMap novelty(const Game &game, qint64 self = 0) const;
+    // Writes the library's opening statistics as a Polyglot book, weighted by games played,
+    // keeping moves played at least `minGames` times. Returns the number of entries.
+    int exportPolyglot(const QString &path, int minGames = 2) const;
     void addCard(const QString &title, const QString &fen, const QString &moves);
     QVariantList cards() const;
     void review(qint64 id, bool success);

@@ -1,5 +1,11 @@
 # Changements
 
+## Petits ajouts — 3 novembre 2026
+
+- **Écriture de livres Polyglot** : Bibliothèque → « Exporter un livre Polyglot » écrit un `.bin` des coups joués au moins deux fois, pondérés par le nombre de parties. Les clés du schéma 8 sont des clés Polyglot ; un aller-retour écriture/lecture est testé, roques compris.
+- **Diagrammes SVG** : l'export de diagramme accepte `.svg` en plus de `.png`, avec la même apparence, les flèches et les cercles. Les pièces sont des groupes transformés, lisibles par les moteurs SVG Tiny comme par les navigateurs.
+- **Horloges et évaluations PGN** : `[%clk]` et `[%eval]` (parties Lichess) s'affichent à côté du coup ; `[%cal]`/`[%csl]` ne polluent plus les commentaires. Le PGN enregistré reste inchangé.
+
 ## Analyse en lot et nouveautés — 3 novembre 2026
 
 - **Analyse des parties affichées** : la file d'analyse reçoit en une fois jusqu'à 200 parties correspondant aux filtres de la bibliothèque (lignes principales), avec le budget et le profil choisis.

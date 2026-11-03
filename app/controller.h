@@ -185,6 +185,8 @@ class Controller : public QObject {
     Q_INVOKABLE void createMistakeCards();
     Q_INVOKABLE void exportStudyPdf(const QString &url);
     Q_INVOKABLE void exportDiagram(const QString &url);
+    Q_INVOKABLE void exportPolyglot(const QString &url, int minGames);
+    QByteArray diagramSvg() const;
     Q_INVOKABLE void identifyOpening();
     Q_INVOKABLE void searchAdvanced(const QVariantMap &filters);
     Q_INVOKABLE void inspectPlayer(const QString &name);
