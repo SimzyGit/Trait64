@@ -27,7 +27,7 @@ QVariantMap Controller::preferences() const {
                          {"fontFamily", QGuiApplication::font().family()},
                          {"fontScale", 1.0}, {"uiScale", 1.0},
                          {"sidebarCompact", false}, {"figurines", false}, {"syncAtStartup", false}, {"highContrast", false},
-                         {"reduceMotion", false}, {"language", "fr"},
+                         {"reduceMotion", false}, {"language", "auto"},
                          {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
                          {"coordinates", true},
                          {"pieceStyle", "cburnett"},

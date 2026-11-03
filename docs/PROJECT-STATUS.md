@@ -12,19 +12,19 @@ entre parenthèses) est proposé en option. Voir [MOVE-NOTEBOOK.md](MOVE-NOTEBOO
 
 ## Dernière version publiée et vérifiée
 
-**[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
+**[v0.3.0-dev.64](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/SimzyGit/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
 
 Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](VALIDATION.md).
 
 ### Versions précédentes
 
-**[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](VALIDATION.md).
+**[v0.3.0-dev.57](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](VALIDATION.md).
 
-La [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12) rend le contrôle manuel d'intégrité asynchrone et annulable. L'étude non enregistrée est conservée ; chevauchements, relances réentrantes et fermeture sont testés. La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones. [Détails](ASYNC-INTEGRITY.md).
+La [PR #12](https://github.com/SimzyGit/Trait64/pull/12) rend le contrôle manuel d'intégrité asynchrone et annulable. L'étude non enregistrée est conservée ; chevauchements, relances réentrantes et fermeture sont testés. La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones. [Détails](ASYNC-INTEGRITY.md).
 
-La [PR #10](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10) est intégrée : doublons recherchés par empreinte et indexation du matériel accélérée, sans migration. Les 12 suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés.
+La [PR #10](https://github.com/SimzyGit/Trait64/pull/10) est intégrée : doublons recherchés par empreinte et indexation du matériel accélérée, sans migration. Les 12 suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés.
 
-La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) a été fusionnée et a livré un **audit global de fiabilité**. Dix groupes de problèmes ont été corrigés : récupération des sessions, réindexation annulable, bornes FEN, réponses UCI réentrantes, fin de partie et nulles réclamables, anciens caches, options UCI, limites de pendule et durée de vie du système de mises à jour pendant l’authentification.
+La [PR #9](https://github.com/SimzyGit/Trait64/pull/9) a été fusionnée et a livré un **audit global de fiabilité**. Dix groupes de problèmes ont été corrigés : récupération des sessions, réindexation annulable, bornes FEN, réponses UCI réentrantes, fin de partie et nulles réclamables, anciens caches, options UCI, limites de pendule et durée de vie du système de mises à jour pendant l’authentification.
 
 **Contrôles historiques de l’audit** : 12/12 suites en CI sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN, installation puis démarrage des deux paquets Debian et test de démarrage AppImage. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) et [TESTING.md](TESTING.md). Ces tests ne remplacent **pas** un essai graphique sur Voyager/Wayland avec le matériel de l’utilisateur.
 
@@ -69,17 +69,17 @@ Toute évolution du schéma SQLite exige une migration 8 sauvegardée.
 
 | Version | Évolution principale |
 | --- | --- |
-| [dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64) | Refonte native, navigation latérale, lecture personnalisable et régressions visuelles |
-| [dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57) | Vérification d'intégrité en arrière-plan et annulable, relance réentrante protégée |
-| [dev.55](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |
-| [dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52) | Audit massif, corrections de fiabilité et tests ASan/UBSan élargis |
-| [dev.46](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46) | Motifs tactiques, flèches et annotations PGN |
-| [dev.43](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43) | Compréhension des variantes du bilan |
-| [dev.42](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42) | Répertoires asynchrones et publication directe sans archives Actions |
-| [dev.33](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.33) | Imports reprenables, répertoires et préparation |
-| [dev.25](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.25) | Catalogue moteurs/bases et recherches annulables |
+| [dev.64](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64) | Refonte native, navigation latérale, lecture personnalisable et régressions visuelles |
+| [dev.57](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.57) | Vérification d'intégrité en arrière-plan et annulable, relance réentrante protégée |
+| [dev.55](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |
+| [dev.52](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.52) | Audit massif, corrections de fiabilité et tests ASan/UBSan élargis |
+| [dev.46](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.46) | Motifs tactiques, flèches et annotations PGN |
+| [dev.43](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.43) | Compréhension des variantes du bilan |
+| [dev.42](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.42) | Répertoires asynchrones et publication directe sans archives Actions |
+| [dev.33](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.33) | Imports reprenables, répertoires et préparation |
+| [dev.25](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.25) | Catalogue moteurs/bases et recherches annulables |
 
-Les changements précis sont détaillés dans les [Releases](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases), le [changelog](CHANGELOG.md), la [roadmap](ROADMAP.md) et les [tests](TESTING.md).
+Les changements précis sont détaillés dans les [Releases](https://github.com/SimzyGit/Trait64/releases), le [changelog](CHANGELOG.md), la [roadmap](ROADMAP.md) et les [tests](TESTING.md).
 
 ## Principes de communication
 

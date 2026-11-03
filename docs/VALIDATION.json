@@ -791,7 +791,7 @@
    "No Voyager hardware test",
    "Large GUI probe not yet completed"
   ],
-  "ci_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40010927047",
+  "ci_url": "https://github.com/SimzyGit/Trait64/actions/runs/40010927047",
   "ci_status": "success",
   "ci_suites": {
    "core_asan_ubsan": {
@@ -1517,7 +1517,7 @@
  "benchmarks/2026-10-25/qualification-summary.json": {
   "date": "2026-10-25",
   "workflow_run": 40179661406,
-  "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406",
+  "url": "https://github.com/SimzyGit/Trait64/actions/runs/40179661406",
   "conclusion": "success",
   "runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
   "measurement_commit": "67f49eefbfabb0f635752ca1cdea7a1cb6056e45",
@@ -4030,7 +4030,7 @@
   ],
   "ci": {
    "run_id": 39564062699,
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699",
+   "url": "https://github.com/SimzyGit/Trait64/actions/runs/39564062699",
    "status": "success",
    "core_sanitizers": {
     "passed": 2,
@@ -4067,9 +4067,9 @@
   },
   "release": {
    "version": "v0.3.0-dev.52",
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52",
+   "url": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.52",
    "run_id": 39566807355,
-   "run_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355",
+   "run_url": "https://github.com/SimzyGit/Trait64/actions/runs/39566807355",
    "status": "published",
    "published_at": "2026-10-21T08:24:00Z",
    "verified_date": "2026-10-22",
@@ -4240,7 +4240,7 @@
   ],
   "code_commit": "3a6f5d4fbdeee87d466fe31fa034eb5f3fb05d55",
   "ci_run": 38940592180,
-  "ci_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38940592180",
+  "ci_url": "https://github.com/SimzyGit/Trait64/actions/runs/38940592180",
   "ci_debian12": {
    "passed": 11,
    "total": 11,
@@ -4263,7 +4263,7 @@
   "actions_artifacts": 0,
   "release": {
    "version": "v0.3.0-dev.43",
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43",
+   "url": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.43",
    "published_at": "2026-10-16T17:45:37Z",
    "draft": false,
    "prerelease": true,
@@ -4387,7 +4387,7 @@
   ],
   "pull_request_ci": {
    "run_id": 40181527836,
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836",
+   "url": "https://github.com/SimzyGit/Trait64/actions/runs/40181527836",
    "conclusion": "success",
    "core_sanitizers": {
     "passed": 2,
@@ -4411,12 +4411,12 @@
    "actions_artifacts": 0
   },
   "version": "v0.3.0-dev.57",
-  "release": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57",
+  "release": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.57",
   "published_at": "2026-10-25T15:31:18Z",
-  "pr": "https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12",
+  "pr": "https://github.com/SimzyGit/Trait64/pull/12",
   "release_tag_commit": "078bbaf64c866e1a697a704f59e2198ce9d2b8cc",
   "publication_ci": {
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40205667259",
+   "url": "https://github.com/SimzyGit/Trait64/actions/runs/40205667259",
    "run_id": 40205667259,
    "conclusion": "success",
    "core_sanitizers": {
@@ -4620,10 +4620,10 @@
  },
  "verification-performance-2026-10-24.json": {
   "date": "2026-10-24",
-  "release": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55",
+  "release": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.55",
   "version": "v0.3.0-dev.55",
   "published_at": "2026-10-24T08:34:39Z",
-  "pr": "https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10",
+  "pr": "https://github.com/SimzyGit/Trait64/pull/10",
   "tested_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
   "merge_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
   "release_tag_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
@@ -4640,7 +4640,7 @@
    "stockfish": "16"
   },
   "publication_ci": {
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40077170390",
+   "url": "https://github.com/SimzyGit/Trait64/actions/runs/40077170390",
    "conclusion": "success",
    "core_sanitizers": {
     "passed": 2,
@@ -4830,7 +4830,7 @@
    "version": "0.3.0-dev.42",
    "tested_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
    "status": "published",
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42",
+   "url": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.42",
    "published_at": "2026-10-16T06:40:07Z",
    "prerelease": true,
    "tag_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
@@ -4970,7 +4970,7 @@
   },
   "ci": {
    "run_id": 39127471728,
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728",
+   "url": "https://github.com/SimzyGit/Trait64/actions/runs/39127471728",
    "status": "success",
    "debian12": {
     "suites_passed": 11,
@@ -4994,9 +4994,9 @@
   },
   "release": {
    "version": "v0.3.0-dev.46",
-   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46",
+   "url": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.46",
    "run_id": 39206008438,
-   "run_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39206008438",
+   "run_url": "https://github.com/SimzyGit/Trait64/actions/runs/39206008438",
    "status": "published",
    "published_at": "2026-10-19T05:56:40Z",
    "draft": false,
@@ -5092,7 +5092,7 @@
  },
  "verification-ui-2026-10-28.json": {
   "checked_on": "2026-10-28",
-  "repository": "feuvrierbernardinisimhon-png/Trait64",
+  "repository": "SimzyGit/Trait64",
   "pull_request": 13,
   "final_feature_head": "dd0e53c674a4043f697577187d190db0fe2c65ef",
   "merge_commit": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
@@ -5256,7 +5256,7 @@
    "draft": false,
    "prerelease": true,
    "target_commitish": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
-   "html_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64",
+   "html_url": "https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64",
    "assets": [
     {
      "id": 684152142,
@@ -5264,7 +5264,7 @@
      "size": 415,
      "digest": "sha256:d43eca764c4fe08b2a9bd4926a6874696a2f67500969cbca4129482584aa47cb",
      "state": "uploaded",
-     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/SHA256SUMS"
+     "browser_download_url": "https://github.com/SimzyGit/Trait64/releases/download/v0.3.0-dev.64/SHA256SUMS"
     },
     {
      "id": 684152144,
@@ -5272,7 +5272,7 @@
      "size": 36899320,
      "digest": "sha256:3c8f4ddc826adb5d5ab496920edf7111ced026b67621a8ec3461a6d2610e21ff",
      "state": "uploaded",
-     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/Trait64-0.3.0-dev.64-linux-x86_64.AppImage"
+     "browser_download_url": "https://github.com/SimzyGit/Trait64/releases/download/v0.3.0-dev.64/Trait64-0.3.0-dev.64-linux-x86_64.AppImage"
     },
     {
      "id": 684152143,
@@ -5280,7 +5280,7 @@
      "size": 291573760,
      "digest": "sha256:7121ac45732264b699d7a68c00ca4ed5bc3a9540d270b02e4bda7c4dfe9d8106",
      "state": "uploaded",
-     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/Trait64-runtime-sources.tar"
+     "browser_download_url": "https://github.com/SimzyGit/Trait64/releases/download/v0.3.0-dev.64/Trait64-runtime-sources.tar"
     },
     {
      "id": 684152138,
@@ -5288,7 +5288,7 @@
      "size": 1073846,
      "digest": "sha256:038f6f353c42a0204c3c53dc888afe2e4383858f0e3543a7301642f454258e31",
      "state": "uploaded",
-     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian12_amd64.deb"
+     "browser_download_url": "https://github.com/SimzyGit/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian12_amd64.deb"
     },
     {
      "id": 684152136,
@@ -5296,7 +5296,7 @@
      "size": 1083160,
      "digest": "sha256:8258a8ab0f7b8cf841e3b2a9c9272b9dd7df1a3c68a7a7aedd82ce7861280524",
      "state": "uploaded",
-     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian13_amd64.deb"
+     "browser_download_url": "https://github.com/SimzyGit/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian13_amd64.deb"
     }
    ]
   },

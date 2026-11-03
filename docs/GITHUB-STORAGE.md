@@ -42,13 +42,13 @@ modification. Les dix versions déjà publiées disposaient de leurs cinq fichie
 dont les sources nécessaires aux licences : elles doivent rester disponibles.
 
 Nettoyage réellement effectué à 05:59 UTC dans l'exécution
-[38689692486](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38689692486) :
+[38689692486](https://github.com/SimzyGit/Trait64/actions/runs/38689692486) :
 les 58 archives et leurs 8 371 207 728 octets ont été supprimés. L'inventaire final
 ne contient aucune archive Actions ni cache. Les dix releases et leurs cinquante
-fichiers sont identiques avant/après. La [PR #4](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/4)
+fichiers sont identiques avant/après. La [PR #4](https://github.com/SimzyGit/Trait64/pull/4)
 est fusionnée après validation Debian 12/13, paquets, AppImage et sanitizers.
 La purge déclenchée automatiquement à la fin de la CI de la PR #5 a également
-réussi ([38692633667](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38692633667)).
+réussi ([38692633667](https://github.com/SimzyGit/Trait64/actions/runs/38692633667)).
 
 À 06:35 UTC, la publication dev.36 (exécution 38692749119), puis dev.38, ont
 encore rencontré `Artifact storage quota has been hit` au téléversement, malgré
@@ -58,7 +58,7 @@ quota d’archives. Ne pas relancer les anciennes exécutions 36/38 : elles util
 l’ancien workflow. Voir `PROJECT-STATUS.md` pour la publication actuelle ;
 aucun achat ni changement du budget du compte n’a été effectué.
 
-Le 16 octobre, [l’exécution 38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628)
+Le 16 octobre, [l’exécution 38861352628](https://github.com/SimzyGit/Trait64/actions/runs/38861352628)
 a réellement publié **v0.3.0-dev.42**, avec cinq fichiers et zéro archive Actions.
 Les tailles et SHA-256 des cinq fichiers distants correspondent au manifeste
 validé avant envoi. Les dix releases précédentes et leurs cinquante fichiers

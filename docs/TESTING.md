@@ -53,7 +53,7 @@ Rapport de livraison : [verification-performance-2026-10-24.json](VALIDATION.md)
 
 ## Audit global — validation finale du 22 octobre 2026
 
-La [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9) ajoute des régressions sur les sessions et chemins restaurés, l’annulation finale de réindexation, les compteurs FEN, les réponses moteur réentrantes, la destruction pendant l’authentification, les nulles réclamables, le cache hérité et les cadences extrêmes.
+La [PR #9](https://github.com/SimzyGit/Trait64/pull/9) ajoute des régressions sur les sessions et chemins restaurés, l’annulation finale de réindexation, les compteurs FEN, les réponses moteur réentrantes, la destruction pendant l’authentification, les nulles réclamables, le cache hérité et les cadences extrêmes.
 
 Les options UCI sont vérifiées avec un moteur déclarant des bornes strictes et Stockfish réel. Un dossier nommé `<empty>` empêche la création du fichier de journal erroné, y compris en exécution privilégiée ; les chaînes vides et les anciens marqueurs doivent permettre le démarrage et l’analyse.
 
@@ -165,7 +165,7 @@ Lot répertoires : 9/9 suites locales en 15,44 s ; éditeur QML à 960 × 640, r
 
 Validation finale locale du lot : **9/9 suites réussies en 15,53 s**, avec Stockfish réel. La préparation couvre les filtres combinés source/joueur/couleur/année/Elo, les métadonnées manquantes, le dédoublonnage des répétitions, les bornes invalides et la réutilisation après annulation. Le scénario bureau ouvre le dialogue à 960 × 640, remplace rapidement des demandes, exporte le contexte en CSV, refuse un coup provenant d’une autre position et vérifie les erreurs QML.
 
-Les résultats CI et la publication du lot sont suivis dans la [PR #3](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/3). Le protocole ne qualifie pas un corpus réel de plusieurs millions de parties ni une installation sur Voyager.
+Les résultats CI et la publication du lot sont suivis dans la [PR #3](https://github.com/SimzyGit/Trait64/pull/3). Le protocole ne qualifie pas un corpus réel de plusieurs millions de parties ni une installation sur Voyager.
 
 Le contrôle de taille du parcours de répertoire est effectué avant l’ajout des enfants (100 000 positions maximum), avec insertion élément par élément pour éviter un avertissement de GCC 14 sur la copie de plage. Les neuf suites locales ont été relancées après cette correction.
 
@@ -208,7 +208,7 @@ bash -n packaging/ci-linux.sh
 
 ## Publication effectivement vérifiée — 16 octobre 2026
 
-La CI [38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628) a publié **v0.3.0-dev.42** au commit `fc941c17c53d6c5aa639433c6563f73469971ae9` : 11/11 suites Debian 12 (47,44 s) et Debian 13 (58,41 s), DEB installés, AppImage démarrée, 17 tests du publieur, 9 du nettoyage et cœur ASan/UBSan. Les cinq noms/tailles/SHA-256 distants correspondent au manifeste de compilation ; le tag résout le commit testé. Zéro archive Actions.
+La CI [38861352628](https://github.com/SimzyGit/Trait64/actions/runs/38861352628) a publié **v0.3.0-dev.42** au commit `fc941c17c53d6c5aa639433c6563f73469971ae9` : 11/11 suites Debian 12 (47,44 s) et Debian 13 (58,41 s), DEB installés, AppImage démarrée, 17 tests du publieur, 9 du nettoyage et cœur ASan/UBSan. Les cinq noms/tailles/SHA-256 distants correspondent au manifeste de compilation ; le tag résout le commit testé. Zéro archive Actions.
 
 Vérification complémentaire avec les métadonnées réellement publiées et `libs/updates/releases.cpp` : les trois paquets sont sélectionnés pour une mise à jour dev.33 → dev.42 sur Développement, exclus de Stable/Bêta ; ignorance, version identique et rétrogradation restent bloquées. Cette lecture n’effectue aucune installation sur le PC utilisateur. Détails dans `verification-repertoires-2026-10-16.json`.
 
@@ -233,7 +233,7 @@ puis `content` et `pgn_benchmark_safety` passent séparément. Le test du clic r
 est ensuite reconstruit et repasse en 17,31 s. Il ne s’agit pas d’une installation
 sur le PC Voyager.
 
-La [CI 38940592180](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38940592180)
+La [CI 38940592180](https://github.com/SimzyGit/Trait64/actions/runs/38940592180)
 a ensuite validé le commit `3a6f5d4` : **11/11 Debian 12 en 49,00 s**, **11/11
 Debian 13 en 60,91 s**, deux DEB installés/démarrés, AppImage démarrée, cœur
 ASan/UBSan (14,23 s), 17 tests de publication et 9 de nettoyage. **dev.43 est
@@ -250,7 +250,7 @@ captures optionnelles. Fourchette et clouage testés par clic, repères exacts,
 export/relecture PGN et étude d’origine intacte. Dialogue et échiquier inspectés
 à 960 × 640. Compilation sans avertissement relevé.
 
-CI [39127471728](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728) :
+CI [39127471728](https://github.com/SimzyGit/Trait64/actions/runs/39127471728) :
 11/11 Debian 12 en 49,37 s, 11/11 Debian 13 en 60,14 s ; paquets installés,
 AppImage, cœur ASan/UBSan, 17 tests de publication et 9 de nettoyage réussis.
 Publication dev.46 confirmée par la CI 39206008438 : 11/11 Debian 12 en 50,19 s,

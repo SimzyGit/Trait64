@@ -100,4 +100,4 @@ command -v update-desktop-database >/dev/null && update-desktop-database "${app_
 echo
 echo "Trait64 ${version} est installé. Ouvrez « Trait64 » dans le menu des applications,"
 echo "ou lancez : ${bin_dir}/trait64"
-echo "Les mises à jour suivantes se font depuis l'application (Menu → Mises à jour)."
+echo "Les mises à jour suivantes se font depuis l'application (Aide → Mises à jour)."

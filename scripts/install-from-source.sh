@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 set -euo pipefail
-trait64_source="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+trait64_source="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "${EUID}" -eq 0 ]]; then
     echo 'Lance ce script avec ton compte habituel, sans sudo. Il demandera sudo pour installer les dépendances.' >&2
     exit 1

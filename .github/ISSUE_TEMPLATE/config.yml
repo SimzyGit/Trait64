@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Faille de sécurité / Security issue
+    url: https://github.com/SimzyGit/Trait64/security/advisories/new
+    about: Signalez-la en privé, pas dans une demande publique.

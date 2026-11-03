@@ -8,7 +8,7 @@ import os
 import urllib.error
 import urllib.request
 
-REPOSITORY = 'feuvrierbernardinisimhon-png/Trait64'
+REPOSITORY = 'SimzyGit/Trait64'
 ARTIFACT_NAMES = {'Trait64-debian12-amd64', 'Trait64-debian13-amd64'}
 
 

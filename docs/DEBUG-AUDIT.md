@@ -3,7 +3,7 @@
 Demande utilisateur : suspendre les ajouts et déboguer tout le logiciel.
 Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 
-**Audit intégré dans la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Publication le 21 octobre 2026, vérification finale le 22 octobre. Dix groupes de défauts corrigés. Mesures et références : [verification-debug-2026-10-22.json](VALIDATION.md).
+**Audit intégré dans la [PR #9](https://github.com/SimzyGit/Trait64/pull/9), publié dans [v0.3.0-dev.52](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.52).** Publication le 21 octobre 2026, vérification finale le 22 octobre. Dix groupes de défauts corrigés. Mesures et références : [verification-debug-2026-10-22.json](VALIDATION.md).
 
 ## Corrections et preuves de régression
 
@@ -26,7 +26,7 @@ Référence avant modification : **11/11 suites, 55,76 s**, GCC 13.3 / Qt 6.4.2,
 
 Contrôles locaux : cœur **3 269**, robustesse **4 414**, interface **683**, analyses persistantes **121**, mises à jour **45**, stockage **158**, répertoires **51**, imports reprenables **24**. Le stress déterministe couvre **80 études classiques/Chess960 et 3 000 mutations FEN/PGN** : 330 acceptées avec round trip vérifié, 2 670 rejetées. Les parseurs en flux et parallèle vérifient aussi l’ordre des parties et leurs offsets.
 
-| Contrôle | [PR, CI 39564062699](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699) | [Publication, CI 39566807355](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355) |
+| Contrôle | [PR, CI 39564062699](https://github.com/SimzyGit/Trait64/actions/runs/39564062699) | [Publication, CI 39566807355](https://github.com/SimzyGit/Trait64/actions/runs/39566807355) |
 |---|---|---|
 | Cœur ASan/UBSan | 2/2, 139,75 s | 2/2, 94,35 s |
 | Tous les modules Qt ASan/UBSan, Stockfish réel | 12/12, 112,50 s | 12/12, 104,70 s |
@@ -42,8 +42,8 @@ Les avertissements `-Wall -Wextra -Wpedantic -Wformat=2` sont étendus à tous l
 
 ### Échecs ayant conduit aux corrections
 
-- Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La [CI 39393905485](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39393905485) a ensuite révélé l’arrêt de Stockfish lié aux chaînes UCI vides. Le comportement a été reproduit avec le moteur réel, puis corrigé au commit `de41134a`.
-- La [CI 39563408828](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39563408828) a atteint le délai de 120 s du stress en Debug non optimisé avec sanitizers. Le délai passe à **300 s uniquement sous sanitizers**, et reste 120 s sinon. Le même corpus termine ensuite en 125,86 s dans la PR et 84,86 s dans la publication ; aucun cas, contrôle ni sanitizer retiré.
+- Le 20 octobre, l’arbre `9188d119` passait 12/12 suites locales en Debug (92,78 s) et ASan/UBSan (120,18 s). La [CI 39393905485](https://github.com/SimzyGit/Trait64/actions/runs/39393905485) a ensuite révélé l’arrêt de Stockfish lié aux chaînes UCI vides. Le comportement a été reproduit avec le moteur réel, puis corrigé au commit `de41134a`.
+- La [CI 39563408828](https://github.com/SimzyGit/Trait64/actions/runs/39563408828) a atteint le délai de 120 s du stress en Debug non optimisé avec sanitizers. Le délai passe à **300 s uniquement sous sanitizers**, et reste 120 s sinon. Le même corpus termine ensuite en 125,86 s dans la PR et 84,86 s dans la publication ; aucun cas, contrôle ni sanitizer retiré.
 - Le test d’annulation d’export est rendu déterministe en annulant avant dispatch. Un export minuscule peut déjà être terminé à l’instruction UI suivante ; ce test ne suppose plus que l’annulation gagne cette course.
 
 ## Publication vérifiée

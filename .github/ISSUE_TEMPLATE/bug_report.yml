@@ -1,0 +1,38 @@
+name: Signaler un bug / Bug report
+description: Quelque chose ne fonctionne pas comme prévu.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version de Trait64
+      description: Aide → Mises à jour…, ligne « Version installée ».
+    validations: {required: true}
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation
+      options: [AppImage, Paquet .deb, Compilé depuis les sources]
+    validations: {required: true}
+  - type: input
+    id: system
+    attributes:
+      label: Système
+      placeholder: Debian 13, Ubuntu 24.04, Fedora 41…
+    validations: {required: true}
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: "1. Ouvrir…\n2. Cliquer sur…\n3. Constater…"
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu et résultat obtenu
+    validations: {required: true}
+  - type: textarea
+    id: extra
+    attributes:
+      label: PGN, capture d'écran ou journal
+      description: Joignez si possible un petit PGN qui reproduit le problème. Retirez toute donnée personnelle.

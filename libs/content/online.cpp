@@ -14,7 +14,7 @@
 namespace t64 {
 namespace {
 constexpr qint64 maxBytes = 256 * 1024 * 1024;
-const QByteArray userAgent = "Trait64 (https://github.com/feuvrierbernardinisimhon-png/Trait64)";
+const QByteArray userAgent = "Trait64 (https://github.com/SimzyGit/Trait64)";
 } // namespace
 
 OnlineGames::OnlineGames(QObject *parent, QNetworkAccessManager *network)

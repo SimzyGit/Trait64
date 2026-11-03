@@ -10,7 +10,7 @@
 #include <QSysInfo>
 #include <QTimer>
 namespace t64 {
-static const QString repo = "feuvrierbernardinisimhon-png/Trait64";
+static const QString repo = "SimzyGit/Trait64";
 static const QString api = "https://api.github.com/repos/" + repo;
 Updater::Updater(const QString &path, QObject *parent, QNetworkAccessManager *network)
     : QObject(parent), network_(network ? network : new QNetworkAccessManager(this)), dataPath_(path) {

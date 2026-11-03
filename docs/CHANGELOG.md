@@ -68,7 +68,7 @@ Validation locale : 14 suites sans suite ignorée, Stockfish réel, 207 contrôl
 du carnet incluant six captures ; matrice existante de neuf configurations et
 164 captures. Trois passages des interactions ne reproduisent pas l'ancien
 échec isolé des filtres ; sa cause reste inconnue. Rapports et limites :
-https://github.com/feuvrierbernardinisimhon-png/Trait64/blob/main/docs/MOVE-NOTEBOOK.md
+https://github.com/SimzyGit/Trait64/blob/main/docs/MOVE-NOTEBOOK.md
 
 À 960 × 640 avec texte 150 % / interface 125 %, la page reste défilante.
 Les essais logiciels hors écran ne valident pas Voyager/Wayland/GPU.

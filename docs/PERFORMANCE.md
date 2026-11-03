@@ -128,7 +128,7 @@ observation. Aucun essai matériel Voyager n'est revendiqué.
 ## Vérification manuelle d'intégrité — dev.57
 
 La durée locale de 110,028 s a conduit à retirer le contrôle manuel du fil UI.
-La [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12)
+La [PR #12](https://github.com/SimzyGit/Trait64/pull/12)
 utilise un worker et une connexion dédiée, avec annulation SQLite, état visible
 et fermeture attendue. Les tests d'interruption et de relance réentrante passent
 localement et en CI. Ce correctif ne constitue pas une nouvelle mesure 100k.

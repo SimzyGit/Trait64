@@ -47,7 +47,7 @@ Le test vérifie le rectangle réellement visible de la page et attend la fin du
 suivi programmé, sans forcer lui-même la sélection. Un rafraîchissement de la
 même position conserve le défilement manuel du carnet.
 
-La CI [40742429259](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40742429259)
+La CI [40742429259](https://github.com/SimzyGit/Trait64/actions/runs/40742429259)
 est encore en cours. Aucune nouvelle version n'est annoncée comme publiée.
 Aucun benchmark 100k n'a été relancé pour ce lot.
 
@@ -75,7 +75,7 @@ Les captures hors écran ne valident ni le GPU, ni Wayland, ni le matériel cibl
 
 ## Captures
 
-[Avant : dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/blob/5b41204047375d91f1e580756addd9879d59d7a4/docs/screenshots/analysis.png)
+[Avant : dev.64](https://github.com/SimzyGit/Trait64/blob/5b41204047375d91f1e580756addd9879d59d7a4/docs/screenshots/analysis.png)
 
 ![Carnet côte à côte](screenshots/notebook.png)
 

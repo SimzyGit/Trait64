@@ -3,7 +3,7 @@
 Résultats de test conservés sur main. Les données brutes de chaque rapport sont dans
 [VALIDATION.json](VALIDATION.json), sous la clé de leur ancien chemin (par exemple
 `verification-ui-2026-10-28.json` ou `benchmarks/2026-10-25/gui/gui-100k.json`).
-Les fichiers d'origine restent consultables dans la branche [archive/validation-2026-10](https://github.com/feuvrierbernardinisimhon-png/Trait64/tree/archive/validation-2026-10/docs).
+Les fichiers d'origine restent consultables dans la branche [archive/validation-2026-10](https://github.com/SimzyGit/Trait64/tree/archive/validation-2026-10/docs).
 Les outils de mesure sont dans [tools/benchmarks](../tools/benchmarks).
 
 ## Rapports
@@ -64,7 +64,7 @@ Les outils de mesure sont dans [tools/benchmarks](../tools/benchmarks).
 
 ## Résultats sur corpus réel — 25 octobre 2026
 
-Les deux jobs de [qualification 40179661406](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406)
+Les deux jobs de [qualification 40179661406](https://github.com/SimzyGit/Trait64/actions/runs/40179661406)
 ont réussi. Code produit dev.55 (`550f28f`), sonde `67f49ee`. Méthode complète :
 [REPRODUCE.md](#reproduire-les-mesures-protocole-du-25-octobre). Les mesures locales du 24 octobre restent distinctes.
 

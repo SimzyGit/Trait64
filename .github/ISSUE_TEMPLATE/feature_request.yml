@@ -1,0 +1,22 @@
+name: Proposer une fonction / Feature request
+description: Une idée pour améliorer Trait64.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin
+      description: Que cherchez-vous à faire, et qu'est-ce qui vous en empêche aujourd'hui ?
+    validations: {required: true}
+  - type: textarea
+    id: idea
+    attributes:
+      label: Solution envisagée
+      description: Comment cela pourrait fonctionner. Un exemple d'un autre logiciel (ChessBase, SCID, En Croissant, Lichess…) aide beaucoup.
+  - type: checkboxes
+    id: roadmap
+    attributes:
+      label: Vérification
+      options:
+        - label: J'ai consulté la [feuille de route](https://github.com/SimzyGit/Trait64/blob/main/docs/ROADMAP.md) et les demandes existantes.
+          required: true

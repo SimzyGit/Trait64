@@ -1,6 +1,6 @@
 # Refonte native de Trait64 — 28 octobre 2026
 
-La [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13), demandée le 26 octobre, est intégrée et publiée dans **[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)** le 28 octobre 2026. Base : dev.57 ; tête testée `dd0e53c674a4043f697577187d190db0fe2c65ef`, fusion `15708fb857c709af61bbfc56f9f5efa1392ccb87`, arbres identiques.
+La [PR #13](https://github.com/SimzyGit/Trait64/pull/13), demandée le 26 octobre, est intégrée et publiée dans **[v0.3.0-dev.64](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64)** le 28 octobre 2026. Base : dev.57 ; tête testée `dd0e53c674a4043f697577187d190db0fe2c65ef`, fusion `15708fb857c709af61bbfc56f9f5efa1392ccb87`, arbres identiques.
 
 ## Interface réalisée
 
@@ -14,7 +14,7 @@ Les dix entrées de navigation donnent accès aux sept pages et aux dialogues ex
 
 La sonde locale finale a réalisé 1 180 contrôles (captures comprises), 9 configurations, 63 vues de pages, 100 ouvertures de dialogues et une vue de navigation développée : 164 captures, zéro avertissement QML. Navigation clavier, commande exécutée, préférences et étude non enregistrée contrôlées. Démarrage et interactions locaux passent ; les 13 suites locales complètes avaient passé sur e0e13d9 en 84,52 s, sans suite ignorée. [Résultats locaux](VALIDATION.md) · [Matrice](VALIDATION.md).
 
-[CI finale de PR](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40516973650) et [CI de publication](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40644804206) réussies. Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport de livraison](VALIDATION.md).
+[CI finale de PR](https://github.com/SimzyGit/Trait64/actions/runs/40516973650) et [CI de publication](https://github.com/SimzyGit/Trait64/actions/runs/40644804206) réussies. Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport de livraison](VALIDATION.md).
 
 Dimensions : 960 × 640, 1366 × 768, 1440 × 940, 1920 × 1080 et 2560 × 1600 ; combinaisons français/anglais, clair/sombre et tailles jusqu’à 150 % / 125 %. Reproduction dans [TESTING](TESTING.md).
 

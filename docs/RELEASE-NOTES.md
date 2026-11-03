@@ -15,7 +15,7 @@ Validation locale : 14 suites sans suite ignorée, Stockfish réel, 207 contrôl
 du carnet incluant six captures ; matrice existante de neuf configurations et
 164 captures. Trois passages des interactions ne reproduisent pas l'ancien
 échec isolé des filtres ; sa cause reste inconnue. Rapports et limites :
-https://github.com/feuvrierbernardinisimhon-png/Trait64/blob/main/docs/MOVE-NOTEBOOK.md
+https://github.com/SimzyGit/Trait64/blob/main/docs/MOVE-NOTEBOOK.md
 
 À 960 × 640 avec texte 150 % / interface 125 %, la page reste défilante.
 Les essais logiciels hors écran ne valident pas Voyager/Wayland/GPU.
@@ -62,7 +62,7 @@ Détails et limites : [PERFORMANCE.md](PERFORMANCE.md), [TESTING.md](TESTING.md)
 - Cadence PGN cohérente avec l’horloge et protégée des dépassements entiers.
 - Stress FEN/PGN reproductible et contrôles ASan/UBSan étendus à tous les modules dans la CI.
 
-Publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52). Douze suites réussies sur Debian 12 et 13, contrôles ASan/UBSan, paquets installés et AppImage validés. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Schéma 7 conservé.
+Publié dans [v0.3.0-dev.52](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.52). Douze suites réussies sur Debian 12 et 13, contrôles ASan/UBSan, paquets installés et AppImage validés. Rapport et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md). Schéma 7 conservé.
 
 ## Motifs tactiques et repères sur l’échiquier
 
