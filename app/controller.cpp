@@ -58,6 +58,17 @@ Controller::Controller(const QString &path, QObject *parent)
         else
             emit message(tr("Ce moteur ne propose pas de réglage Elo : le niveau 0–20 est utilisé."));
     });
+    connect(&tournament_, &t64::Tournament::gameFinished, this, [this](const QString &pgn) {
+        QFile file(tournamentFile_);
+        if (!file.open(QIODevice::Append) || file.write(pgn.toUtf8()) < 0)
+            emit message(tr("Écriture impossible : ") + tournamentFile_, true);
+    });
+    connect(&tournament_, &t64::Tournament::finished, this, [this](int games) {
+        if (games <= 0 || !QFileInfo::exists(tournamentFile_)) return;
+        // The PGN file stays in the data folder as a record of the tournament.
+        importSourceFile(tournamentFile_, {{"id", "tournament:" + QFileInfo(tournamentFile_).completeBaseName()},
+                                           {"title", tournamentTitle_}});
+    });
     online_ = new t64::OnlineGames(this);
     connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
         emit busyChanged();
@@ -212,6 +223,13 @@ Controller::Controller(const QString &path, QObject *parent)
     refresh();
 }
 Controller::~Controller() {
+    // Engines emit failed() if they do not quit in time while shutting down: by then some
+    // members this controller's handlers use are already destroyed, so stop listening first.
+    disconnect(&engine_, nullptr, this, nullptr);
+    disconnect(&tournament_, nullptr, this, nullptr);
+    disconnect(online_, nullptr, this, nullptr);
+    tournament_.stop();
+    online_->cancel();
     repertoiresEnabled_ = repertoireReadPending_ = false;
     disconnect(&repertoireReader_, nullptr, this, nullptr);
     disconnect(&repertoireWriter_, nullptr, this, nullptr);

@@ -2,6 +2,9 @@
 #include "controller.h"
 #include "explanation.h"
 #include <QDate>
+#include <QDateTime>
+#include <QDir>
+#include <QRandomGenerator>
 #include <QFile>
 #include <QImageReader>
 #include <QJsonArray>
@@ -486,6 +489,65 @@ void Controller::compareEngines(const QVariantList &indices) {
         cancelReview();
         stopPlaying();
         comparison_.start(profiles, qs(game_.nodes[node_].fen), positionCommand(), game_.chess960);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+QStringList Controller::bookOpenings(int count, int plies) {
+    // Weighted random walks through the book give varied, still theoretical, openings.
+    QStringList lines;
+    auto *random = QRandomGenerator::global();
+    for (int attempt = 0; attempt < count * 4 && lines.size() < count; ++attempt) {
+        chess::Board board;
+        QStringList line;
+        for (int ply = 0; ply < plies; ++ply) {
+            const auto moves = book_.moves(board);
+            int total = 0;
+            for (const auto &entry : moves) total += entry.weight;
+            if (total == 0) break;
+            int pick = random->bounded(total);
+            for (const auto &entry : moves)
+                if ((pick -= entry.weight) < 0) {
+                    line << qs(chess::uci::moveToUci(entry.move));
+                    board.makeMove(entry.move);
+                    break;
+                }
+        }
+        if (line.size() >= 2 && !lines.contains(line.join(' '))) lines << line.join(' ');
+    }
+    return lines;
+}
+void Controller::startTournament(const QVariantList &indices, int gamesPerPairing, int moveTime, int maxPlies,
+                                 bool bookOpenings) {
+    try {
+        need(!trainingActive() && !busy(), "Terminez l’entraînement ou le traitement en cours.");
+        need(!tournament_.running(), "Un tournoi est déjà en cours.");
+        const auto available = settings_.value("engineProfiles").toList();
+        QVariantList profiles;
+        QSet<int> seen;
+        for (const auto &value : indices) {
+            const int index = value.toInt();
+            need(index >= 0 && index < available.size(), "Profil moteur introuvable.");
+            if (!seen.contains(index)) {
+                profiles << available[index];
+                seen.insert(index);
+            }
+        }
+        t64::Tournament::Settings options{gamesPerPairing, moveTime, maxPlies, {}};
+        if (bookOpenings) {
+            need(book_.isOpen(), "Indiquez d’abord un livre Polyglot dans Paramètres.");
+            const int pairs = int(profiles.size() * (profiles.size() - 1) / 2);
+            options.openings = this->bookOpenings(std::max(1, pairs * std::max(1, gamesPerPairing / 2)), 8);
+            need(!options.openings.isEmpty(), "Le livre ne contient pas la position initiale.");
+        }
+        comparison_.stop();
+        stopPlaying();
+        const auto stamp = QDateTime::currentDateTime();
+        QDir().mkpath(dataPath_ + "/tournaments");
+        tournamentFile_ = dataPath_ + "/tournaments/tournoi-" + stamp.toString("yyyyMMdd-HHmmss") + ".pgn";
+        tournamentTitle_ = "Tournoi de moteurs — " + stamp.toString("dd/MM/yyyy HH:mm");
+        QFile::remove(tournamentFile_);
+        tournament_.start(profiles, options);
     } catch (const std::exception &e) {
         fail(e);
     }

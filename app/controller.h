@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "comparison.h"
+#include "tournament.h"
 #include "content.h"
 #include "database.h"
 #include "online.h"
@@ -37,6 +38,7 @@ class Controller : public QObject {
     Q_PROPERTY(QString librarySearchStatus READ librarySearchStatus NOTIFY searchChanged)
     Q_PROPERTY(t64::Updater *updater READ updater CONSTANT)
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
+    Q_PROPERTY(t64::Tournament *tournament READ tournament CONSTANT)
     Q_PROPERTY(t64::AnalysisQueue *analysisQueue READ analysisQueue CONSTANT)
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
     Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
@@ -134,6 +136,10 @@ class Controller : public QObject {
     Q_INVOKABLE void cancelTask() { cancelTask_->store(true); }
     t64::Updater *updater() const { return updater_.get(); }
     t64::Comparison *comparison() { return &comparison_; }
+    t64::Tournament *tournament() { return &tournament_; }
+    // Round-robin between saved engine profiles; finished games go to the library.
+    Q_INVOKABLE void startTournament(const QVariantList &indices, int gamesPerPairing, int moveTime, int maxPlies,
+                                     bool bookOpenings);
     t64::AnalysisQueue *analysisQueue() { return &analysisQueue_; }
     Q_INVOKABLE void enqueueAnalysis(bool variations = true, int milliseconds = 500, int profile = -1);
     Q_INVOKABLE void compareEngines(const QVariantList &indices);
@@ -352,6 +358,9 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     t64::Uci engine_;
     t64::Comparison comparison_;
+    t64::Tournament tournament_;
+    QString tournamentFile_, tournamentTitle_;
+    QStringList bookOpenings(int count, int plies);
     t64::AnalysisQueue analysisQueue_;
     void initAnalyses();
     QFutureWatcher<ImportResult> importer_;

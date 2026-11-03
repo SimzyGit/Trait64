@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "comparison.h"
 #include "game.h"
+#include "tournament.h"
 #include "uci.h"
 #include <QCoreApplication>
 #include <QDir>
@@ -150,6 +151,68 @@ int main(int argc, char **argv) {
         if (path.isEmpty()) {
             std::cerr << "Stockfish missing; engine integration skipped\n";
             return 77;
+        }
+        {
+            check(t64::Tournament::eloDifference(.5) == 0 && t64::Tournament::eloDifference(.75) == 191 &&
+                      t64::Tournament::eloDifference(1) == 798 && t64::Tournament::eloDifference(0) == -798,
+                  "Score fractions map to the logistic Elo difference, bounded at both ends");
+            QTemporaryDir dir;
+            QFile fake(dir.path() + "/illegal-engine");
+            check(fake.open(QIODevice::WriteOnly), "Create illegal-move fixture");
+            fake.write("#!/bin/sh\nwhile IFS= read -r line; do\ncase \"$line\" in\n"
+                       "uci) printf '%s\\n' 'id name Illegal' 'uciok';;\nisready) printf 'readyok\\n';;\n"
+                       "go*) printf 'bestmove a1a1\\n';;\nquit) exit;;\nesac\ndone\n");
+            fake.close();
+            fake.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+            t64::Tournament tournament;
+            QSignalSpy games(&tournament, &t64::Tournament::gameFinished), done(&tournament, &t64::Tournament::finished);
+            bool rejected = false;
+            try {
+                tournament.start({QVariantMap{{"name", "A"}, {"enginePath", path}}, QVariantMap{{"name", "B"}, {"enginePath", path}}},
+                                 {2, 100, 40, {"e2e4 e7e5 e1e3"}});
+            } catch (const std::exception &) {
+                rejected = true;
+            }
+            check(rejected && !tournament.running(), "Illegal opening lines are refused before any game");
+            tournament.start({QVariantMap{{"name", "Stockfish"}, {"enginePath", path}, {"threads", 1}, {"hash", 16}},
+                              QVariantMap{{"name", "Illegal"}, {"enginePath", fake.fileName()}}},
+                             {2, 100, 40, {"d2d4 d7d5"}});
+            check(tournament.total() == 2, "Two games per pairing, one with each colour");
+            check(waitFor([&] { return !done.isEmpty(); }, 20000), "Forfeit tournament completes");
+            const auto table = tournament.standings();
+            check(games.size() == 2 && table[0].toMap()["name"] == "Stockfish" && table[0].toMap()["points"] == 2.0 &&
+                      table[1].toMap()["losses"] == 2,
+                  "An illegal move loses the game");
+            const auto first = games[0].first().toString(), second = games[1].first().toString();
+            check(first.contains("[White \"Stockfish\"]") && second.contains("[White \"Illegal\"]") &&
+                      first.contains("coup illégal") && first.contains("1. d4 d5"),
+                  "Colours alternate and the PGN records opening and termination");
+            const auto parsed = t64::parsePgn((first + second).toStdString());
+            check(parsed.size() == 2, "Tournament PGN is readable by Trait64");
+
+            games.clear();
+            done.clear();
+            tournament.start({QVariantMap{{"name", "SF 1"}, {"enginePath", path}, {"hash", 16}},
+                              QVariantMap{{"name", "SF 2"}, {"enginePath", path}, {"hash", 16}}},
+                             {2, 100, 24, {}});
+            check(waitFor([&] { return !done.isEmpty(); }, 60000), "Real engine match completes");
+            double points = 0;
+            int played = 0;
+            for (const auto &row : tournament.standings()) {
+                points += row.toMap()["points"].toDouble();
+                played += row.toMap()["games"].toInt();
+            }
+            check(games.size() == 2 && points == 2.0 && played == 4 && !tournament.running(),
+                  "Every game awards exactly one point");
+            for (const auto &game : games) {
+                const auto parsedGame = t64::parsePgn(game.first().toString().toStdString());
+                check(parsedGame.size() == 1 && parsedGame.front().nodes.size() > 10, "Engine games replay legally");
+            }
+            tournament.start({QVariantMap{{"name", "SF 1"}, {"enginePath", path}}, QVariantMap{{"name", "SF 2"}, {"enginePath", path}}},
+                             {4, 100, 300, {}});
+            done.clear();
+            QTimer::singleShot(300, &tournament, [&] { tournament.stop(); });
+            check(waitFor([&] { return !done.isEmpty(); }, 5000) && !tournament.running(), "A tournament can be stopped");
         }
         auto start = QString::fromStdString(chess::constants::STARTPOS);
         {

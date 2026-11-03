@@ -86,6 +86,57 @@ int main(int argc, char **argv) {
         if (app.arguments().contains("--ui-layout")) return uiLayoutProbe(dir.path());
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
+        if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
+            Controller c(dir.path() + "/tournament");
+            c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+            c.setPreference("hash", 16);
+            c.saveEngineProfile("Stockfish A");
+            c.saveEngineProfile("Stockfish B");
+            // Book with two short lines: every tournament opening must come from it.
+            const chess::Board start;
+            chess::Board e4, d4;
+            e4.makeMove(chess::uci::uciToMove(e4, "e2e4"));
+            d4.makeMove(chess::uci::uciToMove(d4, "d2d4"));
+            QFile book(dir.path() + "/tournament-book.bin");
+            check(book.open(QIODevice::WriteOnly), "Tournament book written");
+            std::vector<std::tuple<quint64, int, int>> rows{{start.hash(), 12, 28}, {start.hash(), 11, 27},
+                                                            {e4.hash(), 52, 36}, {d4.hash(), 51, 35}};
+            std::sort(rows.begin(), rows.end());
+            for (auto [key, from, to] : rows)
+                for (quint64 part : {key, quint64(to | from << 6) << 48 | quint64(1) << 32})
+                    for (int shift = 56; shift >= 0; shift -= 8) book.putChar(char(part >> shift & 0xff));
+            book.close();
+            c.setPreference("bookPath", book.fileName());
+            QSignalSpy messages(&c, &Controller::message);
+            c.startTournament({0}, 2, 100, 30, true);
+            check(!c.tournament()->running() && messages.size() == 1, "A tournament needs two profiles");
+            c.startTournament({0, 1}, 2, 100, 30, true);
+            check(c.tournament()->running(), "Tournament starts from saved profiles");
+            QElapsedTimer wait;
+            wait.start();
+            while ((c.tournament()->running() || c.busy() || c.librarySearching()) && wait.elapsed() < 60000) QTest::qWait(20);
+            const auto games = c.games();
+            check(games.size() == 2, "Both tournament games reach the library");
+            bool tagged = false;
+            for (const auto &value : c.sources()) tagged |= value.toMap()["title"].toString().startsWith("Tournoi de moteurs");
+            check(tagged, "Tournament games are filed under their own source");
+            for (const auto &value : games) {
+                c.loadGame(value.toMap()["id"].toLongLong());
+                const auto pgn = c.state()["pgn"].toString();
+                const auto moves = c.moveRows();
+                check(moves.size() > 2, "Tournament game has moves");
+                const auto first = moves[1].toMap();
+                const auto line = first["white"].toMap()["text"].toString() + " " + first["black"].toMap()["text"].toString();
+                check(line == "e4 e5" || line == "d4 d5", "Tournament openings come from the Polyglot book");
+            }
+            // Settings are shared by every controller in this process: leave them as found.
+            c.setPreference("bookPath", "");
+            c.removeEngineProfile(1);
+            c.removeEngineProfile(0);
+            c.setPreference("hash", 128);
+            c.setPreference("enginePath", "");
+            check(c.preferences()["engineProfiles"].toList().isEmpty(), "Tournament test leaves no profile behind");
+        }
         {
             // Online import: the download step is covered by online_tests; here the result
             // goes through the real controller, library, source registry and sync bookmark.
@@ -593,7 +644,7 @@ int main(int argc, char **argv) {
             // Exercise every new dialog including small window layout and keyboard capture.
             for (const auto &name :
                  QStringList{"appearanceDialog", "positionEditor", "reviewDialog", "settingsDialog",
-                             "updatesDialog", "compareDialog", "analysisQueueDialog"}) {
+                             "updatesDialog", "compareDialog", "tournamentDialog", "analysisQueueDialog"}) {
                 QObject *dialog = window->findChild<QObject *>(name);
                 check(dialog, "Feature dialog exists");
                 QMetaObject::invokeMethod(dialog, "open");

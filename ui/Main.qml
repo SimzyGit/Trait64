@@ -581,6 +581,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Menu {id:analysisMenu;x:win.width-width-32;y:172
         MenuItem {text:qsTr("Analyses en arrière-plan");onTriggered:analysisQueueDialog.open()}
         MenuItem {text:qsTr("Comparer plusieurs moteurs");onTriggered:compareDialog.open()}
+        MenuItem {text:qsTr("Tournoi de moteurs");onTriggered:tournamentDialog.open()}
         MenuItem {text:qsTr("Éditer la position");onTriggered:positionEditor.open()}
         MenuItem {text:qsTr("Copier la position FEN");onTriggered:controller.copyText("fen")}
         MenuItem {text:controller.state.playing?qsTr("Arrêter la partie"):qsTr("Jouer une partie");onTriggered:controller.state.playing?controller.stopPlaying():playDialog.open()}
@@ -617,6 +618,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     AnalysisQueue {id:analysisQueueDialog;objectName:"analysisQueueDialog";backend:controller}
     Review {id:reviewDialog;objectName:"reviewDialog";backend:controller}
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
+    Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
     TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
@@ -707,6 +709,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Préparation par position"),run:function(){preparationDialog.open()}},
             {title:qsTr("Moteurs et profils"),run:function(){settingsDialog.open()}},
             {title:qsTr("Comparer les moteurs"),run:function(){compareDialog.open()}},
+            {title:qsTr("Tournoi de moteurs"),run:function(){tournamentDialog.open()}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},

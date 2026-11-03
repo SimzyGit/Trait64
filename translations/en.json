@@ -605,5 +605,20 @@
   "Limiter la force à": "Limit strength to",
   "Elo": "Elo",
   "Déposer pour importer": "Drop to import",
-  "Notation figurine (♘ ♗ ♖ ♕ ♔)": "Figurine notation (♘ ♗ ♖ ♕ ♔)"
+  "Notation figurine (♘ ♗ ♖ ♕ ♔)": "Figurine notation (♘ ♗ ♖ ♕ ♔)",
+  "Tournoi de moteurs": "Engine tournament",
+  "Toutes rondes entre 2 et 8 profils enregistrés. Chaque paire joue les deux couleurs depuis la même ouverture ; les parties sont ajoutées à la bibliothèque.": "Round robin between 2 and 8 saved profiles. Each pair plays both colours from the same opening; games are added to the library.",
+  "Enregistrez au moins deux profils UCI dans les paramètres pour organiser un tournoi.": "Save at least two UCI profiles in Settings to run a tournament.",
+  "Parties par paire": "Games per pair",
+  "Temps par coup (ms)": "Time per move (ms)",
+  "Nulle adjugée après (demi-coups)": "Adjudicate draw after (plies)",
+  "Ouvertures tirées du livre Polyglot": "Openings drawn from the Polyglot book",
+  "%1 partie(s), environ %2 min au maximum.": "%1 game(s), about %2 min at most.",
+  "Sélectionnez au moins deux profils.": "Select at least two profiles.",
+  "Lancer le tournoi": "Start tournament",
+  "Rang": "Rank",
+  "Moteur": "Engine",
+  "Points": "Points",
+  "Elo ±": "Elo ±",
+  "« Elo ± » est l'écart estimé face au reste du plateau. Sur peu de parties, la marge d'erreur dépasse souvent 100 Elo.": "\"Elo ±\" is the estimated gap against the rest of the field. Over few games the error margin often exceeds 100 Elo."
 }
