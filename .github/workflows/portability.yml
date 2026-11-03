@@ -1,0 +1,57 @@
+name: Windows and macOS
+# Portability check only: nothing here builds packages or publishes a release.
+on:
+  push:
+    branches: ['main']
+    paths-ignore: ['docs/**', '*.md']
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: trait64-portability-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core:
+    name: Core (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DT64_BUILD_GUI=OFF -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --config Release --parallel 3
+      - run: ctest --test-dir build -C Release --output-on-failure
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
+      - name: macOS libraries
+        if: runner.os == 'macOS'
+        run: |
+          brew install libarchive sqlite
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix libarchive);$(brew --prefix sqlite);$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+      - name: Windows libraries
+        if: runner.os == 'Windows'
+        run: |
+          vcpkg install libarchive:x64-windows sqlite3:x64-windows
+          echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --config Release --parallel 3
+      # Engine fixtures are POSIX shell scripts and the QML suites need a desktop session:
+      # run the storage, import, repertoire, content, online and update suites here.
+      - run: ctest --test-dir build -C Release --output-on-failure -E "^(engine|persistent_analysis|desktop_.*|move_notebook)$"
