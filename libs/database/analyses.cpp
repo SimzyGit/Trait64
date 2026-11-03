@@ -3,6 +3,7 @@
 #include <QJsonDocument>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QUuid>
 #include <algorithm>
 #include <stdexcept>
@@ -63,13 +64,19 @@ void Database::upgradeV9(int originalVersion) {
         backup(path_ + ".before-v9-" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".sqlite");
     sql("SAVEPOINT schema9");
     try {
+        // Le numéro de version ne garantit pas l'absence de la colonne : une base peut
+        // avoir été rétrogradée, ou restaurée à partir d'une sauvegarde plus récente.
+        auto addColumn = [&](const char *table, const char *column, const char *definition) {
+            if (db_.record(table).indexOf(column) < 0)
+                sql(QString("ALTER TABLE %1 ADD COLUMN %2 %3").arg(table, column, definition));
+        };
         // Profondeur du dernier bilan mené à son terme : elle évite de recalculer pendant
         // des heures ce qui a déjà été vu au moins aussi loin. 0 : jamais passée en revue.
-        sql("ALTER TABLE games ADD COLUMN reviewed_depth INTEGER NOT NULL DEFAULT 0");
-        sql("CREATE INDEX games_review ON games(deleted,reviewed_depth,id)");
+        addColumn("games", "reviewed_depth", "INTEGER NOT NULL DEFAULT 0");
+        sql("CREATE INDEX IF NOT EXISTS games_review ON games(deleted,reviewed_depth,id)");
         // Une analyse lancée depuis la bibliothèque sait de quelle partie elle vient, et
         // peut donc reporter sa profondeur une fois terminée. 0 : étude sans origine.
-        sql("ALTER TABLE analysis_jobs ADD COLUMN game INTEGER NOT NULL DEFAULT 0");
+        addColumn("analysis_jobs", "game", "INTEGER NOT NULL DEFAULT 0");
         sql("PRAGMA user_version=9");
         sql("RELEASE schema9");
     } catch (...) {

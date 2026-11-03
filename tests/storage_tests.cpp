@@ -195,6 +195,7 @@ int main(int argc, char **argv) {
             const auto gameId = waiting.first().toLongLong();
             const auto job = db.createAnalysisJob(QString::fromStdString(db.load(gameId).pgn()),
                                                   QVariantMap{{"depth", 18}}, false, 1, gameId);
+            db.setAnalysisStatus(job, "running");
             db.saveAnalysisResult(job, 0, 0, "fen", QVariantList{QVariantMap{{"rank", 1}}});
             db.setAnalysisStatus(job, "completed");
             check(db.recentGamesToReview(2, 18).size() == 1, "A finished review is not queued again");
