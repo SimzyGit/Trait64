@@ -40,6 +40,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
     Q_PROPERTY(QVariantList notation READ notation NOTIFY changed)
     Q_PROPERTY(QVariantList moveRows READ moveRows NOTIFY notationChanged)
+    Q_PROPERTY(QVariantList moveFlow READ moveFlow NOTIFY notationChanged)
     Q_PROPERTY(QVariantList games READ games NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
@@ -105,6 +106,7 @@ class Controller : public QObject {
     QVariantList squares() const { return squares_; }
     QVariantList notation() const { return notation_; }
     QVariantList moveRows() const;
+    QVariantList moveFlow() const;
     QVariantList games() const { return games_; }
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
@@ -236,6 +238,7 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
+    bool frenchNotation() const;
     struct PreparationResult {
         QVariantList rows;
         QString error, fen;

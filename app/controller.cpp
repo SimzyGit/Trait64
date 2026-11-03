@@ -404,11 +404,12 @@ void Controller::refresh(bool content) {
     if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
 }
-QVariantList Controller::moveRows() const {
+bool Controller::frenchNotation() const {
     const auto language = settings_.value("language", "fr").toString();
-    const bool french = language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French);
-    return t64::moveRows(game_, node_, french);
+    return language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French);
 }
+QVariantList Controller::moveRows() const { return t64::moveRows(game_, node_, frenchNotation()); }
+QVariantList Controller::moveFlow() const { return t64::moveFlow(game_, node_, frenchNotation()); }
 void Controller::writeSession() {
     if (trainingActive())
         return;

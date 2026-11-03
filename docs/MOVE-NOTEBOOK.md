@@ -80,3 +80,13 @@ Les captures hors écran ne valident ni le GPU, ni Wayland, ni le matériel cibl
 ![Carnet côte à côte](screenshots/notebook.png)
 
 ![Petite fenêtre, tailles maximales et contraste renforcé](screenshots/notebook-max.png)
+
+## Affichage continu
+
+L'en-tête du carnet propose **Tableau** (affichage ci-dessus) ou **Continu** :
+les coups s'enchaînent dans l'ordre PGN (`1. e4 e5 (1… c5 2. Cf3) 2. Cf3`) et
+ne passent à la ligne qu'au bord du panneau. La ligne principale est en gras,
+les variantes en gris entre parenthèses et les commentaires en italique. Un
+coup noir reprend son numéro (`1…`) après un commentaire ou une variante. Le
+choix est mémorisé (`notebookLayout` : `table` ou `flow`) ; le modèle est
+`moveFlow`. Schéma SQLite 7 inchangé.
