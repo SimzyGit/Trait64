@@ -206,10 +206,12 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                 Layout.margins:0;spacing:win.height<820?8:14
                 RowLayout {Layout.fillWidth:true
                     ColumnLayout {spacing:3;Layout.fillWidth:true;Layout.minimumWidth:0
-                        Label {Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;text:controller.state.training?(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne")):qsTr("Sur l’échiquier.");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(24*win.textScale)}
-                        Label {visible:win.height>=820||controller.state.training;text:controller.state.training?qsTr("Jouez les coups de votre répertoire · ")+controller.state.trainingProgress:controller.state.title;color:win.muted;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale);elide:Text.ElideRight;Layout.fillWidth:true}
+                        Label {Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;text:controller.state.training?(controller.puzzles.active?qsTr("Trouver le meilleur coup"):controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne")):qsTr("Sur l’échiquier.");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(24*win.textScale)}
+                        Label {visible:win.height>=820||controller.state.training;text:controller.state.training?(controller.puzzles.active?qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):qsTr("Jouez les coups de votre répertoire · ")+controller.state.trainingProgress):controller.state.title;color:win.muted;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale);elide:Text.ElideRight;Layout.fillWidth:true}
                     }
                     Item {Layout.fillWidth:true}
+                    TButton {objectName:"puzzleHint";text:qsTr("Indice");visible:controller.puzzles.active&&!controller.state.trainingComplete;onClicked:controller.puzzleHint();ToolTip.visible:hovered;ToolTip.text:qsTr("Montre la pièce à jouer ; compte comme un échec.")}
+                    TButton {objectName:"nextPuzzle";text:qsTr("Puzzle suivant");accent:true;visible:controller.puzzles.active&&controller.state.trainingComplete;onClicked:controller.nextPuzzle()}
                     TButton {text:qsTr("Position suivante");visible:controller.state.repertoireTraining>0;enabled:controller.state.trainingComplete && controller.state.repertoireDue>0;onClicked:controller.startRepertoireTraining(controller.state.repertoireTraining)}
                     TButton {text:controller.state.training?qsTr("Quitter l’exercice"):qsTr("Nouvelle étude");onClicked:controller.state.training?controller.finishTraining():controller.newGame()}
                     TButton {objectName:"saveStudy";text:controller.state.training?qsTr("Voir la solution"):qsTr("Enregistrer");accent:true;onClicked:controller.state.training?controller.revealCard():controller.saveGame()}
@@ -404,6 +406,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     }
                 }
                 Flow {Layout.fillWidth:true;spacing:8
+                    TButton {objectName:"openPuzzles";text:qsTr("Puzzles");accent:true;onClicked:puzzlesDialog.open()}
                     TButton {text:qsTr("Réviser un répertoire");onClicked:repertoiresDialog.open()}
                     TButton {text:qsTr("Réviser la prochaine carte");accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
                     Label {text:qsTr("Aujourd’hui : ")+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+qsTr(" · Cette semaine : ")+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
@@ -622,6 +625,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Review {id:reviewDialog;objectName:"reviewDialog";backend:controller}
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
+    Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
     TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
@@ -713,6 +717,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Moteurs et profils"),run:function(){settingsDialog.open()}},
             {title:qsTr("Comparer les moteurs"),run:function(){compareDialog.open()}},
             {title:qsTr("Tournoi de moteurs"),run:function(){tournamentDialog.open()}},
+            {title:qsTr("Puzzles tactiques"),run:function(){puzzlesDialog.open()}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},

@@ -138,6 +138,52 @@ int main(int argc, char **argv) {
             check(c.preferences()["engineProfiles"].toList().isEmpty(), "Tournament test leaves no profile behind");
         }
         {
+            Controller c(dir.path() + "/puzzles");
+            QFile csv(dir.path() + "/puzzles.csv");
+            check(csv.open(QIODevice::WriteOnly), "Puzzle file written");
+            // Two rooks: the stored solution is d1d8, but e1e8 mates as well.
+            csv.write("PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags\n"
+                      "p1,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 d1d8,1500,75,95,1000,backRankMate mateIn1,u,\n"
+                      "p2,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1520,75,95,1000,backRankMate mateIn1,u,\n");
+            csv.close();
+            c.importPuzzles(csv.fileName(), 100, 0, 0);
+            QElapsedTimer wait;
+            wait.start();
+            while (c.busy() && wait.elapsed() < 10000) QTest::qWait(10);
+            check(c.puzzles()["total"].toInt() == 2, "Puzzle bank imported");
+            const auto study = c.state()["fen"];
+            const int before = c.puzzles()["rating"].toInt();
+            c.startPuzzle("mateIn1", "lichess");
+            check(c.puzzles()["active"].toBool() && c.state()["training"].toBool(), "Puzzle starts in training mode");
+            const auto first = c.puzzles()["current"].toMap()["id"];
+            const bool twoRooks = c.state()["fen"].toString().startsWith("6k1/r4ppp/8/8/8/8/5PPP/3RR1K1");
+            c.move("d1d2");
+            check(!c.state()["trainingComplete"].toBool(), "A wrong move does not finish the puzzle");
+            c.finishTraining();
+            check(c.state()["fen"] == study, "Leaving a puzzle restores the study");
+            c.startPuzzle("mateIn1", "lichess");
+            const bool rooks = c.state()["fen"].toString().startsWith("6k1/r4ppp/8/8/8/8/5PPP/3RR1K1");
+            c.move(rooks ? "e1e8" : "d1d8");
+            check(c.state()["trainingComplete"].toBool(), "Any mate solves the last move");
+            check(c.puzzles()["rating"].toInt() > before && c.puzzles()["solved"].toInt() == 1,
+                  "Solving raises the rating and counts the puzzle");
+            c.nextPuzzle();
+            const auto second = c.puzzles()["current"].toMap();
+            check(c.puzzles()["active"].toBool() && second["id"] != (rooks ? QVariant(1) : QVariant(2)) &&
+                      !second.isEmpty(),
+                  "The next puzzle is one not yet solved");
+            const int beforeHint = c.puzzles()["rating"].toInt();
+            c.puzzleHint();
+            c.move("d1d8");
+            check(c.state()["trainingComplete"].toBool() && c.puzzles()["rating"].toInt() < beforeHint,
+                  "A hint makes the attempt count as a failure");
+            c.nextPuzzle();
+            check(c.puzzles()["active"].toBool(), "Unsolved puzzles stay available");
+            c.finishTraining();
+            Q_UNUSED(first);
+            Q_UNUSED(twoRooks);
+        }
+        {
             // Online import: the download step is covered by online_tests; here the result
             // goes through the real controller, library, source registry and sync bookmark.
             Controller c(dir.path() + "/online-import");

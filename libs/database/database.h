@@ -14,6 +14,10 @@ struct ImportProgress {
     qint64 job = 0, bytes = 0, total = 0, processed = 0, added = 0, committed = 0, committedBytes = 0;
     bool verifying = true;
 };
+struct Puzzle {
+    QString ref, fen, solution, themes, source;
+    int rating = 1500, popularity = 0;
+};
 class Database {
   public:
     explicit Database(const QString &path);
@@ -81,6 +85,12 @@ class Database {
     void validateOutputPath(const QString &path) const;
     void backup(const QString &path);
     QString integrity(const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
+    // Puzzle bank: insert ignores references already present; returns the number added.
+    int addPuzzles(const std::vector<Puzzle> &puzzles);
+    // An unsolved puzzle near `rating` (± spread), optionally of a theme and a source.
+    QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {}, const QString &source = {}) const;
+    void recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter);
+    QVariantMap puzzleStats() const;
     void addCard(const QString &title, const QString &fen, const QString &moves);
     QVariantList cards() const;
     void review(qint64 id, bool success);
@@ -95,6 +105,7 @@ class Database {
     bool enhanced_ = false, fts_ = false;
     bool keyed_ = false; // schema 8: positions indexed by Zobrist key, not FEN text
     void upgradeV8(int originalVersion);
+    void createPuzzleTables();
     static qint64 hashKey(const std::string &fen);
     static qint64 pawnsKey(const std::string &fen);
     static qint64 nodeKey(const Node &node) { return node.hash ? qint64(node.hash) : hashKey(node.fen); }

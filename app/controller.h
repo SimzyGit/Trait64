@@ -49,6 +49,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
     Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
+    Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
@@ -117,6 +118,13 @@ class Controller : public QObject {
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
     QVariantList bookMoves() const { return bookMoves_; }
+    QVariantMap puzzles() const;
+    // Puzzles: theme is a Lichess theme tag ("fork", "mateIn2"…), source "lichess", "mine" or "".
+    Q_INVOKABLE void startPuzzle(const QString &theme = {}, const QString &source = {});
+    Q_INVOKABLE void nextPuzzle();
+    Q_INVOKABLE void puzzleHint();
+    Q_INVOKABLE void importPuzzles(const QString &url, int max, int minRating, int maxRating);
+    Q_INVOKABLE void createMistakePuzzles();
     QVariantList cards() const { return cards_; }
     QVariantList engineOptions() const {
         return settings_.value("enginePath").toString() == engine_.executable() ? engine_.options()
@@ -290,7 +298,7 @@ class Controller : public QObject {
     qint64 selectedRepertoire_ = 0;
     QVariantList repertoires_;
     QVariantMap repertoireState_, repertoireExercise_;
-    bool trainingActive() const { return cardId_ || !repertoireExercise_.isEmpty(); }
+    bool trainingActive() const { return cardId_ || puzzleId_ || !repertoireExercise_.isEmpty(); }
     void refreshRepertoires(bool overview = true);
     bool playRepertoireAnswer(const QString &uci);
     struct SearchResult {
@@ -348,6 +356,13 @@ class Controller : public QObject {
     QVariantMap state_, stats_;
     QVariantList squares_, notation_, games_, openings_, bookMoves_, cards_, engineLines_;
     t64::PolyglotBook book_;
+    qint64 puzzleId_ = 0, puzzleStarted_ = 0;
+    QVariantMap puzzle_, puzzleStats_;
+    QString puzzleTheme_, puzzleSource_;
+    QElapsedTimer puzzleClock_;
+    void refreshPuzzleStats();
+    void finishPuzzle();
+    bool acceptPuzzleMate(const QString &uci);
     t64::OnlineGames *online_ = nullptr;
     QString onlineSyncKey_, onlineFile_;
     qint64 onlineSyncTime_ = 0;

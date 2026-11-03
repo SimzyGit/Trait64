@@ -48,6 +48,7 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
 TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enabled:rows.currentIndex>=0&&rows.currentIndex<root.backend.review.length;onClicked:root.explain(rows.currentIndex)}
             TButton {text:qsTr("Annoter le PGN");enabled:!root.backend.reviewState.running&&root.backend.review.length>0;onClicked:root.backend.annotateReview()}
             TButton {text:qsTr("Créer des exercices des erreurs");enabled:!root.backend.reviewState.running&&root.backend.review.length>0;onClicked:root.backend.createMistakeCards()}
+            TButton {objectName:"mistakePuzzles";text:qsTr("Créer des puzzles des erreurs");enabled:!root.backend.reviewState.running&&root.backend.review.length>0;onClicked:root.backend.createMistakePuzzles()}
         }
         Label {text:qsTr("Seuils indicatifs : 50 / 100 / 250 centipions. Les résultats dépendent du moteur et du temps accordé ; les exercices suivent sa variante principale.");wrapMode:Text.WordWrap;Layout.fillWidth:true;opacity:.7;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
     }

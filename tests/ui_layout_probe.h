@@ -77,7 +77,7 @@ int uiLayoutProbe(const QString &directory) {
             capture(QString("case%1-page%2").arg(index).arg(page)); report.append(row);
         }
         if(index==0||index==5||index==7||index==8) {
-            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","tournamentDialog","analysisQueueDialog","updatesDialog","commandsDialog","fenDialog","pgnDialog","cardDialog","playDialog","tagsDialog","helpDialog","collectionDialog","deleteCardDialog","deleteVariationDialog","chess960Dialog","promotionDialog","reviewExplanationDialog"}) {
+            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","tournamentDialog","puzzlesDialog","analysisQueueDialog","updatesDialog","commandsDialog","fenDialog","pgnDialog","cardDialog","playDialog","tagsDialog","helpDialog","collectionDialog","deleteCardDialog","deleteVariationDialog","chess960Dialog","promotionDialog","reviewExplanationDialog"}) {
                 auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
                 check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
                 check(dialog->property("visible").toBool(), "Layout: dialog visible");

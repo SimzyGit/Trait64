@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "online.h"
+#include "puzzles.h"
+#include <QProcess>
 #include <QCoreApplication>
 #include <QFile>
 #include <QNetworkAccessManager>
@@ -136,6 +138,43 @@ int main(int argc, char **argv) {
         network.responses = {{200, games("L", 1)}};
         check(run(online, [&] { online.fetch("lichess", "simzy", 3, file); online.cancel(); }).first.contains("annulé"),
               "A fetch can be canceled");
+        {
+            const QByteArray csv =
+                "PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags\n"
+                "00aaa,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1200,75,95,1000,backRankMate mate mateIn1 oneMove,https://lichess.org/x#1,\n"
+                "00bad,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d9,1200,75,95,1000,mate,https://lichess.org/y#1,\n"
+                "00hard,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 d1d8,2500,75,90,10,mateIn1,https://lichess.org/z#1,\n";
+            t64::PuzzleRecord record;
+            check(t64::parseLichessPuzzle(QString::fromUtf8(csv.split('\n')[1]), record) && record.ref == "lichess:00aaa" &&
+                      record.fen == "6k1/r4ppp/8/8/8/8/5PPP/3R2K1 w - - 1 2" && record.solution == "d1d8" &&
+                      record.rating == 1200 && record.themes.contains("backRankMate"),
+                  "Lichess row: opponent move applied, solver position and solution kept");
+            check(!t64::parseLichessPuzzle(QString::fromUtf8(csv.split('\n')[0]), record) &&
+                      !t64::parseLichessPuzzle(QString::fromUtf8(csv.split('\n')[2]), record),
+                  "Header and illegal rows are skipped");
+            QFile plain(dir.filePath("puzzles.csv"));
+            check(plain.open(QIODevice::WriteOnly) && plain.write(csv) == csv.size(), "Write puzzle CSV");
+            plain.close();
+            auto read = [&](const QString &path, int max, int minimum, int maximum) {
+                std::vector<t64::PuzzleRecord> all;
+                const int n = t64::readLichessPuzzles(path, max, minimum, maximum,
+                                                      [&](std::vector<t64::PuzzleRecord> &&b) { all.insert(all.end(), b.begin(), b.end()); });
+                check(n == int(all.size()), "Reader reports what it delivered");
+                return all;
+            };
+            check(read(plain.fileName(), 100, 0, 0).size() == 2 && read(plain.fileName(), 1, 0, 0).size() == 1 &&
+                      read(plain.fileName(), 100, 2000, 3000).front().ref == "lichess:00hard",
+                  "Reader honours the maximum and the rating range");
+            if (QProcess::execute("gzip", {"-k", plain.fileName()}) == 0)
+                check(read(plain.fileName() + ".gz", 100, 0, 0).size() == 2, "Compressed exports are read directly");
+            bool refused = false;
+            try {
+                read(dir.filePath("missing.csv"), 10, 0, 0);
+            } catch (const std::exception &) {
+                refused = true;
+            }
+            check(refused, "A missing file is an error, not an empty bank");
+        }
         std::cout << checks << " online checks passed\n";
         return 0;
     } catch (const std::exception &e) {

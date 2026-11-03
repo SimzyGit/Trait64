@@ -87,6 +87,7 @@ Controller::Controller(const QString &path, QObject *parent)
     });
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
+    refreshPuzzleStats();
     flipped_ = settings_.value("flipped", false).toBool();
     if (!settings_.contains("enginePath")) {
         QString stockfish = QStandardPaths::findExecutable("stockfish");
@@ -156,6 +157,13 @@ Controller::Controller(const QString &path, QObject *parent)
                 emit message(r.error, true);
             else
                 emit message("Vérification SQLite : " + r.detail, r.detail != "ok");
+            return;
+        }
+        if (r.operation == "puzzles") {
+            refreshPuzzleStats();
+            emit changed();
+            emit message(r.error.isEmpty() ? QString("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
+                                           : r.error, !r.error.isEmpty());
             return;
         }
         if (r.operation == "online") {
@@ -843,9 +851,10 @@ void Controller::move(const QString &uci) {
         if (trainingActive()) {
             if (trainingComplete_)
                 return;
-            if (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_]) {
+            const bool mate = acceptPuzzleMate(uci);
+            if (!mate && (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_])) {
                 trainingFailed_ = true;
-                emit message("Ce n’est pas le coup du répertoire. Essaie encore.");
+                emit message(puzzleId_ ? "Pas le bon coup. Essaie encore." : "Ce n’est pas le coup du répertoire. Essaie encore.");
                 return;
             }
             node_ = game_.play(node_, uci.toStdString());
@@ -854,7 +863,10 @@ void Controller::move(const QString &uci) {
                 node_ = game_.play(node_, solution_[solutionIndex_].toStdString());
                 ++solutionIndex_;
             }
-            if (solutionIndex_ >= solution_.size()) {
+            if (solutionIndex_ >= solution_.size() && puzzleId_) {
+                trainingComplete_ = true;
+                finishPuzzle();
+            } else if (solutionIndex_ >= solution_.size()) {
                 trainingComplete_ = true;
                 db_->review(cardId_, !trainingFailed_);
                 refreshLibrary();
@@ -1211,6 +1223,8 @@ void Controller::finishTraining() {
     dirty_ = beforeDirty_;
     flipped_ = beforeFlipped_;
     cardId_ = 0;
+    puzzleId_ = 0;
+    puzzle_.clear();
     repertoireExercise_.clear();
     trainingComplete_ = false;
     selected_ = -1;

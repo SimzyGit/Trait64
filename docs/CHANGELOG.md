@@ -1,5 +1,9 @@
 # Changements
 
+## Puzzles tactiques — 3 novembre 2026
+
+Banque de puzzles locale (Entraînement → Puzzles) : import direct de l'export Lichess (CSV, compressé `.zst` ou non, licence CC0) avec plafond et plage de classement, et puzzles tirés de vos erreurs analysées (Bilan → « Créer des puzzles des erreurs »). Chaque puzzle est choisi près de votre classement (Elo, K = 32), parmi ceux non résolus, par thème (mat en 1/2/3, fourchette, clouage…) et origine. Au dernier coup, tout mat est accepté ; un indice ou la solution comptent comme un échec. Chrono et historique des tentatives conservés.
+
 ## Schéma 8 : positions en clés Zobrist — 3 novembre 2026
 
 Les quatre tables de positions (`positions`, `all_positions`, `opening_edges`, `opening_stats`) utilisent une clé entière de 64 bits au lieu de la FEN texte, en tables sans `rowid`. Sur 20 000 parties générées (≈ 1,9 million de positions, mêmes fichier et machine) : **1 010 Mo → 413 Mo (−59 %)**, import 192 s → 189 s, recherche par position 2,79 → 1,74 ms, arbre d'ouvertures 0,05 → 0,03 ms. Ces mesures ne remplacent pas la qualification sur plusieurs millions de parties réelles.
