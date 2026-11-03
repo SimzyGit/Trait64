@@ -1,5 +1,14 @@
 # Changements
 
+## Gains rapides — 3 novembre 2026
+
+- **Livres Polyglot** : onglet Livre à côté de l'Explorateur, part de chaque coup ; chemin du `.bin` dans Paramètres. Recherche dichotomique dans le fichier, clés vérifiées contre les valeurs de référence du format.
+- **Import Lichess / Chess.com** par pseudo, sans compte, depuis la fenêtre des imports. Lichess ne récupère ensuite que les nouvelles parties ; les parties sont rangées sous une source par joueur.
+- **Force du moteur en Elo** dans la partie locale (`UCI_LimitStrength` + `UCI_Elo`, bornés à la plage du moteur) ; repli sur le niveau 0–20 si le moteur ne le propose pas.
+- **Carnet de coups continu** en option (ordre PGN, variantes entre parenthèses) et **notation figurine** (♘ ♗ ♖ ♕ ♔), affichage seulement.
+- **Glisser-déposer** d'un PGN, FEN, EPD ou T64 dans la fenêtre.
+- **CI Windows et macOS** (portabilité, sans publication). Schéma SQLite 7 inchangé.
+
 ## Carnet de coups côte à côte — 28 octobre 2026
 
 Le lecteur de l'espace Analyse présente désormais une ligne par numéro de coup,
