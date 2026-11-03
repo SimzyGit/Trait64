@@ -12,7 +12,7 @@ base ni d'une fenêtre de temps aléatoire.
 12/12 suites locales en 62,73 s avec Stockfish 16, sans suite ignorée. CI PR :
 cœur ASan/UBSan 2/2, Qt ASan/UBSan 12/12, Debian 12/13 12/12, DEB installés
 et AppImage démarrés. Publication et fichiers vérifiés dans
-[verification-integrity-2026-10-25.json](verification-integrity-2026-10-25.json).
+[verification-integrity-2026-10-25.json](VALIDATION.md).
 Schéma 7 inchangé ; portée précise dans [ASYNC-INTEGRITY.md](ASYNC-INTEGRITY.md).
 
 ## Qualification des imports — 23 octobre 2026
@@ -34,7 +34,7 @@ Ce mode est opt-in et ne remplace pas les tests habituels. Exécution sans écra
 `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`. Cela ne mesure pas le GPU,
 Wayland ni la cadence d'affichage du PC Voyager.
 
-Mesures et protocole : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
+Mesures et protocole : [benchmarks/2026-10-23](VALIDATION.md).
 Le commit `26ba77d` a passé les **12 suites locales** avec Stockfish (62,33 s),
 puis la CI PR avec cœur/Qt ASan/UBSan et Debian 12/13. La fusion `550f28f` et
 la publication dev.55 ont également passé ces contrôles, les paquets installés
@@ -46,10 +46,10 @@ le maximum de lecture concurrente de 4,031 s est documenté, sans prétendre qu'
 mesure la réactivité Qt. La qualification GitHub a désormais réussi Qt 100k, la réindexation 10k et
 le contrôle de tous les PGN des trois bases. Pour reproduire le palier Qt 100k,
 utiliser la sonde instrumentée et sa garde de 90 minutes au commit `67f49ee` :
-[protocole du 25 octobre](benchmarks/2026-10-25/REPRODUCE.md). La sonde de main
+[protocole du 25 octobre](VALIDATION.md). La sonde de main
 conserve sa garde de 30 minutes. Les mesures portent sur le code produit dev.55 ;
 les tests fonctionnels du correctif d'intégrité sont distincts.
-Rapport de livraison : [verification-performance-2026-10-24.json](verification-performance-2026-10-24.json).
+Rapport de livraison : [verification-performance-2026-10-24.json](VALIDATION.md).
 
 ## Audit global — validation finale du 22 octobre 2026
 
@@ -59,7 +59,7 @@ Les options UCI sont vérifiées avec un moteur déclarant des bornes strictes e
 
 Le stress conserve 80 études et 3 000 mutations pour tous les builds. Son délai est de 300 s sous sanitizers et 120 s sinon : le passage CI non optimisé a pris 125,86 s dans la PR. Douze suites passent localement, sous ASan/UBSan avec Qt, puis sur Debian 12 et 13. Les DEB installés et l’AppImage démarrent. La publication dev.52, le tag, les cinq fichiers et la sélection des mises à jour ont été vérifiés.
 
-Résultats, échecs initiaux et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md) ; mesures exactes : [verification-debug-2026-10-22.json](verification-debug-2026-10-22.json).
+Résultats, échecs initiaux et limites : [DEBUG-AUDIT.md](DEBUG-AUDIT.md) ; mesures exactes : [verification-debug-2026-10-22.json](VALIDATION.md).
 
 ## Suites actuelles
 
@@ -108,7 +108,7 @@ Les mesures reproductibles et leurs limites sont dans [PERFORMANCE.md](PERFORMAN
 
 ### Refonte de l’interface — 27–28 octobre 2026
 
-La tête `dd0e53c674a4043f697577187d190db0fe2c65ef` a passé les 13 suites en CI Debian 12/13 et Qt ASan/UBSan. La publication dev.64 a été reconstruite et vérifiée sur `15708fb857c709af61bbfc56f9f5efa1392ccb87`, avec le même arbre source. [Rapport](verification-ui-2026-10-28.json) et [périmètre](UI-REDESIGN.md).
+La tête `dd0e53c674a4043f697577187d190db0fe2c65ef` a passé les 13 suites en CI Debian 12/13 et Qt ASan/UBSan. La publication dev.64 a été reconstruite et vérifiée sur `15708fb857c709af61bbfc56f9f5efa1392ccb87`, avec le même arbre source. [Rapport](VALIDATION.md) et [périmètre](UI-REDESIGN.md).
 
 La sonde locale a réalisé **1 180 contrôles**, y compris ceux des captures, dans 9 configurations : 63 vues de pages, 100 ouvertures de dialogues et une vue avec la barre latérale développée, soit 164 captures. Aucun avertissement QML. Dimensions : 960 × 640, 1366 × 768, 1440 × 940, 1920 × 1080 et 2560 × 1600 ; français/anglais, clair/sombre, texte jusqu’à 150 % et interface jusqu’à 125 %.
 
@@ -122,7 +122,7 @@ T64_UI_SCREENSHOTS=/tmp/trait64-ui-captures ./build/desktop_tests --ui-layout
 
 Le nombre de contrôles avec captures diffère de celui de la CI, qui ne conserve pas les images. La sonde vérifie géométrie, navigation clavier, exécution d’une commande, préférences et étude non enregistrée. Le démarrage couvre le profil Joueurs vide. Les scénarios clic/glisser, variantes, notes, sauvegarde, entraînement et moteurs restent dans les suites existantes.
 
-Un passage local sur 77521f2 a échoué sur « Latest preparation filters replace stale request ». Les passages suivants et les CI finales ont réussi ; diagnostic du résultat ajouté, assertion inchangée. Cause non établie : [local.json](ui-validation/2026-10-27/local.json).
+Un passage local sur 77521f2 a échoué sur « Latest preparation filters replace stale request ». Les passages suivants et les CI finales ont réussi ; diagnostic du résultat ajouté, assertion inchangée. Cause non établie : [local.json](VALIDATION.md).
 
 Captures documentaires :
 
@@ -196,7 +196,7 @@ python3 -m unittest discover -s tests -p 'test_cleanup_actions.py' -v
 bash -n packaging/ci-linux.sh
 ```
 
-17 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Ils couvrent aussi le retard de visibilité d’un nouveau brouillon, le délai dépassé, un identifiant changé et l’utilisation des réponses REST de création/publication. Les échanges GitHub y utilisent un double de test. La CI 38797743659 a validé les 11 suites et paquets sur Debian 12/13, ainsi que l’AppImage. Voir WORK-IN-PROGRESS pour la publication réelle et `verification-repertoires-2026-10-16.json` pour les mesures datées.
+17 tests de publication couvrent fichiers manquants/inattendus/vides/liens, hash distant incorrect, reprise du brouillon, refus d’écraser une release ou un autre brouillon, tag discordant et canaux. Ils couvrent aussi le retard de visibilité d’un nouveau brouillon, le délai dépassé, un identifiant changé et l’utilisation des réponses REST de création/publication. Les échanges GitHub y utilisent un double de test. La CI 38797743659 a validé les 11 suites et paquets sur Debian 12/13, ainsi que l’AppImage. Voir `VALIDATION.json` (clé `verification-repertoires-2026-10-16.json`) pour la publication réelle et les mesures datées.
 
 
 ## Publication effectivement vérifiée — 16 octobre 2026

@@ -38,19 +38,19 @@ L’interface native utilise une navigation latérale compacte ou développée, 
 - **Navigation latérale et grand échiquier** : accueil réorganisé, panneaux adaptables et palette de commandes au clavier.
 - **Lecture personnalisable** : police système, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé et libellés français/anglais. Certains diagnostics et descriptifs de catalogue restent français.
 - **Corrections visuelles** : commandes coupées, profil Joueurs vide bloquant le démarrage, titre d’aide et couleurs des dialogues ; schéma SQLite 7 conservé.
-- **Validation** : 13 suites Debian 12/13 et Qt ASan/UBSan, 1 180 contrôles locaux avec 164 captures. Paquets installés et AppImage démarrée ; essai matériel Voyager encore à faire. [Périmètre](docs/UI-REDESIGN.md) · [Publication](docs/verification-ui-2026-10-28.json).
+- **Validation** : 13 suites Debian 12/13 et Qt ASan/UBSan, 1 180 contrôles locaux avec 164 captures. Paquets installés et AppImage démarrée ; essai matériel Voyager encore à faire. [Périmètre](docs/UI-REDESIGN.md) · [Publication](docs/VALIDATION.md).
 
 ### Vérification de la base et qualification 100k (dev.57)
 
 - **Vérification en arrière-plan et annulable** : le contrôle d'intégrité ne retient plus le fil de l'interface ; l'étude ouverte est conservée. Relance et fermeture protégées. [Portée du correctif](docs/ASYNC-INTEGRITY.md).
-- **100 000 parties réelles qualifiées** sur le code d'import dev.55 : navigation Qt pendant l'import, sauvegarde/restauration et empreinte de tous les PGN ; réindexation de 10 000 parties. Les mesures sans écran ne remplacent pas un essai Voyager ni la qualification de plusieurs millions. [Résultats](docs/benchmarks/2026-10-25/RESULTS.md).
-- **12 suites réussies** localement et en CI Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage démarrés. [Publication vérifiée](docs/verification-integrity-2026-10-25.json).
+- **100 000 parties réelles qualifiées** sur le code d'import dev.55 : navigation Qt pendant l'import, sauvegarde/restauration et empreinte de tous les PGN ; réindexation de 10 000 parties. Les mesures sans écran ne remplacent pas un essai Voyager ni la qualification de plusieurs millions. [Résultats](docs/VALIDATION.md).
+- **12 suites réussies** localement et en CI Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage démarrés. [Publication vérifiée](docs/VALIDATION.md).
 
 ### Imports PGN (dev.55)
 
 - **Deux coûts d'import supprimés** : recherche des doublons par l'index des empreintes et calcul direct des clés matérielles, sans changement du schéma 7.
 - **Mesure conservée sur 10 000 parties réelles** : 93,114 → 42,498 s sur le même hôte et protocole (−54,4 % dans cet essai). Données comparées, sauvegarde et restauration vérifiées ; ce gain ne certifie pas les volumes de plusieurs millions. [Méthode et limites](docs/PERFORMANCE.md).
-- **Validation et distribution** : 12 suites sous Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage testés ; cinq fichiers de release vérifiés, aucune archive Actions. [Publication](docs/verification-performance-2026-10-24.json).
+- **Validation et distribution** : 12 suites sous Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage testés ; cinq fichiers de release vérifiés, aucune archive Actions. [Publication](docs/VALIDATION.md).
 
 ### Fiabilité et analyse tactique (dev.46 → dev.52)
 

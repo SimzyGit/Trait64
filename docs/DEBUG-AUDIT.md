@@ -3,7 +3,7 @@
 Demande utilisateur : suspendre les ajouts et déboguer tout le logiciel.
 Base exacte : `4e4cd3d36711c98a5952d26dca4b2531bc4c6264` (code de dev.46).
 
-**Audit intégré dans la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Publication le 21 octobre 2026, vérification finale le 22 octobre. Dix groupes de défauts corrigés. Mesures et références : [verification-debug-2026-10-22.json](verification-debug-2026-10-22.json).
+**Audit intégré dans la [PR #9](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/9), publié dans [v0.3.0-dev.52](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52).** Publication le 21 octobre 2026, vérification finale le 22 octobre. Dix groupes de défauts corrigés. Mesures et références : [verification-debug-2026-10-22.json](VALIDATION.md).
 
 ## Corrections et preuves de régression
 

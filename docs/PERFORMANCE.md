@@ -33,8 +33,8 @@ Les corrections sont intégrées à **dev.55**. Le palier CLI de 100 000 est mes
 ci-dessous ; la réactivité Qt est qualifiée séparément. Aucun résultat à
 500 000/1/2/5/10 millions ni sur le PC Voyager n'est revendiqué.
 
-Rapports : [benchmarks/2026-10-23](benchmarks/2026-10-23/).
-Protocole : [REPRODUCE.md](benchmarks/2026-10-23/REPRODUCE.md).
+Rapports : [benchmarks/2026-10-23](VALIDATION.md).
+Protocole : [REPRODUCE.md](VALIDATION.md).
 
 ## 100 000 parties réelles — hôte local, 24 octobre 2026
 
@@ -78,14 +78,14 @@ elle ne doit pas être masquée par la médiane. Ce n'est pas une mesure de Qt.
 Les filtres peu sélectifs, matériaux fréquents, pages éloignées et combinaisons
 complexes ne sont pas couverts exhaustivement par ces lectures.
 
-Rapport complet : [material-100k.json](benchmarks/2026-10-24/material-100k.json).
+Rapport complet : [material-100k.json](VALIDATION.md).
 Les valeurs ont été récupérées depuis la sortie complète observée avant la
 réinitialisation du dossier temporaire, puis enregistrées dans Git ; provenance
-et limites : [recovery-provenance.json](benchmarks/2026-10-24/recovery-provenance.json).
+et limites : [recovery-provenance.json](VALIDATION.md).
 
 ## Qualification GitHub terminée — 25 octobre 2026
 
-[Résultats, JSON bruts et protocole](benchmarks/2026-10-25/RESULTS.md).
+[Résultats, JSON bruts et protocole](VALIDATION.md).
 Code produit dev.55 (`550f28f`), sonde instrumentée `67f49ee`.
 **Deux runners différents** pour Qt et le stockage, chacun avec deux CPU logiques ;
 une mesure par scénario, caches non purgés. Ne pas comparer ces temps entre eux
@@ -156,7 +156,7 @@ Le test a mis en évidence une sélection d’index défavorable aux filtres de 
 
 À qualifier ensuite : PGN réels, variantes, index de toutes les positions, import annulé/repris, migration et sauvegarde de grosses bases, recherche de positions communes/rares, tris globaux et pages très éloignées. Depuis le 12 octobre, la recherche s’exécute dans un worker avec annulation SQLite et pagination par curseur (200 lignes dans l’interface). La liste reste une QVariantList bornée ; les exports, certains profils statistiques et les migrations peuvent encore bloquer l’interface. Les mesures historiques ci-dessus portent sur le schéma 3, pas sur ces nouveaux scénarios.
 
-Reproduction : voir [TESTING.md](TESTING.md). Données brutes : [performance-2026-10-10.json](performance-2026-10-10.json).
+Reproduction : voir [TESTING.md](TESTING.md). Données brutes : [performance-2026-10-10.json](VALIDATION.md).
 
 
 ## Pages éloignées — 13 octobre 2026, schéma 4
@@ -175,7 +175,7 @@ Le test compare aussi le contenu exact des deux pages. Le premier prototype de c
 
 Base synthétique après checkpoint : 1 097 678 848 octets ; préparation : 128.108 s. Pic RSS du **processus de benchmark**, mesuré par `getrusage(RUSAGE_CHILDREN)` depuis Python : 14 300 Kio ; ce n’est ni la RAM de l’application graphique ni une mesure d’import PGN. Temps du processus complet : 129.227 s.
 
-Données brutes : [avant correction](performance-cursors-before-2026-10-12.json), [après correction](performance-cursors-2026-10-13.json). La commande `./build/database_benchmark 1000000` inclut les deux parcours. Les tests de non-régression vérifient aussi les passages entre groupes de dates, les valeurs absentes et les cinq tris.
+Données brutes : [avant correction](VALIDATION.md), [après correction](VALIDATION.md). La commande `./build/database_benchmark 1000000` inclut les deux parcours. Les tests de non-régression vérifient aussi les passages entre groupes de dates, les valeurs absentes et les cinq tris.
 
 Les essais sur 1, 2, 5 et 10 millions de **parties PGN réelles avec toutes leurs positions et variantes** ne sont pas encore réalisés. Les tris globaux et filtres peu sélectifs restent à mesurer : le worker évite de bloquer l’interface, sans rendre automatiquement toute requête rapide.
 
@@ -219,7 +219,7 @@ Mesure réelle : premières **10 000 parties / 661 314 positions** du corpus
 [Lichess janvier 2013](https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst),
 sous [CC0](https://database.lichess.org/), sur l'hôte Linux partagé, GCC 13.3,
 Qt 6.4.2, compilation Release. PGN de 92 811 021 octets ; empreintes et rapports
-bruts dans [performance-pgn-2026-10-15.json](performance-pgn-2026-10-15.json).
+bruts dans [performance-pgn-2026-10-15.json](VALIDATION.md).
 L'identifiant embarqué `0.3.0-dev.1` est celui de la configuration locale de
 mesure ; ce n'est pas une nouvelle version distribuée.
 

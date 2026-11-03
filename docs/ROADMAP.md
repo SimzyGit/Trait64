@@ -2,14 +2,14 @@
 
 ## Interface native — dev.64, 28 octobre 2026
 
-Navigation latérale, grand échiquier, panneaux adaptables, commandes clavier, police et tailles réglables, contraste renforcé et libellés français/anglais. Débordements, palette des dialogues et profil Joueurs vide corrigés. Treize suites en CI et 1 180 contrôles locaux (captures comprises), schéma 7 conservé. [Périmètre et limites](UI-REDESIGN.md) · [Publication](verification-ui-2026-10-28.json).
+Navigation latérale, grand échiquier, panneaux adaptables, commandes clavier, police et tailles réglables, contraste renforcé et libellés français/anglais. Débordements, palette des dialogues et profil Joueurs vide corrigés. Treize suites en CI et 1 180 contrôles locaux (captures comprises), schéma 7 conservé. [Périmètre et limites](UI-REDESIGN.md) · [Publication](VALIDATION.md).
 
 ## Performances et intégrité — dev.55 / dev.57, 25 octobre 2026
 
 Deux corrections mesurées de l'import (choix de l'index des doublons, calcul du
 matériel), sans migration. Sur 10 000 parties réelles : 93,114 → 42,498 s dans
 la comparaison conservée. Corrections intégrées et publiées dans dev.55 ;
-voir PERFORMANCE et WORK-IN-PROGRESS. La qualification Qt séparée a réussi sur 100 000 parties, avec 1 842 navigations
+voir PERFORMANCE et VALIDATION. La qualification Qt séparée a réussi sur 100 000 parties, avec 1 842 navigations
 et zéro avertissement QML ; tous les PGN restaurés et la réindexation 10k sont
 contrôlés. La vérification manuelle d'intégrité est asynchrone et annulable dans
 dev.57 (PR #12), sans changement du schéma.
@@ -40,7 +40,7 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Réseau | Vérification facultative GitHub Releases, trois canaux, SHA-256, notification, téléchargement et installation | Signature indépendante du mainteneur, import distant volontaire, partage ; jeu en ligne exclu du périmètre |
 | Fonctions avancées | Études PDF/PNG, bilan moteur expliqué par suites légales et événements matériels, copies annotées, exercices issus des erreurs | Reconnaissance de diagrammes depuis images, rapports de répertoire, détection de faiblesses, cours pédagogiques complets |
 
-Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. La refonte demandée le 26 octobre est livrée ; préserver ses contrôles visuels. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [NEXT-STEPS.md](NEXT-STEPS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
+Priorité suivante : qualifier les gros corpus et développer les explications vérifiables, puis approfondir les répertoires et l’entraînement. La refonte demandée le 26 octobre est livrée ; préserver ses contrôles visuels. Aucune estimation de niveau Elo à partir d’une partie ne sera développée. Voir [PROJECT-STATUS.md](PROJECT-STATUS.md) pour reprendre sans recréer l’application. Conserver PGN et les sauvegardes SQLite comme sorties récupérables pendant l’évolution du format T64 expérimental.
 
 ## Lot explications — 16 octobre 2026
 
@@ -58,7 +58,7 @@ Les plans, réfutations démontrées et équivalences restent ouverts. Guide : [
 - [x] Statistiques et couverture locale asynchrones, annulation et rejet des résultats d’une ancienne bibliothèque.
 - [x] Analyse moteur de la copie complète d’un répertoire, profils et budget par position, sans modifier les notes ni les révisions.
 
-Le lot est distribué dans v0.3.0-dev.42 : 11/11 suites sur Debian 12 et 13, paquets et empreintes distantes vérifiés, zéro archive Actions. Les preuves et le commit exact figurent dans WORK-IN-PROGRESS. Les éditions ponctuelles restent synchrones, les transpositions sont développées une seule fois, et la couverture probabiliste/comparaison des répertoires restent ouvertes.
+Le lot est distribué dans v0.3.0-dev.42 : 11/11 suites sur Debian 12 et 13, paquets et empreintes distantes vérifiés, zéro archive Actions. Les preuves et le commit exact figurent dans VALIDATION.json. Les éditions ponctuelles restent synchrones, les transpositions sont développées une seule fois, et la couverture probabiliste/comparaison des répertoires restent ouvertes.
 
 ## Catalogue validé localement — 12 octobre 2026
 
@@ -384,10 +384,10 @@ Lorsque les fonctions principales seront suffisamment robustes :
 ---
 
 
-Références étudiées et précautions de réutilisation : [SOURCES.md](SOURCES.md). Ordre de travail et reprise : [NEXT-STEPS.md](NEXT-STEPS.md).
+Références étudiées et précautions de réutilisation : [SOURCES.md](SOURCES.md). Ordre de travail et reprise : [PROJECT-STATUS.md](PROJECT-STATUS.md).
 
 13 octobre : répertoires par position, partage des transpositions, PGN et rappels espacés implémentés. Les réponses adverses absentes sont détectées par rapport à la bibliothèque ; couverture probabiliste globale, comparaison de répertoires et analyse moteur des branches restent à développer. Guide : [REPERTOIRES-IMPORTS.md](REPERTOIRES-IMPORTS.md).
 
-15 octobre : stockage Actions nettoyé (8,37 Go) et purge automatique intégrée par la PR #4. La PR #5 ajoute l'import parallèle, corrige la notation SAN historique et protège les sorties du benchmark. Dix suites réussissent sur Debian 12 et 13 ; corpus réel de 10 000 parties avec pause/reprise et sauvegarde vérifiées. Voir [PERFORMANCE.md](PERFORMANCE.md). Prochain lot : file d'analyses persistante et explications vérifiables, puis entraînement et répertoires ; détails de reprise dans [WORK-IN-PROGRESS.md](WORK-IN-PROGRESS.md).
+15 octobre : stockage Actions nettoyé (8,37 Go) et purge automatique intégrée par la PR #4. La PR #5 ajoute l'import parallèle, corrige la notation SAN historique et protège les sorties du benchmark. Dix suites réussissent sur Debian 12 et 13 ; corpus réel de 10 000 parties avec pause/reprise et sauvegarde vérifiées. Voir [PERFORMANCE.md](PERFORMANCE.md). Prochain lot : file d'analyses persistante et explications vérifiables, puis entraînement et répertoires ; détails de reprise dans [PROJECT-STATUS.md](PROJECT-STATUS.md).
 
 15 octobre, lot analyses : file Qt/SQLite persistante, copie indépendante de l’étude, toutes les branches, pause/reprise après arrêt réel, MultiPV, cache borné tenant compte de l’historique et de l’identité moteur, export PGN annoté sans prolonger la ligne jouée. Les scores de mat ne produisent plus de pertes artificielles en centipions. Guide : [ANALYSIS-QUEUE.md](ANALYSIS-QUEUE.md).

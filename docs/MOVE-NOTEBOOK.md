@@ -37,9 +37,9 @@ sans suite ignorée en 157,24 s**, Stockfish 16 réel inclus. Le carnet passe
 207 contrôles, captures comprises, dans six configurations, sans avertissement
 QML. La matrice existante passe ses neuf configurations et 164 captures.
 Les captures du carnet et de la matrice sont distinctes. Rapports :
-[validation](verification-notebook-2026-10-28.json),
-[journal local](notebook-local-tests-2026-10-28.txt) et
-[matrice](notebook-layout-2026-10-28.json).
+[validation](VALIDATION.md),
+[journal local](VALIDATION.md) et
+[matrice](VALIDATION.md).
 
 À 960 × 640 avec texte 150 % / interface 125 %, la page reste défilante : le
 suivi du coup ajuste aussi ce défilement après le calcul de mise en page Qt.

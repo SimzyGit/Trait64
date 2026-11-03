@@ -55,7 +55,7 @@ encore rencontré `Artifact storage quota has been hit` au téléversement, malg
 un inventaire vide et les tests/paquets réussis. Depuis la PR #7, le pipeline
 transmet directement les fichiers vérifiés à Releases et ne dépend plus de ce
 quota d’archives. Ne pas relancer les anciennes exécutions 36/38 : elles utilisent
-l’ancien workflow. Voir `WORK-IN-PROGRESS.md` pour la publication actuelle ;
+l’ancien workflow. Voir `PROJECT-STATUS.md` pour la publication actuelle ;
 aucun achat ni changement du budget du compte n’a été effectué.
 
 Le 16 octobre, [l’exécution 38861352628](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38861352628)

@@ -1,0 +1,5355 @@
+{
+ "benchmarks/2026-10-23/before-10k.json": {
+  "backup_ms": 3099,
+  "backup_verified": true,
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 371650560,
+  "elapsed_ms": 93114,
+  "end_rss_kib": 19040,
+  "exact_player": {
+   "max_ms": 2.214327,
+   "median_ms": 1.233828,
+   "p95_ms": 2.214327,
+   "samples": 5,
+   "samples_ms": [
+    2.214327,
+    1.397804,
+    0.951285,
+    1.233828,
+    0.9544
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 1.299166,
+   "median_ms": 1.179005,
+   "p95_ms": 1.299166,
+   "samples": 5,
+   "samples_ms": [
+    1.179005,
+    1.283993,
+    1.299166,
+    1.138545,
+    1.132205
+   ]
+  },
+  "first_pass_ms": 32076,
+  "games": 10000,
+  "games_per_second": 107.39523594733338,
+  "hash_ms": 577,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 3163,
+  "job": {
+   "added": 10000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "id": 1,
+   "modified": 1792170952293,
+   "offset": 7561130,
+   "processed": 10000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "lichess-2013-01",
+   "updated": "2026-10-23T19:15:58.115Z"
+  },
+  "last_position": {
+   "max_ms": 1.820917,
+   "median_ms": 1.071215,
+   "p95_ms": 1.820917,
+   "samples": 5,
+   "samples_ms": [
+    1.820917,
+    1.205636,
+    1.071215,
+    0.912497,
+    0.96142
+   ]
+  },
+  "limit": 10000,
+  "load_one_game": {
+   "max_ms": 1.222481,
+   "median_ms": 0.978775,
+   "p95_ms": 1.222481,
+   "samples": 5,
+   "samples_ms": [
+    1.222481,
+    0.965897,
+    1.078065,
+    0.92822,
+    0.978775
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 1.751383,
+   "median_ms": 1.631959,
+   "p95_ms": 1.751383,
+   "samples": 5,
+   "samples_ms": [
+    1.751383,
+    1.634297,
+    1.488729,
+    1.631959,
+    1.200308
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.106179,
+   "median_ms": 0.051607,
+   "p95_ms": 0.106179,
+   "samples": 5,
+   "samples_ms": [
+    0.106179,
+    0.06015,
+    0.051607,
+    0.048032,
+    0.047761
+   ]
+  },
+  "os": "Ubuntu 24.04.3 LTS",
+  "pause_committed": 5000,
+  "peak_rss_kib": 18788,
+  "player_fragment": {
+   "max_ms": 2.556649,
+   "median_ms": 2.290791,
+   "p95_ms": 2.556649,
+   "samples": 5,
+   "samples_ms": [
+    2.556649,
+    2.147517,
+    2.290791,
+    2.06981,
+    2.339044
+   ]
+  },
+  "qt": "6.4.2",
+  "reopen_ms": 1.133027,
+  "restore_copy_ms": 1203,
+  "restore_ms": 3949,
+  "restore_verified": true,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-23/commands.json": [
+  {
+   "name": "parse-10k-1",
+   "command": [
+    "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+    "--input",
+    "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "--source-url",
+    "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "--threads",
+    "1",
+    "--limit",
+    "10000",
+    "--report",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/parse-10k-1.json"
+   ],
+   "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+   "process_seconds": 11.749449729919434
+  },
+  {
+   "name": "parse-10k-4",
+   "command": [
+    "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+    "--input",
+    "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "--source-url",
+    "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "--threads",
+    "4",
+    "--limit",
+    "10000",
+    "--report",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/parse-10k-4.json"
+   ],
+   "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+   "process_seconds": 3.9082894325256348
+  },
+  {
+   "name": "before-10k",
+   "command": [
+    "/workspace/scratch/a60c9ae04ffb/perf-baselines/before/pgn_benchmark",
+    "--input",
+    "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "--source-url",
+    "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "--threads",
+    "4",
+    "--limit",
+    "10000",
+    "--pause-at",
+    "5000",
+    "--database",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/before-10k.sqlite",
+    "--backup",
+    "--report",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/before-10k.json"
+   ],
+   "binary_sha256": "c3beba44446a345498b2a0b94b5da65dc6eef9ab84c9d68efaba31204a33bfb3",
+   "process_seconds": 106.5810182094574
+  },
+  {
+   "name": "digest-10k",
+   "command": [
+    "/workspace/scratch/a60c9ae04ffb/perf-baselines/digest/pgn_benchmark",
+    "--input",
+    "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "--source-url",
+    "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "--threads",
+    "4",
+    "--limit",
+    "10000",
+    "--pause-at",
+    "5000",
+    "--database",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/digest-10k.sqlite",
+    "--backup",
+    "--report",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/digest-10k.json"
+   ],
+   "binary_sha256": "9ababd4ebf193727f78054b3a5d08103b2216f1d180f9e01a93daf445994e968",
+   "process_seconds": 72.15607857704163
+  },
+  {
+   "name": "material-10k",
+   "command": [
+    "/workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf/pgn_benchmark",
+    "--input",
+    "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "--source-url",
+    "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+    "--threads",
+    "4",
+    "--limit",
+    "10000",
+    "--pause-at",
+    "5000",
+    "--database",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/material-10k.sqlite",
+    "--backup",
+    "--report",
+    "/workspace/scratch/a60c9ae04ffb/material-measures/material-10k.json"
+   ],
+   "binary_sha256": "077efc2a6e17cad258a0a9c83e67a1b8706473be520434b0b1ac061defce6887",
+   "process_seconds": 55.49070167541504
+  }
+ ],
+ "benchmarks/2026-10-23/digest-10k.json": {
+  "backup_ms": 3440,
+  "backup_verified": true,
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 371662848,
+  "elapsed_ms": 57649,
+  "end_rss_kib": 19148,
+  "exact_player": {
+   "max_ms": 1.434472,
+   "median_ms": 0.940778,
+   "p95_ms": 1.434472,
+   "samples": 5,
+   "samples_ms": [
+    1.434472,
+    0.843461,
+    0.910913,
+    0.994169,
+    0.940778
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 1.105246,
+   "median_ms": 0.764563,
+   "p95_ms": 1.105246,
+   "samples": 5,
+   "samples_ms": [
+    1.105246,
+    0.764563,
+    0.756861,
+    0.664432,
+    0.824943
+   ]
+  },
+  "first_pass_ms": 26574,
+  "games": 10000,
+  "games_per_second": 173.4635466356745,
+  "hash_ms": 682,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 3303,
+  "job": {
+   "added": 10000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "id": 1,
+   "modified": 1792170952293,
+   "offset": 7561130,
+   "processed": 10000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "lichess-2013-01",
+   "updated": "2026-10-23T19:17:09.346Z"
+  },
+  "last_position": {
+   "max_ms": 1.407121,
+   "median_ms": 1.141911,
+   "p95_ms": 1.407121,
+   "samples": 5,
+   "samples_ms": [
+    1.365999,
+    0.960858,
+    1.407121,
+    1.030494,
+    1.141911
+   ]
+  },
+  "limit": 10000,
+  "load_one_game": {
+   "max_ms": 1.635645,
+   "median_ms": 0.84242,
+   "p95_ms": 1.635645,
+   "samples": 5,
+   "samples_ms": [
+    1.635645,
+    0.893426,
+    0.84242,
+    0.80285,
+    0.771063
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 1.337967,
+   "median_ms": 1.133418,
+   "p95_ms": 1.337967,
+   "samples": 5,
+   "samples_ms": [
+    1.337967,
+    1.1008,
+    1.133418,
+    1.109432,
+    1.158336
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.139911,
+   "median_ms": 0.051618,
+   "p95_ms": 0.139911,
+   "samples": 5,
+   "samples_ms": [
+    0.139911,
+    0.060591,
+    0.051618,
+    0.051608,
+    0.045488
+   ]
+  },
+  "os": "Ubuntu 24.04.3 LTS",
+  "pause_committed": 5000,
+  "peak_rss_kib": 18684,
+  "player_fragment": {
+   "max_ms": 2.57367,
+   "median_ms": 2.229942,
+   "p95_ms": 2.57367,
+   "samples": 5,
+   "samples_ms": [
+    2.57367,
+    2.277003,
+    1.912373,
+    2.229942,
+    1.647924
+   ]
+  },
+  "qt": "6.4.2",
+  "reopen_ms": 0.816851,
+  "restore_copy_ms": 944,
+  "restore_ms": 3782,
+  "restore_verified": true,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-23/local-tests.txt": "Internal ctest changing into directory: /workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf\nTest project /workspace/scratch/a60c9ae04ffb/Trait64-perf/build-perf\n      Start  1: core\n 1/12 Test  #1: core .............................   Passed    0.21 sec\n      Start  2: robustness\n 2/12 Test  #2: robustness .......................   Passed    2.21 sec\n      Start  3: pgn_benchmark_safety\n 3/12 Test  #3: pgn_benchmark_safety .............   Passed    0.44 sec\n      Start  4: content\n 4/12 Test  #4: content ..........................   Passed    0.05 sec\n      Start  5: updates\n 5/12 Test  #5: updates ..........................   Passed    0.11 sec\n      Start  6: storage\n 6/12 Test  #6: storage ..........................   Passed    0.50 sec\n      Start  7: repertoires\n 7/12 Test  #7: repertoires ......................   Passed    0.16 sec\n      Start  8: resumable_import\n 8/12 Test  #8: resumable_import .................   Passed    0.13 sec\n      Start  9: persistent_analysis\n 9/12 Test  #9: persistent_analysis ..............   Passed   39.71 sec\n      Start 10: engine\n10/12 Test #10: engine ...........................   Passed    2.58 sec\n      Start 11: desktop_smoke\n11/12 Test #11: desktop_smoke ....................   Passed    2.50 sec\n      Start 12: desktop_interactions\n12/12 Test #12: desktop_interactions .............   Passed   13.71 sec\n\n100% tests passed, 0 tests failed out of 12\n\nTotal Test time (real) =  62.33 sec\n",
+ "benchmarks/2026-10-23/logical-equivalence.json": {
+  "equal": true,
+  "excluded_columns": [
+   "games.uuid",
+   "games.updated"
+  ],
+  "method": "SHA-256 of ordered JSON rows; import task timestamps and FTS implementation tables are excluded",
+  "queries": {
+   "games": "SELECT id,white,black,event,date,result,eco,collection,favorite,deleted,pgn,digest,white_elo,black_elo,plies,fingerprint FROM games ORDER BY id",
+   "positions": "SELECT * FROM positions ORDER BY game_id,ply",
+   "all_positions": "SELECT * FROM all_positions ORDER BY game_id,node",
+   "opening_edges": "SELECT * FROM opening_edges ORDER BY game_id,fen,uci",
+   "opening_stats": "SELECT * FROM opening_stats ORDER BY fen,uci",
+   "library_counts": "SELECT * FROM library_counts ORDER BY rowid",
+   "player_counts": "SELECT * FROM player_counts ORDER BY name",
+   "source_games": "SELECT * FROM source_games ORDER BY source_id,game_id"
+  },
+  "databases": {
+   "before-10k": {
+    "games": {
+     "rows": 10000,
+     "sha256": "92594339a62cbe665d0595d3da9b701ad9a1d0086265e3faff270719973c76a5"
+    },
+    "positions": {
+     "rows": 661314,
+     "sha256": "9688a8cbe5bbc2d4fcff28f385e8a136e22efde39363b27490d535531b582d82"
+    },
+    "all_positions": {
+     "rows": 661314,
+     "sha256": "ad0ada9a144cb7e4b7a2fe6b32d04f50e3f5259d27f88fc9d056bda535d550c3"
+    },
+    "opening_edges": {
+     "rows": 649821,
+     "sha256": "4a9e6c7f8b3e544a9b60b5f8b7cf21ddedf81c6730321d00617848339284bf89"
+    },
+    "opening_stats": {
+     "rows": 589541,
+     "sha256": "caa805dcb8f6541652b1d453f99b32a532cc72edfacd8de3fffebe39ddc23b3b"
+    },
+    "library_counts": {
+     "rows": 1,
+     "sha256": "0465a87660f0f6ff4bc6e7384700d23b9e9dcc2764774b07392b452d68b3f43e"
+    },
+    "player_counts": {
+     "rows": 1410,
+     "sha256": "0678892db484b63e3832648572fc8b2bcc91749a0b8445c5be3f448c564860ce"
+    },
+    "source_games": {
+     "rows": 10000,
+     "sha256": "49b3b2fdf4d715112f5699aba66f12c13bb44ec7ef644cd3204fd309a3bb5bc3"
+    }
+   },
+   "digest-10k": {
+    "games": {
+     "rows": 10000,
+     "sha256": "92594339a62cbe665d0595d3da9b701ad9a1d0086265e3faff270719973c76a5"
+    },
+    "positions": {
+     "rows": 661314,
+     "sha256": "9688a8cbe5bbc2d4fcff28f385e8a136e22efde39363b27490d535531b582d82"
+    },
+    "all_positions": {
+     "rows": 661314,
+     "sha256": "ad0ada9a144cb7e4b7a2fe6b32d04f50e3f5259d27f88fc9d056bda535d550c3"
+    },
+    "opening_edges": {
+     "rows": 649821,
+     "sha256": "4a9e6c7f8b3e544a9b60b5f8b7cf21ddedf81c6730321d00617848339284bf89"
+    },
+    "opening_stats": {
+     "rows": 589541,
+     "sha256": "caa805dcb8f6541652b1d453f99b32a532cc72edfacd8de3fffebe39ddc23b3b"
+    },
+    "library_counts": {
+     "rows": 1,
+     "sha256": "0465a87660f0f6ff4bc6e7384700d23b9e9dcc2764774b07392b452d68b3f43e"
+    },
+    "player_counts": {
+     "rows": 1410,
+     "sha256": "0678892db484b63e3832648572fc8b2bcc91749a0b8445c5be3f448c564860ce"
+    },
+    "source_games": {
+     "rows": 10000,
+     "sha256": "49b3b2fdf4d715112f5699aba66f12c13bb44ec7ef644cd3204fd309a3bb5bc3"
+    }
+   },
+   "material-10k": {
+    "games": {
+     "rows": 10000,
+     "sha256": "92594339a62cbe665d0595d3da9b701ad9a1d0086265e3faff270719973c76a5"
+    },
+    "positions": {
+     "rows": 661314,
+     "sha256": "9688a8cbe5bbc2d4fcff28f385e8a136e22efde39363b27490d535531b582d82"
+    },
+    "all_positions": {
+     "rows": 661314,
+     "sha256": "ad0ada9a144cb7e4b7a2fe6b32d04f50e3f5259d27f88fc9d056bda535d550c3"
+    },
+    "opening_edges": {
+     "rows": 649821,
+     "sha256": "4a9e6c7f8b3e544a9b60b5f8b7cf21ddedf81c6730321d00617848339284bf89"
+    },
+    "opening_stats": {
+     "rows": 589541,
+     "sha256": "caa805dcb8f6541652b1d453f99b32a532cc72edfacd8de3fffebe39ddc23b3b"
+    },
+    "library_counts": {
+     "rows": 1,
+     "sha256": "0465a87660f0f6ff4bc6e7384700d23b9e9dcc2764774b07392b452d68b3f43e"
+    },
+    "player_counts": {
+     "rows": 1410,
+     "sha256": "0678892db484b63e3832648572fc8b2bcc91749a0b8445c5be3f448c564860ce"
+    },
+    "source_games": {
+     "rows": 10000,
+     "sha256": "49b3b2fdf4d715112f5699aba66f12c13bb44ec7ef644cd3204fd309a3bb5bc3"
+    }
+   },
+   "material-10k-restored": {
+    "games": {
+     "rows": 10000,
+     "sha256": "92594339a62cbe665d0595d3da9b701ad9a1d0086265e3faff270719973c76a5"
+    },
+    "positions": {
+     "rows": 661314,
+     "sha256": "9688a8cbe5bbc2d4fcff28f385e8a136e22efde39363b27490d535531b582d82"
+    },
+    "all_positions": {
+     "rows": 661314,
+     "sha256": "ad0ada9a144cb7e4b7a2fe6b32d04f50e3f5259d27f88fc9d056bda535d550c3"
+    },
+    "opening_edges": {
+     "rows": 649821,
+     "sha256": "4a9e6c7f8b3e544a9b60b5f8b7cf21ddedf81c6730321d00617848339284bf89"
+    },
+    "opening_stats": {
+     "rows": 589541,
+     "sha256": "caa805dcb8f6541652b1d453f99b32a532cc72edfacd8de3fffebe39ddc23b3b"
+    },
+    "library_counts": {
+     "rows": 1,
+     "sha256": "0465a87660f0f6ff4bc6e7384700d23b9e9dcc2764774b07392b452d68b3f43e"
+    },
+    "player_counts": {
+     "rows": 1410,
+     "sha256": "0678892db484b63e3832648572fc8b2bcc91749a0b8445c5be3f448c564860ce"
+    },
+    "source_games": {
+     "rows": 10000,
+     "sha256": "49b3b2fdf4d715112f5699aba66f12c13bb44ec7ef644cd3204fd309a3bb5bc3"
+    }
+   }
+  }
+ },
+ "benchmarks/2026-10-23/material-10k.json": {
+  "backup_ms": 3090,
+  "backup_verified": true,
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 371658752,
+  "elapsed_ms": 42498,
+  "end_rss_kib": 18736,
+  "exact_player": {
+   "max_ms": 1.56243,
+   "median_ms": 1.05711,
+   "p95_ms": 1.56243,
+   "samples": 5,
+   "samples_ms": [
+    1.56243,
+    1.180265,
+    0.862577,
+    1.05711,
+    1.02391
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 1.181336,
+   "median_ms": 1.082047,
+   "p95_ms": 1.181336,
+   "samples": 5,
+   "samples_ms": [
+    0.945282,
+    1.082047,
+    1.181336,
+    1.105012,
+    0.821025
+   ]
+  },
+  "first_pass_ms": 19312,
+  "games": 10000,
+  "games_per_second": 235.30519083250977,
+  "hash_ms": 692,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 2798,
+  "job": {
+   "added": 10000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "id": 1,
+   "modified": 1792170952293,
+   "offset": 7561130,
+   "processed": 10000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "lichess-2013-01",
+   "updated": "2026-10-23T19:18:06.353Z"
+  },
+  "last_position": {
+   "max_ms": 1.265433,
+   "median_ms": 0.967786,
+   "p95_ms": 1.265433,
+   "samples": 5,
+   "samples_ms": [
+    1.265433,
+    0.941867,
+    0.967786,
+    0.92449,
+    1.009839
+   ]
+  },
+  "limit": 10000,
+  "load_one_game": {
+   "max_ms": 1.351843,
+   "median_ms": 0.988287,
+   "p95_ms": 1.351843,
+   "samples": 5,
+   "samples_ms": [
+    0.988287,
+    0.78503,
+    0.803458,
+    1.351843,
+    1.01697
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 1.29655,
+   "median_ms": 1.0238,
+   "p95_ms": 1.29655,
+   "samples": 5,
+   "samples_ms": [
+    1.196519,
+    1.015126,
+    0.931391,
+    1.0238,
+    1.29655
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.105669,
+   "median_ms": 0.049485,
+   "p95_ms": 0.105669,
+   "samples": 5,
+   "samples_ms": [
+    0.105669,
+    0.058658,
+    0.049485,
+    0.046339,
+    0.045248
+   ]
+  },
+  "os": "Ubuntu 24.04.3 LTS",
+  "pause_committed": 5000,
+  "peak_rss_kib": 18304,
+  "player_fragment": {
+   "max_ms": 2.230715,
+   "median_ms": 1.919697,
+   "p95_ms": 2.230715,
+   "samples": 5,
+   "samples_ms": [
+    2.230715,
+    1.925907,
+    1.919697,
+    1.85534,
+    1.77501
+   ]
+  },
+  "qt": "6.4.2",
+  "reopen_ms": 1.074146,
+  "restore_copy_ms": 1085,
+  "restore_ms": 3525,
+  "restore_verified": true,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-23/method.json": {
+  "date": "2026-10-23",
+  "corpus_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "license": "CC0, https://database.lichess.org/",
+  "main_reference": "06a4321e4a6d7e7ff4446d6d73ff39d3555c913a",
+  "digest_reference": "69250f06543e6fcd666a1d33ef6e86ec5122580c",
+  "material_reference": "e21e8d31f2795c06c0f2d912500a91fbee7e1559",
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "build": "Release, -O3 -DNDEBUG",
+  "qt": "6.4.2",
+  "host": "Linux-6.18.55-x86_64-with-glibc2.39",
+  "measurement_order": [
+   "parse-10k-1",
+   "parse-10k-4",
+   "before-10k",
+   "digest-10k",
+   "material-10k"
+  ],
+  "conditions": "Shared Linux host. Sequential measurements, no local compilation during the three import comparisons. OS caches not dropped. One observation per variant, not a confidence interval. All three executables use the same benchmark/core/storage objects, replacing only database.cpp with the source from the recorded commit.",
+  "not_tested": [
+   "Voyager GPU/Wayland",
+   "500000 or more real games"
+  ],
+  "logical_equivalence": "passed: all compared rows of the three imports and restored material database are equal"
+ },
+ "benchmarks/2026-10-23/parse-100k-4.json": {
+  "canonical_sha256": "eb0826cb0ba0f70ee446c1bf706224031a500c6ec5bd7e6028845bc1bf97ca1f",
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "elapsed_ms": 35706,
+  "end_rss_kib": 9828,
+  "games": 100000,
+  "games_per_second": 2800.649750742172,
+  "hash_ms": 574,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "limit": 100000,
+  "mode": "parse + canonical PGN hash (no database)",
+  "nodes": 6817385,
+  "os": "Ubuntu 24.04.3 LTS",
+  "peak_rss_kib": 9636,
+  "qt": "6.4.2",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-23/parse-10k-1.json": {
+  "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "elapsed_ms": 11063,
+  "end_rss_kib": 9012,
+  "games": 10000,
+  "games_per_second": 903.9139473922082,
+  "hash_ms": 676,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "limit": 10000,
+  "mode": "parse + canonical PGN hash (no database)",
+  "nodes": 661314,
+  "os": "Ubuntu 24.04.3 LTS",
+  "peak_rss_kib": 10368,
+  "qt": "6.4.2",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 1
+ },
+ "benchmarks/2026-10-23/parse-10k-4.json": {
+  "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "elapsed_ms": 3345,
+  "end_rss_kib": 9672,
+  "games": 10000,
+  "games_per_second": 2989.536621823617,
+  "hash_ms": 554,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "limit": 10000,
+  "mode": "parse + canonical PGN hash (no database)",
+  "nodes": 661314,
+  "os": "Ubuntu 24.04.3 LTS",
+  "peak_rss_kib": 11264,
+  "qt": "6.4.2",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-23/validation.json": {
+  "tested_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
+  "tree": "1fe413a2e3d665dc9ff7299576e637cdd1efcb7d",
+  "build": "Release GCC 13.3, Qt 6.4.2",
+  "local_suites": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0,
+   "seconds": 62.33
+  },
+  "checks": {
+   "core": 3269,
+   "robustness": 4414,
+   "storage": 192,
+   "persistent_analysis": 121,
+   "desktop": 683,
+   "repertoires": 51,
+   "resumable_import": 24,
+   "updates": 45
+  },
+  "stockfish": "real Stockfish 16",
+  "qml": "offscreen software",
+  "limitations": [
+   "No Voyager hardware test",
+   "Large GUI probe not yet completed"
+  ],
+  "ci_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40010927047",
+  "ci_status": "success",
+  "ci_suites": {
+   "core_asan_ubsan": {
+    "passed": 2,
+    "seconds": 140.58
+   },
+   "qt_asan_ubsan": {
+    "passed": 12,
+    "seconds": 131.41
+   },
+   "debian12": {
+    "passed": 12,
+    "seconds": 59.58
+   },
+   "debian13": {
+    "passed": 12,
+    "seconds": 74.79
+   }
+  },
+  "merge_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "runtime_code_matches_tested_commit": true
+ },
+ "benchmarks/2026-10-24/corpus-qualification.yml": "name: Qualify real PGN corpus without artifacts\non:\n  push:\n    branches: ['perf/qt-corpus-qualification']\n    paths: ['.github/workflows/corpus-qualification.yml', 'scripts/qualify-real-corpus.py']\n  workflow_dispatch:\npermissions:\n  contents: read\nconcurrency:\n  group: trait64-corpus-qualification\n  cancel-in-progress: false\njobs:\n  real-corpus:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 60\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: false\n      - name: Reserve disk on the disposable GitHub runner\n        shell: bash\n        run: |\n          test \"${RUNNER_ENVIRONMENT:-}\" = github-hosted\n          df -h \"$RUNNER_TEMP\"\n          # These preinstalled SDKs are not dependencies of this C++/Qt job.\n          # Never target the repository, user data, releases or Actions storage.\n          sudo rm -rf -- /usr/share/dotnet /usr/local/lib/android\n          df -h \"$RUNNER_TEMP\"\n      - name: Install build and corpus dependencies\n        run: |\n          sudo apt-get update\n          sudo apt-get install -y --no-install-recommends cmake ninja-build libarchive-dev libsqlite3-dev qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 fonts-dejavu-core zstd\n      - name: Build the two real-corpus probes\n        run: |\n          cmake -S . -B build-perf -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON\n          cmake --build build-perf --target pgn_benchmark desktop_tests --parallel 2\n      - name: Fetch the pinned CC0 corpus\n        shell: bash\n        run: |\n          mkdir \"$RUNNER_TEMP/trait64-corpus\"\n          curl --fail --location --retry 2 --max-time 300 --max-filesize 30000000 https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst -o \"$RUNNER_TEMP/trait64-corpus/source.pgn.zst\"\n          zstd -d \"$RUNNER_TEMP/trait64-corpus/source.pgn.zst\" -o \"$RUNNER_TEMP/trait64-corpus/source.pgn\"\n      - name: Measure Qt, reindexing, import and restoration\n        env:\n          QT_QPA_PLATFORM: offscreen\n          QT_QUICK_BACKEND: software\n        run: python3 scripts/qualify-real-corpus.py --input \"$RUNNER_TEMP/trait64-corpus/source.pgn\" --output \"$RUNNER_TEMP/trait64-measures\"\n",
+ "benchmarks/2026-10-24/github/40097867485/gui-100k-process.json": {
+  "name": "gui-100k",
+  "argv": [
+   "/home/runner/work/Trait64/Trait64/build-perf/desktop_tests",
+   "--benchmark-import",
+   "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "--benchmark-games",
+   "100000"
+  ],
+  "started_utc": "2026-10-24T13:26:34Z",
+  "completed_utc": "2026-10-24T13:56:36Z",
+  "process_seconds": 1801.688531094,
+  "maximum_rss_kib": 123536,
+  "user_seconds": 296.694302,
+  "system_seconds": 236.652253,
+  "resource_method": "Linux os.wait4 child rusage",
+  "returncode": 1
+ },
+ "benchmarks/2026-10-24/github/40097867485/method.json": {
+  "host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "logical_cpus": 2,
+  "sqlite": "3.45.1",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "source_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "source_bytes": 92811021,
+  "tested_runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "measurement_commit": "e34e545c6c532b97654b067cbe5da750c0e87843",
+  "workflow_run": "40097867485",
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "build": "Release -O3 -DNDEBUG",
+  "free_disk_bytes_before_runs": 31570042880,
+  "binary_sha256": {
+   "pgn_benchmark": "60c0dc601eef48b989b81eea83a0322cc9e93667434389402aaed339575437df",
+   "desktop_tests": "db11ba1e38acc4973d8f0ceff83f0713d7d7ecca829eddcc1123464bb3d04527"
+  },
+  "conditions": "Sequential runs after compilation, GitHub ubuntu-24.04 runner, caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.",
+  "cpu_model": "AMD EPYC 9V74 80-Core Processor"
+ },
+ "benchmarks/2026-10-24/github/40097867485/outcome.json": {
+  "status": "failed",
+  "reason": "GUI benchmark timed out at its 1800-second guard",
+  "workflow_run": 40097867485,
+  "job_id": 120883798111,
+  "measurement_commit": "e34e545c6c532b97654b067cbe5da750c0e87843",
+  "runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "reports_available": [
+   "method",
+   "gui-100k-process"
+  ],
+  "processed_games": null,
+  "gui_timer_distribution": null,
+  "subsequent_scenarios": "not started",
+  "interpretation": "No GUI performance or 100k completion claim can be derived from this failed run. JSON reconstructed by parsing timestamp-stripped GitHub job log reports, not remeasured.",
+  "app_runtime_sources_changed": false
+ },
+ "benchmarks/2026-10-24/material-100k.json": {
+  "backup_ms": 36032,
+  "backup_verified": true,
+  "concurrent_first_page_200": {
+   "max_ms": 4031.414563,
+   "median_ms": 3.014111,
+   "p95_ms": 12.506297,
+   "samples": 11045
+  },
+  "concurrent_reader": true,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 3836055552,
+  "elapsed_ms": 1250857,
+  "end_rss_kib": 17072,
+  "exact_player": {
+   "max_ms": 4.488679,
+   "median_ms": 1.452692,
+   "p95_ms": 4.488679,
+   "samples": 5,
+   "samples_ms": [
+    4.488679,
+    1.452692,
+    1.719907,
+    1.22218,
+    1.368082
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 2.231399,
+   "median_ms": 1.76827,
+   "p95_ms": 2.231399,
+   "samples": 5,
+   "samples_ms": [
+    2.231399,
+    1.767704,
+    1.688845,
+    1.76827,
+    1.778993
+   ]
+  },
+  "first_pass_ms": 612467,
+  "games": 100000,
+  "games_per_second": 79.9451895780253,
+  "hash_ms": 1925,
+  "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 110028,
+  "job": {
+   "added": 100000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "id": 1,
+   "modified": 1792170952293,
+   "offset": 76427240,
+   "processed": 100000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "lichess-2013-01",
+   "updated": "2026-10-24T08:38:32.153Z"
+  },
+  "last_position": {
+   "max_ms": 45.730924,
+   "median_ms": 18.269462,
+   "p95_ms": 45.730924,
+   "samples": 5,
+   "samples_ms": [
+    45.730924,
+    18.269462,
+    19.740237,
+    16.554091,
+    16.720387
+   ]
+  },
+  "limit": 100000,
+  "load_one_game": {
+   "max_ms": 2.952892,
+   "median_ms": 2.548781,
+   "p95_ms": 2.952892,
+   "samples": 5,
+   "samples_ms": [
+    2.952892,
+    2.419641,
+    2.548781,
+    2.104016,
+    2.883901
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 3.629553,
+   "median_ms": 2.377702,
+   "p95_ms": 3.629553,
+   "samples": 5,
+   "samples_ms": [
+    3.629553,
+    2.371522,
+    2.160767,
+    2.498451,
+    2.377702
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.198026,
+   "median_ms": 0.142446,
+   "p95_ms": 0.198026,
+   "samples": 5,
+   "samples_ms": [
+    0.158832,
+    0.086134,
+    0.108204,
+    0.198026,
+    0.142446
+   ]
+  },
+  "os": "Ubuntu 24.04.3 LTS",
+  "pause_committed": 50000,
+  "peak_rss_kib": 18352,
+  "player_fragment": {
+   "max_ms": 6.273657,
+   "median_ms": 2.411418,
+   "p95_ms": 6.273657,
+   "samples": 5,
+   "samples_ms": [
+    6.273657,
+    2.411418,
+    2.943763,
+    2.195213,
+    2.382647
+   ]
+  },
+  "qt": "6.4.2",
+  "reopen_ms": 2.785314,
+  "restore_copy_ms": 12262,
+  "restore_ms": 228293,
+  "restore_verified": true,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-24/pragma-comparison.json": {
+  "checked_on": "2026-10-24",
+  "repository": "https://github.com/francescobianco/pragma-chess",
+  "revision": "08c9d3c9ea2e91dd32ac710ad639d1ff24aaff47",
+  "documents": [
+   "README.md",
+   "docs/en/guide/databases/index.html",
+   "docs/en/guide/games-list/index.html",
+   "docs/en/guide/convert/index.html",
+   "DESIGN.md"
+  ],
+  "finding": "No reproducible numeric benchmark protocol identified in the inspected README, database/list/conversion guides and design document. This is not an assertion about every publication or release.",
+  "comparison_performed": false,
+  "reason": "No same-host/same-corpus measurement of Pragma was run. Do not infer relative performance from our internal before/after result."
+ },
+ "benchmarks/2026-10-24/recovery-provenance.json": {
+  "measurement_date": "2026-10-24",
+  "source_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
+  "published_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "report_recovery": "JSON values transcribed from the complete successful tool output before the temporary execution filesystem was reset; not a new run and not a claim of byte-identical serialization.",
+  "conditions": "Shared local host, Release GCC 13.3, Qt 6.4.2, system SQLite 3.45.1. Sequential run after compilation; OS caches not purged; 4 parser workers, one writer and one read probe.",
+  "host": {
+   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+   "cpu_quota": "8 cores",
+   "memory_limit_bytes": 8589934592
+  },
+  "not_completed_before_reset": [
+   "100k GUI timing",
+   "10k standalone reindex measurement",
+   "all restored PGNs hash comparison",
+   "SQLite dbstat profile"
+  ],
+  "interpretation": "100k CLI import, SQLite integrity, backup and restoration checks completed. Median concurrent reads 3.014111 ms, p95 12.506297 ms, maximum 4031.414563 ms; outlier cause not established. RSS is process memory, excluding kernel file cache."
+ },
+ "benchmarks/2026-10-24/update-selector.json": {
+  "development_channel": true,
+  "ignored_version_rejection": true,
+  "same_version_and_downgrade_rejection": true,
+  "selected": [
+   {
+    "asset_id": 671722207,
+    "bytes": 36862456,
+    "name": "Trait64-0.3.0-dev.55-linux-x86_64.AppImage",
+    "sha256": "6a5438883933a08c18b3dc934a61608f1b5b4e3aa4b6f16c63c6b808208c9a1f"
+   },
+   {
+    "asset_id": 671722205,
+    "bytes": 1043890,
+    "name": "trait64_0.3.0-dev.55_debian12_amd64.deb",
+    "sha256": "f8be3ca3194ecfe712f08bcea0a5cef028345cafbba01caf2ecfbc8224b26176"
+   },
+   {
+    "asset_id": 671722202,
+    "bytes": 1051226,
+    "name": "trait64_0.3.0-dev.55_debian13_amd64.deb",
+    "sha256": "fff21deb26c86f70ad50e90eaf72fde98c16cb87b8fd59112525295bd5ff8f36"
+   }
+  ],
+  "stable_and_beta_exclusion": true,
+  "tag": "v0.3.0-dev.55"
+ },
+ "benchmarks/2026-10-25/corpus-qualification.yml": "name: Qualify real PGN corpus without artifacts\non:\n  push:\n    branches: ['perf/qt-corpus-qualification']\n    paths: ['.github/workflows/corpus-qualification.yml', 'scripts/qualify-real-corpus.py', 'tests/import_gui_probe.h']\n  workflow_dispatch:\npermissions:\n  contents: read\nconcurrency:\n  group: trait64-corpus-qualification\n  cancel-in-progress: false\njobs:\n  real-corpus:\n    name: Real corpus (${{ matrix.scenario }})\n    runs-on: ubuntu-24.04\n    timeout-minutes: 110\n    strategy:\n      fail-fast: false\n      max-parallel: 2\n      matrix:\n        scenario: [gui, storage]\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: false\n      - name: Reserve disk on the disposable GitHub runner\n        shell: bash\n        run: |\n          test \"${RUNNER_ENVIRONMENT:-}\" = github-hosted\n          df -h \"$RUNNER_TEMP\"\n          # These preinstalled SDKs are not dependencies of this C++/Qt job.\n          # Never target the repository, user data, releases or Actions storage.\n          sudo rm -rf -- /usr/share/dotnet /usr/local/lib/android\n          df -h \"$RUNNER_TEMP\"\n      - name: Install build and corpus dependencies\n        run: |\n          sudo apt-get update\n          sudo apt-get install -y --no-install-recommends cmake ninja-build libarchive-dev libsqlite3-dev qt6-base-dev qt6-declarative-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 fonts-dejavu-core zstd\n      - name: Build the two real-corpus probes\n        run: |\n          cmake -S . -B build-perf -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON\n          cmake --build build-perf --target pgn_benchmark desktop_tests --parallel 2\n      - name: Fetch the pinned CC0 corpus\n        shell: bash\n        run: |\n          mkdir \"$RUNNER_TEMP/trait64-corpus\"\n          curl --fail --location --retry 2 --max-time 300 --max-filesize 30000000 https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst -o \"$RUNNER_TEMP/trait64-corpus/source.pgn.zst\"\n          zstd -d \"$RUNNER_TEMP/trait64-corpus/source.pgn.zst\" -o \"$RUNNER_TEMP/trait64-corpus/source.pgn\"\n      - name: Measure the independent scenario\n        env:\n          QT_QPA_PLATFORM: offscreen\n          QT_QUICK_BACKEND: software\n        run: python3 scripts/qualify-real-corpus.py --input \"$RUNNER_TEMP/trait64-corpus/source.pgn\" --output \"$RUNNER_TEMP/trait64-measures\" --scenario \"${{ matrix.scenario }}\"\n",
+ "benchmarks/2026-10-25/gui/gui-100k-process.json": {
+  "name": "gui-100k",
+  "argv": [
+   "/home/runner/work/Trait64/Trait64/build-perf/desktop_tests",
+   "--benchmark-import",
+   "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "--benchmark-games",
+   "100000",
+   "--benchmark-timeout-seconds",
+   "5400"
+  ],
+  "started_utc": "2026-10-25T09:15:38Z",
+  "completed_utc": "2026-10-25T09:46:22Z",
+  "process_seconds": 1844.0870250409998,
+  "maximum_rss_kib": 125400,
+  "user_seconds": 469.505415,
+  "system_seconds": 322.138735,
+  "resource_method": "Linux os.wait4 child rusage",
+  "returncode": 0
+ },
+ "benchmarks/2026-10-25/gui/gui-100k.json": {
+  "errors": [],
+  "import_ms": 1842604.390126,
+  "input": "/home/runner/work/_temp/trait64-corpus/source.pgn",
+  "mode": "real Qt/QML window, offscreen software rendering",
+  "navigation_succeeded": true,
+  "page_navigations": 1842,
+  "processed_games": 100000,
+  "progress_samples": [
+   {
+    "added": 0,
+    "bytes": 0,
+    "committed": 0,
+    "elapsed_ms": 19,
+    "job": 1,
+    "processed": 0,
+    "rate": 0,
+    "remaining": 0,
+    "total": 92811021,
+    "verifying": true
+   },
+   {
+    "added": 7500,
+    "bytes": 5713634,
+    "committed": 7500,
+    "elapsed_ms": 60027,
+    "job": 1,
+    "processed": 7512,
+    "rate": 96182.64763315601,
+    "remaining": 905.5415830534473,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 12250,
+    "bytes": 9438904,
+    "committed": 12250,
+    "elapsed_ms": 120030,
+    "job": 1,
+    "processed": 12499,
+    "rate": 80351.61317783264,
+    "remaining": 1037.591078793682,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 16500,
+    "bytes": 12699153,
+    "committed": 16500,
+    "elapsed_ms": 180038,
+    "job": 1,
+    "processed": 16749,
+    "rate": 71582.43238672875,
+    "remaining": 1119.1554314219225,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 20500,
+    "bytes": 15762073,
+    "committed": 20500,
+    "elapsed_ms": 240040,
+    "job": 1,
+    "processed": 20749,
+    "rate": 66002.56689418366,
+    "remaining": 1167.362901559966,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 24000,
+    "bytes": 18463923,
+    "committed": 24000,
+    "elapsed_ms": 300047,
+    "job": 1,
+    "processed": 24249,
+    "rate": 62297.720509342675,
+    "remaining": 1193.416025372073,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 27750,
+    "bytes": 21216002,
+    "committed": 27750,
+    "elapsed_ms": 360047,
+    "job": 1,
+    "processed": 27839,
+    "rate": 59027.61911386242,
+    "remaining": 1212.9071115318993,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 31000,
+    "bytes": 23828765,
+    "committed": 31000,
+    "elapsed_ms": 420056,
+    "job": 1,
+    "processed": 31249,
+    "rate": 56988.20954954739,
+    "remaining": 1210.4654023219416,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 34250,
+    "bytes": 26322946,
+    "committed": 34250,
+    "elapsed_ms": 480060,
+    "job": 1,
+    "processed": 34499,
+    "rate": 55119.43161306804,
+    "remaining": 1206.2547282188705,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 37500,
+    "bytes": 28820297,
+    "committed": 37500,
+    "elapsed_ms": 540069,
+    "job": 1,
+    "processed": 37749,
+    "rate": 53611.27759826928,
+    "remaining": 1193.6056528909469,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 40750,
+    "bytes": 31294212,
+    "committed": 40750,
+    "elapsed_ms": 600069,
+    "job": 1,
+    "processed": 40999,
+    "rate": 52339.948118674765,
+    "remaining": 1175.3318681271476,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 44000,
+    "bytes": 33734417,
+    "committed": 44000,
+    "elapsed_ms": 660072,
+    "job": 1,
+    "processed": 44249,
+    "rate": 51192.955326981966,
+    "remaining": 1153.998702021855,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 47000,
+    "bytes": 36044800,
+    "committed": 47000,
+    "elapsed_ms": 720080,
+    "job": 1,
+    "processed": 47249,
+    "rate": 50189.50839211667,
+    "remaining": 1131.0375976688454,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 50000,
+    "bytes": 38390325,
+    "committed": 50000,
+    "elapsed_ms": 780084,
+    "job": 1,
+    "processed": 50249,
+    "rate": 49291.038068947804,
+    "remaining": 1104.0687746092278,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 53000,
+    "bytes": 40682235,
+    "committed": 53000,
+    "elapsed_ms": 840085,
+    "job": 1,
+    "processed": 53249,
+    "rate": 48493.00299190636,
+    "remaining": 1074.9754146737512,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 56000,
+    "bytes": 42860544,
+    "committed": 56000,
+    "elapsed_ms": 900085,
+    "job": 1,
+    "processed": 56088,
+    "rate": 47651.47049504202,
+    "remaining": 1048.2462866533613,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 58750,
+    "bytes": 45089703,
+    "committed": 58750,
+    "elapsed_ms": 960094,
+    "job": 1,
+    "processed": 58999,
+    "rate": 47118.33583086193,
+    "remaining": 1012.7971873052257,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 61750,
+    "bytes": 47387242,
+    "committed": 61750,
+    "elapsed_ms": 1020097,
+    "job": 1,
+    "processed": 61993,
+    "rate": 46482.05054763535,
+    "remaining": 977.2326836882804,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 64500,
+    "bytes": 49514497,
+    "committed": 64500,
+    "elapsed_ms": 1080102,
+    "job": 1,
+    "processed": 64749,
+    "rate": 45947.75645724955,
+    "remaining": 942.2989790651412,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 67500,
+    "bytes": 51773440,
+    "committed": 67500,
+    "elapsed_ms": 1140104,
+    "job": 1,
+    "processed": 67697,
+    "rate": 45436.02344929266,
+    "remaining": 903.1948195422209,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 70250,
+    "bytes": 53910860,
+    "committed": 70250,
+    "elapsed_ms": 1200109,
+    "job": 1,
+    "processed": 70499,
+    "rate": 45028.98313465548,
+    "remaining": 863.8916158437836,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 73250,
+    "bytes": 56056597,
+    "committed": 73250,
+    "elapsed_ms": 1260117,
+    "job": 1,
+    "processed": 73323,
+    "rate": 44507.200901948796,
+    "remaining": 825.8084816650572,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 76000,
+    "bytes": 58299005,
+    "committed": 76000,
+    "elapsed_ms": 1320117,
+    "job": 1,
+    "processed": 76249,
+    "rate": 44192.059847531,
+    "remaining": 780.9551335482312,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 78750,
+    "bytes": 60424192,
+    "committed": 78750,
+    "elapsed_ms": 1380122,
+    "job": 1,
+    "processed": 78999,
+    "rate": 43843.97793005767,
+    "remaining": 738.6836352227267,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 81500,
+    "bytes": 62521344,
+    "committed": 81500,
+    "elapsed_ms": 1440123,
+    "job": 1,
+    "processed": 81749,
+    "rate": 43478.25820884832,
+    "remaining": 696.6626136333058,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 84250,
+    "bytes": 64624911,
+    "committed": 84250,
+    "elapsed_ms": 1500128,
+    "job": 1,
+    "processed": 84499,
+    "rate": 43151.74142973518,
+    "remaining": 653.1859217291611,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 87000,
+    "bytes": 66723189,
+    "committed": 87000,
+    "elapsed_ms": 1560137,
+    "job": 1,
+    "processed": 87249,
+    "rate": 42849.50281025873,
+    "remaining": 608.8246138005184,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 89750,
+    "bytes": 68791987,
+    "committed": 89750,
+    "elapsed_ms": 1620138,
+    "job": 1,
+    "processed": 89999,
+    "rate": 42556.079114037595,
+    "remaining": 564.4089986682316,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 92500,
+    "bytes": 70863732,
+    "committed": 92500,
+    "elapsed_ms": 1680139,
+    "job": 1,
+    "processed": 92749,
+    "rate": 42275.73711675089,
+    "remaining": 519.1462171171426,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 95250,
+    "bytes": 72958234,
+    "committed": 95250,
+    "elapsed_ms": 1740144,
+    "job": 1,
+    "processed": 95499,
+    "rate": 42012.329903817306,
+    "remaining": 472.5466796402583,
+    "total": 92811021,
+    "verifying": false
+   },
+   {
+    "added": 98000,
+    "bytes": 75074443,
+    "committed": 98000,
+    "elapsed_ms": 1800149,
+    "job": 1,
+    "processed": 98249,
+    "rate": 41759.225339068515,
+    "remaining": 424.7343636282989,
+    "total": 92811021,
+    "verifying": false
+   }
+  ],
+  "qml_warnings": 0,
+  "qt": "6.4.2",
+  "requested_games": 100000,
+  "startup_ms": 729.21939,
+  "status": "paused",
+  "stored_games": 100000,
+  "timed_out": false,
+  "timeout_seconds": 5400,
+  "timer_interval_ms": 10,
+  "timer_max_ms": 32.741684,
+  "timer_median_ms": 10.106175,
+  "timer_p95_ms": 10.786336,
+  "timer_samples": 181611,
+  "workers": 4
+ },
+ "benchmarks/2026-10-25/gui/method.json": {
+  "host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "logical_cpus": 2,
+  "sqlite": "3.45.1",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "source_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "source_bytes": 92811021,
+  "tested_runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "measurement_commit": "67f49eefbfabb0f635752ca1cdea7a1cb6056e45",
+  "workflow_run": "40179661406",
+  "scenario": "gui",
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "build": "Release -O3 -DNDEBUG",
+  "free_disk_bytes_before_runs": 31308644352,
+  "binary_sha256": {
+   "pgn_benchmark": "60c0dc601eef48b989b81eea83a0322cc9e93667434389402aaed339575437df",
+   "desktop_tests": "0d8b6fd7df7973113b08f0de845f9a43d566832ef1d3dd198c8257d853af23be"
+  },
+  "conditions": "Separate GitHub ubuntu-24.04 runners for GUI and storage; scenarios within one runner are sequential after compilation. Caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.",
+  "cpu_model": "AMD EPYC 7763 64-Core Processor"
+ },
+ "benchmarks/2026-10-25/integrity-local-tests.txt": "Internal ctest changing into directory: /workspace/scratch/a60c9ae04ffb/Trait64-maintenance/build\nTest project /workspace/scratch/a60c9ae04ffb/Trait64-maintenance/build\n      Start  1: core\n 1/12 Test  #1: core .............................   Passed    0.19 sec\n      Start  2: robustness\n 2/12 Test  #2: robustness .......................   Passed    2.06 sec\n      Start  3: pgn_benchmark_safety\n 3/12 Test  #3: pgn_benchmark_safety .............   Passed    0.29 sec\n      Start  4: content\n 4/12 Test  #4: content ..........................   Passed    0.02 sec\n      Start  5: updates\n 5/12 Test  #5: updates ..........................   Passed    0.11 sec\n      Start  6: storage\n 6/12 Test  #6: storage ..........................   Passed    0.49 sec\n      Start  7: repertoires\n 7/12 Test  #7: repertoires ......................   Passed    0.15 sec\n      Start  8: resumable_import\n 8/12 Test  #8: resumable_import .................   Passed    0.11 sec\n      Start  9: persistent_analysis\n 9/12 Test  #9: persistent_analysis ..............   Passed   39.86 sec\n      Start 10: engine\n10/12 Test #10: engine ...........................   Passed    2.62 sec\n      Start 11: desktop_smoke\n11/12 Test #11: desktop_smoke ....................   Passed    2.69 sec\n      Start 12: desktop_interactions\n12/12 Test #12: desktop_interactions .............   Passed   14.15 sec\n\n100% tests passed, 0 tests failed out of 12\n\nTotal Test time (real) =  62.73 sec\n",
+ "benchmarks/2026-10-25/qualification-summary.json": {
+  "date": "2026-10-25",
+  "workflow_run": 40179661406,
+  "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40179661406",
+  "conclusion": "success",
+  "runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "measurement_commit": "67f49eefbfabb0f635752ca1cdea7a1cb6056e45",
+  "actions_artifacts": 0,
+  "gui": {
+   "job_id": 121127791517,
+   "stored_games": 100000,
+   "import_ms": 1842604.390126,
+   "timer_interval_ms": 10,
+   "timer_p95_ms": 10.786336,
+   "timer_max_ms": 32.741684,
+   "page_navigations": 1842,
+   "qml_warnings": 0,
+   "timed_out": false
+  },
+  "storage": {
+   "job_id": 121127791436,
+   "games": 100000,
+   "positions_per_table": 6817385,
+   "reindexed_games": 10000,
+   "reindex_ms": 49642,
+   "all_canonical_pgn_hashes_equal": true,
+   "integrity": "ok",
+   "backup_verified": true,
+   "restore_verified": true,
+   "dbstat_bytes": 3836043264,
+   "position_and_opening_bytes": 3599065088,
+   "position_and_opening_fraction": 0.9382232785996024
+  },
+  "limitations": [
+   "Different hardware for GUI and CLI; no speed comparison between these runners or against the local host",
+   "Single run per scenario; OS caches not purged",
+   "Offscreen software Qt; timer intervals and programmed navigation, not GPU FPS or human input latency",
+   "Startup from an empty library; no full-application cold opening of 100k measured",
+   "Local concurrent SQL outlier of 4031 ms not reproduced on GitHub (max 7.506 ms), cause unresolved",
+   "No Voyager or 500k/million-scale qualification"
+  ]
+ },
+ "benchmarks/2026-10-25/source-provenance.json": {
+  "release_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "measurement_commit": "67f49eefbfabb0f635752ca1cdea7a1cb6056e45",
+  "method": "Git object hashes and modes for all product source/resources, plus GitHub compare listing of diagnostic changes.",
+  "product_files_compared": 138,
+  "product_differences": [],
+  "extra_product_files": [],
+  "executable_changes": [
+   "tests/import_gui_probe.h",
+   "scripts/qualify-real-corpus.py",
+   ".github/workflows/corpus-qualification.yml"
+  ],
+  "probe_changes": "Configurable bounded timeout (default 30 min), report before post-run assertions, minute progress snapshots, explicit target game-count assertion. GUI/navigation/import behavior unchanged.",
+  "original_gui_timeout": {
+   "run": 40097867485,
+   "guard_seconds": 1800
+  },
+  "current_gui_timeout_seconds": 5400
+ },
+ "benchmarks/2026-10-25/storage/material-100k-process.json": {
+  "name": "material-100k",
+  "argv": [
+   "/home/runner/work/Trait64/Trait64/build-perf/pgn_benchmark",
+   "--input",
+   "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "--threads",
+   "4",
+   "--limit",
+   "100000",
+   "--pause-at",
+   "50000",
+   "--probe-reads",
+   "--database",
+   "/home/runner/work/_temp/trait64-measures/material-100k.sqlite",
+   "--backup",
+   "--source-url",
+   "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+   "--report",
+   "/home/runner/work/_temp/trait64-measures/material-100k.json"
+  ],
+  "started_utc": "2026-10-25T09:18:52Z",
+  "completed_utc": "2026-10-25T10:02:02Z",
+  "process_seconds": 2589.8604644879997,
+  "maximum_rss_kib": 22736,
+  "user_seconds": 419.635108,
+  "system_seconds": 343.078733,
+  "resource_method": "Linux os.wait4 child rusage",
+  "returncode": 0
+ },
+ "benchmarks/2026-10-25/storage/material-100k.json": {
+  "backup_ms": 98014,
+  "backup_verified": true,
+  "concurrent_first_page_200": {
+   "max_ms": 7.505711,
+   "median_ms": 1.068384,
+   "p95_ms": 1.487254,
+   "samples": 21961
+  },
+  "concurrent_reader": true,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 3836080128,
+  "elapsed_ms": 2224097,
+  "end_rss_kib": 18844,
+  "exact_player": {
+   "max_ms": 0.945667,
+   "median_ms": 0.524842,
+   "p95_ms": 0.945667,
+   "samples": 5,
+   "samples_ms": [
+    0.945667,
+    0.531462,
+    0.524842,
+    0.514627,
+    0.512943
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 0.782411,
+   "median_ms": 0.691002,
+   "p95_ms": 0.782411,
+   "samples": 5,
+   "samples_ms": [
+    0.782411,
+    0.658163,
+    0.707437,
+    0.673576,
+    0.691002
+   ]
+  },
+  "first_pass_ms": 940914,
+  "games": 100000,
+  "games_per_second": 44.962067751541404,
+  "hash_ms": 602,
+  "input": "/home/runner/work/_temp/trait64-corpus/source.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 37774,
+  "job": {
+   "added": 100000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "id": 1,
+   "modified": 1792919776954,
+   "offset": 76427240,
+   "processed": 100000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "source",
+   "updated": "2026-10-25T09:55:56.866Z"
+  },
+  "last_position": {
+   "max_ms": 11.250112,
+   "median_ms": 10.72265,
+   "p95_ms": 11.250112,
+   "samples": 5,
+   "samples_ms": [
+    11.250112,
+    10.812071,
+    10.583266,
+    10.72265,
+    10.513111
+   ]
+  },
+  "limit": 100000,
+  "load_one_game": {
+   "max_ms": 1.250867,
+   "median_ms": 1.109263,
+   "p95_ms": 1.250867,
+   "samples": 5,
+   "samples_ms": [
+    1.250867,
+    1.117606,
+    1.109263,
+    1.092008,
+    1.077525
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 1.090985,
+   "median_ms": 0.916913,
+   "p95_ms": 1.090985,
+   "samples": 5,
+   "samples_ms": [
+    1.090985,
+    0.904174,
+    0.897244,
+    0.930013,
+    0.916913
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.103066,
+   "median_ms": 0.054452,
+   "p95_ms": 0.103066,
+   "samples": 5,
+   "samples_ms": [
+    0.103066,
+    0.060401,
+    0.054452,
+    0.052379,
+    0.051257
+   ]
+  },
+  "os": "Ubuntu 24.04.5 LTS",
+  "pause_committed": 50000,
+  "peak_rss_kib": 22736,
+  "player_fragment": {
+   "max_ms": 1.516067,
+   "median_ms": 0.944595,
+   "p95_ms": 1.516067,
+   "samples": 5,
+   "samples_ms": [
+    1.516067,
+    0.958246,
+    0.937755,
+    0.944595,
+    0.916914
+   ]
+  },
+  "qt": "6.4.2",
+  "reopen_ms": 0.797874,
+  "restore_copy_ms": 38775,
+  "restore_ms": 92731,
+  "restore_verified": true,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-25/storage/method.json": {
+  "host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "logical_cpus": 2,
+  "sqlite": "3.45.1",
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "source_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "source_bytes": 92811021,
+  "tested_runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "measurement_commit": "67f49eefbfabb0f635752ca1cdea7a1cb6056e45",
+  "workflow_run": "40179661406",
+  "scenario": "storage",
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "build": "Release -O3 -DNDEBUG",
+  "free_disk_bytes_before_runs": 31304130560,
+  "binary_sha256": {
+   "pgn_benchmark": "60c0dc601eef48b989b81eea83a0322cc9e93667434389402aaed339575437df",
+   "desktop_tests": "79aad6d2939addf6218db451438152823a335d28fd2bece72da86d84bf8c471e"
+  },
+  "conditions": "Separate GitHub ubuntu-24.04 runners for GUI and storage; scenarios within one runner are sequential after compilation. Caches not purged. GUI is offscreen software. RSS excludes kernel file cache. No Voyager hardware claim.",
+  "cpu_model": "AMD EPYC 9V74 80-Core Processor"
+ },
+ "benchmarks/2026-10-25/storage/reindex-10k-process.json": {
+  "name": "reindex-10k",
+  "argv": [
+   "/home/runner/work/Trait64/Trait64/build-perf/pgn_benchmark",
+   "--input",
+   "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "--threads",
+   "4",
+   "--limit",
+   "10000",
+   "--database",
+   "/home/runner/work/_temp/trait64-measures/reindex.sqlite",
+   "--reindex",
+   "--source-url",
+   "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+   "--report",
+   "/home/runner/work/_temp/trait64-measures/reindex-10k.json"
+  ],
+  "started_utc": "2026-10-25T09:16:17Z",
+  "completed_utc": "2026-10-25T09:18:52Z",
+  "process_seconds": 154.965689563,
+  "maximum_rss_kib": 21636,
+  "user_seconds": 62.46544,
+  "system_seconds": 33.229024,
+  "resource_method": "Linux os.wait4 child rusage",
+  "returncode": 0
+ },
+ "benchmarks/2026-10-25/storage/reindex-10k.json": {
+  "concurrent_reader": false,
+  "cpu_arch": "x86_64",
+  "database_with_journals_bytes": 749660336,
+  "elapsed_ms": 101965,
+  "end_rss_kib": 20656,
+  "exact_player": {
+   "max_ms": 1.438468,
+   "median_ms": 0.807052,
+   "p95_ms": 1.438468,
+   "samples": 5,
+   "samples_ms": [
+    1.438468,
+    0.839851,
+    0.807052,
+    0.798859,
+    0.784798
+   ]
+  },
+  "first_page_200": {
+   "max_ms": 0.750976,
+   "median_ms": 0.681391,
+   "p95_ms": 0.750976,
+   "samples": 5,
+   "samples_ms": [
+    0.750976,
+    0.609292,
+    0.711787,
+    0.673119,
+    0.681391
+   ]
+  },
+  "first_pass_ms": 101965,
+  "games": 10000,
+  "games_per_second": 98.07286814102878,
+  "hash_ms": 556,
+  "input": "/home/runner/work/_temp/trait64-corpus/source.pgn",
+  "input_bytes": 92811021,
+  "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+  "integrity": "ok",
+  "integrity_ms": 2704,
+  "job": {
+   "added": 10000,
+   "bytes": 92811021,
+   "error": "",
+   "file": "/home/runner/work/_temp/trait64-corpus/source.pgn",
+   "id": 1,
+   "modified": 1792919776954,
+   "offset": 7561130,
+   "processed": 10000,
+   "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "sourceId": 1,
+   "status": "paused",
+   "title": "source",
+   "updated": "2026-10-25T09:17:59.707Z"
+  },
+  "last_position": {
+   "max_ms": 1.234799,
+   "median_ms": 0.933944,
+   "p95_ms": 1.234799,
+   "samples": 5,
+   "samples_ms": [
+    1.234799,
+    0.950789,
+    0.926362,
+    0.920904,
+    0.933944
+   ]
+  },
+  "limit": 10000,
+  "load_one_game": {
+   "max_ms": 0.948686,
+   "median_ms": 0.771848,
+   "p95_ms": 0.948686,
+   "samples": 5,
+   "samples_ms": [
+    0.948686,
+    0.789425,
+    0.771848,
+    0.764998,
+    0.770346
+   ]
+  },
+  "mode": "checkpointed import including file verification, full positions and indexes",
+  "next_page_200": {
+   "max_ms": 1.187207,
+   "median_ms": 1.006904,
+   "p95_ms": 1.187207,
+   "samples": 5,
+   "samples_ms": [
+    1.187207,
+    1.006904,
+    1.080305,
+    0.978411,
+    0.969808
+   ]
+  },
+  "opening_tree": {
+   "max_ms": 0.084007,
+   "median_ms": 0.061604,
+   "p95_ms": 0.084007,
+   "samples": 5,
+   "samples_ms": [
+    0.07938,
+    0.055775,
+    0.084007,
+    0.061604,
+    0.050416
+   ]
+  },
+  "os": "Ubuntu 24.04.5 LTS",
+  "peak_rss_kib": 21636,
+  "player_fragment": {
+   "max_ms": 2.108651,
+   "median_ms": 1.767075,
+   "p95_ms": 2.108651,
+   "samples": 5,
+   "samples_ms": [
+    2.108651,
+    1.597979,
+    1.736368,
+    1.782718,
+    1.767075
+   ]
+  },
+  "qt": "6.4.2",
+  "reindex_ms": 49642,
+  "reindexed_games": 10000,
+  "reopen_ms": 0.752469,
+  "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+  "version": "0.3.0-dev.1",
+  "workers": 4
+ },
+ "benchmarks/2026-10-25/storage/restored-content-100k.json": {
+  "method": "SHA-256 of every canonical PGN ordered by game id; counts of both position tables. Not a byte comparison of every index row.",
+  "databases": {
+   "material-100k.sqlite": {
+    "games": 100000,
+    "positions": 6817385,
+    "all_positions": 6817385,
+    "canonical_sha256": "eb0826cb0ba0f70ee446c1bf706224031a500c6ec5bd7e6028845bc1bf97ca1f",
+    "closed_database_bytes": 3836047360
+   },
+   "material-100k.sqlite.backup": {
+    "games": 100000,
+    "positions": 6817385,
+    "all_positions": 6817385,
+    "canonical_sha256": "eb0826cb0ba0f70ee446c1bf706224031a500c6ec5bd7e6028845bc1bf97ca1f",
+    "closed_database_bytes": 3530797056
+   },
+   "material-100k.sqlite.restored": {
+    "games": 100000,
+    "positions": 6817385,
+    "all_positions": 6817385,
+    "canonical_sha256": "eb0826cb0ba0f70ee446c1bf706224031a500c6ec5bd7e6028845bc1bf97ca1f",
+    "closed_database_bytes": 3530797056
+   }
+  }
+ },
+ "benchmarks/2026-10-25/storage/storage-profile-100k.json": {
+  "method": "SQLite dbstat after all timed runs; excludes WAL/SHM",
+  "objects": [
+   {
+    "name": "all_positions",
+    "bytes": 630185984,
+    "payload_bytes": 574491595,
+    "unused_bytes": 7366357,
+    "pages": 153854
+   },
+   {
+    "name": "opening_edges",
+    "bytes": 538144768,
+    "payload_bytes": 453383072,
+    "unused_bytes": 63081804,
+    "pages": 131383
+   },
+   {
+    "name": "positions",
+    "bytes": 526028800,
+    "payload_bytes": 473079426,
+    "unused_bytes": 5070772,
+    "pages": 128425
+   },
+   {
+    "name": "positions_fen",
+    "bytes": 483487744,
+    "payload_bytes": 400163551,
+    "unused_bytes": 61455574,
+    "pages": 118039
+   },
+   {
+    "name": "all_positions_fen",
+    "bytes": 483487744,
+    "payload_bytes": 400163551,
+    "unused_bytes": 61455574,
+    "pages": 118039
+   },
+   {
+    "name": "opening_stats",
+    "bytes": 477237248,
+    "payload_bytes": 396120334,
+    "unused_bytes": 62096756,
+    "pages": 116513
+   },
+   {
+    "name": "all_positions_material",
+    "bytes": 247255040,
+    "payload_bytes": 197032400,
+    "unused_bytes": 29046109,
+    "pages": 60365
+   },
+   {
+    "name": "games",
+    "bytes": 150044672,
+    "payload_bytes": 124762652,
+    "unused_bytes": 23982358,
+    "pages": 36632
+   },
+   {
+    "name": "sqlite_autoindex_positions_1",
+    "bytes": 106618880,
+    "payload_bytes": 72640349,
+    "unused_bytes": 13214020,
+    "pages": 26030
+   },
+   {
+    "name": "sqlite_autoindex_all_positions_1",
+    "bytes": 106618880,
+    "payload_bytes": 72640349,
+    "unused_bytes": 13214020,
+    "pages": 26030
+   },
+   {
+    "name": "games_fts_data",
+    "bytes": 16293888,
+    "payload_bytes": 16023631,
+    "unused_bytes": 150227,
+    "pages": 3978
+   },
+   {
+    "name": "games_digest",
+    "bytes": 8327168,
+    "payload_bytes": 7067105,
+    "unused_bytes": 935671,
+    "pages": 2033
+   },
+   {
+    "name": "games_fingerprint",
+    "bytes": 8302592,
+    "payload_bytes": 7067105,
+    "unused_bytes": 911167,
+    "pages": 2027
+   },
+   {
+    "name": "games_collection",
+    "bytes": 6938624,
+    "payload_bytes": 3134210,
+    "unused_bytes": 3484090,
+    "pages": 1694
+   },
+   {
+    "name": "games_recent",
+    "bytes": 6717440,
+    "payload_bytes": 3034210,
+    "unused_bytes": 3363554,
+    "pages": 1640
+   },
+   {
+    "name": "games_eco_recent",
+    "bytes": 6000640,
+    "payload_bytes": 3434210,
+    "unused_bytes": 2248854,
+    "pages": 1465
+   },
+   {
+    "name": "games_white_recent",
+    "bytes": 5038080,
+    "payload_bytes": 3916063,
+    "unused_bytes": 807261,
+    "pages": 1230
+   },
+   {
+    "name": "sqlite_autoindex_games_1",
+    "bytes": 5033984,
+    "payload_bytes": 4167105,
+    "unused_bytes": 552135,
+    "pages": 1229
+   },
+   {
+    "name": "games_black_recent",
+    "bytes": 5005312,
+    "payload_bytes": 3923938,
+    "unused_bytes": 766714,
+    "pages": 1222
+   },
+   {
+    "name": "games_date",
+    "bytes": 4694016,
+    "payload_bytes": 2034210,
+    "unused_bytes": 2346058,
+    "pages": 1146
+   },
+   {
+    "name": "games_filter",
+    "bytes": 3186688,
+    "payload_bytes": 2480309,
+    "unused_bytes": 397047,
+    "pages": 778
+   },
+   {
+    "name": "games_players",
+    "bytes": 2879488,
+    "payload_bytes": 2238686,
+    "unused_bytes": 332370,
+    "pages": 703
+   },
+   {
+    "name": "games_black_rating",
+    "bytes": 2322432,
+    "payload_bytes": 1756607,
+    "unused_bytes": 259025,
+    "pages": 567
+   },
+   {
+    "name": "games_white_rating",
+    "bytes": 2306048,
+    "payload_bytes": 1748826,
+    "unused_bytes": 250470,
+    "pages": 563
+   },
+   {
+    "name": "games_fts_docsize",
+    "bytes": 1495040,
+    "payload_bytes": 900000,
+    "unused_bytes": 5415,
+    "pages": 365
+   },
+   {
+    "name": "source_games_game",
+    "bytes": 995328,
+    "payload_bytes": 567105,
+    "unused_bytes": 125311,
+    "pages": 243
+   },
+   {
+    "name": "source_games",
+    "bytes": 995328,
+    "payload_bytes": 567105,
+    "unused_bytes": 125311,
+    "pages": 243
+   },
+   {
+    "name": "player_counts",
+    "bytes": 94208,
+    "payload_bytes": 51463,
+    "unused_bytes": 20936,
+    "pages": 23
+   },
+   {
+    "name": "player_counts_rank",
+    "bytes": 86016,
+    "payload_bytes": 64283,
+    "unused_bytes": 8537,
+    "pages": 21
+   },
+   {
+    "name": "sqlite_autoindex_player_counts_1",
+    "bytes": 77824,
+    "payload_bytes": 55888,
+    "unused_bytes": 8764,
+    "pages": 19
+   },
+   {
+    "name": "games_fts_idx",
+    "bytes": 28672,
+    "payload_bytes": 16656,
+    "unused_bytes": 7145,
+    "pages": 7
+   },
+   {
+    "name": "sqlite_schema",
+    "bytes": 24576,
+    "payload_bytes": 15345,
+    "unused_bytes": 8745,
+    "pages": 6
+   },
+   {
+    "name": "sqlite_autoindex_sources_1",
+    "bytes": 4096,
+    "payload_bytes": 74,
+    "unused_bytes": 4011,
+    "pages": 1
+   },
+   {
+    "name": "sources",
+    "bytes": 4096,
+    "payload_bytes": 182,
+    "unused_bytes": 3901,
+    "pages": 1
+   },
+   {
+    "name": "review_log_date",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "review_log",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoires",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoire_targets",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoire_reviews",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoire_positions",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoire_moves",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "repertoire_due",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "library_counts",
+    "bytes": 4096,
+    "payload_bytes": 18,
+    "unused_bytes": 4066,
+    "pages": 1
+   },
+   {
+    "name": "import_jobs",
+    "bytes": 4096,
+    "payload_bytes": 177,
+    "unused_bytes": 3906,
+    "pages": 1
+   },
+   {
+    "name": "import_history_recent",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "import_history",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "games_fts_config",
+    "bytes": 4096,
+    "payload_bytes": 11,
+    "unused_bytes": 4074,
+    "pages": 1
+   },
+   {
+    "name": "cards_due",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "cards",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "analysis_results",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "analysis_pending",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "analysis_jobs",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "analysis_cache_used",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   },
+   {
+    "name": "analysis_cache",
+    "bytes": 4096,
+    "payload_bytes": 0,
+    "unused_bytes": 4088,
+    "pages": 1
+   }
+  ]
+ },
+ "benchmarks/2026-10-25/update-selector.json": {
+  "from_version": "v0.3.0-dev.55",
+  "code_commit": "078bbaf64c866e1a697a704f59e2198ce9d2b8cc",
+  "development_channel": true,
+  "ignored_version_rejection": true,
+  "same_version_and_downgrade_rejection": true,
+  "selected": [
+   {
+    "asset_id": 675392923,
+    "bytes": 36866552,
+    "name": "Trait64-0.3.0-dev.57-linux-x86_64.AppImage",
+    "sha256": "6aa73a039573e1ae642c7b151a6a374bf72bd11eddba28ee7a338a04e8a6d61e"
+   },
+   {
+    "asset_id": 675392920,
+    "bytes": 1045718,
+    "name": "trait64_0.3.0-dev.57_debian12_amd64.deb",
+    "sha256": "50ec511ac6edc5afa26a1afb6b4fd3e4829fd2841983ee67596339b06c712cdd"
+   },
+   {
+    "asset_id": 675392921,
+    "bytes": 1053654,
+    "name": "trait64_0.3.0-dev.57_debian13_amd64.deb",
+    "sha256": "3a230ba8c14f9fff26e6112d17a0990536e89962fa1951f4f7de8237706b2edc"
+   }
+  ],
+  "stable_and_beta_exclusion": true,
+  "tag": "v0.3.0-dev.57"
+ },
+ "notebook-layout-2026-10-28.json": {
+  "cases": [
+   {
+    "boardWidth": 306,
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 307,
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 434,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "boardWidth": 435,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "boardWidth": 606,
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "boardWidth": 568,
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "boardWidth": 720,
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "boardWidth": 708,
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "boardWidth": 720,
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 0,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 1,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "boardWidth": 1228,
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 2,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 3,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 4,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 5,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 6,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "boardWidth": 300,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 406,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 389,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "boardWidth": 522,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "boardWidth": 561,
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "boardWidth": 502,
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "boardWidth": 300,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "boardWidth": 474,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   }
+  ],
+  "checks": 1180,
+  "qmlWarnings": 0
+ },
+ "notebook-local-tests-2026-10-28.txt": "Internal ctest changing into directory: /workspace/scratch/a60c9ae04ffb/Trait64-moves/build\nTest project /workspace/scratch/a60c9ae04ffb/Trait64-moves/build\n      Start  1: core\n 1/14 Test  #1: core .............................   Passed    0.45 sec\n      Start  2: robustness\n 2/14 Test  #2: robustness .......................   Passed    3.76 sec\n      Start  3: pgn_benchmark_safety\n 3/14 Test  #3: pgn_benchmark_safety .............   Passed    0.69 sec\n      Start  4: content\n 4/14 Test  #4: content ..........................   Passed    0.06 sec\n      Start  5: updates\n 5/14 Test  #5: updates ..........................   Passed    0.12 sec\n      Start  6: storage\n 6/14 Test  #6: storage ..........................   Passed    1.01 sec\n      Start  7: repertoires\n 7/14 Test  #7: repertoires ......................   Passed    0.38 sec\n      Start  8: resumable_import\n 8/14 Test  #8: resumable_import .................   Passed    0.23 sec\n      Start  9: persistent_analysis\n 9/14 Test  #9: persistent_analysis ..............   Passed   53.31 sec\n      Start 10: engine\n10/14 Test #10: engine ...........................   Passed    6.14 sec\n      Start 11: desktop_smoke\n11/14 Test #11: desktop_smoke ....................   Passed    3.75 sec\n      Start 12: move_notebook\n12/14 Test #12: move_notebook ....................   Passed   15.04 sec\n      Start 13: desktop_layout\n13/14 Test #13: desktop_layout ...................   Passed   32.57 sec\n      Start 14: desktop_interactions\n14/14 Test #14: desktop_interactions .............   Passed   39.69 sec\n\n100% tests passed, 0 tests failed out of 14\n\nTotal Test time (real) = 157.24 sec\n",
+ "performance-2026-10-10.json": {
+  "database_bytes": 1020379136,
+  "exact_player": {
+   "max_ms": 1.134689,
+   "median_ms": 0.880405
+  },
+  "fixture": "Synthetic metadata and one opening edge per game; not a full PGN/position corpus",
+  "games": 1000000,
+  "library_page": {
+   "max_ms": 9.905948,
+   "median_ms": 8.39231
+  },
+  "opening_tree": {
+   "max_ms": 0.057617,
+   "median_ms": 0.025648
+  },
+  "seed_ms": 119841,
+  "statistics": {
+   "max_ms": 0.275415,
+   "median_ms": 0.074483
+  },
+  "top_players": {
+   "max_ms": 4.732908,
+   "median_ms": 4.073295
+  },
+  "trigram_substring": {
+   "max_ms": 19.099755,
+   "median_ms": 17.404142
+  }
+ },
+ "performance-cursors-2026-10-13.json": {
+  "database_bytes": 1097678848,
+  "deep_cursor_200": {
+   "max_ms": 2.97995,
+   "median_ms": 2.47513
+  },
+  "deep_offset_200": {
+   "max_ms": 56.298294,
+   "median_ms": 52.58964
+  },
+  "exact_player": {
+   "max_ms": 1.51347,
+   "median_ms": 1.212263
+  },
+  "fixture": "Synthetic metadata and one opening edge per game; not a full PGN/position corpus",
+  "games": 1000000,
+  "library_page": {
+   "max_ms": 11.939542,
+   "median_ms": 11.468822
+  },
+  "opening_tree": {
+   "max_ms": 0.061832,
+   "median_ms": 0.026569
+  },
+  "seed_ms": 128108,
+  "statistics": {
+   "max_ms": 0.299796,
+   "median_ms": 0.074281
+  },
+  "top_players": {
+   "max_ms": 4.515653,
+   "median_ms": 3.96177
+  },
+  "trigram_substring": {
+   "max_ms": 18.882053,
+   "median_ms": 17.450185
+  },
+  "process_peak_rss_kib": 14300,
+  "process_seconds": 129.227,
+  "build": "Debug GCC 13.3 Qt 6.4.2 SQLite 3.45.1, Linux x86_64, shared environment"
+ },
+ "performance-cursors-before-2026-10-12.json": {
+  "database_bytes": 1097678848,
+  "deep_cursor_200": {
+   "max_ms": 135.012316,
+   "median_ms": 121.697695
+  },
+  "deep_offset_200": {
+   "max_ms": 54.866071,
+   "median_ms": 53.251403
+  },
+  "exact_player": {
+   "max_ms": 1.401186,
+   "median_ms": 1.246702
+  },
+  "fixture": "Synthetic metadata and one opening edge per game; not a full PGN/position corpus",
+  "games": 1000000,
+  "library_page": {
+   "max_ms": 13.405869,
+   "median_ms": 12.304155
+  },
+  "opening_tree": {
+   "max_ms": 0.05977,
+   "median_ms": 0.02652
+  },
+  "seed_ms": 130387,
+  "statistics": {
+   "max_ms": 0.248344,
+   "median_ms": 0.073581
+  },
+  "top_players": {
+   "max_ms": 4.812625,
+   "median_ms": 4.063054
+  },
+  "trigram_substring": {
+   "max_ms": 18.355501,
+   "median_ms": 17.774884
+  },
+  "process_peak_rss_kib": 14104,
+  "process_seconds": 132.826,
+  "build": "Debug GCC 13.3 Qt 6.4.2 SQLite 3.45.1, Linux x86_64, shared environment"
+ },
+ "performance-pgn-2026-10-15.json": {
+  "date": "2026-10-15",
+  "build": "Release",
+  "compiler": "GCC 13.3",
+  "schema": 6,
+  "license": "CC0; https://database.lichess.org/",
+  "compressed_sha256": "aa40b3671fa3cf1072eb182892cd90b0e1e003a4a5943492f64b77e7f3fd1635",
+  "scope": "First 10,000 actual games from Lichess January 2013; shared development host, not a million-game qualification",
+  "parse_1": {
+   "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+   "cpu_arch": "x86_64",
+   "elapsed_ms": 10126,
+   "games": 10000,
+   "hash_ms": 731,
+   "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "input_bytes": 92811021,
+   "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "limit": 10000,
+   "mode": "parse + canonical PGN hash (no database)",
+   "nodes": 661314,
+   "os": "Ubuntu 24.04.3 LTS",
+   "peak_rss_kib": 9008,
+   "qt": "6.4.2",
+   "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+   "version": "0.3.0-dev.1",
+   "workers": 1
+  },
+  "parse_4": {
+   "canonical_sha256": "fe13b24aad0d68aa6d7fde69f14bf796c1d47904ff472acdf99e1ac7de41a2d8",
+   "cpu_arch": "x86_64",
+   "elapsed_ms": 3637,
+   "games": 10000,
+   "hash_ms": 547,
+   "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "input_bytes": 92811021,
+   "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "limit": 10000,
+   "mode": "parse + canonical PGN hash (no database)",
+   "nodes": 661314,
+   "os": "Ubuntu 24.04.3 LTS",
+   "peak_rss_kib": 9316,
+   "qt": "6.4.2",
+   "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+   "version": "0.3.0-dev.1",
+   "workers": 4
+  },
+  "import_4_pause_resume": {
+   "backup_ms": 809,
+   "backup_verified": true,
+   "cpu_arch": "x86_64",
+   "database_with_journals_bytes": 371634176,
+   "elapsed_ms": 72462,
+   "exact_player": {
+    "max_ms": 1.273985,
+    "median_ms": 0.899251
+   },
+   "first_page_200": {
+    "max_ms": 0.764952,
+    "median_ms": 0.700267
+   },
+   "first_pass_ms": 25582,
+   "games": 10000,
+   "hash_ms": 561,
+   "input": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+   "input_bytes": 92811021,
+   "input_sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+   "integrity": "ok",
+   "integrity_ms": 2585,
+   "job": {
+    "added": 10000,
+    "bytes": 92811021,
+    "error": "",
+    "file": "/workspace/scratch/a60c9ae04ffb/corpus/lichess-2013-01.pgn",
+    "id": 1,
+    "modified": 1791982932833,
+    "offset": 7561130,
+    "processed": 10000,
+    "sha256": "8963b6a1620a0e9c77e5515a0744ec133e86869487188af047bb0a74400dee37",
+    "sourceId": 1,
+    "status": "paused",
+    "title": "lichess-2013-01",
+    "updated": "2026-10-15T06:18:32.094Z"
+   },
+   "limit": 10000,
+   "load_one_game": {
+    "max_ms": 1.021001,
+    "median_ms": 0.866772
+   },
+   "mode": "checkpointed import including file verification, full positions and indexes",
+   "next_page_200": {
+    "max_ms": 1.108591,
+    "median_ms": 0.992068
+   },
+   "opening_tree": {
+    "max_ms": 0.126668,
+    "median_ms": 0.090594
+   },
+   "os": "Ubuntu 24.04.3 LTS",
+   "pause_committed": 5000,
+   "peak_rss_kib": 18452,
+   "qt": "6.4.2",
+   "reopen_ms": 0.741788,
+   "source_url": "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst",
+   "version": "0.3.0-dev.1",
+   "workers": 4
+  }
+ },
+ "ui-validation/2026-10-27/local.json": {
+  "date": "2026-10-27",
+  "qt": "6.4.2",
+  "rendering": "offscreen/software",
+  "visual_checks": 1180,
+  "scenarios": 9,
+  "page_views": 63,
+  "dialog_views": 100,
+  "expanded_sidebar_views": 1,
+  "screenshots": 164,
+  "qml_warnings": 0,
+  "final_smoke_seconds": 3.3,
+  "final_interactions_seconds": 31.63,
+  "full_suite_previous_head": {
+   "head": "e0e13d97f5bbc1d80655113fc1d7ddb16bebb34f",
+   "passed": 13,
+   "skipped": 0,
+   "seconds": 84.52
+  },
+  "intermittent_failure": {
+   "head": "77521f248f39b575e0be2346989fb440dca8aa82",
+   "assertion": "Latest preparation filters replace stale request",
+   "occurrences": 1,
+   "subsequent_runs": "passed: 29.31 s, then final palette changes: 31.63 s",
+   "cause": "not reproduced; result diagnostics added, assertion unchanged"
+  },
+  "not_tested": [
+   "Voyager hardware",
+   "Wayland GPU rendering",
+   "120 Hz",
+   "million-game benchmarks"
+  ]
+ },
+ "ui-validation/2026-10-27/matrix.json": {
+  "cases": [
+   {
+    "boardWidth": 306,
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 307,
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 0,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 434,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "boardWidth": 435,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 1,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1366
+   },
+   {
+    "boardWidth": 606,
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "boardWidth": 568,
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 2,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1440
+   },
+   {
+    "boardWidth": 720,
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "boardWidth": 708,
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "height": 1080,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 3,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 1920
+   },
+   {
+    "boardWidth": 720,
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 0,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 1,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "boardWidth": 1228,
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 2,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 3,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 4,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 5,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "height": 1600,
+    "language": "en",
+    "light": false,
+    "page": 6,
+    "scenario": 4,
+    "textScale": 1,
+    "uiScale": 1,
+    "width": 2560
+   },
+   {
+    "boardWidth": 300,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 406,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 5,
+    "textScale": 1.5,
+    "uiScale": 1,
+    "width": 960
+   },
+   {
+    "boardWidth": 389,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 0,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 1,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "boardWidth": 522,
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 2,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 3,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 4,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 5,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "height": 768,
+    "language": "fr",
+    "light": false,
+    "page": 6,
+    "scenario": 6,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1366
+   },
+   {
+    "boardWidth": 561,
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "boardWidth": 502,
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "height": 940,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 7,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 1440
+   },
+   {
+    "boardWidth": 300,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 0,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 1,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "boardWidth": 474,
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 2,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 3,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 4,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 5,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   },
+   {
+    "height": 640,
+    "language": "en",
+    "light": true,
+    "page": 6,
+    "scenario": 8,
+    "textScale": 1.5,
+    "uiScale": 1.25,
+    "width": 960
+   }
+  ],
+  "checks": 1180,
+  "qmlWarnings": 0
+ },
+ "ui-validation/2026-10-27/update-selector.json": {
+  "development_channel": true,
+  "ignored_version_rejection": true,
+  "same_version_and_downgrade_rejection": true,
+  "selected": [
+   {
+    "asset_id": 684152144,
+    "bytes": 36899320,
+    "name": "Trait64-0.3.0-dev.64-linux-x86_64.AppImage",
+    "sha256": "3c8f4ddc826adb5d5ab496920edf7111ced026b67621a8ec3461a6d2610e21ff"
+   },
+   {
+    "asset_id": 684152138,
+    "bytes": 1073846,
+    "name": "trait64_0.3.0-dev.64_debian12_amd64.deb",
+    "sha256": "038f6f353c42a0204c3c53dc888afe2e4383858f0e3543a7301642f454258e31"
+   },
+   {
+    "asset_id": 684152136,
+    "bytes": 1083160,
+    "name": "trait64_0.3.0-dev.64_debian13_amd64.deb",
+    "sha256": "8258a8ab0f7b8cf841e3b2a9c9272b9dd7df1a3c68a7a7aedd82ce7861280524"
+   }
+  ],
+  "stable_and_beta_exclusion": true,
+  "tag": "v0.3.0-dev.64"
+ },
+ "verification-debug-2026-10-22.json": {
+  "date": "2026-10-22",
+  "test_dates": [
+   "2026-10-20",
+   "2026-10-21"
+  ],
+  "base_commit": "4e4cd3d36711c98a5952d26dca4b2531bc4c6264",
+  "code_commit": "8eada72f4e94a15f4334d970d4b4a1972a46c538",
+  "merge_commit": "e301ddb694562cead329e6b6f3ff3099c27f9ec3",
+  "tested_and_merged_tree": "40e388e8ea15b53a85004357267338a7b41e94e8",
+  "schema": 7,
+  "fixed_defect_groups": 10,
+  "local": {
+   "compiler": "GCC 13.3",
+   "qt": "6.4.2",
+   "stockfish": "16 (real executable)",
+   "suites_passed": 12,
+   "suites_total": 12,
+   "first_invocation_seconds": 84.12,
+   "smoke_rerun_seconds": 2.96,
+   "note": "Eleven suites passed in the first invocation on October 21. A restored generated executable was incomplete and lacked execute permission; it was relinked, then desktop_smoke passed. This was an environment artifact, not a source fix.",
+   "core_checks": 3269,
+   "desktop_checks": 683,
+   "analysis_checks": 121,
+   "update_checks": 45,
+   "storage_checks": 158,
+   "repertoire_checks": 51,
+   "resumable_import_checks": 24,
+   "robustness": {
+    "seed": "0x64302026",
+    "checks": 4414,
+    "generated_studies": 80,
+    "mutations": 3000,
+    "accepted": 330,
+    "rejected": 2670
+   },
+   "earlier_complete_pass": {
+    "date": "2026-10-20",
+    "tree": "9188d1192223bc8ef2f87e348c0a5a5a510750b9",
+    "debug": {
+     "passed": 12,
+     "total": 12,
+     "seconds": 92.78
+    },
+    "asan_ubsan": {
+     "passed": 12,
+     "total": 12,
+     "seconds": 120.18,
+     "leak_detection": false
+    }
+   }
+  },
+  "regressions": {
+   "updater_use_after_free": "Reproduced by AddressSanitizer before the destructor fix.",
+   "legacy_terminal_cache": "Regression failed before ignoring and replacing incorrect terminal cache entries.",
+   "empty_uci_option": "Actual Stockfish exited 1 with a literal <empty> debug filename, and exited 0 with an empty value, while a directory of that name blocked file creation."
+  },
+  "previous_ci": [
+   {
+    "run_id": 39393905485,
+    "head": "672dd497c748beafd22dbb2121dc5d0fb58446e7",
+    "core_sanitizers": "2/2 passed in 78.03 s",
+    "desktop_sanitizers": "10/12; persistent_analysis and desktop_interactions failed due to the literal <empty> filename",
+    "resolution_commit": "de41134a004be05be01dc82c08afe39019d568a4"
+   },
+   {
+    "run_id": 39563408828,
+    "head": "de41134a004be05be01dc82c08afe39019d568a4",
+    "core_sanitizers": "core passed in 14.84 s; robustness timed out after 120.14 s",
+    "resolution": "Timeout raised to 300 s only with sanitizers; unchanged corpus and checks",
+    "resolution_commit": "8eada72f4e94a15f4334d970d4b4a1972a46c538"
+   }
+  ],
+  "ci": {
+   "run_id": 39564062699,
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39564062699",
+   "status": "success",
+   "core_sanitizers": {
+    "passed": 2,
+    "total": 2,
+    "seconds": 139.75,
+    "core_seconds": 13.84,
+    "robustness_seconds": 125.86,
+    "leak_detection": "default enabled"
+   },
+   "desktop_sanitizers": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 112.5,
+    "leak_detection": false,
+    "stockfish": "real"
+   },
+   "debian12": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 58.7,
+    "installed_deb_smoke": "passed",
+    "appimage_smoke": "passed"
+   },
+   "debian13": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 73.99,
+    "installed_deb_smoke": "passed"
+   },
+   "publisher_tests": 17,
+   "cleanup_tests": 9,
+   "package_manifest": "passed",
+   "actions_artifacts": 0
+  },
+  "release": {
+   "version": "v0.3.0-dev.52",
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.52",
+   "run_id": 39566807355,
+   "run_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39566807355",
+   "status": "published",
+   "published_at": "2026-10-21T08:24:00Z",
+   "verified_date": "2026-10-22",
+   "draft": false,
+   "prerelease": true,
+   "tag_commit_verified": true,
+   "assets_match_runner_manifest": true,
+   "actions_artifacts": 0,
+   "core_sanitizers": {
+    "passed": 2,
+    "total": 2,
+    "seconds": 94.35,
+    "core_seconds": 9.32,
+    "robustness_seconds": 84.86,
+    "leak_detection": "default enabled"
+   },
+   "desktop_sanitizers": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 104.7,
+    "leak_detection": false,
+    "stockfish": "real"
+   },
+   "debian12": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 60.21,
+    "installed_deb_smoke": "passed",
+    "appimage_smoke": "passed"
+   },
+   "debian13": {
+    "passed": 12,
+    "total": 12,
+    "seconds": 75.45,
+    "installed_deb_smoke": "passed"
+   },
+   "publisher_tests": 17,
+   "cleanup_tests": 9,
+   "assets": [
+    {
+     "id": 661836165,
+     "name": "SHA256SUMS",
+     "size": 415,
+     "digest": "sha256:307a5c9df1e38f65bb12095b8e254e4657e4dad0c790d6ed0fe49caf83e19234",
+     "state": "uploaded"
+    },
+    {
+     "id": 661836162,
+     "name": "Trait64-0.3.0-dev.52-linux-x86_64.AppImage",
+     "size": 36862456,
+     "digest": "sha256:e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2",
+     "state": "uploaded"
+    },
+    {
+     "id": 661836158,
+     "name": "Trait64-runtime-sources.tar",
+     "size": 291573760,
+     "digest": "sha256:24aba64acbf22c1ce76001f7301876ee444e2776e57fc746c0ceb5a81828064a",
+     "state": "uploaded"
+    },
+    {
+     "id": 661836164,
+     "name": "trait64_0.3.0-dev.52_debian12_amd64.deb",
+     "size": 1043920,
+     "digest": "sha256:d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece",
+     "state": "uploaded"
+    },
+    {
+     "id": 661836159,
+     "name": "trait64_0.3.0-dev.52_debian13_amd64.deb",
+     "size": 1051410,
+     "digest": "sha256:70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4",
+     "state": "uploaded"
+    }
+   ],
+   "runner_manifest": {
+    "Trait64-0.3.0-dev.52-linux-x86_64.AppImage": {
+     "size": 36862456,
+     "digest": "sha256:e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2"
+    },
+    "Trait64-runtime-sources.tar": {
+     "size": 291573760,
+     "digest": "sha256:24aba64acbf22c1ce76001f7301876ee444e2776e57fc746c0ceb5a81828064a"
+    },
+    "trait64_0.3.0-dev.52_debian12_amd64.deb": {
+     "size": 1043920,
+     "digest": "sha256:d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece"
+    },
+    "trait64_0.3.0-dev.52_debian13_amd64.deb": {
+     "size": 1051410,
+     "digest": "sha256:70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4"
+    },
+    "SHA256SUMS": {
+     "size": 415,
+     "digest": "sha256:307a5c9df1e38f65bb12095b8e254e4657e4dad0c790d6ed0fe49caf83e19234"
+    }
+   },
+   "updater_probe": {
+    "from_version": "0.3.0-dev.46",
+    "source_commit": "e301ddb694562cead329e6b6f3ff3099c27f9ec3",
+    "development_channel": true,
+    "ignored_version_rejection": true,
+    "same_version_and_downgrade_rejection": true,
+    "selected": [
+     {
+      "asset_id": 661836162,
+      "bytes": 36862456,
+      "name": "Trait64-0.3.0-dev.52-linux-x86_64.AppImage",
+      "sha256": "e9434b09db43600ec1340d3ff4356bd86268fc407a437db2700b2641471417b2"
+     },
+     {
+      "asset_id": 661836164,
+      "bytes": 1043920,
+      "name": "trait64_0.3.0-dev.52_debian12_amd64.deb",
+      "sha256": "d1c9fa1acf9b8990bf694c4d371a14aa11a468624d6b833f9e9be97284bf3ece"
+     },
+     {
+      "asset_id": 661836159,
+      "bytes": 1051410,
+      "name": "trait64_0.3.0-dev.52_debian13_amd64.deb",
+      "sha256": "70a607e6fbfbe3ef198948060e723a16bd2b5adf712e32c28209a1777214c4a4"
+     }
+    ],
+    "stable_and_beta_exclusion": true,
+    "tag": "v0.3.0-dev.52"
+   }
+  },
+  "observed_build_messages": [
+   "Two GCC 13 -Wmaybe-uninitialized warnings in libstdc++ regex/std_function headers during optimized sanitizer builds; no runtime ASan/UBSan finding in the completed suites.",
+   "linuxdeployqt dependency scanning reports missing Windows/macOS/iOS and QtQuick.Shapes modules. Trait64 does not import these modules; the packaged AppImage startup tests pass."
+  ],
+  "limits": [
+   "Deterministic stress testing is not exhaustive proof of robustness.",
+   "Qt GUI tests use offscreen software rendering; no test on the user's Voyager PC or GPU.",
+   "LeakSanitizer disabled for local and Qt runs; core CI retains default leak detection.",
+   "No extension to automatic 75-move/fivefold-repetition adjudication or all complex dead positions.",
+   "Previously completed analysis reports are historical; launching a new analysis applies cache corrections.",
+   "Third-party dependencies were not exhaustively audited line by line.",
+   "Release asset names, sizes and GitHub-provided digests were compared with the runner manifest; binaries were installed and tested in CI, not on the user's PC."
+  ]
+ },
+ "verification-explanations-2026-10-16.json": {
+  "date": "2026-10-16",
+  "compiler": "GCC 13.3",
+  "qt": "6.4.2",
+  "stockfish": "16 (real executable)",
+  "schema": 7,
+  "core_checks": 2553,
+  "all_11_suites_covered": true,
+  "full_ctest_passed": 9,
+  "full_ctest_total": 11,
+  "initial_failures": "content and pgn_benchmark_safety binaries restored without executable permission",
+  "resolved_by": "Restore executable bit on these generated binaries and rerun both suites",
+  "content_seconds": 0.07,
+  "pgn_benchmark_safety_seconds": 0.95,
+  "final_desktop_interactions_seconds": 17.31,
+  "screen_size": [
+   960,
+   640
+  ],
+  "visual_inspection": "Explanation dialog readable; real button opens copy and original study/review preserved",
+  "ci_status": "passed",
+  "limitations": [
+   "No checkmate threats or tactical motif detector yet",
+   "Material count is not an engine evaluation",
+   "Copies start from FEN without earlier repetition history",
+   "No validation on the user Voyager computer"
+  ],
+  "code_commit": "3a6f5d4fbdeee87d466fe31fa034eb5f3fb05d55",
+  "ci_run": 38940592180,
+  "ci_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/38940592180",
+  "ci_debian12": {
+   "passed": 11,
+   "total": 11,
+   "seconds": 49.0,
+   "installed_deb_smoke": "passed",
+   "appimage_smoke": "passed"
+  },
+  "ci_debian13": {
+   "passed": 11,
+   "total": 11,
+   "seconds": 60.91,
+   "installed_deb_smoke": "passed"
+  },
+  "ci_sanitizers": {
+   "passed": 1,
+   "seconds": 14.23
+  },
+  "publisher_tests": 17,
+  "cleanup_tests": 9,
+  "actions_artifacts": 0,
+  "release": {
+   "version": "v0.3.0-dev.43",
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.43",
+   "published_at": "2026-10-16T17:45:37Z",
+   "draft": false,
+   "prerelease": true,
+   "tag_commit_verified": true,
+   "assets_match_runner_manifest": true,
+   "assets": [
+    {
+     "id": 648103703,
+     "name": "SHA256SUMS",
+     "size": 415,
+     "digest": "sha256:79ccb50733fa3aecb7de58ec6e99031b2083919d222c89640088ef2ace522ba6",
+     "state": "uploaded"
+    },
+    {
+     "id": 648103702,
+     "name": "Trait64-0.3.0-dev.43-linux-x86_64.AppImage",
+     "size": 36854264,
+     "digest": "sha256:269f3c0cb65bcd1b429e28e80b29f25b789abaf3c24e611e75aa167254ddb38e",
+     "state": "uploaded"
+    },
+    {
+     "id": 648103704,
+     "name": "Trait64-runtime-sources.tar",
+     "size": 291573760,
+     "digest": "sha256:a8f83f7a248f0278b34754be768bec8924b2f68f699cc4973f4eaedb20eb4f08",
+     "state": "uploaded"
+    },
+    {
+     "id": 648103706,
+     "name": "trait64_0.3.0-dev.43_debian12_amd64.deb",
+     "size": 1029066,
+     "digest": "sha256:7ea60d9e81139bee6479fb959b34cf1c4baf65b2efa70930d068fdd6dcae6a52",
+     "state": "uploaded"
+    },
+    {
+     "id": 648103705,
+     "name": "trait64_0.3.0-dev.43_debian13_amd64.deb",
+     "size": 1034870,
+     "digest": "sha256:336eae651bfe25f32e1af0d1c0fbc0e6d57712179f1c07b87caa634536b4fc69",
+     "state": "uploaded"
+    }
+   ]
+  },
+  "real_metadata_updater_probe": {
+   "development_channel": true,
+   "ignored_version_rejection": true,
+   "same_version_and_downgrade_rejection": true,
+   "selected": [
+    {
+     "asset_id": 648103702,
+     "bytes": 36854264,
+     "name": "Trait64-0.3.0-dev.43-linux-x86_64.AppImage",
+     "sha256": "269f3c0cb65bcd1b429e28e80b29f25b789abaf3c24e611e75aa167254ddb38e"
+    },
+    {
+     "asset_id": 648103706,
+     "bytes": 1029066,
+     "name": "trait64_0.3.0-dev.43_debian12_amd64.deb",
+     "sha256": "7ea60d9e81139bee6479fb959b34cf1c4baf65b2efa70930d068fdd6dcae6a52"
+    },
+    {
+     "asset_id": 648103705,
+     "bytes": 1034870,
+     "name": "trait64_0.3.0-dev.43_debian13_amd64.deb",
+     "sha256": "336eae651bfe25f32e1af0d1c0fbc0e6d57712179f1c07b87caa634536b4fc69"
+    }
+   ],
+   "stable_and_beta_exclusion": true,
+   "tag": "v0.3.0-dev.43"
+  }
+ },
+ "verification-integrity-2026-10-25.json": {
+  "date": "2026-10-25",
+  "code_commit": "ac30a2490705cedbdffee1e4fa6f2ab07ad21bdf",
+  "schema": 7,
+  "local": {
+   "configuration": "Release, Qt 6.4.2, GCC 13.3, Stockfish 16",
+   "suites_passed": 12,
+   "suites_failed": 0,
+   "suites_skipped": 0,
+   "total_seconds": 62.73,
+   "storage_seconds": 0.49,
+   "desktop_interactions_seconds": 14.15
+  },
+  "coverage": [
+   "SQL pre-cancellation",
+   "Actual SQLite integrity-check interruption",
+   "Connection reuse and unchanged game count",
+   "UI event processing while worker queued",
+   "Overlap rejection",
+   "Canceled result not success",
+   "Unsaved study preserved",
+   "Restart after cancellation",
+   "Reentrant completion signal preserves old result",
+   "Shutdown with active verification"
+  ],
+  "ci_status": "passed",
+  "limits": [
+   "No new real-corpus throughput measurement",
+   "No Voyager hardware test",
+   "Manual backup and library-opening validation remain synchronous"
+  ],
+  "tested_commit": "685cce343dcfd95b06576d04629906fd64a7c534",
+  "merge_commit": "078bbaf64c866e1a697a704f59e2198ce9d2b8cc",
+  "runtime_sources_equal": true,
+  "merge_documentation_differences": [
+   "docs/RELEASE-NOTES.md",
+   "docs/WORK-IN-PROGRESS.md",
+   "docs/benchmarks/2026-10-25/RESULTS.md",
+   "docs/benchmarks/2026-10-25/gui/gui-100k-process.json",
+   "docs/benchmarks/2026-10-25/gui/gui-100k.json",
+   "docs/benchmarks/2026-10-25/gui/method.json",
+   "docs/benchmarks/2026-10-25/qualification-summary.json",
+   "docs/benchmarks/2026-10-25/storage/material-100k-process.json",
+   "docs/benchmarks/2026-10-25/storage/material-100k.json",
+   "docs/benchmarks/2026-10-25/storage/method.json",
+   "docs/benchmarks/2026-10-25/storage/reindex-10k-process.json",
+   "docs/benchmarks/2026-10-25/storage/reindex-10k.json",
+   "docs/benchmarks/2026-10-25/storage/restored-content-100k.json",
+   "docs/benchmarks/2026-10-25/storage/storage-profile-100k.json"
+  ],
+  "pull_request_ci": {
+   "run_id": 40181527836,
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40181527836",
+   "conclusion": "success",
+   "core_sanitizers": {
+    "passed": 2,
+    "seconds": 80.08
+   },
+   "qt_sanitizers": {
+    "passed": 12,
+    "seconds": 125.71
+   },
+   "debian12": {
+    "passed": 12,
+    "seconds": 50.22
+   },
+   "debian13": {
+    "passed": 12,
+    "seconds": 59.96
+   },
+   "installed_debian12_smoke": true,
+   "installed_debian13_smoke": true,
+   "appimage_smoke": true,
+   "actions_artifacts": 0
+  },
+  "version": "v0.3.0-dev.57",
+  "release": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57",
+  "published_at": "2026-10-25T15:31:18Z",
+  "pr": "https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12",
+  "release_tag_commit": "078bbaf64c866e1a697a704f59e2198ce9d2b8cc",
+  "publication_ci": {
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40205667259",
+   "run_id": 40205667259,
+   "conclusion": "success",
+   "core_sanitizers": {
+    "passed": 2,
+    "seconds": 153.59
+   },
+   "qt_sanitizers": {
+    "passed": 12,
+    "seconds": 129.6
+   },
+   "debian12": {
+    "passed": 12,
+    "seconds": 58.89
+   },
+   "debian13": {
+    "passed": 12,
+    "seconds": 73.43
+   },
+   "installed_debian12_smoke": true,
+   "installed_debian13_smoke": true,
+   "appimage_smoke": true,
+   "skipped": 0,
+   "actions_artifacts": 0
+  },
+  "assets_match_ci_manifest": true,
+  "assets": {
+   "Trait64-0.3.0-dev.57-linux-x86_64.AppImage": {
+    "size": 36866552,
+    "digest": "sha256:6aa73a039573e1ae642c7b151a6a374bf72bd11eddba28ee7a338a04e8a6d61e"
+   },
+   "Trait64-runtime-sources.tar": {
+    "size": 291573760,
+    "digest": "sha256:a7b3856f5b7168de412d04670417171f77f0ed1dc4089388f0655e83f91fee24"
+   },
+   "trait64_0.3.0-dev.57_debian12_amd64.deb": {
+    "size": 1045718,
+    "digest": "sha256:50ec511ac6edc5afa26a1afb6b4fd3e4829fd2841983ee67596339b06c712cdd"
+   },
+   "trait64_0.3.0-dev.57_debian13_amd64.deb": {
+    "size": 1053654,
+    "digest": "sha256:3a230ba8c14f9fff26e6112d17a0990536e89962fa1951f4f7de8237706b2edc"
+   },
+   "SHA256SUMS": {
+    "size": 415,
+    "digest": "sha256:dce682fa5cb148a948e1632835b8fc5d44a53d068c885cbe5e0fc0b57c5a6847"
+   }
+  },
+  "update_selector": {
+   "from_version": "v0.3.0-dev.55",
+   "development_channel": true,
+   "ignored_version_rejection": true,
+   "same_version_and_downgrade_rejection": true,
+   "selected": [
+    {
+     "asset_id": 675392923,
+     "bytes": 36866552,
+     "name": "Trait64-0.3.0-dev.57-linux-x86_64.AppImage",
+     "sha256": "6aa73a039573e1ae642c7b151a6a374bf72bd11eddba28ee7a338a04e8a6d61e"
+    },
+    {
+     "asset_id": 675392920,
+     "bytes": 1045718,
+     "name": "trait64_0.3.0-dev.57_debian12_amd64.deb",
+     "sha256": "50ec511ac6edc5afa26a1afb6b4fd3e4829fd2841983ee67596339b06c712cdd"
+    },
+    {
+     "asset_id": 675392921,
+     "bytes": 1053654,
+     "name": "trait64_0.3.0-dev.57_debian13_amd64.deb",
+     "sha256": "3a230ba8c14f9fff26e6112d17a0990536e89962fa1951f4f7de8237706b2edc"
+    }
+   ],
+   "stable_and_beta_exclusion": true,
+   "tag": "v0.3.0-dev.57"
+  },
+  "qualification_100k": {
+   "run_id": 40179661406,
+   "runtime_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+   "summary": "benchmarks/2026-10-25/qualification-summary.json",
+   "conclusion": "success"
+  }
+ },
+ "verification-notebook-2026-10-28.json": {
+  "date": "2026-10-28",
+  "product_commit": "2d5e8947ea45deb8ae80a76e4983f2b80bfbbd50",
+  "base_commit": "5b41204047375d91f1e580756addd9879d59d7a4",
+  "schema": 7,
+  "local": {
+   "qt": "6.4.2",
+   "rendering": "offscreen/software",
+   "suites_passed": 14,
+   "suites_skipped": 0,
+   "seconds": 157.24,
+   "suites": [
+    {
+     "name": "core",
+     "seconds": 0.45
+    },
+    {
+     "name": "robustness",
+     "seconds": 3.76
+    },
+    {
+     "name": "pgn_benchmark_safety",
+     "seconds": 0.69
+    },
+    {
+     "name": "content",
+     "seconds": 0.06
+    },
+    {
+     "name": "updates",
+     "seconds": 0.12
+    },
+    {
+     "name": "storage",
+     "seconds": 1.01
+    },
+    {
+     "name": "repertoires",
+     "seconds": 0.38
+    },
+    {
+     "name": "resumable_import",
+     "seconds": 0.23
+    },
+    {
+     "name": "persistent_analysis",
+     "seconds": 53.31
+    },
+    {
+     "name": "engine",
+     "seconds": 6.14
+    },
+    {
+     "name": "desktop_smoke",
+     "seconds": 3.75
+    },
+    {
+     "name": "move_notebook",
+     "seconds": 15.04
+    },
+    {
+     "name": "desktop_layout",
+     "seconds": 32.57
+    },
+    {
+     "name": "desktop_interactions",
+     "seconds": 39.69
+    }
+   ],
+   "notebook_checks_including_captures": 207,
+   "notebook_scenarios": 6,
+   "notebook_qml_warnings": 0,
+   "layout_scenarios": 9,
+   "layout_captures": 164,
+   "notebook_captures": 6,
+   "stockfish": "16, real process"
+  },
+  "ci": {
+   "run": 40742429259,
+   "state": "in_progress"
+  },
+  "prior_failures": [
+   {
+    "issue": "Variant label height binding loop",
+    "resolution": "Remove the self-dependent explicit label height; use implicit height only for visible branch labels."
+   },
+   {
+    "issue": "Import test stopped waiting before the asynchronous library search finished",
+    "resolution": "Wait for both the import and the library search, then choose the requested game by Event."
+   },
+   {
+    "issue": "Selected move below the visible page at 960x640 / 150% text / 125% UI",
+    "resolution": "Follow selection after the Qt layout pass and scroll the outer page as needed; verify actual viewport geometry."
+   },
+   {
+    "issue": "A locally generated resource source was empty",
+    "resolution": "Regenerated resources and relinked; final full suite passed."
+   }
+  ],
+  "not_validated": [
+   "Voyager hardware",
+   "Wayland/GPU/120Hz",
+   "New large-database performance measurements"
+  ],
+  "release": {
+   "state": "not_published"
+  },
+  "preparation_replacement": {
+   "status": "not_reproduced",
+   "interaction_suite_passes_on_product_commit": 3,
+   "seconds": [
+    39.69,
+    36.3,
+    28.63
+   ],
+   "cause": "not_established",
+   "assertion_unchanged": true
+  }
+ },
+ "verification-performance-2026-10-24.json": {
+  "date": "2026-10-24",
+  "release": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.55",
+  "version": "v0.3.0-dev.55",
+  "published_at": "2026-10-24T08:34:39Z",
+  "pr": "https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/10",
+  "tested_commit": "26ba77de9e2d54c846e2e34bb8c304fef46d7fec",
+  "merge_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "release_tag_commit": "550f28f51f174b8d3b1d5f896928c2cfa09e04d4",
+  "runtime_sources_equal": true,
+  "documentation_changes_preserved": [
+   "README.md",
+   "docs/PROJECT-STATUS.md"
+  ],
+  "local_suites": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0,
+   "seconds": 62.33,
+   "stockfish": "16"
+  },
+  "publication_ci": {
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/40077170390",
+   "conclusion": "success",
+   "core_sanitizers": {
+    "passed": 2,
+    "seconds": 151.25
+   },
+   "qt_sanitizers": {
+    "passed": 12,
+    "seconds": 134.59
+   },
+   "debian12": {
+    "passed": 12,
+    "seconds": 59.31
+   },
+   "debian13": {
+    "passed": 12,
+    "seconds": 73.41
+   },
+   "installed_debian12_smoke": true,
+   "installed_debian13_smoke": true,
+   "appimage_smoke": true
+  },
+  "assets_match_ci_manifest": true,
+  "assets": {
+   "Trait64-0.3.0-dev.55-linux-x86_64.AppImage": {
+    "size": 36862456,
+    "digest": "sha256:6a5438883933a08c18b3dc934a61608f1b5b4e3aa4b6f16c63c6b808208c9a1f"
+   },
+   "Trait64-runtime-sources.tar": {
+    "size": 291573760,
+    "digest": "sha256:52d6cb01d4ec13c1f7bae2cea2e4734b982da03533e05f76a3adcd84b1bbcb18"
+   },
+   "trait64_0.3.0-dev.55_debian12_amd64.deb": {
+    "size": 1043890,
+    "digest": "sha256:f8be3ca3194ecfe712f08bcea0a5cef028345cafbba01caf2ecfbc8224b26176"
+   },
+   "trait64_0.3.0-dev.55_debian13_amd64.deb": {
+    "size": 1051226,
+    "digest": "sha256:fff21deb26c86f70ad50e90eaf72fde98c16cb87b8fd59112525295bd5ff8f36"
+   },
+   "SHA256SUMS": {
+    "size": 415,
+    "digest": "sha256:5d92dfaf5218c26f9ca2d72281b38428aeab118160463ba5e649b94853d9cafc"
+   }
+  },
+  "actions_artifacts": {
+   "pull_request": 0,
+   "publication": 0
+  },
+  "update_selector": {
+   "from_version": "v0.3.0-dev.52",
+   "development_channel": true,
+   "ignored_version_rejection": true,
+   "same_version_and_downgrade_rejection": true,
+   "selected": [
+    {
+     "asset_id": 671722207,
+     "bytes": 36862456,
+     "name": "Trait64-0.3.0-dev.55-linux-x86_64.AppImage",
+     "sha256": "6a5438883933a08c18b3dc934a61608f1b5b4e3aa4b6f16c63c6b808208c9a1f"
+    },
+    {
+     "asset_id": 671722205,
+     "bytes": 1043890,
+     "name": "trait64_0.3.0-dev.55_debian12_amd64.deb",
+     "sha256": "f8be3ca3194ecfe712f08bcea0a5cef028345cafbba01caf2ecfbc8224b26176"
+    },
+    {
+     "asset_id": 671722202,
+     "bytes": 1051226,
+     "name": "trait64_0.3.0-dev.55_debian13_amd64.deb",
+     "sha256": "fff21deb26c86f70ad50e90eaf72fde98c16cb87b8fd59112525295bd5ff8f36"
+    }
+   ],
+   "stable_and_beta_exclusion": true,
+   "tag": "v0.3.0-dev.55"
+  },
+  "limitations": [
+   "No Voyager hardware/GPU test",
+   "500000 and millions of real games not qualified"
+  ]
+ },
+ "verification-repertoires-2026-10-16.json": {
+  "date": "2026-10-15",
+  "commit": "e2191937041460508507ffff4ab5c0a20afe9a70",
+  "build": "Debug",
+  "compiler": "GCC 13.3",
+  "qt": "6.4.2",
+  "stockfish": "16 (real executable)",
+  "schema": 7,
+  "tests": [
+   {
+    "name": "core",
+    "passed": true,
+    "seconds": 2.78
+   },
+   {
+    "name": "pgn_benchmark_safety",
+    "passed": true,
+    "seconds": 1.14
+   },
+   {
+    "name": "content",
+    "passed": true,
+    "seconds": 0.07
+   },
+   {
+    "name": "updates",
+    "passed": true,
+    "seconds": 0.1
+   },
+   {
+    "name": "storage",
+    "passed": true,
+    "seconds": 0.37
+   },
+   {
+    "name": "repertoires",
+    "passed": true,
+    "seconds": 0.41
+   },
+   {
+    "name": "resumable_import",
+    "passed": true,
+    "seconds": 0.24
+   },
+   {
+    "name": "persistent_analysis",
+    "passed": true,
+    "seconds": 40.44
+   },
+   {
+    "name": "engine",
+    "passed": true,
+    "seconds": 1.38
+   },
+   {
+    "name": "desktop_smoke",
+    "passed": true,
+    "seconds": 3.09
+   },
+   {
+    "name": "desktop_interactions",
+    "passed": true,
+    "seconds": 16.38
+   }
+  ],
+  "ctest_total_seconds": 66.42,
+  "publication_unit_tests": 13,
+  "cleanup_unit_tests": 9,
+  "screen_size": [
+   960,
+   640
+  ],
+  "visual_inspection": "Repertoire selector and all action buttons visible, no QML warnings",
+  "limitations": [
+   "CI package validation tracked separately",
+   "Not a million-game performance qualification",
+   "No test on the user Voyager computer"
+  ],
+  "ci": {
+   "run_id": 38797743659,
+   "tested_commit": "e2191937041460508507ffff4ab5c0a20afe9a70",
+   "debian12": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 48.75
+   },
+   "debian13": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 59.03
+   },
+   "installed_deb_smoke_tests": true,
+   "appimage_smoke_test": true,
+   "runtime_sources_packaged": true,
+   "core_sanitizers": "passed",
+   "manifest": "five required files verified locally",
+   "actions_artifacts": 0
+  },
+  "merge": {
+   "date": "2026-10-16",
+   "commit": "d8c49243f961ae20dfb33e11231a69cbc898f428",
+   "pull_request": 7
+  },
+  "release": {
+   "run_id": 38861352628,
+   "version": "0.3.0-dev.42",
+   "tested_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+   "status": "published",
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.42",
+   "published_at": "2026-10-16T06:40:07Z",
+   "prerelease": true,
+   "tag_commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+   "manifest_matches_remote_assets": true,
+   "actions_artifacts": 0,
+   "debian12": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 47.44
+   },
+   "debian13": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 58.41
+   },
+   "installed_deb_smoke_tests": true,
+   "appimage_smoke_test": true,
+   "runtime_sources_packaged": true,
+   "assets": [
+    {
+     "name": "SHA256SUMS",
+     "size": 415,
+     "digest": "sha256:44992102a50556b460f5bbbd67d142307da9f949395e2288720775c7ab82d93b",
+     "state": "uploaded"
+    },
+    {
+     "name": "Trait64-0.3.0-dev.42-linux-x86_64.AppImage",
+     "size": 36837880,
+     "digest": "sha256:2b208d28e01d2333d12fa50c5a1f4964cb88536ddaf06ee9cc5759a94ac1484f",
+     "state": "uploaded"
+    },
+    {
+     "name": "Trait64-runtime-sources.tar",
+     "size": 291573760,
+     "digest": "sha256:095954c4a2b6dfed9eb5f6b713879c664b021e38bb49f56ae1550b2cef9b6bb8",
+     "state": "uploaded"
+    },
+    {
+     "name": "trait64_0.3.0-dev.42_debian12_amd64.deb",
+     "size": 1007554,
+     "digest": "sha256:95cf4feda58b40f9ed7d4c066e6f8ecf8731b3feb69b63f0ec73fe88cd2e6965",
+     "state": "uploaded"
+    },
+    {
+     "name": "trait64_0.3.0-dev.42_debian13_amd64.deb",
+     "size": 1012366,
+     "digest": "sha256:049fcd1dae94c04d9933f8c891a3b77db71c80fd745059afe8e4fe3e1e10f6d3",
+     "state": "uploaded"
+    }
+   ],
+   "updater_selection": {
+    "development_channel": true,
+    "ignored_version_rejection": true,
+    "same_version_and_downgrade_rejection": true,
+    "selected": [
+     {
+      "asset_id": 646413159,
+      "bytes": 36837880,
+      "name": "Trait64-0.3.0-dev.42-linux-x86_64.AppImage",
+      "sha256": "2b208d28e01d2333d12fa50c5a1f4964cb88536ddaf06ee9cc5759a94ac1484f"
+     },
+     {
+      "asset_id": 646413160,
+      "bytes": 1007554,
+      "name": "trait64_0.3.0-dev.42_debian12_amd64.deb",
+      "sha256": "95cf4feda58b40f9ed7d4c066e6f8ecf8731b3feb69b63f0ec73fe88cd2e6965"
+     },
+     {
+      "asset_id": 646413163,
+      "bytes": 1012366,
+      "name": "trait64_0.3.0-dev.42_debian13_amd64.deb",
+      "sha256": "049fcd1dae94c04d9933f8c891a3b77db71c80fd745059afe8e4fe3e1e10f6d3"
+     }
+    ],
+    "stable_and_beta_exclusion": true,
+    "tag": "v0.3.0-dev.42"
+   }
+  },
+  "failed_publication": {
+   "run_id": 38859094682,
+   "version": "0.3.0-dev.41",
+   "commit": "d8c49243f961ae20dfb33e11231a69cbc898f428",
+   "debian12": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 47.94
+   },
+   "debian13": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 58.88
+   },
+   "installed_deb_smoke_tests": true,
+   "appimage_smoke_test": true,
+   "manifest_verified": true,
+   "failure": "Immediate release listing did not return the newly created draft",
+   "draft_id": 414615852,
+   "draft_assets": 0,
+   "published": false
+  },
+  "publisher_fix": {
+   "commit": "fc941c17c53d6c5aa639433c6563f73469971ae9",
+   "local_unit_tests": 17,
+   "ci_unit_tests": 17,
+   "ci_cleanup_unit_tests": 9,
+   "ci_core_sanitizers": "passed"
+  },
+  "verified_at": "2026-10-16T06:41:53.932268+00:00"
+ },
+ "verification-tactics-2026-10-19.json": {
+  "date": "2026-10-19",
+  "code_commit": "ced24282a2b27bb68b914e315775407d228d6c1f",
+  "merge_commit": "1c86d538dba4b0c65020efcd1f0dff99bc329031",
+  "tested_and_merged_tree": "340e7c77661d0384cad1f571c2065ea3e76d7607",
+  "schema": 7,
+  "local": {
+   "compiler": "GCC 13.3",
+   "qt": "6.4.2",
+   "stockfish": "16 (real executable)",
+   "core_checks": 3258,
+   "suites_passed": 11,
+   "suites_total": 11,
+   "ctest_note": "Initial invocation ended after six completed suites without a final summary. Five remaining suites rerun and passed.",
+   "remaining_five_seconds": 52.21,
+   "desktop_seconds": 14.32,
+   "visual_desktop_seconds": 14.34,
+   "visual_desktop_checks": 666,
+   "visual_check_count_note": "Includes two optional screenshot-save checks.",
+   "screen_size": [
+    960,
+    640
+   ],
+   "visual_inspection": "Dialog readable, copy button accessible, two fork arrows visible on board.",
+   "publisher_tests": 17,
+   "cleanup_tests": 9,
+   "compile_warnings": 0
+  },
+  "ci": {
+   "run_id": 39127471728,
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39127471728",
+   "status": "success",
+   "debian12": {
+    "suites_passed": 11,
+    "total": 11,
+    "seconds": 49.37,
+    "installed_deb_smoke": "passed",
+    "appimage_smoke": "passed"
+   },
+   "debian13": {
+    "suites_passed": 11,
+    "total": 11,
+    "seconds": 60.14,
+    "installed_deb_smoke": "passed"
+   },
+   "sanitizers": {
+    "passed": 1,
+    "seconds": 14.56
+   },
+   "package_manifest": "passed",
+   "compile_warnings": 0
+  },
+  "release": {
+   "version": "v0.3.0-dev.46",
+   "url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.46",
+   "run_id": 39206008438,
+   "run_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/runs/39206008438",
+   "status": "published",
+   "published_at": "2026-10-19T05:56:40Z",
+   "draft": false,
+   "prerelease": true,
+   "tag_commit_verified": true,
+   "assets_match_runner_manifest": true,
+   "actions_artifacts": 0,
+   "debian12": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 50.19,
+    "installed_deb_smoke": "passed",
+    "appimage_smoke": "passed"
+   },
+   "debian13": {
+    "passed": 11,
+    "total": 11,
+    "seconds": 60.78,
+    "installed_deb_smoke": "passed"
+   },
+   "assets": [
+    {
+     "id": 655381277,
+     "name": "SHA256SUMS",
+     "size": 415,
+     "digest": "sha256:eda2646f8bc4c53b9ac14159d91c11f5e33aacaea83229ff700dc0b31e84b937",
+     "state": "uploaded"
+    },
+    {
+     "id": 655381275,
+     "name": "Trait64-0.3.0-dev.46-linux-x86_64.AppImage",
+     "size": 36866552,
+     "digest": "sha256:0ba8921d887e14efb20c130477774d853e599e77c72f3dd1229e600035cf7148",
+     "state": "uploaded"
+    },
+    {
+     "id": 655381276,
+     "name": "Trait64-runtime-sources.tar",
+     "size": 291573760,
+     "digest": "sha256:ad04731c4ad33283e14b40fd5a87c447773748e4d575b5de6b26a52f18fa83ac",
+     "state": "uploaded"
+    },
+    {
+     "id": 655381278,
+     "name": "trait64_0.3.0-dev.46_debian12_amd64.deb",
+     "size": 1045154,
+     "digest": "sha256:c0f895d7cb894456cc493d03bbf19fe3ac3ef8ce6288ca59ffe759d99b807318",
+     "state": "uploaded"
+    },
+    {
+     "id": 655381280,
+     "name": "trait64_0.3.0-dev.46_debian13_amd64.deb",
+     "size": 1053786,
+     "digest": "sha256:d1d471c7ade676e48d361df168e5ab2f7cfdc466c2d776c827fe53c468555106",
+     "state": "uploaded"
+    }
+   ],
+   "updater_probe": {
+    "development_channel": true,
+    "ignored_version_rejection": true,
+    "same_version_and_downgrade_rejection": true,
+    "selected": [
+     {
+      "asset_id": 655381275,
+      "bytes": 36866552,
+      "name": "Trait64-0.3.0-dev.46-linux-x86_64.AppImage",
+      "sha256": "0ba8921d887e14efb20c130477774d853e599e77c72f3dd1229e600035cf7148"
+     },
+     {
+      "asset_id": 655381278,
+      "bytes": 1045154,
+      "name": "trait64_0.3.0-dev.46_debian12_amd64.deb",
+      "sha256": "c0f895d7cb894456cc493d03bbf19fe3ac3ef8ce6288ca59ffe759d99b807318"
+     },
+     {
+      "asset_id": 655381280,
+      "bytes": 1053786,
+      "name": "trait64_0.3.0-dev.46_debian13_amd64.deb",
+      "sha256": "d1d471c7ade676e48d361df168e5ab2f7cfdc466c2d776c827fe53c468555106"
+     }
+    ],
+    "stable_and_beta_exclusion": true,
+    "tag": "v0.3.0-dev.46"
+   }
+  },
+  "limits": [
+   "Observed patterns do not establish a forced material gain",
+   "Kings excluded as fork attackers",
+   "Only absolute pins and king skewers",
+   "Discovered attacks without check remain unsupported",
+   "No installation test on user Voyager computer"
+  ]
+ },
+ "verification-ui-2026-10-28.json": {
+  "checked_on": "2026-10-28",
+  "repository": "feuvrierbernardinisimhon-png/Trait64",
+  "pull_request": 13,
+  "final_feature_head": "dd0e53c674a4043f697577187d190db0fe2c65ef",
+  "merge_commit": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
+  "tested_tree": "5930f856f4b655e89c893133699172cd46d308ac",
+  "merge_tree_matches_feature_head": true,
+  "pr_ci": {
+   "run_id": 40516973650,
+   "conclusion": "success",
+   "core_sanitizers": {
+    "passed": 2,
+    "seconds": 151.86
+   },
+   "desktop_sanitizers": {
+    "passed": 13,
+    "seconds": 191.56
+   },
+   "debian12": {
+    "passed": 13,
+    "seconds": 81.26
+   },
+   "debian13": {
+    "passed": 13,
+    "seconds": 97.31
+   },
+   "installed_deb_smokes": 2,
+   "appimage_smoke": true,
+   "actions_artifacts": 0
+  },
+  "publication_ci": {
+   "run_id": 40644804206,
+   "core_sanitizers": {
+    "passed": 2,
+    "seconds": 77.3
+   },
+   "desktop_sanitizers": {
+    "passed": 13,
+    "seconds": 181.12
+   },
+   "publication_safeguard_tests": 17,
+   "storage_cleanup_tests": 9,
+   "conclusion": "success",
+   "debian12": {
+    "passed": 13,
+    "skipped": 0,
+    "seconds": 84.64
+   },
+   "debian13": {
+    "passed": 13,
+    "skipped": 0,
+    "seconds": 96.84
+   },
+   "installed_deb_smokes": 2,
+   "appimage_smoke": true,
+   "actions_artifacts": 0,
+   "job_ids": [
+    {
+     "name": "core-sanitizers",
+     "id": 122671006219,
+     "conclusion": "success"
+    },
+    {
+     "name": "desktop-sanitizers",
+     "id": 122671006554,
+     "conclusion": "success"
+    },
+    {
+     "name": "version",
+     "id": 122671006587,
+     "conclusion": "success"
+    },
+    {
+     "name": "linux",
+     "id": 122674212607,
+     "conclusion": "success"
+    }
+   ]
+  },
+  "local": {
+   "date": "2026-10-27",
+   "qt": "6.4.2",
+   "rendering": "offscreen/software",
+   "visual_checks": 1180,
+   "scenarios": 9,
+   "page_views": 63,
+   "dialog_views": 100,
+   "expanded_sidebar_views": 1,
+   "screenshots": 164,
+   "qml_warnings": 0,
+   "final_smoke_seconds": 3.3,
+   "final_interactions_seconds": 31.63,
+   "full_suite_previous_head": {
+    "head": "e0e13d97f5bbc1d80655113fc1d7ddb16bebb34f",
+    "passed": 13,
+    "skipped": 0,
+    "seconds": 84.52
+   },
+   "intermittent_failure": {
+    "head": "77521f248f39b575e0be2346989fb440dca8aa82",
+    "assertion": "Latest preparation filters replace stale request",
+    "occurrences": 1,
+    "subsequent_runs": "passed: 29.31 s, then final palette changes: 31.63 s",
+    "cause": "not reproduced; result diagnostics added, assertion unchanged"
+   },
+   "not_tested": [
+    "Voyager hardware",
+    "Wayland GPU rendering",
+    "120 Hz",
+    "million-game benchmarks"
+   ]
+  },
+  "screenshots": {
+   "source_commit": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
+   "local_build_version": "0.3.0-dev.64",
+   "qt": "6.4.2",
+   "rendering": "offscreen/software",
+   "dimensions": [
+    1440,
+    940
+   ],
+   "smoke_capture_exit_codes": [
+    0,
+    0
+   ],
+   "files": [
+    {
+     "path": "docs/screenshots/analysis.png",
+     "size": 119241,
+     "sha256": "d18c40ce221440d9054a8428381f6cbd2686f51558e0a80eafdcd11e70965f9d"
+    },
+    {
+     "path": "docs/screenshots/appearance.png",
+     "size": 106607,
+     "sha256": "a7e3c1a48a3548624aca8599c8812f32d49404064e93106c9900dabeafdfaa71"
+    }
+   ]
+  },
+  "database_schema": 7,
+  "preserved_components": [
+   "ui/Board.qml",
+   "ui/Piece.qml",
+   "Lichess piece assets",
+   "user study data and page indexes"
+  ],
+  "release_notes": {
+   "canonical_path": "docs/RELEASE-NOTES.md",
+   "release_body_updated": false,
+   "reason": "GitHub connector has no release edit operation; browser is signed out of this private repository. Updated notes are committed to main."
+  },
+  "asset_verification_method": "Compare GitHub release metadata names, sizes, upload states and SHA-256 digests with CI's locally hashed package manifest; independently verify the tag resolves to the tested merge commit.",
+  "limits": [
+   "Offscreen software rendering does not validate Voyager hardware, Wayland GPU or 120 Hz.",
+   "Some C++ diagnostics and catalog descriptions remain French.",
+   "No new large-corpus performance qualification.",
+   "An isolated local preparation assertion failure was not reproduced in subsequent local and CI runs; no established cause."
+  ],
+  "release": {
+   "id": 426353841,
+   "tag_name": "v0.3.0-dev.64",
+   "name": "Trait64 0.3.0-dev.64",
+   "published_at": "2026-10-28T07:08:09Z",
+   "draft": false,
+   "prerelease": true,
+   "target_commitish": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
+   "html_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64",
+   "assets": [
+    {
+     "id": 684152142,
+     "name": "SHA256SUMS",
+     "size": 415,
+     "digest": "sha256:d43eca764c4fe08b2a9bd4926a6874696a2f67500969cbca4129482584aa47cb",
+     "state": "uploaded",
+     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/SHA256SUMS"
+    },
+    {
+     "id": 684152144,
+     "name": "Trait64-0.3.0-dev.64-linux-x86_64.AppImage",
+     "size": 36899320,
+     "digest": "sha256:3c8f4ddc826adb5d5ab496920edf7111ced026b67621a8ec3461a6d2610e21ff",
+     "state": "uploaded",
+     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/Trait64-0.3.0-dev.64-linux-x86_64.AppImage"
+    },
+    {
+     "id": 684152143,
+     "name": "Trait64-runtime-sources.tar",
+     "size": 291573760,
+     "digest": "sha256:7121ac45732264b699d7a68c00ca4ed5bc3a9540d270b02e4bda7c4dfe9d8106",
+     "state": "uploaded",
+     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/Trait64-runtime-sources.tar"
+    },
+    {
+     "id": 684152138,
+     "name": "trait64_0.3.0-dev.64_debian12_amd64.deb",
+     "size": 1073846,
+     "digest": "sha256:038f6f353c42a0204c3c53dc888afe2e4383858f0e3543a7301642f454258e31",
+     "state": "uploaded",
+     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian12_amd64.deb"
+    },
+    {
+     "id": 684152136,
+     "name": "trait64_0.3.0-dev.64_debian13_amd64.deb",
+     "size": 1083160,
+     "digest": "sha256:8258a8ab0f7b8cf841e3b2a9c9272b9dd7df1a3c68a7a7aedd82ce7861280524",
+     "state": "uploaded",
+     "browser_download_url": "https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/download/v0.3.0-dev.64/trait64_0.3.0-dev.64_debian13_amd64.deb"
+    }
+   ]
+  },
+  "release_manifest": {
+   "Trait64-0.3.0-dev.64-linux-x86_64.AppImage": {
+    "size": 36899320,
+    "digest": "sha256:3c8f4ddc826adb5d5ab496920edf7111ced026b67621a8ec3461a6d2610e21ff"
+   },
+   "Trait64-runtime-sources.tar": {
+    "size": 291573760,
+    "digest": "sha256:7121ac45732264b699d7a68c00ca4ed5bc3a9540d270b02e4bda7c4dfe9d8106"
+   },
+   "trait64_0.3.0-dev.64_debian12_amd64.deb": {
+    "size": 1073846,
+    "digest": "sha256:038f6f353c42a0204c3c53dc888afe2e4383858f0e3543a7301642f454258e31"
+   },
+   "trait64_0.3.0-dev.64_debian13_amd64.deb": {
+    "size": 1083160,
+    "digest": "sha256:8258a8ab0f7b8cf841e3b2a9c9272b9dd7df1a3c68a7a7aedd82ce7861280524"
+   },
+   "SHA256SUMS": {
+    "size": 415,
+    "digest": "sha256:d43eca764c4fe08b2a9bd4926a6874696a2f67500969cbca4129482584aa47cb"
+   }
+  },
+  "tag_verified_commit": "15708fb857c709af61bbfc56f9f5efa1392ccb87",
+  "update_selector": {
+   "development_channel": true,
+   "ignored_version_rejection": true,
+   "same_version_and_downgrade_rejection": true,
+   "selected": [
+    {
+     "asset_id": 684152144,
+     "bytes": 36899320,
+     "name": "Trait64-0.3.0-dev.64-linux-x86_64.AppImage",
+     "sha256": "3c8f4ddc826adb5d5ab496920edf7111ced026b67621a8ec3461a6d2610e21ff"
+    },
+    {
+     "asset_id": 684152138,
+     "bytes": 1073846,
+     "name": "trait64_0.3.0-dev.64_debian12_amd64.deb",
+     "sha256": "038f6f353c42a0204c3c53dc888afe2e4383858f0e3543a7301642f454258e31"
+    },
+    {
+     "asset_id": 684152136,
+     "bytes": 1083160,
+     "name": "trait64_0.3.0-dev.64_debian13_amd64.deb",
+     "sha256": "8258a8ab0f7b8cf841e3b2a9c9272b9dd7df1a3c68a7a7aedd82ce7861280524"
+    }
+   ],
+   "stable_and_beta_exclusion": true,
+   "tag": "v0.3.0-dev.64"
+  },
+  "documentation_checkpoint": "8f95f48aa4513d8293201156e4b4d2fef456caa1"
+ }
+}

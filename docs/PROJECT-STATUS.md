@@ -2,24 +2,23 @@
 
 > **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux d’abord · AGPL-3.0-or-later**
 
-Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Il ne remplace ni le [suivi technique](NEXT-STEPS.md) ni la [feuille de route complète](ROADMAP.md). L’interface, le moteur et les données utilisateur doivent continuer à fonctionner localement, sans compte ou connexion obligatoire.
+Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Il ne remplace ni le [suivi technique](PROJECT-STATUS.md) ni la [feuille de route complète](ROADMAP.md). L’interface, le moteur et les données utilisateur doivent continuer à fonctionner localement, sans compte ou connexion obligatoire.
 
-## Lot en validation : carnet de coups
+## Carnet de coups
 
-PR #14 : Blancs et Noirs côte à côte, variantes séparées, SAN français à
-l'affichage et suivi du coup visible même en petite fenêtre. 14 suites locales
-réussies, aucune ignorée ; CI et publication encore en attente. Voir
-[MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md). Dev.64 reste la version publiée ci-dessous.
+PR #14 intégrée à main : Blancs et Noirs côte à côte, variantes séparées et SAN
+français à l'affichage. Un affichage continu des coups (ordre PGN, variantes
+entre parenthèses) est proposé en option. Voir [MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md).
 
 ## Dernière version publiée et vérifiée
 
 **[v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
 
-Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](verification-ui-2026-10-28.json).
+Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](VALIDATION.md).
 
 ### Versions précédentes
 
-**[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](verification-integrity-2026-10-25.json).
+**[v0.3.0-dev.57](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](VALIDATION.md).
 
 La [PR #12](https://github.com/feuvrierbernardinisimhon-png/Trait64/pull/12) rend le contrôle manuel d'intégrité asynchrone et annulable. L'étude non enregistrée est conservée ; chevauchements, relances réentrantes et fermeture sont testés. La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones. [Détails](ASYNC-INTEGRITY.md).
 
@@ -52,6 +51,10 @@ La comparaison archivée sur **10 000 parties Lichess CC0 / 661 314 positions** 
 Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité, sauvegarde et restauration sont mesurés. Le rapport conserve un pic de lecture concurrente de 4,031 s, dont la cause reste à établir. La qualification GitHub a réussi : 100 000 parties importées via Qt, 1 842 navigations, zéro avertissement QML, empreinte identique de tous les PGN dans les trois bases et réindexation 10k. Le pic local n'a pas été reproduit sur l'autre hôte, sans cause établie. Les positions/ouvertures et leurs index occupent 93,82 % des pages de la base ; voir [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
 
 ## Principaux travaux restants
+
+Ordre de priorité : **performances → explications vérifiables → entraînement
+tactique → répertoires/préparation**, puis le reste de la [roadmap](ROADMAP.md).
+Toute évolution du schéma SQLite exige une migration 8 sauvegardée.
 
 1. **Grandes bases réelles** : qualifier 500 000 puis 1/2/5/10 millions de parties, indexations, mémoire, recherches, sauvegardes et restauration ; optimiser à partir des mesures.
 2. **Pédagogie** : compléter les explications tactiques démontrables, variantes justifiées, thèmes et exercices ; développer un véritable corpus tactique libre et sa progression.
