@@ -28,7 +28,7 @@ QVariantMap Controller::preferences() const {
                          {"fontScale", 1.0}, {"uiScale", 1.0},
                          {"sidebarCompact", false}, {"highContrast", false},
                          {"reduceMotion", false}, {"language", "fr"},
-                         {"analysisPanelRatio", .58},
+                         {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
                          {"coordinates", true},
                          {"pieceStyle", "cburnett"},
                          {"customPiecePath", ""},
@@ -103,6 +103,8 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             clean = key == "analysisPanelRatio" ? std::clamp(number,.3,.75) : std::clamp(number,.9,key == "fontScale" ? 1.5 : 1.25);
         } else if (key == "fontFamily") {
             clean = QFontDatabase::families().contains(value.toString()) ? value.toString() : QGuiApplication::font().family();
+        } else if (key == "notebookLayout") {
+            if (!QStringList{"table", "flow"}.contains(value.toString())) return;
         } else if (key == "language") {
             if (!QStringList{"auto","fr","en"}.contains(value.toString())) return;
         } else if (QStringList{"sidebarCompact", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
