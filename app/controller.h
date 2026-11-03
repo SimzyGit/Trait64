@@ -310,7 +310,9 @@ class Controller : public QObject {
     void startRepertoireTask(
         const QString &operation,
         std::function<RepertoireResult(t64::Database &, const t64::RepertoireProgress &)> work);
-    QVariantMap analysisConfig(int milliseconds, int profile) const;
+    // depth 0 : la durée par position décide seule, comme pour une analyse ponctuelle.
+    // Au-delà, c'est la profondeur qui décide et la durée devient un plafond.
+    QVariantMap analysisConfig(int milliseconds, int profile, int depth = 0) const;
     qint64 selectedRepertoire_ = 0;
     QVariantList repertoires_;
     QVariantMap repertoireState_, repertoireExercise_;

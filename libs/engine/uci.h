@@ -27,6 +27,11 @@ class Uci : public QObject {
     bool pressOption(const QString &name);
     void analyse(const QString &fen, const QString &positionCommand, bool play = false,
                  int milliseconds = 800, int depth = 24, bool chess960 = false);
+    // Bilan de masse : on veut un meilleur coup, comme en partie, mais c'est la profondeur
+    // qui décide de l'arrêt. Le temps ne sert que de plafond, pour qu'une position coriace
+    // ne retienne pas la file. Les parties jouées, elles, restent bornées par le seul temps.
+    void analyseToDepth(const QString &fen, const QString &positionCommand, int depth,
+                        int millisecondsCeiling, bool chess960 = false);
     void stop();
     void shutdown();
     QString name() const { return name_; }
@@ -48,6 +53,7 @@ class Uci : public QObject {
     QByteArray buffer_;
     QString name_, activeFen_, pendingFen_, pendingPosition_, syzygyPath_;
     bool pending_ = false, pendingPlay_ = false, activePlay_ = false;
+    bool pendingDepthCeiling_ = false, activeDepthCeiling_ = false;
     bool pending960_ = false, active960_ = false;
     int depth_ = 24;
     int threads_ = 1, hash_ = 128, multiPV_ = 3, skill_ = 20, moveTime_ = 800;
@@ -56,6 +62,8 @@ class Uci : public QObject {
     QVariantList descriptors_;
     QVariantMap customOptions_;
     quint64 generation_ = 0;
+    void start(const QString &fen, const QString &positionCommand, bool play, int milliseconds,
+               int depth, bool chess960, bool depthCeiling);
     void command(const QString &text);
     void consume();
     void parse(const QString &line);

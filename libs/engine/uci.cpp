@@ -162,9 +162,18 @@ void Uci::shutdown() {
     }
     state_ = Off;
     activePlay_ = false;
+    activeDepthCeiling_ = pendingDepthCeiling_ = false;
 }
 void Uci::analyse(const QString &fen, const QString &position, bool play, int milliseconds, int depth,
                   bool variant960) {
+    start(fen, position, play, milliseconds, depth, variant960, false);
+}
+void Uci::analyseToDepth(const QString &fen, const QString &position, int depth,
+                         int millisecondsCeiling, bool variant960) {
+    start(fen, position, true, millisecondsCeiling, depth, variant960, true);
+}
+void Uci::start(const QString &fen, const QString &position, bool play, int milliseconds, int depth,
+                bool variant960, bool depthCeiling) {
     if (state_ == Off) {
         emit status("Démarrez un moteur dans les paramètres.");
         return;
@@ -179,6 +188,7 @@ void Uci::analyse(const QString &fen, const QString &position, bool play, int mi
     pendingFen_ = fen;
     pendingPosition_ = position;
     pendingPlay_ = play;
+    pendingDepthCeiling_ = depthCeiling;
     moveTime_ = std::clamp(milliseconds, 100, 10000);
     pending_ = true;
     if (state_ == Searching) {
@@ -192,6 +202,7 @@ void Uci::stop() {
     ++generation_;
     pending_ = false;
     activePlay_ = false;
+    activeDepthCeiling_ = pendingDepthCeiling_ = false;
     if (state_ == Searching) {
         state_ = Stopping;
         command("stop");
@@ -211,14 +222,20 @@ void Uci::beginSearch() {
         command(QString("setoption name UCI_Chess960 value ") + (active960_ ? "true" : "false"));
     activeFen_ = pendingFen_;
     activePlay_ = pendingPlay_;
+    activeDepthCeiling_ = pendingDepthCeiling_;
     pending_ = false;
     variations_.clear();
     exactVariations_.clear();
     emit lines({});
     command(pendingPosition_);
     state_ = Searching;
-    command(activePlay_ ? "go movetime " + QString::number(moveTime_)
-                        : "go depth " + QString::number(depth_));
+    // Le moteur s'arrête à la première limite atteinte : profondeur et temps à la fois
+    // pour un bilan, le seul temps pour une partie jouée, la seule profondeur pour
+    // l'analyse locale, qui tourne tant que la position reste affichée.
+    command(!activePlay_        ? "go depth " + QString::number(depth_)
+            : activeDepthCeiling_ ? "go depth " + QString::number(depth_) + " movetime " +
+                                        QString::number(moveTime_)
+                                  : "go movetime " + QString::number(moveTime_));
     if (activePlay_)
         timeout_.start(moveTime_ + 10000);
     emit status(name_ + (activePlay_ ? " · réfléchit…" : " · analyse locale"));

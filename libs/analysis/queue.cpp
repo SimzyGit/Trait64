@@ -68,6 +68,8 @@ QVariantMap normalizedProfile(QVariantMap profile) {
     result["hash"] = std::clamp(profile.value("hash", 128).toInt(), 16, 4096);
     result["multiPV"] = std::clamp(profile.value("multiPV", 3).toInt(), 1, 5);
     result["milliseconds"] = std::clamp(profile.value("milliseconds", 500).toInt(), 100, 10000);
+    // 0 : la durée seule décide, comme avant. Au-delà, la profondeur décide et la durée plafonne.
+    result["depth"] = std::clamp(profile.value("depth", 0).toInt(), 0, 99);
     result["syzygyPath"] = profile["syzygyPath"].toString();
     auto options = profile["uciOptions"].toMap();
     // Background analysis always uses full strength, without engine-side output files.
@@ -437,7 +439,11 @@ class AnalysisWorker : public QObject {
             finish(cached, true);
             return;
         }
-        engine_->analyse(fen, command, true, config_["milliseconds"].toInt(), 24, game_.chess960);
+        const int depth = config_["depth"].toInt();
+        if (depth > 0)
+            engine_->analyseToDepth(fen, command, depth, config_["milliseconds"].toInt(), game_.chess960);
+        else
+            engine_->analyse(fen, command, true, config_["milliseconds"].toInt(), 24, game_.chess960);
     }
     void finish(const QVariantList &lines, bool cached) {
         require(!lines.empty() && lines.first().toMap()["rank"].toInt() == 1,

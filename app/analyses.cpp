@@ -78,7 +78,7 @@ void Controller::findNovelty() {
         fail(e);
     }
 }
-QVariantMap Controller::analysisConfig(int milliseconds, int profile) const {
+QVariantMap Controller::analysisConfig(int milliseconds, int profile, int depth) const {
     QVariantMap config;
     if (profile < 0) {
         for (const auto &key :
@@ -92,5 +92,6 @@ QVariantMap Controller::analysisConfig(int milliseconds, int profile) const {
         config = profiles[profile].toMap();
     }
     config["milliseconds"] = milliseconds;
+    config["depth"] = depth;
     return config;
 }
