@@ -3,7 +3,7 @@
 Résultats de test conservés sur main. Les données brutes de chaque rapport sont dans
 [VALIDATION.json](VALIDATION.json), sous la clé de leur ancien chemin (par exemple
 `verification-ui-2026-10-28.json` ou `benchmarks/2026-10-25/gui/gui-100k.json`).
-Les fichiers d'origine restent consultables dans l'étiquette [archive/validation-2026-10](https://github.com/feuvrierbernardinisimhon-png/Trait64/tree/archive/validation-2026-10/docs).
+Les fichiers d'origine restent consultables dans la branche [archive/validation-2026-10](https://github.com/feuvrierbernardinisimhon-png/Trait64/tree/archive/validation-2026-10/docs).
 Les outils de mesure sont dans [tools/benchmarks](../tools/benchmarks).
 
 ## Rapports
