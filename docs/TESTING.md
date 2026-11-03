@@ -120,6 +120,13 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
 T64_UI_SCREENSHOTS=/tmp/trait64-ui-captures ./build/desktop_tests --ui-layout
 ```
 
+Les captures du README viennent d’une session réaliste (Najdorf commentée, quatre parties, Stockfish en marche) :
+
+```bash
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software T64_STOCKFISH=/usr/games/stockfish \
+./build/desktop_tests --showcase docs/screenshots
+```
+
 Le nombre de contrôles avec captures diffère de celui de la CI, qui ne conserve pas les images. La sonde vérifie géométrie, navigation clavier, exécution d’une commande, préférences et étude non enregistrée. Le démarrage couvre le profil Joueurs vide. Les scénarios clic/glisser, variantes, notes, sauvegarde, entraînement et moteurs restent dans les suites existantes.
 
 Un passage local sur 77521f2 a échoué sur « Latest preparation filters replace stale request ». Les passages suivants et les CI finales ont réussi ; diagnostic du résultat ajouté, assertion inchangée. Cause non établie : [local.json](VALIDATION.md).

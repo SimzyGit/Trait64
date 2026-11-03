@@ -1,5 +1,12 @@
 # Changements
 
+## Bilan, comptes en ligne et installation — 3 novembre 2026
+
+- **Bilan en deux passages** : un premier passage rapide va du début vers la fin, puis un passage complet remonte de la fin vers le début. Le moteur garde sa table de hachage d'une position à l'autre : en remontant, il connaît déjà la suite de la partie, ce qui rend les évaluations des positions précédentes plus fiables (c'est ce que font les analyses « backward » de ChessBase et SCID). Un seul passage reste possible.
+- **Comptes Lichess et Chess.com** (Fichier → Comptes) : enregistrez vos pseudos, Trait64 ne récupère à chaque synchronisation que les parties jouées depuis la précédente, à la demande ou au démarrage. Retirer un compte garde ses parties.
+- **Installation en une commande** : `install.sh` télécharge la dernière version publiée, vérifie son empreinte SHA-256 et l'ajoute au menu des applications, sans sudo. README refait avec des captures à jour.
+- Carnet en tableau : l'étiquette « Variante » n'apparaît plus qu'au début de chaque variante.
+
 ## Interface classique — 3 novembre 2026
 
 L'interface suit désormais la disposition que connaissent la plupart des joueurs (ChessBase, SCID, analyse Lichess), modernisée : barre de menus, onglets d'espaces de travail, grand échiquier encadré des joueurs (couleur, nom, Elo ou pendule), notation, arbre et livre à droite, moteur dessous, bibliothèque en tableau dense. Thème clair par défaut, gris neutres et un seul accent ; le thème sombre et les tailles restent réglables. L'arbre d'ouvertures montre une barre de résultats Blancs / nulles / Noirs par coup. Le carnet garde des colonnes compactes sur grand écran.

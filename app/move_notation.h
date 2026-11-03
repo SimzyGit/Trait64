@@ -71,6 +71,7 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
     // siblings are emitted as separate blocks after the complete parent row.
     std::function<void(int, int)> line = [&](int id, int depth) {
         if (depth > 128) return;
+        bool start = true;
         while (id > 0 && visited < 10000) {
             const auto &node = game.nodes[id];
             const auto board = game.boardAt(node.parent);
@@ -78,7 +79,8 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
             const bool white = board.sideToMove() == chess::Color::WHITE;
             int last = id;
             QVariantMap row{{"initial", false}, {"depth", depth}, {"number", number},
-                            {"white", QVariantMap()}, {"black", QVariantMap()}};
+                            {"white", QVariantMap()}, {"black", QVariantMap()}, {"start", start}};
+            start = false;
             row[white ? "white" : "black"] = entry(id);
             ++visited;
             if (white && !node.children.empty() && visited < 10000) {

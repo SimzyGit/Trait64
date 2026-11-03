@@ -252,7 +252,7 @@ Item {
                 property real moveHeight: modelData.initial ? initialButton.height : cells.height + (branchLabel.visible ? branchLabel.implicitHeight + row.spacing : 0)
                 Label {
                     id: branchLabel
-                    visible: !row.modelData.initial && row.modelData.depth > 0
+                    visible: !row.modelData.initial && row.modelData.depth > 0 && !!row.modelData.start
                     width: row.width - row.indent
                     x: row.indent
                     text: "↳ " + qsTr("Variante") + " · " + row.modelData.depth

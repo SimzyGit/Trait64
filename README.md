@@ -1,86 +1,51 @@
 # Trait64
 
-**Atelier d’échecs libre, local et open source pour étudier, analyser, préparer et mémoriser.**
+**Logiciel d’échecs libre pour Linux : bases de parties, analyse avec Stockfish, préparation d’ouvertures et entraînement. Sans compte, sans cloud, sans publicité.**
 
-[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
-![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C.svg)
-![Qt 6](https://img.shields.io/badge/Qt-6-41CD52.svg)
-![Linux](https://img.shields.io/badge/platform-Linux-FCC624.svg)
-![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
-[![Linux CI](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/feuvrierbernardinisimhon-png/Trait64/actions/workflows/linux.yml)
+[![Version](https://img.shields.io/github/v/release/SimzyGit/Trait64?include_prereleases&label=version)](https://github.com/SimzyGit/Trait64/releases)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
+![Linux](https://img.shields.io/badge/plateforme-Linux-FCC624.svg)
+[![Linux CI](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml)
 
-[**Fonctionnalités**](#ce-qui-fonctionne) · [**État actuel**](docs/PROJECT-STATUS.md) · [**Comparaison**](#comparaison-avec-des-logiciels-similaires) · [**Roadmap**](docs/ROADMAP.md) · [**Releases**](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) · [**Compilation**](#compiler-sans-linstallateur)
+![Trait64 : échiquier, notation, arbre et moteur](docs/screenshots/analysis.png)
 
-Trait64 est une application de bureau pensée comme une alternative moderne, locale et indépendante aux grands outils d’étude échiquéenne. Elle réunit dans un même environnement **bibliothèques de parties, moteurs UCI, analyse, préparation d’ouvertures, annotations, entraînement et gestion d’études**, sans imposer de compte, de cloud ni de télémétrie.
+## Télécharger
 
-**English summary —** Trait64 is a **local-first, open-source chess database and analysis desktop application for Linux**, built with **C++23 and Qt6**. It combines **PGN/FEN game management, named SQLite chess databases, downloadable UCI engines, Stockfish/Arasan/PlentyChess profiles, MultiPV analysis, Chess960, opening preparation, cancellable indexed search, game annotation and chess training** in one offline-capable application.
+**Linux (Debian, Ubuntu, Mint, Fedora…)** : une seule commande dans un terminal.
 
-> **Version publiée vérifiée : [v0.3.0-dev.64](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases/tag/v0.3.0-dev.64) (28 octobre 2026).** Trait64 reste **en alpha**, Linux d’abord (Debian 12/13, AppImage), avec une architecture C++23 / Qt6. Le travail se poursuit : [état vérifié et limites](docs/PROJECT-STATUS.md) · [roadmap](docs/ROADMAP.md). Les fonctionnalités développées en pull request mais non fusionnées ne figurent pas dans les versions publiées.
+```bash
+curl -fsSL https://raw.githubusercontent.com/SimzyGit/Trait64/main/install.sh | bash
+```
 
-### Principes du projet
+Elle télécharge la dernière version, vérifie son empreinte SHA-256 et ajoute **Trait64** au menu des applications, sans mot de passe ni compilation. Les mises à jour se font ensuite depuis le logiciel (**Menu → Mises à jour**). Pour désinstaller : même commande suivie de `-s -- --uninstall`.
 
-- **Local-first** : les parties, bases, analyses et préférences restent sur la machine de l’utilisateur.
-- **Libre et auditable** : code sous GNU AGPL v3 ou ultérieure et dépendances documentées.
-- **Orienté étude** : navigation PGN, variantes, commentaires, préparation, analyse moteur et entraînement dans un même flux de travail.
-- **Interopérable** : PGN et FEN restent au centre ; Trait64 évite l’enfermement dans un format propriétaire.
-- **Extensible** : architecture destinée à accueillir de nouveaux moteurs, formats, bases, outils de recherche et modules d’entraînement.
+Vous préférez télécharger vous-même ? Sur la [page des versions](https://github.com/SimzyGit/Trait64/releases), prenez :
 
-### À qui s’adresse Trait64 ?
+| Votre système | Fichier | Installation |
+| --- | --- | --- |
+| Debian 12 | `trait64_…_debian12_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
+| Debian 13 | `trait64_…_debian13_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
+| Autre Linux 64 bits | `Trait64-…-linux-x86_64.AppImage` | rendre exécutable (clic droit → Propriétés), puis ouvrir |
 
-Trait64 vise les joueurs, entraîneurs et passionnés qui veulent **analyser leurs parties**, construire une **base de données d’échecs locale**, travailler leurs **ouvertures**, comparer plusieurs **moteurs UCI** comme Stockfish, rechercher des positions et conserver leurs études sans dépendre d’un service cloud. Le projet privilégie Linux aujourd’hui, tout en gardant une architecture portable pour de futures versions Windows et macOS.
+Windows et macOS : pas encore publiés. Le code compile déjà sur ces systèmes en intégration continue ; les installateurs viendront ensuite.
 
-L’interface native utilise une navigation latérale compacte ou développée, un grand échiquier et des panneaux redimensionnables. Police, taille du texte, échelle, thème et libellés français/anglais sont réglables ; les préférences personnelles sont conservées.
+Aucun moteur n’est imposé : installez Stockfish depuis votre distribution (`sudo apt install stockfish`) ou téléchargez Stockfish, Arasan ou PlentyChess depuis **Bibliothèque → Téléchargements**.
 
-## Nouveautés récentes — série 0.3
+## Ce que fait Trait64
 
-### Refonte native (dev.64)
-
-- **Navigation latérale et grand échiquier** : accueil réorganisé, panneaux adaptables et palette de commandes au clavier.
-- **Lecture personnalisable** : police système, texte de 90 à 150 %, interface de 90 à 125 %, contraste renforcé et libellés français/anglais. Certains diagnostics et descriptifs de catalogue restent français.
-- **Corrections visuelles** : commandes coupées, profil Joueurs vide bloquant le démarrage, titre d’aide et couleurs des dialogues ; schéma SQLite 7 conservé.
-- **Validation** : 13 suites Debian 12/13 et Qt ASan/UBSan, 1 180 contrôles locaux avec 164 captures. Paquets installés et AppImage démarrée ; essai matériel Voyager encore à faire. [Périmètre](docs/UI-REDESIGN.md) · [Publication](docs/VALIDATION.md).
-
-### Vérification de la base et qualification 100k (dev.57)
-
-- **Vérification en arrière-plan et annulable** : le contrôle d'intégrité ne retient plus le fil de l'interface ; l'étude ouverte est conservée. Relance et fermeture protégées. [Portée du correctif](docs/ASYNC-INTEGRITY.md).
-- **100 000 parties réelles qualifiées** sur le code d'import dev.55 : navigation Qt pendant l'import, sauvegarde/restauration et empreinte de tous les PGN ; réindexation de 10 000 parties. Les mesures sans écran ne remplacent pas un essai Voyager ni la qualification de plusieurs millions. [Résultats](docs/VALIDATION.md).
-- **12 suites réussies** localement et en CI Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage démarrés. [Publication vérifiée](docs/VALIDATION.md).
-
-### Imports PGN (dev.55)
-
-- **Deux coûts d'import supprimés** : recherche des doublons par l'index des empreintes et calcul direct des clés matérielles, sans changement du schéma 7.
-- **Mesure conservée sur 10 000 parties réelles** : 93,114 → 42,498 s sur le même hôte et protocole (−54,4 % dans cet essai). Données comparées, sauvegarde et restauration vérifiées ; ce gain ne certifie pas les volumes de plusieurs millions. [Méthode et limites](docs/PERFORMANCE.md).
-- **Validation et distribution** : 12 suites sous Debian 12/13 et Qt ASan/UBSan, paquets installés et AppImage testés ; cinq fichiers de release vérifiés, aucune archive Actions. [Publication](docs/VALIDATION.md).
-
-### Fiabilité et analyse tactique (dev.46 → dev.52)
-
-- **Grand audit de robustesse (dev.52)** : dix groupes de défauts corrigés, dont la récupération des sessions endommagées, la fin de réindexation annulée, les réponses UCI périmées, la fermeture pendant l’authentification GitHub et les cas limites de nullité. Les anciennes analyses en cache incorrectement classées comme terminées sont recalculées lors d’une nouvelle analyse.
-- **Vérification automatisée renforcée** : 12 suites réussies sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN. Les paquets Debian et l’AppImage démarrent dans la CI ; **aucun essai sur l’ordinateur Voyager de l’utilisateur n’est revendiqué**. [Audit détaillé](docs/DEBUG-AUDIT.md).
-- **Motifs tactiques illustrés (dev.46)** : attaques multiples, clouages et enfilades impliquant le roi, échecs à la découverte et doubles échecs ; les repères graphiques sont conservés dans une copie PGN annotée. Une attaque observée ne constitue pas une preuve de gain forcé. [Portée et limites](docs/TACTICAL-MOTIFS.md).
-- **Comprendre ce coup (dev.43)** : comparaison des suites avant/après le coup, vérification de leur légalité, captures, promotions, roques, échecs, mats/pats, matériel et contexte du moteur, avec ouverture d’une étude indépendante.
-
-### Outils de travail livrés auparavant
-
-Les autres fonctionnalités majeures de la série 0.3 comprennent :
-
-- **Moteurs téléchargeables et vérifiés** : Stockfish 19, Arasan 26 et PlentyChess 8, avec contrôle de compatibilité, SHA-256, progression et annulation.
-- **Profils UCI indépendants** : plusieurs réglages par moteur, avec Threads, Hash, MultiPV, Syzygy et options découvertes directement depuis le handshake UCI.
-- **42 collections PGN optionnelles** : champions du monde, championnes disponibles, matchs historiques et ouvertures, téléchargées depuis leur source sans être incorporées au dépôt.
-- **Bases nommées** : historique des imports, export d’une base choisie et rattachement d’une même partie à plusieurs bases sans duplication.
-- **Recherche avancée combinée** : base, joueur et couleur, ouverture/ECO, date, Elo, tournoi, résultat, favoris, matériel et position.
-- **Recherche asynchrone et annulable** : interrogation SQLite en arrière-plan, pages de 200 résultats par curseur et protection contre les réponses périmées.
-- **Imports PGN reprenables** : lecture parallèle paramétrable (1 à 8 lecteurs), lots transactionnels, progression, pause, reprise après interruption et vérification du fichier par SHA-256.
-- **Répertoires par position** : camp, transpositions, alternatives, notes, parties modèles et répétition espacée. Création, fusion, import/export et couverture locale en arrière-plan, avec annulation et conservation des notes/révisions.
-- **Analyses persistantes** : ligne principale ou toutes les variantes, profils moteur, MultiPV, pause/reprise après plantage, cache avec provenance, résultats paginés et export annoté. Un répertoire entier peut être analysé depuis une copie indépendante.
-- **Publication sans archives Actions** : les paquets Debian 12/13, l’AppImage et les sources correspondantes sont vérifiés puis transmis directement à GitHub Releases.
-- **Préparation filtrée** : statistiques par position, base, adversaire/couleur, période et Elo connu ; calcul annulable et export CSV contextualisé.
-- **SQLite schéma 8** : positions indexées par clé Zobrist 64 bits (base 59 % plus petite sur 20 000 parties) ; migrations sauvegardées et conservation des données existantes.
-
-➡️ [État actuel (28/10/2026)](docs/PROJECT-STATUS.md) · [Audit de fiabilité](docs/DEBUG-AUDIT.md) · [Motifs tactiques](docs/TACTICAL-MOTIFS.md) · [Guide moteurs et bases](docs/ENGINES-DATABASES.md) · [Imports et répertoires](docs/REPERTOIRES-IMPORTS.md) · [Analyses persistantes](docs/ANALYSIS-QUEUE.md) · [Changelog](docs/CHANGELOG.md) · [Roadmap](docs/ROADMAP.md)
-
-![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
+- **Bibliothèque de parties** : import PGN rapide (même des centaines de milliers de parties), recherche par joueur, ouverture, Elo, date, position exacte ou structure de pions, fiches joueurs.
+- **Vos parties Lichess et Chess.com** : enregistrez vos comptes, la synchronisation ne récupère que les nouvelles parties.
+- **Analyse** : Stockfish ou tout moteur UCI, plusieurs lignes, comparaison de moteurs, bilan de partie (passage avant puis arrière) avec graphe, erreurs expliquées et motifs tactiques.
+- **Ouvertures** : arbre statistique de votre base, livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire.
+- **Entraînement** : puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
+- **Jeu** : contre le moteur à un niveau Elo choisi, à deux avec pendule, tournois entre moteurs.
+- **Vos données restent chez vous** : SQLite local, sauvegardes automatiques, PGN et FEN en entrée comme en sortie.
 
 ![Bibliothèque de parties](docs/screenshots/library.png)
+
+**English summary —** Trait64 is a free, local-first chess database and analysis app for Linux (C++23, Qt 6): PGN libraries, UCI engines with two-pass game review, opening trees and Polyglot books, repertoires, Lichess/Chess.com account sync, rated puzzles, engine tournaments. Install: `curl -fsSL https://raw.githubusercontent.com/SimzyGit/Trait64/main/install.sh | bash`.
+
+Projet en **alpha**, développé activement : [nouveautés](docs/CHANGELOG.md) · [état et limites](docs/PROJECT-STATUS.md) · [feuille de route](docs/ROADMAP.md).
 
 ## Comparaison avec des logiciels similaires
 
@@ -125,14 +90,11 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 
 Sources de référence pour cette comparaison : [ChessBase 18](https://shop.chessbase.com/en/products/chessbase_18_program_only), [Scid vs. PC](https://sourceforge.net/projects/scidvspc/), [En Croissant](https://encroissant.org/docs/). La comparaison reflète les informations publiques disponibles et les fonctions de Trait64 documentées dans ce dépôt ; elle pourra évoluer avec les versions.
 
-## Installer sur ton PC
+## Installer : détails
 
-Les [versions publiées](https://github.com/feuvrierbernardinisimhon-png/Trait64/releases) contiennent une **AppImage x86_64** (Debian 12/13, glibc ≥ 2.36) et deux paquets **.deb**, un pour chaque version de Debian. Le dépôt est privé : connecte-toi à ton compte GitHub pour télécharger les fichiers.
+L’installation rapide est décrite dans [Télécharger](#télécharger). Les fichiers publiés : une **AppImage x86_64** (glibc ≥ 2.36) et deux paquets **.deb**, pour Debian 12 et Debian 13, accompagnés de leurs empreintes `SHA256SUMS`. Sans FUSE, l’AppImage se lance avec `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage` ; l’installateur le règle tout seul. Sur Debian, `install.sh --deb` installe le paquet correspondant à votre version.
 
-- **AppImage** : télécharge le fichier `.AppImage`, rends-le exécutable dans ses propriétés, puis ouvre-le. Si FUSE est absent, utilise `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage`. Aucun moteur n’est embarqué dans Trait64 : tu peux installer Stockfish depuis Debian (`sudo apt install stockfish`) ou télécharger Stockfish, Arasan ou PlentyChess depuis **Bibliothèque → Téléchargements → Moteurs**.
-- **Paquet Debian** : choisis `debian12` ou `debian13` selon `/etc/debian_version`, puis installe le fichier avec `sudo apt install ./nom-du-fichier.deb`. Les dépendances et le menu sont installés automatiquement.
-
-Après cette première installation, ouvre **Menu → Mises à jour**. Pour recevoir les préversions actuellement publiées, choisis **Développement** et configure l’accès GitHub privé. Le canal Stable ne reçoit que les véritables Releases stables. Une modification du code ne déclenche jamais de mise à jour stable. Voir [docs/UPDATES.md](docs/UPDATES.md).
+Après l’installation, **Menu → Mises à jour** vérifie les nouvelles versions (canaux Stable, Bêta, Développement), télécharge le fichier, vérifie son empreinte et installe après une sauvegarde. Voir [docs/UPDATES.md](docs/UPDATES.md).
 
 ### Compiler et installer depuis les sources
 
@@ -171,7 +133,7 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 - **Mises à jour** : vérification GitHub en arrière-plan, Stable/Bêta/Développement, notes de version, téléchargement vérifié SHA-256, installation après sauvegarde et redémarrage.
 - **Fiabilité** : sauvegardes automatiques toutes les 6 heures (14 instantanés), session atomique, sauvegarde SQLite complète, contrôle d’intégrité, sauvegarde avant migration du schéma, import classique annulé intégralement en cas d’erreur, import reprenable conservant les lots validés, protection de la bibliothèque contre un export sur elle-même.
 
-![Choix des pièces et couleurs](docs/screenshots/appearance.png)
+![Apparence et langue](docs/screenshots/appearance.png)
 
 ## Premiers pas
 
@@ -232,9 +194,9 @@ Alpha : le [périmètre restant](docs/ROADMAP.md) est explicite. Les tests autom
 
 Import PGN depuis un fichier : pas de plafond global de 64 Mio, mais **64 Mio par partie**, 100 000 nœuds par étude et 128 niveaux de variantes. Le collage PGN, l’EPD et le profil T64 restent limités à 64 Mio et 10 000 parties/positions. Résultats de bibliothèque paginés par 200 ; affichage de notation limité à 10 000 coups. Session limitée à 16 onglets et 64 Mio, historique annuler/rétablir à 64 étapes et 16 Mio par étude. L’import d’un répertoire est limité à 16 Mio et 200 parties ; l’édition des coups, le retrait de branches, le renommage, la suppression et les révisions restent synchrones. Les corpus de plusieurs millions de parties n’ont pas été qualifiés.
 
-La recherche de positions inclut les variantes ; l’explorateur statistique utilise les lignes principales. Le bilan immédiat analyse uniquement la ligne principale : seuils fixes de 50/100/250 centipions pour imprécision/erreur/gaffe, dépendants du moteur et du budget choisi. La création de cartes depuis ce bilan concerne les échecs classiques et conserve une ligne de solution, sans reconnaître toutes les solutions équivalentes. Les résultats du bilan immédiat restent en mémoire ; **Annoter l’étude** enregistre les évaluations dans le PGN. La file d’analyses séparée conserve ses tâches et résultats en SQLite, peut analyser les variantes et reprendre après une interruption.
+La recherche de positions inclut les variantes ; l’explorateur statistique utilise les lignes principales. Le bilan analyse la ligne principale, par défaut en deux passages (rapide du début à la fin, puis complet de la fin vers le début) : seuils fixes de 50/100/250 centipions pour imprécision/erreur/gaffe, dépendants du moteur et du budget choisi. La création de cartes depuis ce bilan concerne les échecs classiques et conserve une ligne de solution, sans reconnaître toutes les solutions équivalentes. Les résultats du bilan immédiat restent en mémoire ; **Annoter l’étude** enregistre les évaluations dans le PGN. La file d’analyses séparée conserve ses tâches et résultats en SQLite, peut analyser les variantes et reprendre après une interruption.
 
-Pas encore : moteur contre moteur, pendules à plusieurs périodes, Polyglot/SCID/ChessBase, couverture probabiliste et comparaison de répertoires, organisation de tournois, synchronisation, plugins, imports distants, format T64 compact final, Flatpak et validation Windows/macOS. Le monogramme T64 reste provisoire.
+Pas encore : versions Windows et macOS, Flatpak, pendules à plusieurs périodes, formats SCID/ChessBase, couverture probabiliste et comparaison de répertoires, recherche par placement partiel de pièces, plugins et format T64 compact final. Le monogramme T64 reste provisoire.
 
 ## Licence et composants
 

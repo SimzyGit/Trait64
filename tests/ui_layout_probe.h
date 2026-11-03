@@ -24,7 +24,7 @@ int uiLayoutProbe(const QString &directory) {
     auto *window=qobject_cast<QQuickWindow *>(engine.rootObjects().first());
     check(window, "Layout: application window exists");
     struct Scenario {int width,height;double text,ui;bool light;const char *language;};
-    const Scenario scenarios[]={{960,640,1,1,false,"fr"},{1366,768,1,1,false,"fr"},{1440,940,1,1,false,"fr"},{1920,1080,1,1,true,"en"},{2560,1600,1,1,false,"en"},{960,640,1.5,1,true,"en"},{1366,768,1.5,1.25,false,"fr"},{1440,940,1.5,1.25,true,"en"},{960,640,1.5,1.25,true,"en"}};
+    const Scenario scenarios[]={{960,640,1,1,false,"fr"},{1366,768,1,1,false,"fr"},{1440,940,1,1,false,"fr"},{1920,1080,1,1,true,"en"},{2560,1600,1,1,false,"en"},{960,640,1.5,1,true,"en"},{1366,768,1.5,1.25,false,"fr"},{1440,940,1.5,1.25,true,"en"},{1440,900,1,1,true,"fr"},{960,640,1.5,1.25,true,"en"}};
     const auto output=qEnvironmentVariable("T64_UI_SCREENSHOTS");
     if(!output.isEmpty()) QDir().mkpath(output);
     QJsonArray report;

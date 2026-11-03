@@ -10,7 +10,10 @@ int moveNotebookProbe(const QString &directory) {
     const auto game = t64::parsePgn(fixture.toStdString()).front();
     const auto rows = t64::moveRows(game, 2, true);
     QSet<int> seen;
-    int selected = 0;
+    int selected = 0, starts = 0;
+    for (const auto &value : rows) starts += value.toMap()["start"].toBool() && value.toMap()["depth"].toInt() > 0;
+    // Variations: (1. d4 d5 … 2. c4), (1... Nf6), (1... c5 … d6), (2. d4 cxd4): one label each.
+    check(starts == 4, "Notebook labels each variation once, on its first row");
     for (const auto &value : rows) {
         const auto row = value.toMap();
         if (row["initial"].toBool()) continue;
