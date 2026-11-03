@@ -38,6 +38,20 @@ int moveNotebookProbe(const QString &directory) {
     check(t64::displaySan("Nf3",t64::Figurines)=="♘f3" && t64::displaySan("exd8=Q+",t64::Figurines)=="exd8=♕+" &&
           t64::displaySan("Kxe2",t64::Figurines)=="♔xe2" && t64::displaySan("O-O-O",t64::Figurines)=="O-O-O" &&
           t64::displaySan("e4",t64::Figurines)=="e4", "Figurine notation replaces piece letters only");
+    {
+        const auto parts=t64::splitComment("[%clk 0:02:59.4] [%eval 0.25] Nice move [%cal Ge2e4,Rd1d8]");
+        check(parts.text=="Nice move" && parts.clock=="2:59" && parts.eval=="+0.25","PGN commands are shown apart from the comment");
+        check(t64::splitComment("[%eval #-3]").eval=="#-3" && t64::splitComment("[%clk 1:05:00]").clock=="1:05:00" &&
+              t64::splitComment("[%eval -1.5]").eval=="-1.50" && t64::splitComment("[%csl Gd4]").text.isEmpty(),
+              "Mates, long clocks, negative scores and pure arrows are handled");
+        const auto lichess=t64::parsePgn("1. e4 { [%eval 0.2] [%clk 0:03:00] } e5 { [%clk 0:02:58] } *").front();
+        const auto flowTokens=t64::moveFlow(lichess,0,false);
+        int comments=0;
+        for(const auto &v:flowTokens) comments+=v.toMap()["kind"]=="comment";
+        check(comments==0 && flowTokens[0].toMap()["clock"]=="3:00" && flowTokens[0].toMap()["eval"]=="+0.20" &&
+              flowTokens[1].toMap()["clock"]=="2:58","Lichess clocks no longer flood the notebook");
+        check(lichess.pgn().find("[%clk 0:03:00]")!=std::string::npos,"Stored PGN keeps every command");
+    }
     const auto blackStart = t64::parsePgn("[SetUp \"1\"]\n[FEN \"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 23\"]\n\n23... e5 24. Nf3 Nc6 *").front();
     const auto blackRows=t64::moveRows(blackStart,1,true);
     check(blackRows[1].toMap()["number"]==23 && blackRows[1].toMap()["white"].toMap().isEmpty() &&

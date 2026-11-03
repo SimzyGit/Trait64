@@ -197,6 +197,11 @@ Item {
                             font.bold: fm.active || !fm.parent.side
                             color: fm.parent.side && !fm.active ? root.muted : root.foreground
                         }
+                        Label {
+                            visible: !!fm.token.clock || !!fm.token.eval
+                            text: [fm.token.eval, fm.token.clock].filter(v => !!v).join(" · ")
+                            color: root.muted; font.pixelSize: 9 * root.textScale
+                        }
                     }
                     background: Rectangle {
                         radius: 3
@@ -300,7 +305,8 @@ Item {
                         Accessible.name: (row.modelData.number || "") + (parent === whiteCell ? ". " : "… ") + (move.text || "")
                         Accessible.description: move.comment || ""
                         contentItem: Label {
-                            text: cell.move.text || ""
+                            text: (cell.move.text || "") + ([cell.move.eval, cell.move.clock].filter(v => !!v).length
+                                                             ? "   " + [cell.move.eval, cell.move.clock].filter(v => !!v).join(" · ") : "")
                             textFormat: Text.PlainText
                             wrapMode: Text.WrapAnywhere
                             verticalAlignment: Text.AlignVCenter

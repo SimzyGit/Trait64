@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "game.h"
+#include <QRegularExpression>
 #include <QVariant>
 #include <functional>
 
@@ -23,18 +24,47 @@ inline QString displaySan(const std::string &san, int notation) {
     return text;
 }
 
+// PGN command annotations ([%clk], [%eval], [%cal]…) are data, not prose: shown apart,
+// never edited. The stored comment keeps them so PGN exports stay lossless.
+struct CommentParts {
+    QString text, clock, eval;
+};
+inline CommentParts splitComment(const std::string &raw) {
+    static const QRegularExpression command("\\[%(\\w+)\\s+([^\\]]*)\\]");
+    CommentParts parts;
+    QString text = QString::fromStdString(raw);
+    for (auto it = command.globalMatch(text); it.hasNext();) {
+        const auto match = it.next();
+        const auto name = match.captured(1), value = match.captured(2).trimmed();
+        if (name == "clk") {
+            // 0:02:59.4 -> 2:59 ; 1:05:00 stays 1:05:00.
+            auto clock = value.section('.', 0, 0);
+            while (clock.size() > 4 && (clock.startsWith('0') || clock.startsWith(':'))) clock.remove(0, 1);
+            parts.clock = clock;
+        } else if (name == "eval") {
+            bool ok = false;
+            const double pawns = value.toDouble(&ok);
+            parts.eval = value.startsWith('#') ? value : ok ? (pawns > 0 ? "+" : "") + QString::number(pawns, 'f', 2) : value;
+        }
+    }
+    text.remove(command);
+    parts.text = text.simplified();
+    return parts;
+}
+
 inline QVariantList moveRows(const Game &game, int current, int french) {
     QVariantList rows;
     rows << QVariantMap{{"initial", true}, {"depth", 0}, {"active", current == 0},
-                        {"comment", QString::fromStdString(game.nodes[0].comment)}};
+                        {"comment", splitComment(game.nodes[0].comment).text}};
     auto entry = [&](int id) {
         const auto &node = game.nodes[id];
         QString text = displaySan(node.san, french);
         static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
         for (int nag : node.nags)
             text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
-        return QVariantMap{{"id", id}, {"parent", node.parent}, {"text", text},
-                           {"active", current == id}, {"comment", QString::fromStdString(node.comment)}};
+        const auto parts = splitComment(node.comment);
+        return QVariantMap{{"id", id},         {"parent", node.parent}, {"text", text},       {"active", current == id},
+                           {"comment", parts.text}, {"clock", parts.clock}, {"eval", parts.eval}};
     };
     int visited = 0;
     // Each recursive call owns one branch. Pair only its direct mainline child;
@@ -78,10 +108,9 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
     QVariantList tokens;
     static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
     auto comment = [&](int id, int depth) {
-        const auto &text = game.nodes[id].comment;
-        if (text.empty()) return false;
-        tokens << QVariantMap{{"kind", "comment"}, {"id", id}, {"depth", depth},
-                              {"text", QString::fromStdString(text)}};
+        const auto text = splitComment(game.nodes[id].comment).text;
+        if (text.isEmpty()) return false;
+        tokens << QVariantMap{{"kind", "comment"}, {"id", id}, {"depth", depth}, {"text", text}};
         return true;
     };
     comment(0, 0);
@@ -97,8 +126,9 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
                 text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
             const QString number = white ? QString::number(board.fullMoveNumber()) + "."
                                    : numbered ? QString::number(board.fullMoveNumber()) + "…" : QString();
-            tokens << QVariantMap{{"kind", "move"}, {"id", id}, {"depth", depth}, {"number", number},
-                                  {"text", text}, {"active", current == id}};
+            const auto parts = splitComment(node.comment);
+            tokens << QVariantMap{{"kind", "move"}, {"id", id},       {"depth", depth},          {"number", number},
+                                  {"text", text},   {"active", current == id}, {"clock", parts.clock}, {"eval", parts.eval}};
             numbered = comment(id, depth);
             const auto &siblings = game.nodes[node.parent].children;
             if (depth < 128 && siblings.front() == id)
