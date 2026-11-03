@@ -187,6 +187,20 @@ int main(int argc, char **argv) {
         exported.open(QIODevice::WriteOnly);
         db.exportPgn(exported);
         check(t64::parsePgn(exported.data().toStdString()).size() == 2, "PGN export streams to a device");
+        {
+            // Un bilan de masse ne doit refaire que ce qui manque : la profondeur atteinte
+            // est retenue par partie, et une demande moins exigeante ne relance rien.
+            const auto waiting = db.recentGamesToReview(2, 18);
+            check(waiting.size() == 2, "Fresh games are all waiting for a review");
+            const auto gameId = waiting.first().toLongLong();
+            const auto job = db.createAnalysisJob(QString::fromStdString(db.load(gameId).pgn()),
+                                                  QVariantMap{{"depth", 18}}, false, 1, gameId);
+            db.saveAnalysisResult(job, 0, 0, "fen", QVariantList{QVariantMap{{"rank", 1}}});
+            db.setAnalysisStatus(job, "completed");
+            check(db.recentGamesToReview(2, 18).size() == 1, "A finished review is not queued again");
+            check(db.recentGamesToReview(2, 12).size() == 1, "A shallower review changes nothing");
+            check(db.recentGamesToReview(2, 24).size() == 2, "A deeper review covers the game again");
+        }
         rejects([&] { db.validateOutputPath(db.path()); });
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
         check(QFile::link(db.path(), dir.path() + "/alias.pgn"), "Create export alias fixture");
