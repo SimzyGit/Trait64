@@ -26,7 +26,7 @@ QVariantMap Controller::preferences() const {
                          {"lightTheme", true},
                          {"fontFamily", QGuiApplication::font().family()},
                          {"fontScale", 1.0}, {"uiScale", 1.0},
-                         {"sidebarCompact", false}, {"figurines", false}, {"highContrast", false},
+                         {"sidebarCompact", false}, {"figurines", false}, {"syncAtStartup", false}, {"highContrast", false},
                          {"reduceMotion", false}, {"language", "fr"},
                          {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
                          {"coordinates", true},
@@ -112,7 +112,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!QStringList{"table", "flow"}.contains(value.toString())) return;
         } else if (key == "language") {
             if (!QStringList{"auto","fr","en"}.contains(value.toString())) return;
-        } else if (QStringList{"sidebarCompact", "figurines", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
+        } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
                        key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}

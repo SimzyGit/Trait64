@@ -73,6 +73,13 @@ Controller::Controller(const QString &path, QObject *parent)
     connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
         emit busyChanged();
         emit message(text, true);
+        if (syncingAccount_ >= 0) accountSynced(0);
+    });
+    connect(online_, &t64::OnlineGames::upToDate, this, [this] {
+        settings_.setValue(onlineSyncKey_, onlineSyncTime_);
+        emit busyChanged();
+        emit message(onlineSyncKey_.section('/', 2) + " : déjà à jour.");
+        accountSynced(0);
     });
     connect(online_, &t64::OnlineGames::finished, this, [this](const QString &path, int) {
         const auto key = onlineSyncKey_.section('/', 1);
@@ -88,6 +95,8 @@ Controller::Controller(const QString &path, QObject *parent)
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     refreshPuzzleStats();
+    if (settings_.value("syncAtStartup", false).toBool() && !settings_.value("onlineAccounts").toList().isEmpty())
+        QTimer::singleShot(2500, this, &Controller::syncAllAccounts);
     flipped_ = settings_.value("flipped", false).toBool();
     if (!settings_.contains("enginePath")) {
         QString stockfish = QStandardPaths::findExecutable("stockfish");
@@ -169,6 +178,7 @@ Controller::Controller(const QString &path, QObject *parent)
         if (r.operation == "online") {
             QFile::remove(onlineFile_);
             if (r.error.isEmpty() && !r.canceled) settings_.setValue(onlineSyncKey_, onlineSyncTime_);
+            if (syncingAccount_ >= 0) QTimer::singleShot(0, this, [this, added = r.error.isEmpty() ? r.count : 0] { accountSynced(added); });
         }
         if (r.operation == "source" && content_)
             content_->reportImport(r.error.isEmpty()
@@ -611,7 +621,7 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         onlineSyncTime_ = QDateTime::currentMSecsSinceEpoch();
         QDir().mkpath(dataPath_ + "/downloads");
         onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
-        const qint64 since = site == "lichess" ? settings_.value(onlineSyncKey_, 0).toLongLong() : 0;
+        const qint64 since = settings_.value(onlineSyncKey_, 0).toLongLong();
         online_->fetch(site, user.trimmed(), max, onlineFile_, since);
         emit busyChanged();
     } catch (const std::exception &e) {

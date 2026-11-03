@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "online.h"
+#include <QDateTime>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -40,6 +41,7 @@ void OnlineGames::fetch(const QString &site, const QString &user, int max, const
     user_ = user;
     max_ = std::clamp(max, 1, 5000);
     destination_ = destination;
+    since_ = sinceMs;
     collected_.clear();
     archives_.clear();
     if (site == "lichess") {
@@ -52,9 +54,18 @@ void OnlineGames::fetch(const QString &site, const QString &user, int max, const
         // Chess.com publishes one archive per month; read the newest ones until `max` games are collected.
         get(QUrl("https://api.chess.com/pub/player/" + user.toLower() + "/games/archives"), "application/json",
             [this](const QByteArray &body) {
-                for (const auto &value : QJsonDocument::fromJson(body).object()["archives"].toArray())
-                    archives_ << value.toString();
-                if (archives_.isEmpty()) return fail(tr("Aucune partie publique pour ce joueur."));
+                const auto since = QDateTime::fromMSecsSinceEpoch(since_).toUTC().date();
+                for (const auto &value : QJsonDocument::fromJson(body).object()["archives"].toArray()) {
+                    const auto url = value.toString();
+                    // ".../games/2026/10": skip months that ended before the last sync.
+                    const int year = url.section('/', -2, -2).toInt(), month = url.section('/', -1).toInt();
+                    if (since_ <= 0 || year > since.year() || (year == since.year() && month >= since.month()))
+                        archives_ << url;
+                }
+                if (archives_.isEmpty()) {
+                    if (since_ > 0) return emit upToDate();
+                    return fail(tr("Aucune partie publique pour ce joueur."));
+                }
                 nextArchive();
             });
     } else
@@ -100,7 +111,10 @@ void OnlineGames::get(const QUrl &url, const char *accept, std::function<void(co
 void OnlineGames::finish(const QByteArray &pgn) {
     int count = 0;
     const auto games = lastGames(pgn.trimmed(), max_, &count);
-    if (count == 0) return fail(tr("Aucune nouvelle partie à importer."));
+    if (count == 0) {
+        if (since_ > 0) return emit upToDate();
+        return fail(tr("Aucune partie publique pour ce joueur."));
+    }
     QSaveFile file(destination_);
     if (!file.open(QIODevice::WriteOnly) || file.write(games + "\n") < 0 || !file.commit())
         return fail(tr("Écriture impossible : ") + destination_);

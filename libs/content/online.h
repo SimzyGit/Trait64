@@ -18,7 +18,8 @@ class OnlineGames : public QObject {
     explicit OnlineGames(QObject *parent = nullptr, QNetworkAccessManager *network = nullptr);
     static bool validUser(const QString &user);
     bool busy() const { return !reply_.isNull(); }
-    // site: "lichess" or "chesscom"; sinceMs > 0 keeps only newer Lichess games.
+    // site: "lichess" or "chesscom"; sinceMs > 0 asks only for newer games (Lichess exactly,
+    // Chess.com from that month on: the library drops the games it already has).
     void fetch(const QString &site, const QString &user, int max, const QString &destination, qint64 sinceMs = 0);
     void cancel();
     // Keeps the last `max` games of a PGN text (games start with an [Event tag).
@@ -26,6 +27,7 @@ class OnlineGames : public QObject {
 
   signals:
     void finished(const QString &path, int games);
+    void upToDate(); // the account has no game newer than `sinceMs`
     void failed(const QString &message);
 
   private:
@@ -37,6 +39,7 @@ class OnlineGames : public QObject {
     QPointer<QNetworkReply> reply_;
     QString user_, destination_;
     int max_ = 0;
+    qint64 since_ = 0;
     QStringList archives_;
     QByteArray collected_;
 };

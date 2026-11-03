@@ -264,6 +264,46 @@ int main(int argc, char **argv) {
             bool tagged = false;
             for (const auto &value : c.sources()) tagged |= value.toMap()["title"].toString() == "Lichess — simzy";
             check(tagged, "Online games are filed under their player source");
+            // Saved accounts: sync queue, up-to-date bookkeeping, failures that do not block the queue.
+            auto settle = [&] {
+                QElapsedTimer w;
+                w.start();
+                while ((c.busy() || c.librarySearching()) && w.elapsed() < 10000) QTest::qWait(10);
+                QTest::qWait(20);
+            };
+            messages.clear();
+            c.addOnlineAccount("lichess", "../x");
+            check(c.onlineAccounts().isEmpty() && messages.size() == 1, "Invalid account names are refused");
+            c.addOnlineAccount("lichess", "Kim");
+            check(c.onlineAccounts().size() == 1 && c.onlineAccounts()[0].toMap()["syncing"].toBool(),
+                  "Adding an account syncs it at once");
+            emit online->upToDate();
+            settle();
+            online->cancel();
+            settle();
+            const auto kim = c.onlineAccounts()[0].toMap();
+            check(kim["lastSync"].toLongLong() > 0 && !kim["syncing"].toBool(), "An up-to-date account records its sync");
+            c.addOnlineAccount("lichess", "kim");
+            check(c.onlineAccounts().size() == 1, "The same account is not added twice");
+            c.addOnlineAccount("chesscom", "Kim");
+            online->cancel();
+            settle();
+            check(c.onlineAccounts().size() == 2 && c.onlineAccounts()[1].toMap()["lastSync"].toLongLong() == 0,
+                  "A failed sync does not pretend to be up to date");
+            c.syncAllAccounts();
+            for (int i = 0; i < 2; ++i) {
+                QElapsedTimer w;
+                w.start();
+                while (!c.onlineFetching() && w.elapsed() < 3000) QTest::qWait(10);
+                online->cancel();
+                settle();
+            }
+            check(!c.busy() && !c.onlineAccounts()[0].toMap()["syncing"].toBool() &&
+                      !c.onlineAccounts()[1].toMap()["syncing"].toBool(),
+                  "Sync all goes through every account even when one fails");
+            c.removeOnlineAccount(1);
+            c.removeOnlineAccount(0);
+            check(c.onlineAccounts().isEmpty() && c.games().size() == 2, "Removing accounts keeps their games");
         }
         {
             Controller c(dir.path() + "/integrity-ui");

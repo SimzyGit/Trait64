@@ -57,6 +57,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
+    Q_PROPERTY(QVariantList onlineAccounts READ onlineAccounts NOTIFY accountsChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
@@ -210,6 +211,12 @@ class Controller : public QObject {
     // site: "lichess" or "chesscom". Lichess re-imports only games newer than the last import.
     Q_INVOKABLE void importOnline(const QString &site, const QString &user, int max);
     Q_INVOKABLE void cancelOnline();
+    // Saved accounts ("lichess" / "chesscom"); adding one syncs it at once.
+    QVariantList onlineAccounts() const;
+    Q_INVOKABLE void addOnlineAccount(const QString &site, const QString &user);
+    Q_INVOKABLE void removeOnlineAccount(int index);
+    Q_INVOKABLE void syncOnlineAccount(int index);
+    Q_INVOKABLE void syncAllAccounts();
     bool onlineFetching() const { return online_->busy(); }
     Q_INVOKABLE void exportFile(const QString &url, bool all = false);
     Q_INVOKABLE void backup(const QString &url);
@@ -262,6 +269,7 @@ class Controller : public QObject {
     void libraryOpened();
     void engineChanged();
     void preferencesChanged();
+    void accountsChanged();
     void busyChanged();
     void message(const QString &text, bool error = false);
     void promotionNeeded(const QString &prefix);
@@ -374,6 +382,10 @@ class Controller : public QObject {
     t64::OnlineGames *online_ = nullptr;
     QString onlineSyncKey_, onlineFile_;
     qint64 onlineSyncTime_ = 0;
+    QList<int> syncQueue_;
+    int syncingAccount_ = -1;
+    void nextAccountSync();
+    void accountSynced(int added);
     void openBook();
     QString engineStatus_ = "Moteur déconnecté";
     QSettings settings_;

@@ -13,7 +13,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
     spacing:16
     Flow {Layout.fillWidth:true;spacing:8
         Item {Layout.fillWidth:true}
-        TButton {objectName:"playersImportOnline";text:qsTr("Importer depuis Lichess / Chess.com");onClicked:root.importOnline()}
+        TButton {objectName:"playersImportOnline";text:qsTr("Comptes Lichess / Chess.com");onClicked:root.importOnline()}
         TextField {id:filter;placeholderText:qsTr("Rechercher un joueur");Layout.preferredWidth:240}
     }
     RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)}}

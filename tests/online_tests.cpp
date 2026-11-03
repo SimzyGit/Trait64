@@ -3,6 +3,7 @@
 #include "puzzles.h"
 #include <QProcess>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -128,9 +129,25 @@ int main(int argc, char **argv) {
         network.responses = {{404, {}}};
         check(run(online, [&] { online.fetch("lichess", "nobody", 3, file); }).first.contains("introuvable"),
               "Unknown player is reported");
-        network.responses = {{200, {}}};
-        check(run(online, [&] { online.fetch("lichess", "simzy", 3, file, 1); }).first.contains("Aucune nouvelle"),
-              "No new games is reported");
+        {
+            QSignalSpy upToDate(&online, &t64::OnlineGames::upToDate);
+            network.responses = {{200, {}}};
+            online.fetch("lichess", "simzy", 3, file, 1);
+            check(upToDate.wait(2000), "An account with no new game is reported as up to date");
+            // Chess.com sync: only the months since the last sync are downloaded.
+            network.requests.clear();
+            network.responses = {
+                {200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08","https://api.chess.com/pub/player/simzy/games/2026/09","https://api.chess.com/pub/player/simzy/games/2026/10"]})"},
+                {200, games("Oct", 1)}, {200, games("Sep", 1)}};
+            const qint64 september15 = QDateTime(QDate(2026, 9, 15), QTime(12, 0)).toMSecsSinceEpoch();
+            auto [path, count] = run(online, [&] { online.fetch("chesscom", "simzy", 50, file, september15); });
+            check(count == 2 && network.requests.size() == 3 && !network.requests.last().url().path().contains("/08/"),
+                  "Chess.com sync skips months before the last sync");
+            network.responses = {{200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08"]})"}};
+            upToDate.clear();
+            online.fetch("chesscom", "simzy", 50, file, september15);
+            check(upToDate.wait(2000), "Chess.com account without newer months is up to date");
+        }
         const int before = int(network.requests.size());
         check(run(online, [&] { online.fetch("lichess", "../x", 3, file); }).second == -1 &&
                   network.requests.size() == before,

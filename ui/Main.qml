@@ -70,7 +70,7 @@ ApplicationWindow {
         Menu { title: qsTr("&Fichier")
             MenuItem {text: qsTr("Nouvelle étude"); onTriggered: controller.newGame()}
             MenuItem {text: qsTr("Importer des parties…"); onTriggered: importDialog.open()}
-            MenuItem {text: qsTr("Importer depuis Lichess / Chess.com…"); onTriggered: importsDialog.open()}
+            MenuItem {text: qsTr("Comptes Lichess et Chess.com…"); onTriggered: accountsDialog.open()}
             MenuItem {text: qsTr("Imports PGN reprenables…"); onTriggered: importsDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Enregistrer l’étude"); enabled: !controller.state.training; onTriggered: controller.saveGame()}
@@ -200,6 +200,7 @@ ApplicationWindow {
                 }
                 Flow {Layout.fillWidth:true;spacing:8
                     TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";width:Math.min(parent.width,260*win.textScale);textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    TButton {text:qsTr("Comptes en ligne");objectName:"showAccounts";onClicked:accountsDialog.open()}
                     TButton {text:qsTr("Imports reprenables");objectName:"showImports";onClicked:importsDialog.open()}
                     TButton {text:qsTr("Exporter cette base");enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
                 }
@@ -571,7 +572,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     Item {height:20}
                 }
             }
-            Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onImportOnline:importsDialog.open()}
+            Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onImportOnline:accountsDialog.open()}
         }
     }
     footer:Rectangle {
@@ -714,6 +715,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
     Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
+    Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)","Image vectorielle SVG (*.svg)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
@@ -809,6 +811,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Puzzles tactiques"),run:function(){puzzlesDialog.open()}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
+            {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},
             {title:qsTr("Apparence et langue"),run:function(){appearanceDialog.open()}},
             {title:qsTr("Recherche avancée"),run:function(){advancedDialog.open()}},
