@@ -603,5 +603,7 @@
   "Importer": "Import",
   "PGN PAR LOTS": "PGN IN BATCHES",
   "Limiter la force à": "Limit strength to",
-  "Elo": "Elo"
+  "Elo": "Elo",
+  "Déposer pour importer": "Drop to import",
+  "Notation figurine (♘ ♗ ♖ ♕ ♔)": "Figurine notation (♘ ♗ ♖ ♕ ♔)"
 }

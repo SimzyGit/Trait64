@@ -453,9 +453,12 @@ void Controller::openBook() {
         emit message(tr("Livre d'ouvertures illisible : ") + path, true);
     }
 }
-bool Controller::frenchNotation() const {
+int Controller::frenchNotation() const {
+    if (settings_.value("figurines", false).toBool()) return t64::Figurines;
     const auto language = settings_.value("language", "fr").toString();
-    return language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French);
+    return language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French)
+               ? t64::FrenchLetters
+               : t64::EnglishLetters;
 }
 QVariantList Controller::moveRows() const { return t64::moveRows(game_, node_, frenchNotation()); }
 QVariantList Controller::moveFlow() const { return t64::moveFlow(game_, node_, frenchNotation()); }

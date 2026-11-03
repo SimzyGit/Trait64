@@ -26,7 +26,7 @@ QVariantMap Controller::preferences() const {
                          {"lightTheme", false},
                          {"fontFamily", QGuiApplication::font().family()},
                          {"fontScale", 1.0}, {"uiScale", 1.0},
-                         {"sidebarCompact", false}, {"highContrast", false},
+                         {"sidebarCompact", false}, {"figurines", false}, {"highContrast", false},
                          {"reduceMotion", false}, {"language", "fr"},
                          {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
                          {"coordinates", true},
@@ -107,7 +107,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!QStringList{"table", "flow"}.contains(value.toString())) return;
         } else if (key == "language") {
             if (!QStringList{"auto","fr","en"}.contains(value.toString())) return;
-        } else if (QStringList{"sidebarCompact", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
+        } else if (QStringList{"sidebarCompact", "figurines", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
                        key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
@@ -141,6 +141,10 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         if (key == "language") {
             translator_->setLanguage(clean.toString());
             emit notationChanged();
+        }
+        if (key == "figurines") {
+            emit notationChanged();
+            refresh();
         }
         if (key == "enginePath")
             emit engineChanged();

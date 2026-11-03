@@ -34,6 +34,7 @@ TDialog {
                 Label {text:qsTr("Taille de l’interface")}
                 SpinBox {objectName:"uiScaleControl";from:90;to:125;stepSize:5;value:Math.round(root.backend.preferences.uiScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("uiScale",value/100)}
             }
+            CheckBox {objectName:"figurineNotation";text:qsTr("Notation figurine (♘ ♗ ♖ ♕ ♔)");checked:root.backend.preferences.figurines;onToggled:root.backend.setPreference("figurines",checked)}
             CheckBox {text:qsTr("Navigation compacte");checked:root.backend.preferences.sidebarCompact;onToggled:root.backend.setPreference("sidebarCompact",checked)}
             CheckBox {text:qsTr("Contraste renforcé");checked:root.backend.preferences.highContrast;onToggled:root.backend.setPreference("highContrast",checked)}
             CheckBox {text:qsTr("Réduire les animations");checked:root.backend.preferences.reduceMotion;onToggled:root.backend.setPreference("reduceMotion",checked)}

@@ -35,6 +35,9 @@ int moveNotebookProbe(const QString &directory) {
     check(rows[1].toMap()["white"].toMap()["text"].toString().contains('!'), "NAG belongs to its half-move");
     check(t64::displaySan("Nf3",true)=="Cf3" && t64::displaySan("exd8=Q+",true)=="exd8=D+" &&
           t64::displaySan("O-O",true)=="O-O" && t64::displaySan("Nf3",false)=="Nf3", "SAN translation is presentation only");
+    check(t64::displaySan("Nf3",t64::Figurines)=="♘f3" && t64::displaySan("exd8=Q+",t64::Figurines)=="exd8=♕+" &&
+          t64::displaySan("Kxe2",t64::Figurines)=="♔xe2" && t64::displaySan("O-O-O",t64::Figurines)=="O-O-O" &&
+          t64::displaySan("e4",t64::Figurines)=="e4", "Figurine notation replaces piece letters only");
     const auto blackStart = t64::parsePgn("[SetUp \"1\"]\n[FEN \"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 23\"]\n\n23... e5 24. Nf3 Nc6 *").front();
     const auto blackRows=t64::moveRows(blackStart,1,true);
     check(blackRows[1].toMap()["number"]==23 && blackRows[1].toMap()["white"].toMap().isEmpty() &&
@@ -207,6 +210,22 @@ int moveNotebookProbe(const QString &directory) {
         c.setPreference("bookPath",directory+"/missing.bin");
         check(c.bookMoves().isEmpty() && messages.size()==1 && messages.first().at(1).toBool(),"Unreadable book is reported, not used");
         c.setPreference("bookPath","");
+    }
+    {
+        c.newGame();c.move("g1f3");
+        c.setPreference("figurines",true);
+        bool figurine=false;
+        for(const auto &value:c.moveFlow()) figurine|=value.toMap()["text"].toString()=="♘f3";
+        check(figurine,"Figurine preference reaches the notebook");
+        c.setPreference("figurines",false);
+        auto *drop=visualItem(window->contentItem(),"fileDrop");
+        QVariant first;
+        const QVariantList urls{QUrl("file:///tmp/notes.txt"),QUrl("file:///tmp/Games.PGN"),QUrl("file:///tmp/b.pgn")};
+        check(drop && QMetaObject::invokeMethod(drop,"firstFile",Q_RETURN_ARG(QVariant,first),Q_ARG(QVariant,QVariant(urls))) &&
+              first.toString()=="file:///tmp/Games.PGN","Drop area keeps the first importable file");
+        QVariant none;
+        QMetaObject::invokeMethod(drop,"firstFile",Q_RETURN_ARG(QVariant,none),Q_ARG(QVariant,QVariant(QVariantList{QUrl("file:///tmp/a.zip")})));
+        check(none.toString().isEmpty(),"Drop area ignores other files");
     }
     check(warnings.isEmpty(),"Notebook has no QML warnings");
     std::cout<<checks<<" notebook checks passed\n";

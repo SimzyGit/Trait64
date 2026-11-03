@@ -247,7 +247,7 @@ class Controller : public QObject {
     void reviewChanged();
 
   private:
-    bool frenchNotation() const;
+    int frenchNotation() const; // t64::Notation used to display SAN
     struct PreparationResult {
         QVariantList rows;
         QString error, fen;

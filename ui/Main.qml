@@ -10,6 +10,23 @@ ApplicationWindow {
     visible: true
     title: "Trait64 — " + controller.state.title + (controller.state.dirty ? " •" : "")
     onClosing: function(close) { if(controller.updater.state.status==="installing") close.accepted=false }
+    // Drop a PGN, FEN, EPD or T64 file anywhere in the window to import it.
+    DropArea {
+        id: fileDrop; objectName: "fileDrop"; anchors.fill: parent; z: 1000
+        readonly property var accepted: /\.(pgn|fen|epd|t64)$/i
+        function firstFile(urls) { for (var i = 0; i < urls.length; ++i) if (accepted.test(urls[i].toString())) return urls[i].toString(); return "" }
+        onEntered: function(drag) { drag.accepted = drag.hasUrls && firstFile(drag.urls) !== "" && !controller.busy }
+        onDropped: function(drop) {
+            var file = firstFile(drop.urls)
+            if (file === "") return
+            drop.acceptProposedAction()
+            controller.importFile(file)
+        }
+        Rectangle {
+            anchors.fill: parent; visible: fileDrop.containsDrag; color: Qt.rgba(0, 0, 0, .35)
+            Label { anchors.centerIn: parent; text: qsTr("Déposer pour importer"); color: "white"; font.pixelSize: 22; font.bold: true }
+        }
+    }
     Updates {id:updatesDialog;objectName:"updatesDialog";parent:Overlay.overlay;backend:controller.updater}
     property int page: 0
     property bool light: controller.preferences.lightTheme

@@ -6,19 +6,24 @@
 
 namespace t64 {
 // Presentation only: SAN stored in the game and PGN exports stay standard.
-inline QString displaySan(const std::string &san, bool french) {
+// notation: 0 = English letters, 1 = French letters (a bool converts), 2 = figurines.
+enum Notation { EnglishLetters = 0, FrenchLetters = 1, Figurines = 2 };
+inline QString displaySan(const std::string &san, int notation) {
     QString text = QString::fromStdString(san);
-    if (!french) return text;
-    const QString pieces = "NBRQK", translated = "CFTDR";
-    for (int i = 0; i < text.size(); ++i) {
+    if (notation == EnglishLetters) return text;
+    static const QString pieces = "NBRQK", french = "CFTDR";
+    static const QStringList figurines{"♘", "♗", "♖", "♕", "♔"};
+    for (int i = int(text.size()) - 1; i >= 0; --i) {
         if (i != 0 && text[i - 1] != '=') continue;
-        const int piece = pieces.indexOf(text[i]);
-        if (piece >= 0) text[i] = translated[piece];
+        const auto piece = pieces.indexOf(text[i]);
+        if (piece < 0) continue;
+        if (notation == Figurines) text.replace(i, 1, figurines[piece]);
+        else text[i] = french[piece];
     }
     return text;
 }
 
-inline QVariantList moveRows(const Game &game, int current, bool french) {
+inline QVariantList moveRows(const Game &game, int current, int french) {
     QVariantList rows;
     rows << QVariantMap{{"initial", true}, {"depth", 0}, {"active", current == 0},
                         {"comment", QString::fromStdString(game.nodes[0].comment)}};
@@ -69,7 +74,7 @@ inline QVariantList moveRows(const Game &game, int current, bool french) {
 
 // Continuous notation in PGN order: "1. e4 e5 (1... c5 2. Nf3) 2. Nf3".
 // Tokens: "move" (id, number, text), "open"/"close" around a variation, "comment".
-inline QVariantList moveFlow(const Game &game, int current, bool french) {
+inline QVariantList moveFlow(const Game &game, int current, int french) {
     QVariantList tokens;
     static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
     auto comment = [&](int id, int depth) {
