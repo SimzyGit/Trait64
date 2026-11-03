@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "database.h"
+#include "legacy_positions.h"
 #include "queue.h"
 #include "uci.h"
 #include <QCoreApplication>
@@ -345,6 +346,7 @@ int main(int argc, char **argv) {
         const auto oldPath = dir.path() + "/old.sqlite";
         db.save(original);
         db.backup(oldPath);
+        downgradePositionsToV7(oldPath);
         {
             auto old = QSqlDatabase::addDatabase("QSQLITE", "analysis-migration");
             old.setDatabaseName(oldPath);

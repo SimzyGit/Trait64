@@ -494,20 +494,40 @@ QVariantList Database::repertoireWeaknesses(qint64 id) const {
 }
 
 QVariantList Database::repertoireGaps(qint64 id) const {
-    QSqlQuery q(db_);
     // Only opponent turns. Statistics describe the local reference corpus, not theoretical truth.
-    q.prepare("SELECT p.fen,o.uci,o.san,o.count,o.white,o.draw,o.black FROM repertoire_positions p JOIN "
-              "repertoires r ON r.id=p.repertoire JOIN opening_stats o ON o.fen=p.key WHERE p.repertoire=? "
-              "AND p.white<>r.white AND o.count>0 AND NOT EXISTS(SELECT 1 FROM repertoire_moves m WHERE "
-              "m.repertoire=p.repertoire AND m.key=p.key AND m.uci=o.uci) ORDER BY o.count DESC,p.key,o.uci "
-              "LIMIT 100");
-    q.addBindValue(id);
-    run(q);
+    // Repertoires keep their text key; the opening statistics are keyed by position hash.
+    QSqlQuery positions(db_), stats(db_);
+    positions.prepare("SELECT p.key,p.fen FROM repertoire_positions p JOIN repertoires r ON r.id=p.repertoire "
+                      "WHERE p.repertoire=? AND p.white<>r.white");
+    positions.addBindValue(id);
+    run(positions);
+    stats.prepare("SELECT o.uci,o.san,o.count,o.white,o.draw,o.black FROM opening_stats o WHERE o.key=? AND "
+                  "o.count>0 AND NOT EXISTS(SELECT 1 FROM repertoire_moves m WHERE m.repertoire=? AND m.key=? "
+                  "AND m.uci=o.uci)");
+    struct Gap {
+        QString key, fen, uci, san;
+        qint64 count, white, draw, black;
+    };
+    std::vector<Gap> gaps;
+    while (positions.next()) {
+        const auto key = positions.value(0).toString(), fen = positions.value(1).toString();
+        stats.bindValue(0, hashKey(fen.toStdString()));
+        stats.bindValue(1, id);
+        stats.bindValue(2, key);
+        run(stats);
+        while (stats.next())
+            gaps.push_back({key, fen, stats.value(0).toString(), stats.value(1).toString(),
+                            stats.value(2).toLongLong(), stats.value(3).toLongLong(), stats.value(4).toLongLong(),
+                            stats.value(5).toLongLong()});
+    }
+    std::sort(gaps.begin(), gaps.end(), [](const Gap &a, const Gap &b) {
+        return std::tie(b.count, a.key, a.uci) < std::tie(a.count, b.key, b.uci);
+    });
     QVariantList rows;
-    while (q.next())
-        rows << QVariantMap{{"fen", q.value(0)},   {"uci", q.value(1)},   {"san", q.value(2)},
-                            {"count", q.value(3)}, {"white", q.value(4)}, {"draw", q.value(5)},
-                            {"black", q.value(6)}};
+    for (size_t i = 0; i < gaps.size() && i < 100; ++i)
+        rows << QVariantMap{{"fen", gaps[i].fen},     {"uci", gaps[i].uci},     {"san", gaps[i].san},
+                            {"count", gaps[i].count}, {"white", gaps[i].white}, {"draw", gaps[i].draw},
+                            {"black", gaps[i].black}};
     return rows;
 }
 } // namespace t64

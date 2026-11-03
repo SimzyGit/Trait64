@@ -73,7 +73,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 7, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 8, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -143,6 +143,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV5(v);
         upgradeV6(v);
         upgradeV7(v);
+        upgradeV8(v);
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
@@ -217,19 +218,24 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         run(del);
         auto line = game.mainline();
         QSqlQuery pos(db_);
-        pos.prepare("INSERT INTO positions(game_id,ply,fen,uci,san) VALUES(?,?,?,?,?)");
+        // Before migration 8 has run (only while upgrading an old library) keys are still FEN text.
+        const QString column = keyed_ ? "key" : "fen";
+        pos.prepare("INSERT INTO positions(game_id,ply," + column + ",uci,san) VALUES(?,?,?,?,?)");
+        auto positionValue = [&](const Node &node) {
+            return keyed_ ? QVariant(nodeKey(node)) : QVariant(s(positionKey(node.fen)));
+        };
         for (size_t i = 0; i < line.size(); ++i) {
             pos.bindValue(0, id);
             pos.bindValue(1, int(i));
-            pos.bindValue(2, s(positionKey(game.nodes[line[i]].fen)));
+            pos.bindValue(2, positionValue(game.nodes[line[i]]));
             pos.bindValue(3, i + 1 < line.size() ? s(game.nodes[line[i + 1]].uci) : QString());
             pos.bindValue(4, i + 1 < line.size() ? s(game.nodes[line[i + 1]].san) : QString());
             run(pos);
         }
         if (enhanced_) {
             QSqlQuery edges(db_);
-            edges.prepare("INSERT INTO opening_edges SELECT game_id,fen,uci,MIN(san) FROM positions WHERE "
-                          "game_id=? AND uci<>'' GROUP BY game_id,fen,uci");
+            edges.prepare("INSERT INTO opening_edges SELECT game_id," + column + ",uci,MIN(san) FROM positions "
+                          "WHERE game_id=? AND uci<>'' GROUP BY game_id," + column + ",uci");
             edges.addBindValue(id);
             run(edges);
         }
@@ -251,7 +257,7 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         erase.addBindValue(id);
         run(erase);
         QSqlQuery all(db_);
-        all.prepare("INSERT INTO all_positions(game_id,node,fen,material) VALUES(?,?,?,?)");
+        all.prepare("INSERT INTO all_positions(game_id,node," + column + ",material) VALUES(?,?,?,?)");
         std::vector<int> pending{0};
         while (!pending.empty()) {
             int n = pending.back();
@@ -260,7 +266,7 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             const auto material = materialKey(s(node.fen).section(' ', 0, 0));
             all.bindValue(0, id);
             all.bindValue(1, n);
-            all.bindValue(2, s(positionKey(node.fen)));
+            all.bindValue(2, positionValue(node));
             all.bindValue(3, material);
             run(all);
             pending.insert(pending.end(), node.children.begin(), node.children.end());
@@ -370,8 +376,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (favorite)
         statement += " AND g.favorite=1";
     if (!position.isEmpty()) {
-        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE fen=?)";
-        args << s(positionKey(position.toStdString()));
+        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE key=?)";
+        args << hashKey(position.toStdString());
     }
     for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
         if (!filters.value(key).toString().isEmpty()) {
@@ -515,9 +521,9 @@ QVariantMap Database::stats() const {
 }
 QVariantList Database::explorer(const QString &position) const {
     QSqlQuery q(db_);
-    q.prepare("SELECT uci,san,count,white,draw,black FROM opening_stats WHERE fen=? AND count>0 ORDER BY "
+    q.prepare("SELECT uci,san,count,white,draw,black FROM opening_stats WHERE key=? AND count>0 ORDER BY "
               "count DESC");
-    q.addBindValue(s(positionKey(position.toStdString())));
+    q.addBindValue(hashKey(position.toStdString()));
     run(q);
     QVariantList out;
     while (q.next())
@@ -545,8 +551,8 @@ QVariantList Database::positionStatistics(const QString &fen, const QVariantMap 
     check(colour == "white" || colour == "black" || colour == "both", "Couleur invalide.");
     QString statement =
         "SELECT DISTINCT p.game_id,p.uci,p.san,g.result,g.white_elo,g.black_elo,g.date "
-        "FROM positions p JOIN games g ON g.id=p.game_id WHERE p.fen=? AND p.uci<>'' AND g.deleted=0";
-    QVariantList args{s(positionKey(fen.toStdString()))};
+        "FROM positions p JOIN games g ON g.id=p.game_id WHERE p.key=? AND p.uci<>'' AND g.deleted=0";
+    QVariantList args{hashKey(fen.toStdString())};
     const auto player = filters["player"].toString().trimmed();
     if (!player.isEmpty()) {
         if (colour == "both") {

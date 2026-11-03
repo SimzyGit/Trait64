@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "archive.h"
 #include "database.h"
+#include "legacy_positions.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QSet>
 #include <QSqlDriver>
@@ -284,8 +287,50 @@ int main(int argc, char **argv) {
         db.deleteCard(cardId);
         check(db.stats()["todayReviews"].toInt() == 3, "Deleting card preserves activity history");
         // Migration of a genuine v1 layout must back up, preserve data and rebuild variant indexes.
+        // Schema 7 -> 8: FEN text keys become Zobrist keys, with a backup and identical results.
+        {
+            const auto v7Path = dir.path() + "/v7.sqlite";
+            db.backup(v7Path);
+            const auto variant = QString::fromStdString(annotated.nodes[vn].fen);
+            const auto start = QString::fromStdString(std::string(chess::constants::STARTPOS));
+            const auto searchBefore = db.search({}, {}, false, variant).size();
+            const auto explorerBefore = db.explorer(start);
+            downgradePositionsToV7(v7Path);
+            const auto legacySize = QFileInfo(v7Path).size();
+            {
+                t64::Database migrated(v7Path);
+                check(migrated.search({}, {}, false, variant).size() == searchBefore && searchBefore > 0,
+                      "Migration 8 keeps variation position search");
+                check(migrated.explorer(start) == explorerBefore && !explorerBefore.empty(),
+                      "Migration 8 keeps opening statistics exactly");
+                check(migrated.integrity() == "ok", "Migration 8 integrity");
+                auto copy = migrated.load(migrated.search().first().toMap()["id"].toLongLong());
+                copy.tags["Event"] = "After migration";
+                migrated.save(copy);
+                check(migrated.explorer(start).first().toMap()["count"].toInt() ==
+                          explorerBefore.first().toMap()["count"].toInt() + 1,
+                      "Opening statistics triggers work on hashed keys");
+            }
+            check(!QDir(dir.path()).entryList({"v7.sqlite.before-v8-*.sqlite"}).empty(), "Backup before migration 8");
+            QSqlDatabase::removeDatabase("v8-check");
+            {
+                auto v8 = QSqlDatabase::addDatabase("QSQLITE", "v8-check");
+                v8.setDatabaseName(v7Path);
+                check(v8.open(), "Open migrated library");
+                QSqlQuery q(v8);
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 8, "Schema version 8");
+                check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
+                          q.value(0).toString() == "integer",
+                      "Positions are stored as integers");
+                q.finish();
+                v8.close();
+            }
+            QSqlDatabase::removeDatabase("v8-check");
+            std::cout << "v7 fixture " << legacySize << " bytes, v8 " << QFileInfo(v7Path).size() << " bytes\n";
+        }
         const auto oldPath = dir.path() + "/old.sqlite";
         db.backup(oldPath);
+        downgradePositionsToV7(oldPath, "old-v7");
         {
             auto old = QSqlDatabase::addDatabase("QSQLITE", "old-fixture");
             old.setDatabaseName(oldPath);

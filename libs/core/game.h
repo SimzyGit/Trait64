@@ -12,6 +12,9 @@ struct Node {
     int parent = -1;
     std::string uci, san, fen, comment;
     std::vector<int> children, nags;
+    // Polyglot-compatible Zobrist key of `fen` (castling, side to move, and en passant only
+    // when a capture is possible), computed with the board that produced the FEN.
+    std::uint64_t hash = 0;
 };
 struct Game {
     bool chess960 = false;
@@ -48,5 +51,7 @@ void readPgnParallel(std::istream &input, int workers, const std::function<void(
 std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000,
                            const std::function<void()> &checkpoint = {});
 std::string positionKey(const std::string &fen);
+// Zobrist key of a FEN (four or six fields; Shredder castling letters select Chess960).
+std::uint64_t positionHash(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);
 } // namespace t64

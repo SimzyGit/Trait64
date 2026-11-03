@@ -170,6 +170,7 @@ Game::Game(const std::string &fen, bool variant960) : chess960(variant960) {
         tags["Variant"] = "Chess960";
     Node root;
     root.fen = b.getFen();
+    root.hash = b.hash();
     nodes.push_back(root);
     if (chess960 || root.fen != chess::constants::STARTPOS) {
         tags["SetUp"] = "1";
@@ -207,6 +208,7 @@ int Game::play(int parent, const std::string &uci) {
         board.makeMove(m);
         checkBoardCounters(board);
         n.fen = board.getFen();
+        n.hash = board.hash();
         const int id = int(nodes.size());
         nodes[parent].children.push_back(id);
         nodes.push_back(std::move(n));
@@ -477,6 +479,17 @@ std::string positionKey(const std::string &fen) {
         out += field;
     }
     return out;
+}
+std::uint64_t positionHash(const std::string &fen) {
+    std::istringstream in(fen);
+    std::array<std::string, 6> field{"", "w", "-", "-", "0", "1"};
+    for (auto &value : field)
+        if (!(in >> value)) break;
+    const bool variant960 = field[2].find_first_not_of("KQkq-") != std::string::npos;
+    const chess::Board board(field[0] + ' ' + field[1] + ' ' + field[2] + ' ' + field[3] + ' ' + field[4] + ' ' +
+                                 field[5],
+                             variant960);
+    return board.hash();
 }
 uint64_t perft(chess::Board &board, int depth) {
     if (depth <= 0)

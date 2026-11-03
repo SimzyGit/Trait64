@@ -1,5 +1,11 @@
 # Changements
 
+## Schéma 8 : positions en clés Zobrist — 3 novembre 2026
+
+Les quatre tables de positions (`positions`, `all_positions`, `opening_edges`, `opening_stats`) utilisent une clé entière de 64 bits au lieu de la FEN texte, en tables sans `rowid`. Sur 20 000 parties générées (≈ 1,9 million de positions, mêmes fichier et machine) : **1 010 Mo → 413 Mo (−59 %)**, import 192 s → 189 s, recherche par position 2,79 → 1,74 ms, arbre d'ouvertures 0,05 → 0,03 ms. Ces mesures ne remplacent pas la qualification sur plusieurs millions de parties réelles.
+
+La migration sauvegarde d'abord la base (`.before-v8-…`), convertit les clés existantes sans relire les PGN, puis compacte le fichier. Deux positions ne diffèrent plus par une case en passant impossible à jouer, comme le veut la règle de répétition. Une collision de clés 64 bits est théoriquement possible mais négligeable (de l'ordre d'une chance sur cinquante pour un milliard de positions distinctes) ; elle ne pourrait qu'ajouter une partie à un résultat de recherche.
+
 ## Gains rapides — 3 novembre 2026
 
 - **Livres Polyglot** : onglet Livre à côté de l'Explorateur, part de chaque coup ; chemin du `.bin` dans Paramètres. Recherche dichotomique dans le fichier, clés vérifiées contre les valeurs de référence du format.
