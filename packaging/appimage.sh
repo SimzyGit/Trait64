@@ -8,6 +8,9 @@ trait64_stage="${trait64_build}/appimage"
 mkdir -p "${trait64_stage}/tools" "${trait64_stage}/AppDir"
 cd "${trait64_stage}/tools"
 # API asset IDs and hashes pin the exact reviewed build tools, even though upstream uses continuous tags.
+# Amont republie « continuous » de temps à autre : l'ancien identifiant disparaît (404) et le repli
+# rapporte un autre binaire, que l'empreinte ci-dessous rejette. Quand cela arrive, relever le nouvel
+# identifiant et son empreinte sur la version publiée, puis les reporter ici après relecture.
 download_tool() {
     local repository="$1" asset="$2" name="$3"
     # Shared Actions IPs may exhaust the unauthenticated REST rate limit.
@@ -17,10 +20,10 @@ download_tool() {
     curl --fail --location --retry 3 \
         "https://github.com/${repository}/releases/download/continuous/${name}" -o "${name}"
 }
-download_tool linuxdeploy/linuxdeploy 602438599 linuxdeploy-x86_64.AppImage
+download_tool linuxdeploy/linuxdeploy 699514588 linuxdeploy-x86_64.AppImage
 download_tool linuxdeploy/linuxdeploy-plugin-qt 525032210 linuxdeploy-plugin-qt-x86_64.AppImage
 cat > SHA256SUMS <<'HASHES'
-8aea8da0f7f7039d2a2cecb14657d752a222a5e1d3825caeef186c82f751cdd1  linuxdeploy-x86_64.AppImage
+df908b19f1ed1cdafa79508d415aa12d6c56ce4d56d4149aa8c09286718706e5  linuxdeploy-x86_64.AppImage
 cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617  linuxdeploy-plugin-qt-x86_64.AppImage
 HASHES
 sha256sum --check SHA256SUMS
