@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "game.h"
 #include "explanation.h"
+#include "polyglot.h"
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -274,6 +277,58 @@ int main() {
         }
         std::istringstream invalidWorkers("1.e4 *");
         rejects([&] { t64::readPgnParallel(invalidWorkers, 9, [](t64::Game &&, uint64_t) {}); });
+        {
+            // Reference keys from the Polyglot book format specification.
+            const std::pair<const char *, std::uint64_t> keys[] = {
+                {"", 0x463b96181691fc9cULL}, {"e2e4", 0x823c9b50fd114196ULL},
+                {"e2e4 d7d5", 0x0756b94461c50fb0ULL}, {"e2e4 d7d5 e4e5", 0x662fafb965db29d4ULL},
+                {"e2e4 d7d5 e4e5 f7f5", 0x22a48b5a8e47ff78ULL}, {"e2e4 d7d5 e4e5 f7f5 e1e2", 0x652a607ca3f242c1ULL},
+                {"e2e4 d7d5 e4e5 f7f5 e1e2 e8f7", 0x00fdd303c946bdd9ULL},
+                {"a2a4 b7b5 h2h4 b5b4 c2c4", 0x3c8123ea7b067637ULL},
+                {"a2a4 b7b5 h2h4 b5b4 c2c4 b4c3 a1a3", 0x5c3f9b829b279560ULL}};
+            for (const auto &[line, key] : keys) {
+                chess::Board board;
+                std::istringstream moves(line);
+                for (std::string uci; moves >> uci;) board.makeMove(chess::uci::uciToMove(board, uci));
+                check(board.hash() == key, "Board hash matches the Polyglot reference key");
+            }
+            auto entry = [](std::ofstream &out, std::uint64_t key, int from, int to, int promotion, int weight) {
+                const std::uint64_t move = to | from << 6 | promotion << 12;
+                const std::uint64_t parts[] = {key, move << 48 | std::uint64_t(weight) << 32};
+                for (auto part : parts)
+                    for (int shift = 56; shift >= 0; shift -= 8) out.put(char(part >> shift & 0xff));
+            };
+            const std::string path = "polyglot-test.bin";
+            chess::Board castle("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), promote("8/P6k/8/8/8/8/8/K7 w - - 0 1");
+            const chess::Board start;
+            std::vector<std::tuple<std::uint64_t, int, int, int, int>> rows = {
+                {start.hash(), 12, 28, 0, 5}, {start.hash(), 11, 27, 0, 9}, {start.hash(), 12, 36, 0, 50},
+                {castle.hash(), 4, 7, 0, 1}, {promote.hash(), 48, 56, 4, 3}, {promote.hash(), 48, 56, 1, 2}};
+            std::sort(rows.begin(), rows.end(), [](auto &a, auto &b) { return std::get<0>(a) < std::get<0>(b); });
+            {
+                std::ofstream out(path, std::ios::binary);
+                for (auto [key, from, to, promotion, weight] : rows) entry(out, key, from, to, promotion, weight);
+            }
+            t64::PolyglotBook book;
+            check(book.open(path), "Polyglot book opens");
+            const auto opening = book.moves(start);
+            check(opening.size() == 2 && chess::uci::moveToUci(opening[0].move) == "d2d4" && opening[0].weight == 9 &&
+                      chess::uci::moveToUci(opening[1].move) == "e2e4",
+                  "Book moves are legal only and sorted by weight");
+            const auto castling = book.moves(castle);
+            check(castling.size() == 1 && castling[0].move.typeOf() == chess::Move::CASTLING &&
+                      chess::uci::moveToUci(castling[0].move) == "e1g1",
+                  "Polyglot king-takes-rook becomes castling");
+            const auto promotions = book.moves(promote);
+            check(promotions.size() == 2 && chess::uci::moveToUci(promotions[0].move) == "a7a8q" &&
+                      chess::uci::moveToUci(promotions[1].move) == "a7a8n",
+                  "Polyglot promotions keep their piece");
+            check(book.moves(chess::Board("8/8/8/8/8/8/8/K6k w - - 0 1")).empty(), "Unknown position has no book move");
+            { std::ofstream bad("polyglot-bad.bin", std::ios::binary); bad << "short"; }
+            check(!book.open("polyglot-bad.bin") && !book.isOpen() && !book.open("missing.bin"), "Invalid book files are rejected");
+            std::remove(path.c_str());
+            std::remove("polyglot-bad.bin");
+        }
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

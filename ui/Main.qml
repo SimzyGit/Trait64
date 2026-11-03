@@ -288,6 +288,7 @@ objectName:"analysisSplit"
                                 TabBar {id:notationTabs;Layout.fillWidth:true
                                     TTabButton {text:qsTr("02  /  Carnet de coups");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     TTabButton {text:qsTr("Explorateur");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    TTabButton {objectName:"bookTab";text:qsTr("Livre");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                 }
                                 StackLayout {
                                     Layout.fillWidth:true;Layout.fillHeight:true;currentIndex:notationTabs.currentIndex
@@ -302,6 +303,16 @@ objectName:"analysisSplit"
                                             width:miniExplorer.width;text:modelData.san+"     "+modelData.count+qsTr(" partie(s)");onClicked:controller.move(modelData.uci)
                                         }
                                         Label {anchors.centerIn:parent;visible:controller.openings.length===0;text:qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    }
+                                    ListView {id:bookList;objectName:"bookMoves";model:controller.bookMoves;clip:true;spacing:4
+                                        delegate:ItemDelegate {
+                                            required property var modelData
+                                            width:bookList.width;text:modelData.san+"     "+modelData.percent+" %";onClicked:controller.move(modelData.uci)
+                                            Accessible.name:modelData.san+", "+modelData.percent+qsTr(" % du livre")
+                                        }
+                                        Label {anchors.centerIn:parent;width:parent.width-24;horizontalAlignment:Text.AlignHCenter;wrapMode:Text.Wrap;visible:controller.bookMoves.length===0
+                                            text:controller.preferences.bookPath?qsTr("Position absente du livre."):qsTr("Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.")
+                                            color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     }
                                 }
                                 RowLayout {Layout.fillWidth:true;visible:!controller.state.training
@@ -605,6 +616,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Le niveau concerne le jeu contre Stockfish. L’analyse utilise sa pleine force.\nLes réglages sont appliqués au démarrage du moteur.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
             RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} SpinBox {from:1;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)}}
             TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
+            TextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
             RowLayout {Layout.fillWidth:true
                 TextField {id:profileName;Layout.fillWidth:true;placeholderText:qsTr("Nom du profil moteur")}
                 TButton {text:qsTr("Mémoriser");onClicked:controller.saveEngineProfile(profileName.text)}

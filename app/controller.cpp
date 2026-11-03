@@ -48,6 +48,7 @@ Controller::Controller(const QString &path, QObject *parent)
       comparison_(this) {
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "fr").toString());
+    openBook();
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     flipped_ = settings_.value("flipped", false).toBool();
@@ -389,6 +390,17 @@ void Controller::refresh(bool content) {
     } catch (const std::exception &e) {
         fail(e);
     }
+    bookMoves_.clear();
+    if (book_.isOpen()) {
+        const auto moves = book_.moves(board);
+        double total = 0;
+        for (const auto &entry : moves) total += entry.weight;
+        for (const auto &entry : moves)
+            bookMoves_ << QVariantMap{{"uci", s(chess::uci::moveToUci(entry.move, game_.chess960))},
+                                      {"san", t64::displaySan(chess::uci::moveToSan(board, entry.move), frenchNotation())},
+                                      {"weight", entry.weight},
+                                      {"percent", total > 0 ? qRound(100 * entry.weight / total) : 0}};
+    }
     detectOpening();
     try {
         refreshRepertoires(false);
@@ -403,6 +415,14 @@ void Controller::refresh(bool content) {
         analysisTimer_.start();
     if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
+}
+void Controller::openBook() {
+    const auto path = settings_.value("bookPath").toString();
+    if (path.isEmpty()) book_ = {};
+    else if (!book_.open(path.toStdString())) {
+        book_ = {};
+        emit message(tr("Livre d'ouvertures illisible : ") + path, true);
+    }
 }
 bool Controller::frenchNotation() const {
     const auto language = settings_.value("language", "fr").toString();

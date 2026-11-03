@@ -188,6 +188,26 @@ int moveNotebookProbe(const QString &directory) {
     check(fenBlack,"Black-start FEN has a separate black cell");
     QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,fenBlack->mapToScene(QPointF(fenBlack->width()/2,fenBlack->height()/2)).toPoint());settled();
     check(c.state()["node"]==1 && c.state()["fen"].toString().toStdString()==blackStart.nodes[1].fen,"Clicking black FEN cell shows its exact position");
+    {
+        const chess::Board start;
+        QFile book(directory+"/book.bin");
+        check(book.open(QIODevice::WriteOnly),"Book fixture written");
+        for(auto [from,to,weight]:{std::tuple{11,27,1},std::tuple{12,28,3}}) {
+            const quint64 key=start.hash(),move=quint64(to|from<<6)<<48|quint64(weight)<<32;
+            for(quint64 part:{key,move}) for(int shift=56;shift>=0;shift-=8) book.putChar(char(part>>shift&0xff));
+        }
+        book.close();
+        c.newGame();c.setPreference("bookPath",directory+"/book.bin");
+        const auto moves=c.bookMoves();
+        check(moves.size()==2 && moves[0].toMap()["uci"]=="e2e4" && moves[0].toMap()["percent"]==75 && moves[1].toMap()["san"]=="d4",
+              "Book moves reach the analysis panel with their share");
+        c.move("e2e4");
+        check(c.bookMoves().isEmpty(),"Leaving the book empties the list");
+        QSignalSpy messages(&c,&Controller::message);
+        c.setPreference("bookPath",directory+"/missing.bin");
+        check(c.bookMoves().isEmpty() && messages.size()==1 && messages.first().at(1).toBool(),"Unreadable book is reported, not used");
+        c.setPreference("bookPath","");
+    }
     check(warnings.isEmpty(),"Notebook has no QML warnings");
     std::cout<<checks<<" notebook checks passed\n";
     return 0;

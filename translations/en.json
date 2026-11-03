@@ -587,5 +587,13 @@
   "♜ Tour": "♜ Rook",
   "♝ Fou": "♝ Bishop",
   "♞ Cavalier": "♞ Knight",
-  "Variante": "Variation"
+  "Variante": "Variation",
+  "Tableau": "Table",
+  "Continu": "Continuous",
+  "Affichage des coups : ": "Move layout: ",
+  "Livre": "Book",
+  " % du livre": " % of the book",
+  "Position absente du livre.": "Position not in the book.",
+  "Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.": "No Polyglot book (.bin): set one in Settings.",
+  "Livre d'ouvertures Polyglot .bin (optionnel)": "Polyglot opening book .bin (optional)"
 }

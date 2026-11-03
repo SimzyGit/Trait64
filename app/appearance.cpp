@@ -22,7 +22,7 @@ QVariantMap Controller::preferences() const {
                          {"moveTime", 1000},
                          {"analysisDepth", 24},
                          {"importWorkers", 2},
-                         {"syzygyPath", ""},
+                         {"syzygyPath", ""}, {"bookPath", ""},
                          {"lightTheme", false},
                          {"fontFamily", QGuiApplication::font().family()},
                          {"fontScale", 1.0}, {"uiScale", 1.0},
@@ -127,7 +127,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 return;
             if (value == "custom" && settings_.value("customPiecePath").toString().isEmpty())
                 return;
-        } else if (key == "enginePath" || key == "syzygyPath") {
+        } else if (key == "enginePath" || key == "syzygyPath" || key == "bookPath") {
             clean = localPath(value.toString());
             if (clean.toString().contains('\n') || clean.toString().contains('\r'))
                 throw std::runtime_error("Chemin invalide.");
@@ -144,6 +144,10 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         }
         if (key == "enginePath")
             emit engineChanged();
+        if (key == "bookPath") {
+            openBook();
+            refresh();
+        }
         emit preferencesChanged();
     } catch (const std::exception &e) {
         fail(e);

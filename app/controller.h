@@ -3,6 +3,7 @@
 #include "comparison.h"
 #include "content.h"
 #include "database.h"
+#include "polyglot.h"
 #include "queue.h"
 #include "uci.h"
 #include "updater.h"
@@ -44,6 +45,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList games READ games NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
+    Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
@@ -110,6 +112,7 @@ class Controller : public QObject {
     QVariantList games() const { return games_; }
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
+    QVariantList bookMoves() const { return bookMoves_; }
     QVariantList cards() const { return cards_; }
     QVariantList engineOptions() const {
         return settings_.value("enginePath").toString() == engine_.executable() ? engine_.options()
@@ -331,7 +334,9 @@ class Controller : public QObject {
     QString query_, resultFilter_;
     bool favoritesOnly_ = false, positionFilter_ = false, trashFilter_ = false;
     QVariantMap state_, stats_;
-    QVariantList squares_, notation_, games_, openings_, cards_, engineLines_;
+    QVariantList squares_, notation_, games_, openings_, bookMoves_, cards_, engineLines_;
+    t64::PolyglotBook book_;
+    void openBook();
     QString engineStatus_ = "Moteur déconnecté";
     QSettings settings_;
     std::unique_ptr<t64::UiTranslator> translator_;
