@@ -29,6 +29,7 @@ TDialog {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
                 text: qsTr("Vos parties publiques arrivent dans la bibliothèque, rangées par compte. Chaque synchronisation ne récupère que les parties jouées depuis la précédente. Aucun mot de passe n’est demandé.")
             }
+            ReviewImported { Layout.fillWidth: true; backend: root.backend }
             Repeater {
                 model: root.backend.onlineAccounts
                 delegate: Rectangle {

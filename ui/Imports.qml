@@ -22,6 +22,7 @@ TDialog {
     ScrollView {id:importsViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewport.availableHeight,implicitHeight);
          spacing: 12
+        ReviewImported { Layout.fillWidth: true; backend: root.backend }
         Label {text: qsTr("Depuis Lichess ou Chess.com"); font.bold: true}
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
