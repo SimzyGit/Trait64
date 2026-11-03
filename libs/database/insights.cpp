@@ -25,7 +25,7 @@ QVariantList Database::players() const {
 }
 QVariantMap Database::player(const QString &name) const {
     QSqlQuery q(db_);
-    q.prepare("SELECT white,black,result,eco,date,white_elo,black_elo FROM games WHERE deleted=0 AND "
+    q.prepare("SELECT white,black,result,eco,date,white_elo,black_elo,id,plies FROM games WHERE deleted=0 AND "
               "id IN(SELECT id FROM games WHERE deleted=0 AND white=? UNION SELECT id FROM games WHERE "
               "deleted=0 AND black=?) ORDER BY date DESC,id DESC");
     q.addBindValue(name);
@@ -34,7 +34,12 @@ QVariantMap Database::player(const QString &name) const {
     int games = 0, wins = 0, draws = 0, losses = 0, unfinished = 0, whiteGames = 0, blackGames = 0,
         rating = 0;
     QMap<QString, QVariantMap> openings;
-    QVariantList recent;
+    QVariantList recent, eloHistory;
+    QHash<qint64, bool> colourOf;          // game id -> played white
+    QHash<qint64, double> pointsOf;        // game id -> points scored, finished games only
+    // Game length as a proxy for the phase where it was decided.
+    struct Phase { int wins = 0, draws = 0, losses = 0; };
+    Phase phases[3];
     while (q.next()) {
         bool white = q.value(0).toString() == name;
         QString result = q.value(2).toString();
@@ -52,6 +57,17 @@ QVariantMap Database::player(const QString &name) const {
             ++unfinished;
         if (!rating)
             rating = q.value(white ? 5 : 6).toInt();
+        const qint64 id = q.value(7).toLongLong();
+        colourOf.insert(id, white);
+        const bool finished = won || lost || result == "1/2-1/2";
+        if (finished) {
+            pointsOf.insert(id, won ? 1 : lost ? 0 : .5);
+            const int plies = q.value(8).toInt();
+            auto &phase = phases[plies <= 50 ? 0 : plies <= 100 ? 1 : 2];
+            won ? ++phase.wins : lost ? ++phase.losses : ++phase.draws;
+        }
+        if (q.value(white ? 5 : 6).toInt() > 0 && eloHistory.size() < 200)
+            eloHistory.prepend(QVariantMap{{"date", q.value(4)}, {"elo", q.value(white ? 5 : 6)}});
         QString key = (white ? "Blancs · " : "Noirs · ") + q.value(3).toString();
         auto &o = openings[key];
         o["label"] = key;
@@ -64,9 +80,59 @@ QVariantMap Database::player(const QString &name) const {
                                   {"result", result},
                                   {"elo", q.value(white ? 5 : 6)}};
     }
-    QVariantList openingList;
-    for (const auto &o : openings)
+    q.finish();
+    QVariantList openingList, weakest;
+    for (const auto &o : openings) {
         openingList << o;
+        if (o["finished"].toInt() >= 3)
+            weakest << QVariantMap{{"label", o["label"]}, {"count", o["finished"]},
+                                   {"score", qRound(100 * o["points"].toDouble() / o["finished"].toInt())}};
+    }
+    std::sort(weakest.begin(), weakest.end(), [](const QVariant &a, const QVariant &b) {
+        return a.toMap()["score"].toInt() < b.toMap()["score"].toInt();
+    });
+    while (weakest.size() > 5) weakest.removeLast();
+    // The first six plies of every game, grouped into the lines the player actually reaches.
+    QHash<qint64, QStringList> starts;
+    QSqlQuery moves(db_);
+    moves.prepare("SELECT p.game_id,p.san FROM positions p JOIN games g ON g.id=p.game_id WHERE g.deleted=0 AND "
+                  "(g.white=? OR g.black=?) AND p.ply<6 AND p.san<>'' ORDER BY p.game_id,p.ply");
+    moves.addBindValue(name);
+    moves.addBindValue(name);
+    run(moves);
+    while (moves.next()) starts[moves.value(0).toLongLong()] << moves.value(1).toString();
+    QMap<QString, QVariantMap> lines[2];
+    for (auto it = starts.cbegin(); it != starts.cend(); ++it) {
+        if (!colourOf.contains(it.key())) continue;
+        QStringList numbered;
+        for (int i = 0; i < it.value().size(); ++i)
+            numbered << (i % 2 == 0 ? QString::number(i / 2 + 1) + ". " : QString()) + it.value()[i];
+        auto &line = lines[colourOf[it.key()] ? 0 : 1][numbered.join(' ')];
+        line["line"] = numbered.join(' ');
+        line["count"] = line["count"].toInt() + 1;
+        if (pointsOf.contains(it.key())) {
+            line["finished"] = line["finished"].toInt() + 1;
+            line["points"] = line["points"].toDouble() + pointsOf[it.key()];
+        }
+    }
+    auto top = [](const QMap<QString, QVariantMap> &all) {
+        QVariantList list;
+        for (auto line : all) {
+            const int finished = line["finished"].toInt();
+            line["score"] = finished ? qRound(100 * line["points"].toDouble() / finished) : QVariant();
+            list << line;
+        }
+        std::sort(list.begin(), list.end(), [](const QVariant &a, const QVariant &b) {
+            return a.toMap()["count"].toInt() > b.toMap()["count"].toInt();
+        });
+        while (list.size() > 8) list.removeLast();
+        return list;
+    };
+    QVariantList phaseList;
+    const char *phaseNames[] = {"Courtes (≤ 25 coups)", "Moyennes (26–50 coups)", "Longues (> 50 coups)"};
+    for (int i = 0; i < 3; ++i)
+        phaseList << QVariantMap{{"label", phaseNames[i]}, {"wins", phases[i].wins}, {"draws", phases[i].draws},
+                                 {"losses", phases[i].losses}};
     std::sort(openingList.begin(), openingList.end(), [](const QVariant &a, const QVariant &b) {
         return a.toMap()["count"].toInt() > b.toMap()["count"].toInt();
     });
@@ -81,6 +147,11 @@ QVariantMap Database::player(const QString &name) const {
             {"elo", rating},
             {"openings", openingList},
             {"recent", recent},
+            {"whiteLines", top(lines[0])},
+            {"blackLines", top(lines[1])},
+            {"phases", phaseList},
+            {"weakest", weakest},
+            {"eloHistory", eloHistory},
             {"score", games > unfinished ? 100. * (wins + .5 * draws) / (games - unfinished) : 0}};
 }
 QVariantList Database::duplicates() const {

@@ -666,5 +666,19 @@
   "Montre la pièce à jouer ; compte comme un échec.": "Shows the piece to move; counts as a failure.",
   "Puzzle suivant": "Next puzzle",
   "Puzzles": "Puzzles",
-  "Créer des puzzles des erreurs": "Create puzzles from mistakes"
+  "Créer des puzzles des erreurs": "Create puzzles from mistakes",
+  "Importer depuis Lichess / Chess.com": "Import from Lichess / Chess.com",
+  "ÉVOLUTION DE L’ELO": "RATING HISTORY",
+  "LIGNES JOUÉES AVEC LES BLANCS": "LINES PLAYED WITH WHITE",
+  "LIGNES JOUÉES AVEC LES NOIRS": "LINES PLAYED WITH BLACK",
+  "RÉSULTATS SELON LA LONGUEUR DE LA PARTIE": "RESULTS BY GAME LENGTH",
+  " victoire(s), ": " win(s), ",
+  " nulle(s), ": " draw(s), ",
+  " défaite(s)": " loss(es)",
+  "OUVERTURES À CIBLER": "OPENINGS TO TARGET",
+  "Ses plus faibles scores, sur au moins trois parties terminées.": "Lowest scores, over at least three finished games.",
+  "sur ": "over ",
+  "Courtes (≤ 25 coups)": "Short (≤ 25 moves)",
+  "Moyennes (26–50 coups)": "Medium (26–50 moves)",
+  "Longues (> 50 coups)": "Long (> 50 moves)"
 }

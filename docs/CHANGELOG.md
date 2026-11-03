@@ -1,5 +1,9 @@
 # Changements
 
+## Dossier adversaire — 3 novembre 2026
+
+La fiche joueur devient un dossier de préparation : lignes réellement jouées sur les six premiers demi-coups (Blancs et Noirs, avec fréquence et score), résultats selon la longueur de partie, ouvertures à cibler (plus faibles scores sur au moins trois parties terminées) et courbe d'Elo. Un bouton importe directement les parties publiques d'un pseudo Lichess ou Chess.com.
+
 ## Puzzles tactiques — 3 novembre 2026
 
 Banque de puzzles locale (Entraînement → Puzzles) : import direct de l'export Lichess (CSV, compressé `.zst` ou non, licence CC0) avec plafond et plage de classement, et puzzles tirés de vos erreurs analysées (Bilan → « Créer des puzzles des erreurs »). Chaque puzzle est choisi près de votre classement (Elo, K = 32), parmi ceux non résolus, par thème (mat en 1/2/3, fourchette, clouage…) et origine. Au dernier coup, tout mat est accepté ; un indice ou la solution comptent comme un échec. Chrono et historique des tentatives conservés.

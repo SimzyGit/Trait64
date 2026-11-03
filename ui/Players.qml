@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 ScrollView {id:root
     signal preparePlayer(string name)
+    signal importOnline()
     property var backend
     property var p: backend.preferences
     function systemText(value) {var language=backend.preferences.language;return backend.uiText(value)}
@@ -13,6 +14,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
     Flow {Layout.fillWidth:true;spacing:8
         Label {text:qsTr("Joueurs & préparation");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale)}
         Item {Layout.fillWidth:true}
+        TButton {objectName:"playersImportOnline";text:qsTr("Importer depuis Lichess / Chess.com");onClicked:root.importOnline()}
         TextField {id:filter;placeholderText:qsTr("Rechercher un joueur");Layout.preferredWidth:240}
     }
     RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)}}
@@ -39,6 +41,59 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                     delegate:Rectangle {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);height:Math.max(40,40*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:2
                         RowLayout {anchors.fill:parent;anchors.margins:10;Label {text:modelData.label;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight} Label {text:modelData.count+qsTr(" parties · ")+(modelData.finished?Math.round(100*modelData.points/modelData.finished)+" %":"—");color:root.p.muted}}
                     }
+                }
+                Label {text:qsTr("ÉVOLUTION DE L’ELO");visible:(root.profile.eloHistory||[]).length>1;x:20;font.bold:true}
+                Canvas {
+                    id:eloChart;objectName:"eloChart";x:20;width:Math.max(1,profileBody.width-20);height:110
+                    visible:(root.profile.eloHistory||[]).length>1
+                    property var points:root.profile.eloHistory||[]
+                    onPointsChanged:requestPaint()
+                    onWidthChanged:requestPaint()
+                    onPaint:{
+                        var ctx=getContext("2d");ctx.clearRect(0,0,width,height)
+                        if(points.length<2)return
+                        var lo=1e9,hi=-1e9
+                        for(var i=0;i<points.length;++i){lo=Math.min(lo,points[i].elo);hi=Math.max(hi,points[i].elo)}
+                        var span=Math.max(1,hi-lo),pad=14
+                        ctx.strokeStyle=controller.preferences.accentColor||"#ef997a";ctx.lineWidth=2;ctx.beginPath()
+                        for(var j=0;j<points.length;++j){
+                            var x=pad+(width-2*pad)*j/(points.length-1),y=pad+(height-2*pad)*(1-(points[j].elo-lo)/span)
+                            j===0?ctx.moveTo(x,y):ctx.lineTo(x,y)
+                        }
+                        ctx.stroke()
+                        ctx.fillStyle=palette.placeholderText;ctx.font="11px sans-serif"
+                        ctx.fillText(hi,2,11);ctx.fillText(lo,2,height-2)
+                    }
+                }
+                Repeater {
+                    model:[{title:qsTr("LIGNES JOUÉES AVEC LES BLANCS"),key:"whiteLines"},{title:qsTr("LIGNES JOUÉES AVEC LES NOIRS"),key:"blackLines"}]
+                    delegate:Column {
+                        required property var modelData
+                        x:20;width:Math.max(1,profileBody.width-20);spacing:4
+                        visible:(root.profile[modelData.key]||[]).length>0
+                        Label {text:modelData.title;font.bold:true}
+                        Repeater {
+                            model:root.profile[parent.modelData.key]||[]
+                            delegate:RowLayout {
+                                required property var modelData
+                                width:parent.width
+                                Label {text:modelData.line;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight}
+                                Label {text:modelData.count+qsTr(" partie(s)")+(modelData.score!==undefined?" · "+modelData.score+" %":"");color:palette.placeholderText}
+                            }
+                        }
+                    }
+                }
+                Label {text:qsTr("RÉSULTATS SELON LA LONGUEUR DE LA PARTIE");visible:!!root.profile.name;x:20;font.bold:true}
+                Repeater {model:root.profile.phases||[]
+                    delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap
+                        text:root.systemText(modelData.label)+" : "+modelData.wins+qsTr(" victoire(s), ")+modelData.draws+qsTr(" nulle(s), ")+modelData.losses+qsTr(" défaite(s)")}
+                }
+                Label {text:qsTr("OUVERTURES À CIBLER");visible:(root.profile.weakest||[]).length>0;x:20;font.bold:true}
+                Label {visible:(root.profile.weakest||[]).length>0;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap;color:palette.placeholderText
+                    text:qsTr("Ses plus faibles scores, sur au moins trois parties terminées.")}
+                Repeater {model:root.profile.weakest||[]
+                    delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);elide:Text.ElideRight
+                        text:modelData.label+" · "+modelData.score+" % "+qsTr("sur ")+modelData.count+qsTr(" partie(s)")}
                 }
                 Label {text:qsTr("PARTIES RÉCENTES");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.recent||[]

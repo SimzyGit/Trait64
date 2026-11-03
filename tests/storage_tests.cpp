@@ -343,6 +343,36 @@ int main(int argc, char **argv) {
                       pawns.search({}, {}, false, target, false, {{"pawnStructure", true}}).size() == 2,
                   "Pawn structure search finds games with other piece placements");
         }
+        {
+            t64::Database scout(dir.path() + "/dossier.sqlite");
+            const char *games[] = {
+                "[White \"Kim\"]\n[Black \"A\"]\n[Result \"1-0\"]\n[WhiteElo \"1800\"]\n[Date \"2026.01.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 1-0",
+                "[White \"Kim\"]\n[Black \"B\"]\n[Result \"0-1\"]\n[WhiteElo \"1850\"]\n[Date \"2026.02.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 0-1",
+                "[White \"C\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1900\"]\n[Date \"2026.03.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
+                "[White \"D\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1880\"]\n[Date \"2026.04.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
+                "[White \"E\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1870\"]\n[Date \"2026.05.01\"]\n\n1. d4 d5 2. c4 e6 1-0"};
+            for (const auto *pgn : games) {
+                auto game = t64::parsePgn(pgn).front();
+                game.tags["ECO"] = game.nodes[1].uci == "e2e4" ? "B54" : "D30";
+                scout.save(game);
+            }
+            const auto kim = scout.player("Kim");
+            const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
+            check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
+                      white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,
+                  "Dossier groups the player's white lines with their score");
+            check(black.size() == 1 && black[0].toMap()["line"] == "1. d4 d5 2. c4 e6" && black[0].toMap()["score"] == 0,
+                  "Dossier separates black lines");
+            const auto weakest = kim["weakest"].toList();
+            check(!weakest.isEmpty() && weakest[0].toMap()["label"] == "Noirs · D30" && weakest[0].toMap()["score"] == 0,
+                  "Weakest opening needs three finished games and comes first");
+            const auto phases = kim["phases"].toList();
+            check(phases.size() == 3 && phases[0].toMap()["wins"] == 1 && phases[0].toMap()["losses"] == 4,
+                  "Results are split by game length");
+            const auto elo = kim["eloHistory"].toList();
+            check(elo.size() == 5 && elo.first().toMap()["elo"] == 1800 && elo.last().toMap()["elo"] == 1870,
+                  "Rating history is oldest first");
+        }
         const auto oldPath = dir.path() + "/old.sqlite";
         db.backup(oldPath);
         downgradePositionsToV7(oldPath, "old-v7");

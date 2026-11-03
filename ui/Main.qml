@@ -483,7 +483,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     Item {height:20}
                 }
             }
-            Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)}}
+            Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onImportOnline:importsDialog.open()}
         }
         }
     }
