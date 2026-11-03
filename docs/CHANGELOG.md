@@ -7,6 +7,8 @@
 - **Force du moteur en Elo** dans la partie locale (`UCI_LimitStrength` + `UCI_Elo`, bornés à la plage du moteur) ; repli sur le niveau 0–20 si le moteur ne le propose pas.
 - **Carnet de coups continu** en option (ordre PGN, variantes entre parenthèses) et **notation figurine** (♘ ♗ ♖ ♕ ♔), affichage seulement.
 - **Glisser-déposer** d'un PGN, FEN, EPD ou T64 dans la fenêtre.
+- **Tournois de moteurs** toutes rondes entre 2 et 8 profils : couleurs alternées sur la même ouverture (liste intégrée ou livre Polyglot), arbitrage complet (mat, pat, répétition, 50 coups, matériel insuffisant, coup illégal, moteur muet), classement avec écart Elo estimé ; les parties rejoignent la bibliothèque sous leur propre source.
+- **Correction** : fermer l'application pendant qu'un moteur tarde à quitter pouvait la faire planter.
 - **CI Windows et macOS** (portabilité, sans publication). Schéma SQLite 7 inchangé.
 
 ## Carnet de coups côte à côte — 28 octobre 2026

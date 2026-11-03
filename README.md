@@ -89,7 +89,7 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Logiciel libre / code source ouvert | ✅ AGPL-3.0+ | ❌ Propriétaire | ✅ GPLv2 | ✅ Open source |
 | Gratuit | ✅ | ❌ | ✅ | ✅ |
 | Linux | ✅ Cible principale | ❌ Natif Windows | ✅ | ✅ |
-| Windows / macOS | 🧪 Prévu, non validé | ✅ Windows | ✅ | ✅ |
+| Windows / macOS | 🧪 CI de compilation, pas encore publié | ✅ Windows | ✅ | ✅ |
 | Fonctionnement local hors ligne | ✅ | ✅ | ✅ | ✅ |
 | Compte obligatoire pour les fonctions locales | ❌ | ❌ | ❌ | ❌ |
 | Gestion de bases de parties | ✅ SQLite | ✅ Très avancée | ✅ Très avancée | ✅ |
@@ -98,6 +98,7 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Recherche joueurs / événements / ECO / Elo / dates | ✅ | ✅ | ✅ | ✅ |
 | Recherche de positions | ✅ | ✅ | ✅ | ✅ |
 | Arbre / explorateur d’ouvertures | ✅ | ✅ | ✅ | ✅ |
+| Livres d’ouvertures | ✅ Polyglot `.bin` | ✅ CTG et livres maison | ✅ Polyglot | ❌ Non documenté |
 | Analyse avec moteurs UCI locaux | ✅ | ✅ | ✅ | ✅ |
 | MultiPV | ✅ | ✅ | ✅ | ✅ |
 | Comparaison simultanée de plusieurs moteurs | ✅ 2–4 profils | ✅ | ✅ Plusieurs moteurs | ◐ Plusieurs moteurs configurables |
@@ -107,9 +108,9 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Entraînement / répétition espacée | ✅ Cartes et positions de répertoire | ✅ | ◐ Outils d’entraînement | ✅ Puzzles / entraînement |
 | Chess960 | ✅ | ◐ | ◐ | ✅ |
 | Jeu contre un moteur | ✅ | ✅ | ✅ | ✅ |
-| Tournois moteur contre moteur | ❌ Prévu | ✅ Selon outils associés | ✅ | ❌ / non central |
+| Tournois moteur contre moteur | ✅ Toutes rondes, 2–8 profils, écart Elo | ✅ Selon outils associés | ✅ | ❌ / non central |
 | Bases téléchargeables intégrées | ✅ 42 collections | ✅ Écosystème ChessBase | ◐ Import manuel / ressources | ✅ Gestionnaire intégré |
-| Import direct Lichess / Chess.com | ❌ Prévu | ✅ | ◐ | ✅ |
+| Import direct Lichess / Chess.com | ✅ Par pseudo, incrémental sur Lichess | ✅ | ◐ | ✅ |
 | Cloud requis pour l’usage principal | ❌ | ❌ mais services cloud intégrés | ❌ | ❌ |
 | Sauvegardes automatiques locales | ✅ | ◐ | ◐ | ◐ |
 | Format propriétaire nécessaire | ❌ | ◐ Écosystème CBH/CBV | ◐ SI4 + PGN | ❌ |
@@ -162,7 +163,7 @@ Pour mettre à jour une compilation locale, tu peux relancer le script ou utilis
 - **Bibliothèque** : SQLite schéma 7, bases nommées et historique, recherche de fragments indexée FTS5 (si disponible), statistiques et arbres d’ouvertures actualisés à chaque écriture, filtres exacts indexés, recherche par joueur/événement/ECO/date/Elo/collection/résultat, matériel et positions incluant les variantes ; favoris, corbeille restaurable, recherche annulable en arrière-plan et pages par curseur, détection des doublons de ligne principale, réindexation annulable. Fiches joueurs, scores et ouvertures issues de votre base.
 - **Moteurs et bases à télécharger** : trois moteurs vérifiés (Stockfish, Arasan, PlentyChess) et 42 collections PGN, dont les champions classiques, des championnes, matchs historiques et ouvertures. Paramètres UCI indépendants par profil ; filtres combinés par base et ouverture. [Mode d’emploi](docs/ENGINES-DATABASES.md).
 - **Analyse** : moteur UCI local, comparaison simultanée de 2 à 4 profils avec budgets CPU/hash partagés, MultiPV, insertion d’une ligne, profils de réglages, limite de profondeur, chemin Syzygy transmis aux moteurs compatibles. Bilan immédiat de la ligne principale avec graphe, pertes en centipions, annotations et création de cartes depuis les erreurs. Explications du bilan à partir de suites légales : réponse au coup joué ou proposition antérieure, captures/promotions/échecs/mats/pats et compte matériel ; motifs vérifiables (attaques multiples, clouages/enfilades du roi, échecs à la découverte et doubles échecs), ouverture d’une copie annotée avec repères PGN. File d’analyses persistante des lignes principales ou de toutes les variantes, copies indépendantes, pause/reprise, cache lié au moteur et à l’historique, export annoté ; scores de mat distincts des centipions et WDL lorsqu’il est fourni par le moteur.
-- **Jeu local** : contre un moteur ou à deux sur le même ordinateur, camp/force/réflexion réglables, force limitée en Elo pour les moteurs compatibles, pendule avec incrément, abandon et réclamation de nulle.
+- **Jeu local** : contre un moteur ou à deux sur le même ordinateur, camp/force/réflexion réglables, force limitée en Elo pour les moteurs compatibles, tournois toutes rondes entre 2 et 8 profils moteur avec classement, pendule avec incrément, abandon et réclamation de nulle.
 - **Ouvertures** : explorateur des lignes principales de vos parties, résultats statistiques, livres Polyglot `.bin`, reconnaissance ECO hors ligne à partir de 3 865 positions nommées et attribution des balises à l’étude. Répertoires personnels par position et transposition, notes/priorités/alternatives, parties modèles, création/fusion/import/export PGN annulables en arrière-plan, lacunes observées dans la bibliothèque calculées sans bloquer l’interface, analyse moteur de toutes les variantes depuis une copie. Les transpositions sont développées une seule fois. Préparation par source, adversaire/couleur, période et Elo connu avec export CSV.
 - **Entraînement** : cartes depuis vos lignes ou les erreurs analysées, réponses adverses automatiques, solution, suivi quotidien/hebdomadaire, objectif et répétition espacée simple ; révision des positions de répertoire avec plusieurs réponses acceptées, calendrier et suivi des rappels manqués.
 - **Mises à jour** : vérification GitHub en arrière-plan, Stable/Bêta/Développement, notes de version, téléchargement vérifié SHA-256, installation après sauvegarde et redémarrage.
