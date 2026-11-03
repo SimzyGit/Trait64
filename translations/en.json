@@ -758,5 +758,9 @@
   "Rechercher une commande": "Search a command",
   "Exporter le diagramme (PNG ou SVG)": "Export diagram (PNG or SVG)",
   "N°": "No.",
-  "Coups": "Moves"
+  "Coups": "Moves",
+  "Deux passages": "Two passes",
+  "Un passage rapide du début à la fin, puis un passage complet de la fin vers le début : le moteur profite de ce qu’il a appris sur la suite de la partie.": "A quick pass from start to end, then a full pass from the end back to the start: the engine benefits from what it learnt about the rest of the game.",
+  "Passage 1/2, début → fin · ": "Pass 1/2, start → end · ",
+  "Passage 2/2, fin → début · ": "Pass 2/2, end → start · "
 }

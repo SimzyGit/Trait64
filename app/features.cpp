@@ -593,24 +593,30 @@ void Controller::removeEngineProfile(int index) {
     emit preferencesChanged();
 }
 QVariantMap Controller::reviewState() const {
+    const int n = int(reviewNodes_.size());
     return {{"running", reviewing_},
-            {"done", reviewIndex_},
-            {"total", int(reviewNodes_.size())},
+            {"done", reviewDone_},
+            {"total", reviewTwoPasses_ && n > 1 ? 2 * n : n},
+            {"pass", reviewPass_ + 1},
+            {"passes", reviewTwoPasses_ ? 2 : 1},
             {"error", reviewError_},
             {"milliseconds", reviewMilliseconds_}};
 }
-void Controller::analyseGame(int milliseconds) {
+void Controller::analyseGame(int milliseconds, bool twoPasses) {
     if (trainingActive())
         return;
     cancelReview();
     stopPlaying();
     review_.clear();
-    reviewScores_.clear();
     reviewError_.clear();
     ++reviewEpoch_;
     reviewGame_ = game_;
     reviewNodes_ = game_.mainline();
+    reviewScores_ = QVariantList(int(reviewNodes_.size()));
     reviewIndex_ = 0;
+    reviewPass_ = 0;
+    reviewDone_ = 0;
+    reviewTwoPasses_ = twoPasses;
     reviewMilliseconds_ = std::clamp(milliseconds, 100, 10000);
     reviewing_ = true;
     auto options = settings_.value("uciOptions").toMap();
@@ -634,11 +640,20 @@ void Controller::cancelReview() {
 void Controller::requestReviewPosition() {
     if (!reviewing_)
         return;
-    if (reviewIndex_ >= int(reviewNodes_.size())) {
+    const int n = int(reviewNodes_.size());
+    if (reviewPass_ == 0 && reviewIndex_ >= n && reviewTwoPasses_ && n > 1) {
+        // Second pass, from the end: positions near the end are now in the engine's hash,
+        // so every earlier position is searched with what was learnt about its future.
+        reviewPass_ = 1;
+        reviewIndex_ = n - 1;
+        emit reviewChanged();
+    }
+    if ((reviewPass_ == 0 && reviewIndex_ >= n) || (reviewPass_ == 1 && reviewIndex_ < 0)) {
         reviewing_ = false;
         reviewer_.shutdown();
         emit reviewChanged();
-        emit message("Analyse de la ligne principale terminée.");
+        emit message(reviewTwoPasses_ ? "Bilan terminé (début → fin, puis fin → début)."
+                                      : "Analyse de la ligne principale terminée.");
         return;
     }
     const int node = reviewNodes_[reviewIndex_];
@@ -668,24 +683,19 @@ void Controller::requestReviewPosition() {
         });
         return;
     }
-    reviewer_.analyse(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), true, reviewMilliseconds_,
-                      24, reviewGame_.chess960);
+    // The first of two passes is a quick sketch (a third of the budget); the second is the full search.
+    const int budget = reviewTwoPasses_ && reviewPass_ == 0 ? std::max(100, reviewMilliseconds_ / 3) : reviewMilliseconds_;
+    reviewer_.analyse(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), true, budget, 24,
+                      reviewGame_.chess960);
 }
-void Controller::finishReviewPosition(const QString &fen, const QVariantList &lines) {
-    if (!reviewing_ || reviewIndex_ >= int(reviewNodes_.size()) ||
-        fen != qs(reviewGame_.nodes[reviewNodes_[reviewIndex_]].fen))
-        return;
-    if (lines.empty() || lines.first().toMap()["bound"].toBool()) {
-        reviewing_ = false;
-        reviewError_ = "Le moteur n’a pas fourni une évaluation exacte ; relancez avec davantage de temps.";
-        emit reviewChanged();
-        return;
-    }
-    QVariantMap score = lines.first().toMap();
-    reviewScores_ << score;
-    if (reviewIndex_ > 0) {
-        int node = reviewNodes_[reviewIndex_], parent = reviewNodes_[reviewIndex_ - 1];
-        auto previous = reviewScores_[reviewIndex_ - 1].toMap();
+void Controller::rebuildReview() {
+    // One row per move whose position before and after are both evaluated.
+    review_.clear();
+    for (int i = 1; i < int(reviewNodes_.size()); ++i) {
+        const auto previous = reviewScores_[i - 1].toMap(), score = reviewScores_[i].toMap();
+        if (previous.isEmpty() || score.isEmpty())
+            continue;
+        const int node = reviewNodes_[i], parent = reviewNodes_[i - 1];
         const bool white = reviewGame_.boardAt(parent).sideToMove() == chess::Color::WHITE;
         const bool lossKnown = previous["scoreType"] == "cp" && score["scoreType"] == "cp";
         const double loss =
@@ -714,10 +724,34 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
                                {"beforeDepth", previous["depth"]},
                                {"engine", reviewer_.name()},
                                {"milliseconds", reviewMilliseconds_},
+                               {"pass", score["pass"]},
                                {"fen", qs(reviewGame_.nodes[parent].fen)},
                                {"depth", score["depth"]}};
     }
-    ++reviewIndex_;
+}
+void Controller::finishReviewPosition(const QString &fen, const QVariantList &lines) {
+    if (!reviewing_ || reviewIndex_ < 0 || reviewIndex_ >= int(reviewNodes_.size()) ||
+        fen != qs(reviewGame_.nodes[reviewNodes_[reviewIndex_]].fen))
+        return;
+    if (lines.empty() || lines.first().toMap()["bound"].toBool()) {
+        // A second-pass miss keeps the first pass's figure instead of stopping the review.
+        if (reviewPass_ == 1 && !reviewScores_[reviewIndex_].toMap().isEmpty()) {
+            --reviewIndex_;
+            ++reviewDone_;
+        } else {
+            reviewing_ = false;
+            reviewError_ = "Le moteur n’a pas fourni une évaluation exacte ; relancez avec davantage de temps.";
+            emit reviewChanged();
+            return;
+        }
+    } else {
+        auto score = lines.first().toMap();
+        score["pass"] = reviewPass_ + 1;
+        reviewScores_[reviewIndex_] = score;
+        rebuildReview();
+        reviewPass_ == 0 ? ++reviewIndex_ : --reviewIndex_;
+        ++reviewDone_;
+    }
     emit reviewChanged();
     const int epoch = reviewEpoch_;
     QTimer::singleShot(0, this, [this, epoch] {

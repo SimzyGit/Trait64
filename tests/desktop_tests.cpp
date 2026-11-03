@@ -538,6 +538,18 @@ int main(int argc, char **argv) {
                                << "messages" << errors;
                 check(!c.reviewState()["running"].toBool() && c.review().size() == 2,
                       "Full game review completes with Stockfish");
+                check(c.reviewState()["passes"] == 2 && c.reviewState()["done"] == c.reviewState()["total"] &&
+                          c.reviewState()["total"].toInt() == 2 * (c.review().size() + 1),
+                      "Review runs a forward pass, then a backward pass");
+                bool backward = true;
+                for (const auto &row : c.review()) backward &= row.toMap()["pass"] == 2;
+                check(backward, "Final evaluations come from the end-to-start pass");
+                c.analyseGame(100, false);
+                timer.restart();
+                while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)
+                    QTest::qWait(20);
+                check(c.reviewState()["passes"] == 1 && c.review().size() == 2 && c.review()[0].toMap()["pass"] == 1,
+                      "A single forward pass stays available");
                 const auto reviewBeforeExplanation = c.review();
                 const auto beforeExplanation = c.state();
                 const auto actual = c.explainReview(0, false);
