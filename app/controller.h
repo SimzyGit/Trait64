@@ -150,6 +150,10 @@ class Controller : public QObject {
                                      bool bookOpenings);
     t64::AnalysisQueue *analysisQueue() { return &analysisQueue_; }
     Q_INVOKABLE void enqueueAnalysis(bool variations = true, int milliseconds = 500, int profile = -1);
+    // Every game matching the current library filters (main lines), up to `maxGames`.
+    Q_INVOKABLE void enqueueLibrary(int milliseconds = 500, int profile = -1, int maxGames = 200);
+    // Jumps to the first move of the study that no other library game played.
+    Q_INVOKABLE void findNovelty();
     Q_INVOKABLE void compareEngines(const QVariantList &indices);
     Q_INVOKABLE void addComparisonLine(int engine, int variation);
     void startBackgroundServices();

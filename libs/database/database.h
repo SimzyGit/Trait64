@@ -91,6 +91,9 @@ class Database {
     QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {}, const QString &source = {}) const;
     void recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter);
     QVariantMap puzzleStats() const;
+    // First main-line move no other game of the library played from that position.
+    // `self` is the game's own library id (its moves are not counted), 0 if unsaved.
+    QVariantMap novelty(const Game &game, qint64 self = 0) const;
     void addCard(const QString &title, const QString &fen, const QString &moves);
     QVariantList cards() const;
     void review(qint64 id, bool success);

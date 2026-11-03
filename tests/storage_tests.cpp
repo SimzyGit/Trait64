@@ -373,6 +373,25 @@ int main(int argc, char **argv) {
             check(elo.size() == 5 && elo.first().toMap()["elo"] == 1800 && elo.last().toMap()["elo"] == 1870,
                   "Rating history is oldest first");
         }
+        {
+            t64::Database theory(dir.path() + "/novelty.sqlite");
+            theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 *").front());
+            theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nf6 *").front());
+            const auto study = t64::parsePgn("1. e4 e5 2. Nf3 d6 3. d4 *").front();
+            auto found = theory.novelty(study);
+            const auto known = found["known"].toList();
+            check(found["found"].toBool() && found["ply"] == 3 && found["san"] == "d6" && found["reached"] == 2 &&
+                      known.size() == 2,
+                  "Novelty: first move never played from a known position, with the known replies");
+            const auto saved = theory.save(study);
+            found = theory.novelty(theory.load(saved), saved);
+            check(found["found"].toBool() && found["san"] == "d6", "A saved game does not count as its own precedent");
+            check(theory.novelty(t64::parsePgn("1. e4 e5 *").front())["reason"] == "known", "Fully known line has no novelty");
+            check(theory.novelty(t64::parsePgn("1. a3 *").front())["ply"] == 0, "A first move can be the novelty");
+            check(theory.novelty(t64::parsePgn("[SetUp \"1\"]\n[FEN \"8/8/8/8/8/8/6k1/4K2R w K - 0 1\"]\n\n1. Ke2 *").front())["reason"] ==
+                      "unknownStart",
+                  "An unknown starting position is reported as such");
+        }
         const auto oldPath = dir.path() + "/old.sqlite";
         db.backup(oldPath);
         downgradePositionsToV7(oldPath, "old-v7");

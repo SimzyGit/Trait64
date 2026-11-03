@@ -43,6 +43,39 @@ const char *openingTriggers[] = {
 qint64 Database::hashKey(const std::string &fen) { return static_cast<qint64>(positionHash(fen)); }
 qint64 Database::pawnsKey(const std::string &fen) { return static_cast<qint64>(pawnKey(fen)); }
 
+QVariantMap Database::novelty(const Game &game, qint64 self) const {
+    QSqlQuery stats(db_), own(db_);
+    stats.prepare("SELECT uci,san,count FROM opening_stats WHERE key=? ORDER BY count DESC");
+    own.prepare("SELECT 1 FROM games WHERE id=? AND deleted=0");
+    own.addBindValue(self);
+    run(own);
+    const bool counted = self > 0 && own.next();
+    own.finish();
+    const auto line = game.mainline();
+    for (size_t i = 0; i + 1 < line.size(); ++i) {
+        const auto &node = game.nodes[line[i]];
+        const auto &next = game.nodes[line[i + 1]];
+        stats.bindValue(0, nodeKey(node));
+        run(stats);
+        qint64 reached = 0, played = 0;
+        QVariantList known;
+        while (stats.next()) {
+            const bool mine = counted && stats.value(0).toString() == QString::fromStdString(next.uci);
+            const qint64 count = stats.value(2).toLongLong() - (mine ? 1 : 0);
+            if (count <= 0) continue;
+            reached += count;
+            if (stats.value(0).toString() == QString::fromStdString(next.uci)) played = count;
+            else if (known.size() < 3) known << QVariantMap{{"san", stats.value(1)}, {"count", count}};
+        }
+        if (reached == 0) // the previous move already left every known game
+            return {{"found", false}, {"reason", "unknownStart"}};
+        if (played == 0)
+            return {{"found", true}, {"node", line[i + 1]}, {"ply", int(i)}, {"san", QString::fromStdString(next.san)},
+                    {"reached", reached}, {"known", known}};
+    }
+    return {{"found", false}, {"reason", "known"}};
+}
+
 void Database::upgradeV8(int originalVersion) {
     if (originalVersion >= 8) {
         keyed_ = true;

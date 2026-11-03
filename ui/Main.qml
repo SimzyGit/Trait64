@@ -594,6 +594,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Nouvelle partie Chess960");onTriggered:chess960Dialog.open()}
         MenuItem {text:qsTr("Dupliquer l’étude");onTriggered:controller.duplicateStudy()}
         MenuItem {text:qsTr("Identifier et renseigner l’ouverture");onTriggered:controller.identifyOpening()}
+        MenuItem {text:qsTr("Chercher la nouveauté");onTriggered:controller.findNovelty()}
         MenuItem {text:qsTr("Exporter le diagramme en PNG");onTriggered:diagramDialog.open()}
         MenuItem {text:qsTr("Exporter l’étude en PDF");onTriggered:pdfDialog.open()}
         MenuItem {text:qsTr("Effacer les flèches et cercles");onTriggered:controller.clearAnnotations()}

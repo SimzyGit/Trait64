@@ -180,6 +180,31 @@ int main(int argc, char **argv) {
             c.nextPuzzle();
             check(c.puzzles()["active"].toBool(), "Unsolved puzzles stay available");
             c.finishTraining();
+            c.importText("[Event \"x\"]\n\n1. e4 e5 *\n\n[Event \"y\"]\n\n1. d4 d5 *\n\n[Event \"z\"]\n\n1. c4 e5 *");
+            wait.restart();
+            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000) QTest::qWait(10);
+            const int jobs = c.analysisQueue()->jobs().size();
+            c.searchLibrary("", "", false, false, false, {});
+            wait.restart();
+            while (c.librarySearching() && wait.elapsed() < 5000) QTest::qWait(10);
+            QSignalSpy refused(&c, &Controller::message);
+            c.enqueueLibrary(100, -1, 2);
+            check(refused.size() == 1 && refused.first().at(1).toBool() && c.analysisQueue()->jobs().size() == jobs,
+                  "Batch analysis without an engine fails once, clearly");
+            if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
+                c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                c.enqueueLibrary(100, -1, 2);
+                wait.restart();
+                while (c.analysisQueue()->jobs().size() < jobs + 2 && wait.elapsed() < 5000) QTest::qWait(10);
+                check(c.analysisQueue()->jobs().size() == jobs + 2, "Library games are queued for analysis up to the limit");
+                c.analysisQueue()->pauseAll();
+                c.setPreference("enginePath", "");
+            }
+            c.newGame();
+            c.move("e2e4");
+            c.move("c7c5");
+            c.findNovelty();
+            check(c.state()["node"].toInt() == 2, "Novelty search jumps to the first unplayed move");
             Q_UNUSED(first);
             Q_UNUSED(twoRooks);
         }

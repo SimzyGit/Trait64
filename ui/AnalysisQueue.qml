@@ -37,6 +37,11 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
             Layout.fillWidth: true
             CheckBox { id: branches; text: qsTr("Toutes les variantes"); checked: true }
             Item { Layout.fillWidth: true }
+            TButton { objectName: "enqueueLibrary"; text: qsTr("Parties affichées de la bibliothèque")
+                enabled: !!root.queue.state.ready && !root.backend.state.training
+                ToolTip.visible: hovered; ToolTip.text: qsTr("Ajoute jusqu’à 200 parties correspondant aux filtres actuels de la bibliothèque (lignes principales).")
+                onClicked: root.backend.enqueueLibrary([100,500,1000,2000,5000,10000][budget.currentIndex], profile.currentIndex - 1, 200)
+            }
             TButton { objectName: "enqueueAnalysis"; text: qsTr("Ajouter à la file"); accent: true
                 enabled: !!root.queue.state.ready && !root.backend.state.training
                 onClicked: root.backend.enqueueAnalysis(branches.checked, [100,500,1000,2000,5000,10000][budget.currentIndex], profile.currentIndex - 1)

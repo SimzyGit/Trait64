@@ -1,5 +1,10 @@
 # Changements
 
+## Analyse en lot et nouveautés — 3 novembre 2026
+
+- **Analyse des parties affichées** : la file d'analyse reçoit en une fois jusqu'à 200 parties correspondant aux filtres de la bibliothèque (lignes principales), avec le budget et le profil choisis.
+- **Chercher la nouveauté** (menu de l'étude) : premier coup de la ligne principale qu'aucune autre partie de la bibliothèque n'a joué depuis cette position, avec le nombre de parties qui l'atteignent et les suites connues. Les coups de la partie elle-même ne comptent pas.
+
 ## Dossier adversaire — 3 novembre 2026
 
 La fiche joueur devient un dossier de préparation : lignes réellement jouées sur les six premiers demi-coups (Blancs et Noirs, avec fréquence et score), résultats selon la longueur de partie, ouvertures à cibler (plus faibles scores sur au moins trois parties terminées) et courbe d'Elo. Un bouton importe directement les parties publiques d'un pseudo Lichess ou Chess.com.

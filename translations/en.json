@@ -680,5 +680,8 @@
   "sur ": "over ",
   "Courtes (≤ 25 coups)": "Short (≤ 25 moves)",
   "Moyennes (26–50 coups)": "Medium (26–50 moves)",
-  "Longues (> 50 coups)": "Long (> 50 moves)"
+  "Longues (> 50 coups)": "Long (> 50 moves)",
+  "Parties affichées de la bibliothèque": "Games shown in the library",
+  "Ajoute jusqu’à 200 parties correspondant aux filtres actuels de la bibliothèque (lignes principales).": "Adds up to 200 games matching the current library filters (main lines).",
+  "Chercher la nouveauté": "Find the novelty"
 }
