@@ -491,6 +491,24 @@ std::uint64_t positionHash(const std::string &fen) {
                              variant960);
     return board.hash();
 }
+std::uint64_t pawnKey(const std::string &fen) {
+    // FNV-1a over the squares of white and black pawns, read straight from the FEN placement.
+    std::uint64_t key = 1469598103934665603ULL;
+    int square = 56; // a8, the first square of a FEN
+    for (const char c : fen) {
+        if (c == ' ') break;
+        if (c == '/') square -= 16;
+        else if (c >= '1' && c <= '8') square += c - '0';
+        else {
+            if (c == 'P' || c == 'p') {
+                key ^= std::uint64_t(square << 1 | (c == 'p'));
+                key *= 1099511628211ULL;
+            }
+            ++square;
+        }
+    }
+    return key;
+}
 uint64_t perft(chess::Board &board, int depth) {
     if (depth <= 0)
         return 1;

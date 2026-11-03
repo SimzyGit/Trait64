@@ -53,5 +53,7 @@ std::vector<Game> parsePgn(const std::string &pgn, size_t maxGames = 10000,
 std::string positionKey(const std::string &fen);
 // Zobrist key of a FEN (four or six fields; Shredder castling letters select Chess960).
 std::uint64_t positionHash(const std::string &fen);
+// Key of the pawn structure alone (both colours), for "same pawn structure" searches.
+std::uint64_t pawnKey(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);
 } // namespace t64

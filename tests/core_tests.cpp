@@ -329,6 +329,19 @@ int main() {
             std::remove(path.c_str());
             std::remove("polyglot-bad.bin");
         }
+        {
+            const std::string a = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3";
+            const std::string sameP = "rnbqkb1r/pppp1ppp/5n2/4p3/4P3/2N5/PPPP1PPP/R1BQKBNR w KQkq - 2 3";
+            const std::string otherP = "rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2";
+            const std::string swapped = "rnbqkbnr/pppp1ppp/8/4P3/4p3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
+            check(t64::pawnKey(a) == t64::pawnKey(sameP) && t64::pawnKey(a) != t64::pawnKey(otherP) &&
+                      t64::pawnKey(a) != t64::pawnKey(swapped) && t64::positionHash(a) != t64::positionHash(sameP),
+                  "Pawn key ignores pieces but not pawn squares or colours");
+            check(t64::positionHash(a) == chess::Board(a).hash() &&
+                      t64::positionHash("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -") ==
+                          chess::Board(a).hash(),
+                  "Position hash accepts four- or six-field FEN");
+        }
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

@@ -257,7 +257,8 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         erase.addBindValue(id);
         run(erase);
         QSqlQuery all(db_);
-        all.prepare("INSERT INTO all_positions(game_id,node," + column + ",material) VALUES(?,?,?,?)");
+        all.prepare(keyed_ ? "INSERT INTO all_positions(game_id,node,key,material,pawns) VALUES(?,?,?,?,?)"
+                           : "INSERT INTO all_positions(game_id,node,fen,material) VALUES(?,?,?,?)");
         std::vector<int> pending{0};
         while (!pending.empty()) {
             int n = pending.back();
@@ -268,6 +269,7 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             all.bindValue(1, n);
             all.bindValue(2, positionValue(node));
             all.bindValue(3, material);
+            if (keyed_) all.bindValue(4, pawnsKey(node.fen));
             run(all);
             pending.insert(pending.end(), node.children.begin(), node.children.end());
         }
@@ -376,8 +378,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (favorite)
         statement += " AND g.favorite=1";
     if (!position.isEmpty()) {
-        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE key=?)";
-        args << hashKey(position.toStdString());
+        // Same pawn structure (any other pieces) or the exact position.
+        const bool pawns = filters.value("pawnStructure").toBool();
+        statement += QString(" AND g.id IN(SELECT game_id FROM all_positions WHERE ") + (pawns ? "pawns" : "key") + "=?)";
+        args << (pawns ? pawnsKey(position.toStdString()) : hashKey(position.toStdString()));
     }
     for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
         if (!filters.value(key).toString().isEmpty()) {

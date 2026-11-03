@@ -52,7 +52,7 @@ ApplicationWindow {
     function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#171b21":"#ffffff"}
     property double selectedBaseId:0
     property var advanced:({})
-    function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
+    function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;f.pawnStructure=positionCheck.checked&&pawnCheck.checked;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
     function filterLibrary() {applyAdvanced()}
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
@@ -147,6 +147,9 @@ ApplicationWindow {
                 Flow {Layout.fillWidth:true;spacing:8
                     CheckBox {id:favoriteCheck;text:qsTr("Favoris");onToggled:win.filterLibrary()}
                     CheckBox {id:positionCheck;text:qsTr("Position de l’échiquier");onToggled:win.filterLibrary()}
+                    CheckBox {id:pawnCheck;objectName:"pawnStructureFilter";text:qsTr("Même structure de pions");visible:positionCheck.checked
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Parties qui atteignent la structure de pions de l’échiquier, quelles que soient les autres pièces.")
+                        onToggled:win.filterLibrary()}
                     CheckBox {id:trashCheck;text:qsTr("Corbeille");onToggled:win.filterLibrary()}
                     TButton {text:qsTr("Annuler la recherche");visible:controller.librarySearching;onClicked:controller.cancelLibrarySearch()}
                 }

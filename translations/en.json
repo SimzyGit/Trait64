@@ -620,5 +620,7 @@
   "Moteur": "Engine",
   "Points": "Points",
   "Elo ±": "Elo ±",
-  "« Elo ± » est l'écart estimé face au reste du plateau. Sur peu de parties, la marge d'erreur dépasse souvent 100 Elo.": "\"Elo ±\" is the estimated gap against the rest of the field. Over few games the error margin often exceeds 100 Elo."
+  "« Elo ± » est l'écart estimé face au reste du plateau. Sur peu de parties, la marge d'erreur dépasse souvent 100 Elo.": "\"Elo ±\" is the estimated gap against the rest of the field. Over few games the error margin often exceeds 100 Elo.",
+  "Même structure de pions": "Same pawn structure",
+  "Parties qui atteignent la structure de pions de l’échiquier, quelles que soient les autres pièces.": "Games reaching the board's pawn structure, whatever the other pieces."
 }

@@ -296,6 +296,7 @@ int main(int argc, char **argv) {
             const auto searchBefore = db.search({}, {}, false, variant).size();
             const auto explorerBefore = db.explorer(start);
             downgradePositionsToV7(v7Path);
+            const auto pawnBefore = db.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size();
             const auto legacySize = QFileInfo(v7Path).size();
             {
                 t64::Database migrated(v7Path);
@@ -304,6 +305,9 @@ int main(int argc, char **argv) {
                 check(migrated.explorer(start) == explorerBefore && !explorerBefore.empty(),
                       "Migration 8 keeps opening statistics exactly");
                 check(migrated.integrity() == "ok", "Migration 8 integrity");
+                check(migrated.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size() == pawnBefore &&
+                          pawnBefore >= searchBefore,
+                      "Migration 8 computes pawn structure keys");
                 auto copy = migrated.load(migrated.search().first().toMap()["id"].toLongLong());
                 copy.tags["Event"] = "After migration";
                 migrated.save(copy);
@@ -327,6 +331,17 @@ int main(int argc, char **argv) {
             }
             QSqlDatabase::removeDatabase("v8-check");
             std::cout << "v7 fixture " << legacySize << " bytes, v8 " << QFileInfo(v7Path).size() << " bytes\n";
+        }
+        {
+            // Same pawns, different pieces: only the structure search links the two games.
+            t64::Database pawns(dir.path() + "/pawns.sqlite");
+            for (const auto *pgn : {"[Event \"A\"]\n\n1. e4 e5 2. Nf3 Nc6 *", "[Event \"B\"]\n\n1. e4 e5 2. Nc3 Nf6 *",
+                                    "[Event \"C\"]\n\n1. d4 d5 *"})
+                pawns.save(t64::parsePgn(pgn).front());
+            const auto target = QString::fromStdString(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 *").front().nodes.back().fen);
+            check(pawns.search({}, {}, false, target).size() == 1 &&
+                      pawns.search({}, {}, false, target, false, {{"pawnStructure", true}}).size() == 2,
+                  "Pawn structure search finds games with other piece placements");
         }
         const auto oldPath = dir.path() + "/old.sqlite";
         db.backup(oldPath);

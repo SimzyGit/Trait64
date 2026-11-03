@@ -41,6 +41,7 @@ const char *openingTriggers[] = {
 } // namespace
 
 qint64 Database::hashKey(const std::string &fen) { return static_cast<qint64>(positionHash(fen)); }
+qint64 Database::pawnsKey(const std::string &fen) { return static_cast<qint64>(pawnKey(fen)); }
 
 void Database::upgradeV8(int originalVersion) {
     if (originalVersion >= 8) {
@@ -53,16 +54,17 @@ void Database::upgradeV8(int originalVersion) {
     try {
         // FEN text -> hash, computed once per distinct position. SQL then converts every table
         // without re-reading a single PGN.
-        sql("CREATE TEMP TABLE keymap(fen TEXT PRIMARY KEY,key INTEGER NOT NULL) WITHOUT ROWID");
+        sql("CREATE TEMP TABLE keymap(fen TEXT PRIMARY KEY,key INTEGER NOT NULL,pawns INTEGER NOT NULL) WITHOUT ROWID");
         QSqlQuery distinct(db_), insert(db_);
         distinct.setForwardOnly(true);
         check(distinct.exec("SELECT fen FROM all_positions UNION SELECT fen FROM positions"),
               distinct.lastError().text());
-        insert.prepare("INSERT INTO keymap VALUES(?,?)");
+        insert.prepare("INSERT INTO keymap VALUES(?,?,?)");
         while (distinct.next()) {
             const auto fen = distinct.value(0).toString();
             insert.bindValue(0, fen);
             insert.bindValue(1, hashKey(fen.toStdString()));
+            insert.bindValue(2, pawnsKey(fen.toStdString()));
             run(insert);
         }
         distinct.finish();
@@ -73,9 +75,10 @@ void Database::upgradeV8(int originalVersion) {
         sql("INSERT INTO positions8 SELECT p.game_id,p.ply,k.key,p.uci,p.san FROM positions p JOIN keymap k "
             "ON k.fen=p.fen");
         sql("CREATE TABLE all_positions8(game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,node "
-            "INTEGER NOT NULL,key INTEGER NOT NULL,material TEXT NOT NULL,PRIMARY KEY(game_id,node)) WITHOUT "
+            "INTEGER NOT NULL,key INTEGER NOT NULL,material TEXT NOT NULL,pawns INTEGER NOT NULL,PRIMARY "
+            "KEY(game_id,node)) WITHOUT "
             "ROWID");
-        sql("INSERT INTO all_positions8 SELECT a.game_id,a.node,k.key,a.material FROM all_positions a JOIN "
+        sql("INSERT INTO all_positions8 SELECT a.game_id,a.node,k.key,a.material,k.pawns FROM all_positions a JOIN "
             "keymap k ON k.fen=a.fen");
         sql("CREATE TABLE opening_edges8(game_id INTEGER REFERENCES games(id) ON DELETE CASCADE,key INTEGER "
             "NOT NULL,uci TEXT NOT NULL,san TEXT NOT NULL,PRIMARY KEY(game_id,key,uci)) WITHOUT ROWID");
@@ -94,6 +97,7 @@ void Database::upgradeV8(int originalVersion) {
         sql("CREATE INDEX positions_key ON positions(key)");
         sql("CREATE INDEX all_positions_key ON all_positions(key)");
         sql("CREATE INDEX all_positions_material ON all_positions(material)");
+        sql("CREATE INDEX all_positions_pawns ON all_positions(pawns)");
         for (const char *trigger : openingTriggers) sql(trigger);
         sql("DROP TABLE keymap");
         sql("PRAGMA user_version=8");

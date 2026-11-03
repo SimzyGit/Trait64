@@ -96,6 +96,7 @@ class Database {
     bool keyed_ = false; // schema 8: positions indexed by Zobrist key, not FEN text
     void upgradeV8(int originalVersion);
     static qint64 hashKey(const std::string &fen);
+    static qint64 pawnsKey(const std::string &fen);
     static qint64 nodeKey(const Node &node) { return node.hash ? qint64(node.hash) : hashKey(node.fen); }
     void upgradeV3(int originalVersion);
     void upgradeV4(int originalVersion);
