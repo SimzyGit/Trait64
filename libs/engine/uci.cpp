@@ -254,9 +254,20 @@ void Uci::parse(const QString &line) {
         return;
     }
     if (line == "uciok" && state_ == Handshake) {
-        const QVariantMap automatic{{"Threads", threads_}, {"Hash", hash_},
-                                    {"MultiPV", multiPV_}, {"Skill Level", skill_}};
-        const QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
+        QVariantMap automatic{{"Threads", threads_}, {"Hash", hash_},
+                              {"MultiPV", multiPV_}, {"Skill Level", skill_}};
+        QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
+        appliedElo_ = 0;
+        if (limitElo_ > 0 && options_.contains("UCI_LimitStrength") && options_.contains("UCI_Elo")) {
+            // An Elo target replaces Skill Level, which would otherwise weaken the engine twice.
+            automatic["Skill Level"] = 20;
+            automatic["UCI_LimitStrength"] = true;
+            automatic["UCI_Elo"] = limitElo_;
+            managed << "UCI_LimitStrength" << "UCI_Elo";
+            for (const auto &value : descriptors_)
+                if (value.toMap()["name"] == "UCI_Elo")
+                    appliedElo_ = optionValue(value.toMap(), limitElo_, true).toInt();
+        }
         for (const auto &value : descriptors_) {
             const auto option = value.toMap();
             const auto name = option["name"].toString();

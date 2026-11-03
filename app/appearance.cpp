@@ -18,7 +18,7 @@ QVariantMap Controller::preferences() const {
                          {"threads", 1},
                          {"hash", 128},
                          {"multiPV", 3},
-                         {"skill", 12},
+                         {"skill", 12}, {"playElo", 0},
                          {"moveTime", 1000},
                          {"analysisDepth", 24},
                          {"importWorkers", 2},
@@ -87,7 +87,7 @@ QVariantMap Controller::preferences() const {
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
         const QMap<QString, QPair<int, int>> limits{{"threads", {1, 32}},       {"hash", {16, 4096}},
-                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}},
+                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}}, {"playElo", {0, 4000}},
                                                     {"moveTime", {100, 10000}}, {"analysisDepth", {1, 99}},
                                                     {"dailyGoal", {1, 1000}},   {"importWorkers", {1, 8}}};
         QVariant clean = value;

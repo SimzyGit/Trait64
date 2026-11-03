@@ -50,6 +50,14 @@ Controller::Controller(const QString &path, QObject *parent)
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "fr").toString());
     openBook();
+    connect(&engine_, &t64::Uci::initialized, this, [this] {
+        const int elo = settings_.value("playElo", 0).toInt();
+        if (!playing_ || elo <= 0) return;
+        if (engine_.appliedElo() > 0)
+            emit message(tr("Force du moteur limitée à %1 Elo.").arg(engine_.appliedElo()));
+        else
+            emit message(tr("Ce moteur ne propose pas de réglage Elo : le niveau 0–20 est utilisé."));
+    });
     online_ = new t64::OnlineGames(this);
     connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
         emit busyChanged();
@@ -1009,6 +1017,7 @@ void Controller::startEngine() {
     auto options = settings_.value("uciOptions").toMap();
     if (!playing_)
         options["UCI_LimitStrength"] = false;
+    engine_.setLimitElo(playing_ ? settings_.value("playElo", 0).toInt() : 0);
     engine_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
                   settings_.value("hash", 128).toInt(), settings_.value("multiPV", 3).toInt(),
                   playing_ ? settings_.value("skill", 12).toInt() : 20,

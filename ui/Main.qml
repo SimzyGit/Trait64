@@ -535,6 +535,14 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             TComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
             GridLayout {columns:2;Layout.fillWidth:true;Label {text:qsTr("Minutes")} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
             TComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
+            RowLayout {Layout.fillWidth:true;visible:opponent.currentIndex===1;spacing:10
+                CheckBox {id:limitElo;objectName:"limitElo";text:qsTr("Limiter la force à");checked:controller.preferences.playElo>0
+                    onToggled:controller.setPreference("playElo",checked?playEloValue.value:0)}
+                SpinBox {id:playEloValue;objectName:"playElo";from:800;to:3200;stepSize:50;editable:true;enabled:limitElo.checked
+                    value:controller.preferences.playElo>0?controller.preferences.playElo:1500
+                    onValueModified:if(limitElo.checked)controller.setPreference("playElo",value)}
+                Label {text:qsTr("Elo");color:win.muted}
+            }
             TButton {text:qsTr("Démarrer avec pendule");accent:true;Layout.fillWidth:true;onClicked:{controller.startLocalGame(clockMinutes.value,clockIncrement.value,opponent.currentIndex,playSide.currentIndex===0);playDialog.close()}}
             TButton {text:qsTr("Moteur sans pendule");visible:opponent.currentIndex===1;Layout.fillWidth:true;onClicked:{controller.playComputer(playSide.currentIndex===0);playDialog.close()}}
             Label {text:qsTr("La partie démarre depuis la position de l’échiquier. Parcourir les coups arrête la pendule.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}

@@ -601,5 +601,7 @@
   "Pseudo": "Username",
   "Parties max.": "Max games",
   "Importer": "Import",
-  "PGN PAR LOTS": "PGN IN BATCHES"
+  "PGN PAR LOTS": "PGN IN BATCHES",
+  "Limiter la force à": "Limit strength to",
+  "Elo": "Elo"
 }

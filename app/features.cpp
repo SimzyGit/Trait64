@@ -453,7 +453,7 @@ void Controller::saveEngineProfile(const QString &name) {
         return;
     auto list = settings_.value("engineProfiles").toList();
     QVariantMap p{{"name", name.trimmed().left(80)}};
-    for (const auto &k : QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "moveTime",
+    for (const auto &k : QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "playElo", "moveTime",
                                      "analysisDepth", "syzygyPath", "uciOptions"})
         p[k] = preferences()[k];
     for (int i = 0; i < list.size(); ++i)

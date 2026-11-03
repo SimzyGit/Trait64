@@ -15,6 +15,11 @@ class Uci : public QObject {
     void start(const QString &executable, int threads = 1, int hash = 128, int multiPV = 3, int skill = 20,
                const QString &syzygyPath = {}, const QVariantMap &customOptions = {});
     QVariantList options() const { return descriptors_; }
+    // Playing strength in Elo for the next start (0 = full strength / Skill Level only).
+    // Applied through UCI_LimitStrength + UCI_Elo when the engine offers them.
+    void setLimitElo(int elo) { limitElo_ = elo > 0 ? elo : 0; }
+    // Elo actually applied after the handshake (clamped to the engine's range), 0 if none.
+    int appliedElo() const { return appliedElo_; }
     QString executable() const { return process_.program(); }
     static QVariantMap parseOption(const QString &line);
     static QVariantMap parseInfo(const QString &line, const QString &fen, bool chess960 = false);
@@ -37,6 +42,7 @@ class Uci : public QObject {
 
   private:
     enum State { Off, Handshake, WaitingReady, Ready, Searching, Stopping } state_ = Off;
+    int limitElo_ = 0, appliedElo_ = 0;
     QProcess process_;
     QTimer timeout_;
     QByteArray buffer_;

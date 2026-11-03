@@ -89,6 +89,57 @@ int main(int argc, char **argv) {
             check(waitFor([&] { return bounded.ready(); }), "Handshake adapts to bounded engine options");
             bounded.shutdown();
         }
+        {
+            QTemporaryDir dir;
+            const auto log = dir.path() + "/commands.log";
+            auto fixture = [&](const QString &name, bool elo) {
+                QFile fake(dir.path() + "/" + name);
+                check(fake.open(QIODevice::WriteOnly), "Create logging UCI fixture");
+                fake.write(QString("#!/bin/sh\nwhile IFS= read -r line; do\nprintf '%s\\n' \"$line\" >> '%1'\n"
+                                   "case \"$line\" in\nuci) printf '%s\\n' 'id name Elo fixture' "
+                                   "'option name Skill Level type spin default 20 min 0 max 20' %2 'uciok';;\n"
+                                   "isready) printf 'readyok\\n';;\nquit) exit;;\nesac\ndone\n")
+                               .arg(log, elo ? "'option name UCI_LimitStrength type check default false' "
+                                               "'option name UCI_Elo type spin default 1320 min 1320 max 3190'"
+                                             : "")
+                               .toUtf8());
+                fake.close();
+                fake.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+                return fake.fileName();
+            };
+            auto commands = [&] {
+                QFile file(log);
+                file.open(QIODevice::ReadOnly);
+                const auto text = QString::fromUtf8(file.readAll());
+                QFile::remove(log);
+                return text;
+            };
+            t64::Uci limited;
+            limited.setLimitElo(900);
+            limited.start(fixture("elo-engine", true), 1, 16, 1, 5, {}, {{"UCI_LimitStrength", false}});
+            check(waitFor([&] { return limited.ready(); }), "Elo-capable engine starts");
+            limited.shutdown();
+            auto sent = commands();
+            check(limited.appliedElo() == 1320 && sent.contains("setoption name UCI_LimitStrength value true") &&
+                      sent.contains("setoption name UCI_Elo value 1320") &&
+                      sent.contains("setoption name Skill Level value 20") && !sent.contains("UCI_LimitStrength value false"),
+                  "Elo target is clamped to the engine range and overrides Skill Level and custom options");
+            limited.setLimitElo(0);
+            limited.start(fixture("elo-engine", true), 1, 16, 1, 5);
+            check(waitFor([&] { return limited.ready(); }), "Full-strength restart");
+            limited.shutdown();
+            sent = commands();
+            check(limited.appliedElo() == 0 && !sent.contains("UCI_Elo") && sent.contains("Skill Level value 5"),
+                  "No Elo target keeps the Skill Level behaviour");
+            t64::Uci plain;
+            plain.setLimitElo(1500);
+            plain.start(fixture("plain-engine", false), 1, 16, 1, 7);
+            check(waitFor([&] { return plain.ready(); }), "Engine without Elo option starts");
+            plain.shutdown();
+            sent = commands();
+            check(plain.appliedElo() == 0 && sent.contains("Skill Level value 7"),
+                  "Engines without UCI_Elo fall back to Skill Level");
+        }
         QSignalSpy best(&engine, &t64::Uci::bestMove), lines(&engine, &t64::Uci::lines),
             complete(&engine, &t64::Uci::completed);
         QString path = qEnvironmentVariable("T64_STOCKFISH");
