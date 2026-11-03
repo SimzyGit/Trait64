@@ -22,6 +22,7 @@
 #include <QTest>
 #include <QThreadPool>
 #include <QtConcurrent>
+#include <functional>
 #include <future>
 #include <iostream>
 
@@ -30,6 +31,16 @@ void check(bool ok, const char *message) {
     ++checks;
     if (!ok)
         throw std::runtime_error(message);
+}
+// Bounded wait that reports whether the condition really came true, so a test
+// can fail on the spot instead of carrying on with an assumption the machine
+// never met. Loaded runners reach these states much later than idle ones.
+bool waitUntil(const std::function<bool()> &ready, int timeoutMs) {
+    QElapsedTimer timer;
+    timer.start();
+    while (!ready() && timer.elapsed() < timeoutMs)
+        QTest::qWait(10);
+    return ready();
 }
 QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
     if (parent->objectName() == name)
@@ -295,9 +306,12 @@ int main(int argc, char **argv) {
                   "A failed sync does not pretend to be up to date");
             c.syncAllAccounts();
             for (int i = 0; i < 2; ++i) {
-                QElapsedTimer w;
-                w.start();
-                while (!c.onlineFetching() && w.elapsed() < 3000) QTest::qWait(10);
+                // Cancelling before the request is in flight cancels nothing: the sync then
+                // runs to completion and imports games the checks below do not expect. Under
+                // `ctest -j4` with sanitizers the first reply can take well over three seconds,
+                // so wait for the fetch to really start and say so if it never does.
+                check(waitUntil([&] { return c.onlineFetching(); }, 15000),
+                      "Sync all puts every account on the wire");
                 online->cancel();
                 settle();
             }
