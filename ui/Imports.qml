@@ -22,7 +22,7 @@ TDialog {
     ScrollView {id:importsViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewport.availableHeight,implicitHeight);
          spacing: 12
-        Label {text: qsTr("DEPUIS LICHESS OU CHESS.COM"); font.bold: true}
+        Label {text: qsTr("Depuis Lichess ou Chess.com"); font.bold: true}
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
             text: qsTr("Parties publiques uniquement, sans compte. Sur Lichess, un nouvel import ne récupère que les parties jouées depuis le précédent.")
@@ -39,7 +39,7 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
             BusyIndicator {visible:root.backend.onlineFetching;running:visible;implicitHeight:28;implicitWidth:28}
         }
         Rectangle {Layout.fillWidth:true;height:1;opacity:.4;color:palette.mid}
-        Label {text: qsTr("PGN PAR LOTS"); font.bold: true}
+        Label {text: qsTr("PGN par lots"); font.bold: true}
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
             text: qsTr("Les parties sont conservées par lots de 250. Après une pause ou un plantage, la reprise repart du dernier lot validé. Le fichier entier est vérifié par SHA-256 avant chaque reprise.")

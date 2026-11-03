@@ -12,7 +12,6 @@ ScrollView {id:root
 ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,implicitHeight);
     spacing:16
     Flow {Layout.fillWidth:true;spacing:8
-        Label {text:qsTr("Joueurs & préparation");font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale)}
         Item {Layout.fillWidth:true}
         TButton {objectName:"playersImportOnline";text:qsTr("Importer depuis Lichess / Chess.com");onClicked:root.importOnline()}
         TextField {id:filter;placeholderText:qsTr("Rechercher un joueur");Layout.preferredWidth:240}
@@ -36,13 +35,13 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                     }
                 }
                 Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+qsTr(" avec les Blancs · ")+(root.profile.blackGames||0)+qsTr(" avec les Noirs · ")+(root.profile.unfinished||0)+qsTr(" inachevées");wrapMode:Text.WordWrap;x:20;width:Math.max(1,profileBody.width-20);color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                Label {text:qsTr("OUVERTURES JOUÉES");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
+                Label {text:qsTr("Ouvertures jouées");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.openings||[]
                     delegate:Rectangle {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);height:Math.max(40,40*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:2
                         RowLayout {anchors.fill:parent;anchors.margins:10;Label {text:modelData.label;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight} Label {text:modelData.count+qsTr(" parties · ")+(modelData.finished?Math.round(100*modelData.points/modelData.finished)+" %":"—");color:root.p.muted}}
                     }
                 }
-                Label {text:qsTr("ÉVOLUTION DE L’ELO");visible:(root.profile.eloHistory||[]).length>1;x:20;font.bold:true}
+                Label {text:qsTr("Évolution de l’Elo");visible:(root.profile.eloHistory||[]).length>1;x:20;font.bold:true}
                 Canvas {
                     id:eloChart;objectName:"eloChart";x:20;width:Math.max(1,profileBody.width-20);height:110
                     visible:(root.profile.eloHistory||[]).length>1
@@ -66,7 +65,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                     }
                 }
                 Repeater {
-                    model:[{title:qsTr("LIGNES JOUÉES AVEC LES BLANCS"),key:"whiteLines"},{title:qsTr("LIGNES JOUÉES AVEC LES NOIRS"),key:"blackLines"}]
+                    model:[{title:qsTr("Lignes jouées avec les Blancs"),key:"whiteLines"},{title:qsTr("Lignes jouées avec les Noirs"),key:"blackLines"}]
                     delegate:Column {
                         required property var modelData
                         x:20;width:Math.max(1,profileBody.width-20);spacing:4
@@ -83,19 +82,19 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                         }
                     }
                 }
-                Label {text:qsTr("RÉSULTATS SELON LA LONGUEUR DE LA PARTIE");visible:!!root.profile.name;x:20;font.bold:true}
+                Label {text:qsTr("Résultats selon la longueur de la partie");visible:!!root.profile.name;x:20;font.bold:true}
                 Repeater {model:root.profile.phases||[]
                     delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap
                         text:root.systemText(modelData.label)+" : "+modelData.wins+qsTr(" victoire(s), ")+modelData.draws+qsTr(" nulle(s), ")+modelData.losses+qsTr(" défaite(s)")}
                 }
-                Label {text:qsTr("OUVERTURES À CIBLER");visible:(root.profile.weakest||[]).length>0;x:20;font.bold:true}
+                Label {text:qsTr("Ouvertures à cibler");visible:(root.profile.weakest||[]).length>0;x:20;font.bold:true}
                 Label {visible:(root.profile.weakest||[]).length>0;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap;color:palette.placeholderText
                     text:qsTr("Ses plus faibles scores, sur au moins trois parties terminées.")}
                 Repeater {model:root.profile.weakest||[]
                     delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);elide:Text.ElideRight
                         text:modelData.label+" · "+modelData.score+" % "+qsTr("sur ")+modelData.count+qsTr(" partie(s)")}
                 }
-                Label {text:qsTr("PARTIES RÉCENTES");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
+                Label {text:qsTr("Parties récentes");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.recent||[]
                     delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);text:modelData.date+" · "+modelData.opponent+" · "+modelData.result;elide:Text.ElideRight}
                 }

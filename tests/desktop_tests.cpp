@@ -776,7 +776,7 @@ int main(int argc, char **argv) {
             c.setPreference("backgroundColor", "");
             window->setProperty("page", 0);
             QTest::qWait(30);
-            check(c.preferences()["accentColor"].toString() == "#a1442b", "Light default accent is readable");
+            check(c.preferences()["accentColor"].toString() == "#2f66ad", "Light default accent is readable");
             c.setPreference("accentColor", "#315ac4");
             c.setPreference("lightTheme", false);
             check(c.preferences()["accentColor"].toString() == "#315ac4",

@@ -67,7 +67,7 @@ TDialog {
                 text: qsTr("Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec.")
             }
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
-            Label { text: qsTr("IMPORTER LA BASE LICHESS"); font.bold: true }
+            Label { text: qsTr("Importer la base Lichess"); font.bold: true }
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
                 text: qsTr("Environ 5 millions de puzzles notés, sous licence CC0. Téléchargez « lichess_db_puzzle.csv.zst » (≈ 280 Mo) depuis le site, puis importez-le ici : le fichier compressé est lu directement.")

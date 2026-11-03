@@ -17,7 +17,6 @@ ScrollView {
     contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
     ColumnLayout {
         width:root.availableWidth;spacing:16
-        Label {text:qsTr("Un échiquier, tous vos outils.");font.pixelSize:Math.round(26*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold;Layout.fillWidth:true;wrapMode:Text.WordWrap}
         Flow {Layout.fillWidth:true;spacing:8
             TButton {text:qsTr("Nouvelle étude");accent:true;onClicked:root.newStudy()}
             TButton {text:qsTr("Importer un PGN");onClicked:root.importStudy()}

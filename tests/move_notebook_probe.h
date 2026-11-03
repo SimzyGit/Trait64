@@ -167,6 +167,7 @@ int moveNotebookProbe(const QString &directory) {
         c.setPreference("lightTheme",scenario.light);c.setPreference("highContrast",scenario.contrast);
         c.setPreference("language",scenario.language);window->resize(scenario.width,scenario.height);QTest::qWait(100);settled();
         auto *cell=visualItem(window->contentItem(),"notebookMove_1");
+        if(cell) qInfo()<<"Cell"<<index<<cell->width()<<cell->height()<<visualItem(window->contentItem(),"moveNotebook")->height()<<visualItem(window->contentItem(),"analysisPanel")->height();
         check(cell && cell->width()>35 && cell->height()>20,"Move cell survives smallest viewport with maximum scales");
         check(cell->mapToScene(QPointF(cell->width(),0)).x()<=window->width(),"Move cell stays inside window");
         auto *outer=visualItem(window->contentItem(),"analysisViewport");

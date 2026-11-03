@@ -23,7 +23,7 @@ TDialog {
         anchors.fill: parent;contentWidth: availableWidth;clip:true
         ColumnLayout {
             width: appearanceScroll.availableWidth;spacing:16
-            Label {text:qsTr("INTERFACE");font.bold:true}
+            Label {text:qsTr("Interface");font.bold:true}
             GridLayout {columns:2;Layout.fillWidth:true;columnSpacing:16;rowSpacing:10
                 Label {text:qsTr("Langue")}
                 TComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English","Système"];property var values:["fr","en","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
@@ -35,11 +35,10 @@ TDialog {
                 SpinBox {objectName:"uiScaleControl";from:90;to:125;stepSize:5;value:Math.round(root.backend.preferences.uiScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("uiScale",value/100)}
             }
             CheckBox {objectName:"figurineNotation";text:qsTr("Notation figurine (♘ ♗ ♖ ♕ ♔)");checked:root.backend.preferences.figurines;onToggled:root.backend.setPreference("figurines",checked)}
-            CheckBox {text:qsTr("Navigation compacte");checked:root.backend.preferences.sidebarCompact;onToggled:root.backend.setPreference("sidebarCompact",checked)}
             CheckBox {text:qsTr("Contraste renforcé");checked:root.backend.preferences.highContrast;onToggled:root.backend.setPreference("highContrast",checked)}
             CheckBox {text:qsTr("Réduire les animations");checked:root.backend.preferences.reduceMotion;onToggled:root.backend.setPreference("reduceMotion",checked)}
             TButton {text:qsTr("Rétablir la largeur des panneaux");onClicked:root.backend.setPreference("analysisPanelRatio",.58)}
-            Label {text:qsTr("JEU DE PIÈCES");font.bold:true}
+            Label {text:qsTr("Jeu de pièces");font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
                 Repeater {model:[{key:"cburnett",label:"Classique"},{key:"merida",label:"Merida"},{key:"spatial",label:"Spatial"},{key:"pixel",label:"Pixel"},{key:"unicode",label:"Unicode"}]
                     delegate:Button {
@@ -60,7 +59,7 @@ TDialog {
                 TButton {text:qsTr("Importer mes 12 SVG…");onClicked:customFolder.open()}
                 TButton {text:qsTr("Mes pièces");visible:!!root.backend.preferences.customPiecePath;onClicked:root.backend.setPreference("pieceStyle","custom")}
             }
-            Label {text:qsTr("PALETTES DE L’ÉCHIQUIER");font.bold:true}
+            Label {text:qsTr("Palettes de l’échiquier");font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
                 Repeater {model:["Trait64","Sauge","Noyer","Océan","Lavande","Rose","Ardoise","Contraste","Sable"]
                     delegate:TButton {required property string modelData;text:modelData;onClicked:root.backend.applyBoardPreset(modelData)}

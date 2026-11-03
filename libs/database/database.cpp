@@ -318,7 +318,7 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     const QueryCancellation cancellation(db_, canceled);
     const bool fullText = fts_ && query.size() >= 3 && !query.contains('%') && !query.contains('_');
     QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite,"
-                        "g.updated,(g.white_elo+g.black_elo),g.plies ";
+                        "g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo ";
     QVariantList args;
     if (fullText) {
         // FTS drives the lookup: ORDER BY must not make SQLite scan every recent game.
@@ -495,7 +495,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         rows << QVariantMap{{"id", q.value(0)},      {"white", q.value(1)},      {"black", q.value(2)},
                             {"event", q.value(3)},   {"date", q.value(4)},       {"result", q.value(5)},
                             {"eco", q.value(6)},     {"collection", q.value(7)}, {"favorite", q.value(8)},
-                            {"updated", q.value(9)}, {"rating", q.value(10)},    {"plies", q.value(11)}};
+                            {"updated", q.value(9)}, {"rating", q.value(10)},    {"plies", q.value(11)},
+                            {"whiteElo", q.value(12)}, {"blackElo", q.value(13)}};
     check(!q.lastError().isValid(), q.lastError().text());
     check(!canceled || !canceled->load(), "Recherche annulée.");
     return rows;

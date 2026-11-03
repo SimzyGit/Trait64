@@ -103,18 +103,16 @@ int uiLayoutProbe(const QString &directory) {
     auto *repertoires=window->findChild<QObject *>("repertoiresDialog");
     check(!palette->property("visible").toBool()&&repertoires->property("visible").toBool(),"Layout: command palette executes the selected action");
     QMetaObject::invokeMethod(repertoires,"close");QTest::qWait(30);
-    auto *toggle=visualItem(window->contentItem(),"sidebarToggle");
-    toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(40);
-    check(!window->property("compactSidebar").toBool(),"Layout: navigation can be expanded in a small window");
-    window->setProperty("page",2);QTest::qWait(60);
-    capture("case8-expanded-sidebar");
-    for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton"}) {
-        auto *button=visualItem(window->contentItem(),name);check(button,"Layout: expanded navigation leaves controls available");
-        const auto point=button->mapToScene(QPointF());
-        if(point.x()<0||point.x()+button->width()>window->width()+1)qWarning()<<"Clipped expanded sidebar action"<<name<<point<<button->width()<<window->width();
-        check(point.x()>=0&&point.x()+button->width()<=window->width()+1,"Layout: expanded navigation keeps controls inside the viewport");
+    // Classic desktop shell: a menu bar with every family of actions, then workspace tabs.
+    auto *menus=window->findChild<QObject *>("mainMenuBar");
+    check(menus&&menus->property("count").toInt()==8,"Layout: the menu bar offers its eight menus");
+    window->resize(960,640);window->setProperty("page",2);QTest::qWait(60);
+    capture("case8-small-analysis");
+    for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton","workspaceTabs"}) {
+        auto *item=visualItem(window->contentItem(),name);check(item,"Layout: main controls exist in the smallest window");
+        const auto point=item->mapToScene(QPointF());
+        check(point.x()>=0&&point.x()+item->width()<=window->width()+1,"Layout: main controls stay inside the smallest window");
     }
-    toggle->forceActiveFocus();QTest::keyClick(window,Qt::Key_Space);QTest::qWait(30);
     QSettings saved;
     check(saved.value("fontScale").toDouble()==1.5&&saved.value("uiScale").toDouble()==1.25&&saved.value("language").toString()=="en","Layout: appearance preferences are persisted");
     check(c.state()["fen"]==original["fen"]&&c.state()["comment"]==original["comment"]&&c.state()["dirty"]==original["dirty"], "Layout: preferences preserve unsaved chess study");

@@ -23,7 +23,7 @@ QVariantMap Controller::preferences() const {
                          {"analysisDepth", 24},
                          {"importWorkers", 2},
                          {"syzygyPath", ""}, {"bookPath", ""},
-                         {"lightTheme", false},
+                         {"lightTheme", true},
                          {"fontFamily", QGuiApplication::font().family()},
                          {"fontScale", 1.0}, {"uiScale", 1.0},
                          {"sidebarCompact", false}, {"figurines", false}, {"highContrast", false},
@@ -56,7 +56,7 @@ QVariantMap Controller::preferences() const {
     defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
-        bg = QColor(defaults["lightTheme"].toBool() ? "#f3efe6" : "#171b21");
+        bg = QColor(defaults["lightTheme"].toBool() ? "#eceef1" : "#1f2124"); // neutral greys, no tint
     auto linear = [](double x) { return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4); };
     const double luminance =
         .2126 * linear(bg.redF()) + .7152 * linear(bg.greenF()) + .0722 * linear(bg.blueF());
@@ -70,18 +70,23 @@ QVariantMap Controller::preferences() const {
             .name();
     };
     defaults["background"] = bg.name();
-    defaults["panel"] = blend(.045);
+    // Light theme: white panes on a grey window, like classic desktop chess software.
+    const auto towardWhite = [&](double factor) {
+        return QColor::fromRgbF(bg.redF() + (1 - bg.redF()) * factor, bg.greenF() + (1 - bg.greenF()) * factor,
+                                bg.blueF() + (1 - bg.blueF()) * factor).name();
+    };
+    defaults["panel"] = light ? towardWhite(.85) : blend(.045);
     defaults["raised"] = blend(.085);
     defaults["line"] = blend(.17);
-    defaults["foreground"] = light ? "#242930" : "#f1ede4";
-    defaults["muted"] = light ? "#565b63" : "#b6bac2";
+    defaults["foreground"] = light ? "#1d2125" : "#e6e8eb";
+    defaults["muted"] = light ? "#5c6570" : "#a4abb4";
     if (defaults["highContrast"].toBool()) {
         defaults["foreground"] = light ? "#000000" : "#ffffff";
         defaults["muted"] = light ? "#202020" : "#eeeeee";
         defaults["line"] = light ? "#656565" : "#b0b0b0";
     }
     if (!settings_.contains("accentColor"))
-        defaults["accentColor"] = light ? "#a1442b" : "#ef997a";
+        defaults["accentColor"] = light ? "#2f66ad" : "#6a9fdc"; // restrained blue, as in desktop chess tools
     return defaults;
 }
 void Controller::setPreference(const QString &key, const QVariant &value) {
