@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include <QFileInfo>
+#include <algorithm>
 
 void Controller::initAnalyses() {
     connect(&analysisQueue_, &t64::AnalysisQueue::message, this, &Controller::message);
@@ -44,6 +45,41 @@ void Controller::enqueueLibrary(int milliseconds, int profile, int maxGames) {
         for (const auto &row : rows)
             analysisQueue_.enqueue(QString::fromStdString(db_->load(row.toMap()["id"].toLongLong()).pgn()), config, false);
         emit message(QString("%1 partie(s) ajoutée(s) à la file d’analyse (lignes principales).").arg(rows.size()));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+int Controller::reviewTimeCeiling(int depth) const {
+    // Ce plafond n'est pas une cible : le moteur s'arrête normalement à la profondeur
+    // demandée, bien avant. Il n'existe que pour qu'une position coriace ne retienne pas
+    // une file de plusieurs milliers de parties. Il croît avec la profondeur, puisque le
+    // temps nécessaire pour l'atteindre croît lui aussi.
+    return std::clamp(depth * depth * 4, 200, 10000);
+}
+void Controller::reviewImported(int depth, int profile) {
+    try {
+        if (trainingActive())
+            throw std::runtime_error("Terminez l’entraînement avant de lancer un bilan.");
+        const int wanted = std::clamp(depth, 1, 40);
+        if (importedGames_ <= 0)
+            throw std::runtime_error("Aucune partie récemment importée à passer en revue.");
+        const auto config = analysisConfig(reviewTimeCeiling(wanted), profile, wanted);
+        // Un seul message clair, plutôt qu'un échec par partie.
+        if (!QFileInfo(config["enginePath"].toString()).isExecutable())
+            throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");
+        const auto ids = db_->recentGamesToReview(importedGames_, wanted);
+        if (ids.isEmpty()) {
+            emit message(QString("Ces %1 partie(s) ont déjà été passées en revue au moins aussi loin.")
+                             .arg(importedGames_));
+            return;
+        }
+        for (const auto &value : ids) {
+            const auto id = value.toLongLong();
+            analysisQueue_.enqueue(QString::fromStdString(db_->load(id).pgn()), config, false, id);
+        }
+        emit message(QString("%1 partie(s) ajoutée(s) à la file de bilan, profondeur %2.")
+                         .arg(ids.size())
+                         .arg(wanted));
     } catch (const std::exception &e) {
         fail(e);
     }

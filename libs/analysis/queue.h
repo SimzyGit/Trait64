@@ -17,7 +17,9 @@ class AnalysisQueue : public QObject {
     ~AnalysisQueue() override;
     void setLibrary(const QString &path);
     void shutdown();
-    void enqueue(const QString &pgn, const QVariantMap &profile, bool variations);
+    // gameId relie l'analyse à la partie de la bibliothèque dont elle vient, pour que sa
+    // profondeur y soit reportée une fois le bilan terminé. 0 : étude sans origine.
+    void enqueue(const QString &pgn, const QVariantMap &profile, bool variations, qint64 gameId = 0);
     QVariantList jobs() const { return jobs_; }
     QVariantList results() const { return results_; }
     QVariantMap state() const { return state_; }

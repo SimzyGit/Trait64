@@ -36,7 +36,11 @@ class Database {
     QVariantList importJobs() const;
     QVariantMap importJob(qint64 id) const;
     void forgetImportJob(qint64 id);
-    qint64 createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations, int total);
+    qint64 createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations, int total,
+                             qint64 gameId = 0);
+    // Parmi les `count` parties les plus récentes, celles qui restent à passer en revue :
+    // non supprimées et pas déjà parcourues à une profondeur au moins égale.
+    QVariantList recentGamesToReview(int count, int depth) const;
     QVariantList analysisJobs() const;
     QVariantMap analysisJob(qint64 id, bool includePgn = true) const;
     QVariantList analysisResults(qint64 id, int offset = 0, int limit = 200) const;
@@ -120,6 +124,7 @@ class Database {
     void upgradeV5(int originalVersion);
     void upgradeV6(int originalVersion);
     void upgradeV7(int originalVersion);
+    void upgradeV9(int originalVersion);
     qint64 registerSource(const QVariantMap &source);
     void linkSource(qint64 source, qint64 game);
     void recordImport(qint64 source, const QString &file, const QString &digest, int processed, int added);

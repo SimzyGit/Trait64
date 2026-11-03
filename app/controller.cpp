@@ -186,6 +186,10 @@ Controller::Controller(const QString &path, QObject *parent)
                                              .arg(r.count)
                                              .arg(r.duplicates)
                                        : r.error);
+        // Taille du lot que le bouton de bilan proposera. Un import raté ou une
+        // reconstruction d'index n'ajoutent rien de neuf à passer en revue.
+        if (r.operation != "reindex")
+            importedGames_ = r.error.isEmpty() ? std::max(0, r.count) : 0;
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())

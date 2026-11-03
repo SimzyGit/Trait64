@@ -46,6 +46,9 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList moveRows READ moveRows NOTIFY notationChanged)
     Q_PROPERTY(QVariantList moveFlow READ moveFlow NOTIFY notationChanged)
     Q_PROPERTY(QVariantList games READ games NOTIFY libraryChanged)
+    // Nombre de parties ajoutées par la dernière synchronisation ou le dernier import :
+    // c'est le lot que le bouton de bilan propose de passer en revue. 0 : rien à proposer.
+    Q_PROPERTY(int importedGames READ importedGames NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
     Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
@@ -116,6 +119,7 @@ class Controller : public QObject {
     QVariantList moveRows() const;
     QVariantList moveFlow() const;
     QVariantList games() const { return games_; }
+    int importedGames() const { return importedGames_; }
     QVariantMap stats() const { return stats_; }
     QVariantList openings() const { return openings_; }
     QVariantList bookMoves() const { return bookMoves_; }
@@ -153,6 +157,10 @@ class Controller : public QObject {
     Q_INVOKABLE void enqueueAnalysis(bool variations = true, int milliseconds = 500, int profile = -1);
     // Every game matching the current library filters (main lines), up to `maxGames`.
     Q_INVOKABLE void enqueueLibrary(int milliseconds = 500, int profile = -1, int maxGames = 200);
+    // Bilan du lot que la dernière synchronisation ou le dernier import vient d'ajouter.
+    // Les parties déjà parcourues au moins aussi loin sont laissées de côté.
+    Q_INVOKABLE void reviewImported(int depth, int profile = -1);
+    Q_INVOKABLE int reviewTimeCeiling(int depth) const;
     // Jumps to the first move of the study that no other library game played.
     Q_INVOKABLE void findNovelty();
     Q_INVOKABLE void compareEngines(const QVariantList &indices);
@@ -362,7 +370,7 @@ class Controller : public QObject {
     QString dataPath_, sessionPath_;
     std::unique_ptr<t64::Database> db_;
     t64::Game game_, beforeTraining_;
-    int node_ = 0, selected_ = -1, beforeNode_ = 0;
+    int node_ = 0, selected_ = -1, beforeNode_ = 0, importedGames_ = 0;
     qint64 gameId_ = 0, beforeId_ = 0, cardId_ = 0;
     QStringList solution_;
     int solutionIndex_ = 0;

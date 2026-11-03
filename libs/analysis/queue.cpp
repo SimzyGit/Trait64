@@ -227,7 +227,7 @@ class AnalysisWorker : public QObject {
         lock_.reset();
         owned_ = false;
     }
-    void enqueue(const QString &pgn, const QVariantMap &profile, bool variations) {
+    void enqueue(const QString &pgn, const QVariantMap &profile, bool variations, qint64 gameId) {
         guarded([&] {
             require(pgn.size() <= 16 * 1024 * 1024, "Étude limitée à 16 Mio pour l’analyse.");
             auto games = parsePgn(pgn.toStdString());
@@ -236,7 +236,7 @@ class AnalysisWorker : public QObject {
             // Reparse the stored snapshot, so indices remain stable after export/restart.
             const auto snapshot = parsePgn(canonical.toStdString()).front();
             selected_ = db_->createAnalysisJob(canonical, normalizedProfile(profile), variations,
-                                               int(nodesFor(snapshot, variations).size()));
+                                               int(nodesFor(snapshot, variations).size()), gameId);
             offset_ = 0;
             error_.clear();
             schedule();
@@ -587,10 +587,12 @@ void AnalysisQueue::shutdown() {
     thread_.wait();
     worker_ = nullptr;
 }
-void AnalysisQueue::enqueue(const QString &pgn, const QVariantMap &profile, bool variations) {
+void AnalysisQueue::enqueue(const QString &pgn, const QVariantMap &profile, bool variations,
+                            qint64 gameId) {
     if (worker_)
-        QMetaObject::invokeMethod(
-            worker_, [w = worker_, pgn, profile, variations] { w->enqueue(pgn, profile, variations); });
+        QMetaObject::invokeMethod(worker_, [w = worker_, pgn, profile, variations, gameId] {
+            w->enqueue(pgn, profile, variations, gameId);
+        });
 }
 void AnalysisQueue::select(qint64 id, int offset) {
     if (worker_)

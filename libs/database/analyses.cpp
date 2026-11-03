@@ -56,8 +56,44 @@ void Database::upgradeV7(int originalVersion) {
         throw;
     }
 }
+void Database::upgradeV9(int originalVersion) {
+    if (originalVersion >= 9)
+        return;
+    if (originalVersion > 0)
+        backup(path_ + ".before-v9-" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".sqlite");
+    sql("SAVEPOINT schema9");
+    try {
+        // Profondeur du dernier bilan mené à son terme : elle évite de recalculer pendant
+        // des heures ce qui a déjà été vu au moins aussi loin. 0 : jamais passée en revue.
+        sql("ALTER TABLE games ADD COLUMN reviewed_depth INTEGER NOT NULL DEFAULT 0");
+        sql("CREATE INDEX games_review ON games(deleted,reviewed_depth,id)");
+        // Une analyse lancée depuis la bibliothèque sait de quelle partie elle vient, et
+        // peut donc reporter sa profondeur une fois terminée. 0 : étude sans origine.
+        sql("ALTER TABLE analysis_jobs ADD COLUMN game INTEGER NOT NULL DEFAULT 0");
+        sql("PRAGMA user_version=9");
+        sql("RELEASE schema9");
+    } catch (...) {
+        sql("ROLLBACK TO schema9");
+        sql("RELEASE schema9");
+        throw;
+    }
+}
+QVariantList Database::recentGamesToReview(int count, int depth) const {
+    QSqlQuery q(db_);
+    // Les identifiants ne sont pas contigus — une suppression laisse un trou —, donc on
+    // désigne le lot par les plus récents plutôt que par un calcul sur les identifiants.
+    q.prepare("SELECT id FROM games WHERE deleted=0 AND reviewed_depth<? AND id IN"
+              "(SELECT id FROM games WHERE deleted=0 ORDER BY id DESC LIMIT ?) ORDER BY id");
+    q.addBindValue(std::clamp(depth, 1, 99));
+    q.addBindValue(std::clamp(count, 1, 100000));
+    run(q);
+    QVariantList ids;
+    while (q.next())
+        ids << q.value(0).toLongLong();
+    return ids;
+}
 qint64 Database::createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations,
-                                   int total) {
+                                   int total, qint64 gameId) {
     require(pgn.size() <= 16 * 1024 * 1024 && total > 0 && total <= 100000, "Étude trop volumineuse.");
     QSqlQuery count(db_);
     require(count.exec("SELECT COUNT(*) FROM analysis_jobs") && count.next(), count.lastError().text());
@@ -71,12 +107,13 @@ qint64 Database::createAnalysisJob(const QString &pgn, const QVariantMap &config
         return it == tags.end() ? QString("?") : QString::fromStdString(it->second);
     };
     QSqlQuery q(db_);
-    q.prepare("INSERT INTO analysis_jobs(title,pgn,config,variations,total) VALUES(?,?,?,?,?)");
+    q.prepare("INSERT INTO analysis_jobs(title,pgn,config,variations,total,game) VALUES(?,?,?,?,?,?)");
     q.addBindValue((tag("White") + " — " + tag("Black")).left(400));
     q.addBindValue(pgn);
     q.addBindValue(json(config));
     q.addBindValue(variations);
     q.addBindValue(total);
+    q.addBindValue(gameId);
     run(q);
     return q.lastInsertId().toLongLong();
 }
@@ -140,6 +177,26 @@ void Database::setAnalysisStatus(qint64 id, const QString &status, const QString
     q.addBindValue(status);
     run(q);
     require(q.numRowsAffected() == 1, "Analyse introuvable ou incomplète.");
+    if (status != "completed")
+        return;
+    QSqlQuery origin(db_);
+    origin.prepare("SELECT game,config FROM analysis_jobs WHERE id=?");
+    origin.addBindValue(id);
+    run(origin);
+    if (!origin.next())
+        return;
+    const auto game = origin.value(0).toLongLong();
+    const int depth = decoded(origin.value(1)).toMap().value("depth").toInt();
+    if (game <= 0 || depth <= 0)
+        return;
+    // Une analyse menée à son terme fait avancer la profondeur de sa partie d'origine,
+    // jamais reculer : un bilan court après un bilan approfondi ne retire rien.
+    QSqlQuery mark(db_);
+    mark.prepare("UPDATE games SET reviewed_depth=? WHERE id=? AND reviewed_depth<?");
+    mark.addBindValue(depth);
+    mark.addBindValue(game);
+    mark.addBindValue(depth);
+    run(mark);
 }
 void Database::setAnalysisIdentity(qint64 id, const QVariantMap &identity) {
     const auto existing = analysisJob(id, false)["identity"].toMap();

@@ -144,6 +144,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV6(v);
         upgradeV7(v);
         upgradeV8(v);
+        upgradeV9(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
