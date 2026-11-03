@@ -337,7 +337,7 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 8, "Schema version 8");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 9, "Schema version 9");
                 check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
                           q.value(0).toString() == "integer",
                       "Positions are stored as integers");
