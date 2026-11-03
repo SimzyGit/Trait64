@@ -6,6 +6,7 @@
 #include <QClipboard>
 #include <QDate>
 #include <QDesktopServices>
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -49,6 +50,22 @@ Controller::Controller(const QString &path, QObject *parent)
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "fr").toString());
     openBook();
+    online_ = new t64::OnlineGames(this);
+    connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
+        emit busyChanged();
+        emit message(text, true);
+    });
+    connect(online_, &t64::OnlineGames::finished, this, [this](const QString &path, int) {
+        const auto key = onlineSyncKey_.section('/', 1);
+        const auto site = key.section('/', 0, 0), user = key.section('/', 1);
+        const bool lichess = site == "lichess";
+        importSourceFile(path, {{"id", site + ":" + user},
+                                {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
+                                {"source", lichess ? "https://lichess.org/@/" + user
+                                                   : "https://www.chess.com/member/" + user},
+                                {"online", true}});
+        emit busyChanged();
+    });
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     flipped_ = settings_.value("flipped", false).toBool();
@@ -121,6 +138,10 @@ Controller::Controller(const QString &path, QObject *parent)
             else
                 emit message("Vérification SQLite : " + r.detail, r.detail != "ok");
             return;
+        }
+        if (r.operation == "online") {
+            QFile::remove(onlineFile_);
+            if (r.error.isEmpty() && !r.canceled) settings_.setValue(onlineSyncKey_, onlineSyncTime_);
         }
         if (r.operation == "source" && content_)
             content_->reportImport(r.error.isEmpty()
@@ -544,6 +565,23 @@ QString Controller::localPath(const QString &input) const {
 void Controller::importText(const QString &text) {
     importBytes(text.toUtf8());
 }
+void Controller::importOnline(const QString &site, const QString &user, int max) {
+    try {
+        require(!busy_ && !online_->busy(), "Un traitement est déjà en cours.");
+        require(t64::OnlineGames::validUser(user.trimmed()), "Pseudo invalide : lettres, chiffres, - et _ uniquement.");
+        const auto name = user.trimmed().toLower();
+        onlineSyncKey_ = "onlineSync/" + site + "/" + name;
+        onlineSyncTime_ = QDateTime::currentMSecsSinceEpoch();
+        QDir().mkpath(dataPath_ + "/downloads");
+        onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
+        const qint64 since = site == "lichess" ? settings_.value(onlineSyncKey_, 0).toLongLong() : 0;
+        online_->fetch(site, user.trimmed(), max, onlineFile_, since);
+        emit busyChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::cancelOnline() { online_->cancel(); }
 void Controller::importFile(const QString &url) {
     importSourceFile(url, {});
 }
@@ -565,7 +603,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             const auto progress = taskProgress_;
             importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress, source] {
                 ImportResult r;
-                r.operation = source.isEmpty() ? "import" : "source";
+                r.operation = source.isEmpty() ? "import" : source.value("online").toBool() ? "online" : "source";
                 try {
                     t64::Database db(databasePath);
                     r.count = db.importPgnFile(

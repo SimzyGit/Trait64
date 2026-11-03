@@ -595,5 +595,11 @@
   " % du livre": " % of the book",
   "Position absente du livre.": "Position not in the book.",
   "Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.": "No Polyglot book (.bin): set one in Settings.",
-  "Livre d'ouvertures Polyglot .bin (optionnel)": "Polyglot opening book .bin (optional)"
+  "Livre d'ouvertures Polyglot .bin (optionnel)": "Polyglot opening book .bin (optional)",
+  "DEPUIS LICHESS OU CHESS.COM": "FROM LICHESS OR CHESS.COM",
+  "Parties publiques uniquement, sans compte. Sur Lichess, un nouvel import ne récupère que les parties jouées depuis le précédent.": "Public games only, no account needed. On Lichess, a new import only fetches games played since the previous one.",
+  "Pseudo": "Username",
+  "Parties max.": "Max games",
+  "Importer": "Import",
+  "PGN PAR LOTS": "PGN IN BATCHES"
 }

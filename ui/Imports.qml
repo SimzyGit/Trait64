@@ -22,6 +22,24 @@ TDialog {
     ScrollView {id:importsViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
 ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewport.availableHeight,implicitHeight);
          spacing: 12
+        Label {text: qsTr("DEPUIS LICHESS OU CHESS.COM"); font.bold: true}
+        Label {
+            Layout.fillWidth: true; wrapMode: Text.WordWrap
+            text: qsTr("Parties publiques uniquement, sans compte. Sur Lichess, un nouvel import ne récupère que les parties jouées depuis le précédent.")
+        }
+        Flow {Layout.fillWidth:true;spacing:8
+            TComboBox {id:onlineSite;objectName:"onlineSite";model:["Lichess","Chess.com"];enabled:!root.backend.busy}
+            TextField {id:onlineUser;objectName:"onlineUser";width:200;placeholderText:qsTr("Pseudo");selectByMouse:true;enabled:!root.backend.busy
+                onAccepted: onlineImport.clicked()}
+            Label {text:qsTr("Parties max.")}
+            SpinBox {id:onlineMax;objectName:"onlineMax";from:1;to:5000;stepSize:50;value:200;editable:true;enabled:!root.backend.busy}
+            TButton {id:onlineImport;objectName:"onlineImport";text:qsTr("Importer");enabled:!root.backend.busy && onlineUser.text.trim().length>1
+                onClicked:root.backend.importOnline(onlineSite.currentIndex===0?"lichess":"chesscom",onlineUser.text,onlineMax.value)}
+            TButton {text:qsTr("Annuler");visible:root.backend.onlineFetching;onClicked:root.backend.cancelOnline()}
+            BusyIndicator {visible:root.backend.onlineFetching;running:visible;implicitHeight:28;implicitWidth:28}
+        }
+        Rectangle {Layout.fillWidth:true;height:1;opacity:.4;color:palette.mid}
+        Label {text: qsTr("PGN PAR LOTS"); font.bold: true}
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
             text: qsTr("Les parties sont conservées par lots de 250. Après une pause ou un plantage, la reprise repart du dernier lot validé. Le fichier entier est vérifié par SHA-256 avant chaque reprise.")

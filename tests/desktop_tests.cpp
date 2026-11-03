@@ -87,6 +87,39 @@ int main(int argc, char **argv) {
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
         {
+            // Online import: the download step is covered by online_tests; here the result
+            // goes through the real controller, library, source registry and sync bookmark.
+            Controller c(dir.path() + "/online-import");
+            auto *online = c.findChild<t64::OnlineGames *>();
+            QSignalSpy messages(&c, &Controller::message);
+            c.importOnline("lichess", "a/../b", 10);
+            check(messages.size() == 1 && !online->busy(), "Invalid online username is refused before any request");
+            c.importOnline("lichess", "Simzy", 10);
+            check(c.busy() && c.onlineFetching(), "Online fetch marks the application busy");
+            online->cancel();
+            QElapsedTimer wait;
+            wait.start();
+            while (c.onlineFetching() && wait.elapsed() < 5000) QTest::qWait(10);
+            check(!c.busy(), "Canceled fetch releases the application");
+            const auto file = dir.path() + "/online-import/downloads/online-lichess-simzy.pgn";
+            QFile pgn(file);
+            check(pgn.open(QIODevice::WriteOnly) &&
+                      pgn.write("[Event \"Rated blitz\"]\n[White \"Simzy\"]\n[Black \"X\"]\n[Result \"1-0\"]\n\n1. e4 e5 1-0\n\n"
+                                "[Event \"Rated blitz\"]\n[White \"Y\"]\n[Black \"Simzy\"]\n[Result \"0-1\"]\n\n1. d4 d5 0-1\n") > 0,
+                  "Downloaded PGN fixture written");
+            pgn.close();
+            emit online->finished(file, 2);
+            wait.restart();
+            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000) QTest::qWait(10);
+            QSettings settings;
+            check(c.games().size() == 2 && !QFile::exists(file) &&
+                      settings.value("onlineSync/lichess/simzy").toLongLong() > 0,
+                  "Online games reach the library, the temporary file is removed and the next sync is incremental");
+            bool tagged = false;
+            for (const auto &value : c.sources()) tagged |= value.toMap()["title"].toString() == "Lichess — simzy";
+            check(tagged, "Online games are filed under their player source");
+        }
+        {
             Controller c(dir.path() + "/integrity-ui");
             c.move("e2e4");
             const auto original = c.state();

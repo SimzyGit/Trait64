@@ -3,6 +3,7 @@
 #include "comparison.h"
 #include "content.h"
 #include "database.h"
+#include "online.h"
 #include "polyglot.h"
 #include "queue.h"
 #include "uci.h"
@@ -52,6 +53,7 @@ class Controller : public QObject {
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+    Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
@@ -123,7 +125,7 @@ class Controller : public QObject {
     QVariantList engineLines() const { return engineLines_; }
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;
-    bool busy() const { return busy_; }
+    bool busy() const { return busy_ || (online_ && online_->busy()); }
     int taskProgress() const { return taskProgress_->load(); }
     QString taskStatus() const {
         return verifying_ ? QString("Vérification de la bibliothèque…")
@@ -183,6 +185,10 @@ class Controller : public QObject {
     Q_INVOKABLE void setFen(const QString &fen);
     Q_INVOKABLE void importText(const QString &text);
     Q_INVOKABLE void importFile(const QString &url);
+    // site: "lichess" or "chesscom". Lichess re-imports only games newer than the last import.
+    Q_INVOKABLE void importOnline(const QString &site, const QString &user, int max);
+    Q_INVOKABLE void cancelOnline();
+    bool onlineFetching() const { return online_->busy(); }
     Q_INVOKABLE void exportFile(const QString &url, bool all = false);
     Q_INVOKABLE void backup(const QString &url);
     Q_INVOKABLE void openBackup(const QString &url);
@@ -336,6 +342,9 @@ class Controller : public QObject {
     QVariantMap state_, stats_;
     QVariantList squares_, notation_, games_, openings_, bookMoves_, cards_, engineLines_;
     t64::PolyglotBook book_;
+    t64::OnlineGames *online_ = nullptr;
+    QString onlineSyncKey_, onlineFile_;
+    qint64 onlineSyncTime_ = 0;
     void openBook();
     QString engineStatus_ = "Moteur déconnecté";
     QSettings settings_;
