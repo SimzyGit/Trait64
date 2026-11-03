@@ -40,6 +40,21 @@ int moveNotebookProbe(const QString &directory) {
     check(blackRows[1].toMap()["number"]==23 && blackRows[1].toMap()["white"].toMap().isEmpty() &&
           blackRows[1].toMap()["black"].toMap()["id"]==1 && blackRows[2].toMap()["number"]==24,
           "Black FEN start keeps empty white cell and fullmove counter");
+    auto flowText=[](const QVariantList &tokens) {
+        QStringList parts; int active=0;
+        for(const auto &value:tokens) {
+            const auto token=value.toMap(); const auto kind=token["kind"].toString();
+            if(kind=="move") { parts<<(token["number"].toString().isEmpty() ? "" : token["number"].toString()+" ")+token["text"].toString(); active+=token["active"].toBool(); }
+            else if(kind=="comment") parts<<"{"+token["text"].toString()+"}";
+            else parts<<(kind=="open" ? "(" : ")");
+        }
+        return std::pair{parts.join(' '),active};
+    };
+    const auto [flow,flowActive]=flowText(t64::moveFlow(game,2,true));
+    check(flow=="{Initial note} 1. e4! {White comment} ( 1. d4 d5 ( 1… Cf6 ) 2. c4 ) 1… e5 {Black comment} "
+                "( 1… c5 2. Cf3 ( 2. d4 cxd4 ) 2… d6 ) 2. Cf3 Cc6 3. Fb5" && flowActive==1,
+          "Continuous notation follows PGN order with black numbers after breaks");
+    check(flowText(t64::moveFlow(blackStart,1,false)).first=="23… e5 24. Nf3 Nc6","Continuous notation keeps a black FEN start");
 
     Controller c(directory+"/notebook");
     c.importText(fixture + "\n\n[Event \"Other game\"]\n\n1. d4 d5 *");
@@ -93,6 +108,33 @@ int moveNotebookProbe(const QString &directory) {
     check(c.state()["node"]==1,"Left shortcut returns to white half-move");
     QTest::keyClick(window,Qt::Key_Right);QTest::qWait(20);
     check(c.state()["node"].toInt()==game.nodes[1].children[0],"Right shortcut returns to black half-move");
+
+    auto *flowSwitch=visualItem(window->contentItem(),"notebookLayoutFlow");
+    check(flowSwitch,"Notebook offers the continuous layout");
+    QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,flowSwitch->mapToScene(QPointF(flowSwitch->width()/2,flowSwitch->height()/2)).toPoint());settled();
+    auto *flowView=visualItem(window->contentItem(),"moveFlow");
+    check(c.preferences()["notebookLayout"]=="flow" && flowView && flowView->isVisible() && !list->isVisible(),"Continuous layout replaces the table and is remembered");
+    for(int id:seen) {
+        c.navigate(0);settled();
+        auto *token=visualItem(window->contentItem(),"flowMove_"+QString::number(id));
+        check(token && token->isVisible(),"Every move exists in continuous layout");
+        const auto p=token->mapToScene(QPointF(token->width()/2,token->height()/2));
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,p.toPoint());settled();
+        token=visualItem(window->contentItem(),"flowMove_"+QString::number(id));
+        check(c.state()["node"].toInt()==id && token && token->property("active").toBool(),"Continuous move click selects exact node");
+    }
+    auto *row1=visualItem(window->contentItem(),"flowMove_1"),*row2=visualItem(window->contentItem(),"flowMove_"+QString::number(game.nodes[1].children[0]));
+    check(row1 && row2 && std::abs(row1->mapToScene(QPointF()).y()-row2->mapToScene(QPointF()).y())<1,"White and black moves share a line");
+    auto *start=visualItem(window->contentItem(),"flowInitialPosition");
+    check(start,"Continuous layout has an initial position button");
+    QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,start->mapToScene(QPointF(start->width()/2,start->height()/2)).toPoint());settled();
+    check(c.state()["node"]==0,"Continuous layout keeps the initial position reachable");
+    auto *tableSwitch=visualItem(window->contentItem(),"notebookLayoutTable");
+    check(tableSwitch,"Notebook offers the table layout");
+    QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,tableSwitch->mapToScene(QPointF(tableSwitch->width()/2,tableSwitch->height()/2)).toPoint());settled();
+    check(c.preferences()["notebookLayout"]=="table" && list->isVisible() && !flowView->isVisible(),"Table layout can be restored");
+    c.setPreference("notebookLayout","bogus");
+    check(c.preferences()["notebookLayout"]=="table","Unknown notebook layout is rejected");
 
     c.navigate(1);c.setComment(QString("Long <plain text> comment & annotation. ").repeated(50));c.setNag(3);
     const auto original=c.state();

@@ -16,6 +16,7 @@ Item {
     property var outerViewport: null
     property int followedNode: -1
     readonly property real numberWidth: Math.max(32, 40 * textScale)
+    readonly property bool flowMode: backend.preferences.notebookLayout === "flow"
 
     property bool forceFollow: false
     function requestFollow(force) {
@@ -29,18 +30,33 @@ Item {
     }
     Timer { id: pageTimer; interval: 16; onTriggered: root.revealInPage() }
     function revealInPage() {
-        if (!visible || !outerViewport || moves.currentIndex < 0) return
-        var item = moves.itemAtIndex(moves.currentIndex)
+        if (!visible || !outerViewport) return
+        var item = flowMode ? flowMoves.itemAt(flowMoves.selected) : (moves.currentIndex < 0 ? null : moves.itemAtIndex(moves.currentIndex))
         if (!item) return
-        var top = moves.mapToItem(outerViewport, 0, item.y - moves.contentY).y
-        var bottom = top + item.moveHeight
+        var top = item.mapToItem(outerViewport, 0, 0).y
+        var bottom = top + (flowMode ? item.height : item.moveHeight)
         var flick = outerViewport.contentItem
         var target = flick.contentY
         if (top < 0) target += top
         else if (bottom > outerViewport.availableHeight) target += bottom - outerViewport.availableHeight
         flick.contentY = Math.max(0, Math.min(target, flick.contentHeight - flick.height))
     }
+    function followFlow(force) {
+        var node = backend.state.node, tokens = backend.moveFlow, selected = -1
+        for (var i = 0; i < tokens.length; ++i)
+            if (tokens[i].kind === "move" && tokens[i].id === node) { selected = i; break }
+        flowMoves.selected = selected
+        if (!visible || (!force && node === followedNode)) return
+        followedNode = node
+        var item = selected < 0 ? null : flowMoves.itemAt(selected)
+        if (!item) { flowView.contentY = 0; return }
+        if (item.y < flowView.contentY) flowView.contentY = item.y
+        else if (item.y + item.height > flowView.contentY + flowView.height)
+            flowView.contentY = Math.min(item.y, item.y + item.height - flowView.height)
+        pageTimer.restart()
+    }
     function followSelection(force) {
+        if (flowMode) return followFlow(force)
         var node = backend.state.node
         var rows = backend.moveRows
         var selected = -1
@@ -69,6 +85,7 @@ Item {
         function onNotationChanged() { root.requestFollow(false) }
     }
     onVisibleChanged: if (visible) requestFollow(true)
+    onFlowModeChanged: requestFollow(true)
     onHeightChanged: requestFollow(true)
     onWidthChanged: requestFollow(true)
     onTextScaleChanged: requestFollow(true)
@@ -77,22 +94,140 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         spacing: 4
-        Row {
+        RowLayout {
             Layout.fillWidth: true
             Layout.rightMargin: 14
-            Label { width: root.numberWidth; text: "N°"; color: root.muted; font.pixelSize: 10 * root.textScale }
+            spacing: 2
+            Row {
+                Layout.fillWidth: true
+                visible: !root.flowMode
+                Label { width: root.numberWidth; text: "N°"; color: root.muted; font.pixelSize: 10 * root.textScale }
+                Repeater {
+                    model: [qsTr("Blancs"), qsTr("Noirs")]
+                    Label {
+                        required property string modelData
+                        width: Math.max(0, (parent.width - root.numberWidth) / 2)
+                        text: modelData; color: root.muted; font.pixelSize: 10 * root.textScale
+                    }
+                }
+            }
+            Item { Layout.fillWidth: true; visible: root.flowMode }
             Repeater {
-                model: [qsTr("Blancs"), qsTr("Noirs")]
+                model: [{key: "table", label: qsTr("Tableau")}, {key: "flow", label: qsTr("Continu")}]
+                Button {
+                    id: layoutButton
+                    required property var modelData
+                    objectName: modelData.key === "flow" ? "notebookLayoutFlow" : "notebookLayoutTable"
+                    readonly property bool current: root.flowMode === (modelData.key === "flow")
+                    padding: 3; leftPadding: 7; rightPadding: 7
+                    Accessible.name: qsTr("Affichage des coups : ") + modelData.label
+                    contentItem: Label {
+                        text: layoutButton.modelData.label; font.pixelSize: 10 * root.textScale
+                        font.bold: layoutButton.current; color: layoutButton.current ? root.foreground : root.muted
+                    }
+                    background: Rectangle {
+                        radius: 3; color: layoutButton.current || layoutButton.hovered ? root.raised : "transparent"
+                        border.width: layoutButton.current || layoutButton.visualFocus ? 1 : 0; border.color: root.accent
+                    }
+                    onClicked: root.backend.setPreference("notebookLayout", modelData.key)
+                }
+            }
+        }
+        Flickable {
+            id: flowView
+            objectName: "moveFlow"
+            visible: root.flowMode
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            contentWidth: width
+            contentHeight: flow.height
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {}
+            Flow {
+                id: flow
+                width: flowView.width - 14
+                spacing: 2
+                Button {
+                    id: flowStart
+                    objectName: "flowInitialPosition"
+                    readonly property bool active: root.backend.state.node === 0
+                    padding: 3; leftPadding: 5; rightPadding: 5
+                    Accessible.name: qsTr("Position initiale")
+                    ToolTip.visible: hovered; ToolTip.text: qsTr("Position initiale")
+                    contentItem: Label { text: "⏮"; color: root.muted; font.pixelSize: 12 * root.textScale }
+                    background: Rectangle {
+                        radius: 3; color: flowStart.active || flowStart.hovered ? root.raised : "transparent"
+                        border.width: flowStart.active || flowStart.visualFocus ? 2 : 0; border.color: root.accent
+                    }
+                    onClicked: root.backend.navigate(0)
+                }
+                Repeater {
+                    id: flowMoves
+                    property int selected: -1
+                    model: root.flowMode ? root.backend.moveFlow : []
+                    delegate: Loader {
+                        required property var modelData
+                        required property int index
+                        readonly property var token: modelData
+                        readonly property bool side: token.depth > 0
+                        sourceComponent: token.kind === "move" ? flowMove : token.kind === "comment" ? flowComment : flowParen
+                    }
+                }
+            }
+            Component {
+                id: flowMove
+                Button {
+                    id: fm
+                    readonly property var token: parent.token
+                    readonly property bool active: parent.index === flowMoves.selected
+                    objectName: "flowMove_" + token.id
+                    padding: 3; leftPadding: 4; rightPadding: 4
+                    Accessible.name: token.number + " " + token.text
+                    contentItem: Row {
+                        spacing: 3
+                        Label {
+                            visible: fm.token.number !== ""
+                            text: fm.token.number; color: root.muted
+                            font.pixelSize: (fm.parent.side ? 11 : 12) * root.textScale
+                        }
+                        Label {
+                            text: fm.token.text; textFormat: Text.PlainText
+                            font.pixelSize: (fm.parent.side ? 11 : 12) * root.textScale
+                            font.bold: fm.active || !fm.parent.side
+                            color: fm.parent.side && !fm.active ? root.muted : root.foreground
+                        }
+                    }
+                    background: Rectangle {
+                        radius: 3
+                        color: fm.active || fm.hovered ? root.raised : "transparent"
+                        border.width: fm.active || fm.visualFocus ? 2 : 0
+                        border.color: root.accent
+                    }
+                    onClicked: root.backend.navigate(token.id)
+                }
+            }
+            Component {
+                id: flowParen
                 Label {
-                    required property string modelData
-                    width: Math.max(0, (parent.width - root.numberWidth) / 2)
-                    text: modelData; color: root.muted; font.pixelSize: 10 * root.textScale
+                    text: parent.token.kind === "open" ? "(" : ")"
+                    topPadding: 3; color: root.muted; font.pixelSize: 12 * root.textScale
+                }
+            }
+            Component {
+                id: flowComment
+                Label {
+                    width: Math.min(implicitWidth, flow.width)
+                    topPadding: 3; leftPadding: 2; rightPadding: 4
+                    text: parent.token.text; textFormat: Text.PlainText; wrapMode: Text.Wrap
+                    font.italic: true; color: root.muted; font.pixelSize: 11 * root.textScale
                 }
             }
         }
         ListView {
             id: moves
             objectName: "moveNotebook"
+            visible: !root.flowMode
             Layout.fillWidth: true
             Layout.fillHeight: true
             model: root.backend.moveRows

@@ -66,4 +66,47 @@ inline QVariantList moveRows(const Game &game, int current, bool french) {
     if (!game.nodes[0].children.empty()) line(game.nodes[0].children[0], 0);
     return rows;
 }
+
+// Continuous notation in PGN order: "1. e4 e5 (1... c5 2. Nf3) 2. Nf3".
+// Tokens: "move" (id, number, text), "open"/"close" around a variation, "comment".
+inline QVariantList moveFlow(const Game &game, int current, bool french) {
+    QVariantList tokens;
+    static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
+    auto comment = [&](int id, int depth) {
+        const auto &text = game.nodes[id].comment;
+        if (text.empty()) return false;
+        tokens << QVariantMap{{"kind", "comment"}, {"id", id}, {"depth", depth},
+                              {"text", QString::fromStdString(text)}};
+        return true;
+    };
+    comment(0, 0);
+    int visited = 0;
+    std::function<void(int, int)> line = [&](int id, int depth) {
+        bool numbered = true; // a black move needs "N..." after a break in the flow
+        while (id > 0 && visited++ < 10000) {
+            const auto &node = game.nodes[id];
+            const auto board = game.boardAt(node.parent);
+            const bool white = board.sideToMove() == chess::Color::WHITE;
+            QString text = displaySan(node.san, french);
+            for (int nag : node.nags)
+                text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
+            const QString number = white ? QString::number(board.fullMoveNumber()) + "."
+                                   : numbered ? QString::number(board.fullMoveNumber()) + "…" : QString();
+            tokens << QVariantMap{{"kind", "move"}, {"id", id}, {"depth", depth}, {"number", number},
+                                  {"text", text}, {"active", current == id}};
+            numbered = comment(id, depth);
+            const auto &siblings = game.nodes[node.parent].children;
+            if (depth < 128 && siblings.front() == id)
+                for (size_t k = 1; k < siblings.size(); ++k) {
+                    tokens << QVariantMap{{"kind", "open"}, {"depth", depth + 1}};
+                    line(siblings[k], depth + 1);
+                    tokens << QVariantMap{{"kind", "close"}, {"depth", depth + 1}};
+                    numbered = true;
+                }
+            id = node.children.empty() ? -1 : node.children.front();
+        }
+    };
+    if (!game.nodes[0].children.empty()) line(game.nodes[0].children.front(), 0);
+    return tokens;
+}
 } // namespace t64
