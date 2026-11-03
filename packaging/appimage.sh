@@ -7,26 +7,29 @@ trait64_version="${2:?Semantic version required}"
 trait64_stage="${trait64_build}/appimage"
 mkdir -p "${trait64_stage}/tools" "${trait64_stage}/AppDir"
 cd "${trait64_stage}/tools"
-# API asset IDs and hashes pin the exact reviewed build tools, even though upstream uses continuous tags.
-# Amont republie « continuous » de temps à autre : l'ancien identifiant disparaît (404) et le repli
-# rapporte un autre binaire, que l'empreinte ci-dessous rejette. Quand cela arrive, relever le nouvel
-# identifiant et son empreinte sur la version publiée, puis les reporter ici après relecture.
+# Les empreintes ci-dessous fixent les binaires exacts qui ont été relus : c'est le seul
+# garde-fou, et il suffit. Amont ne publie que l'étiquette « continuous » et remplace ses
+# actifs à chaque reconstruction, en supprimant les précédents ; épingler l'identifiant
+# d'actif n'apportait donc aucune reproductibilité, mais faisait échouer la construction
+# par un 404 à chaque republication. En cas de republication, relire les binaires publiés
+# puis reporter les empreintes que le message d'erreur affiche.
 download_tool() {
-    local repository="$1" asset="$2" name="$3"
-    # Shared Actions IPs may exhaust the unauthenticated REST rate limit.
-    # The public download fallback is still required to match the pinned digest below.
-    curl --fail --location --retry 3 --header 'Accept: application/octet-stream' \
-        "https://api.github.com/repos/${repository}/releases/assets/${asset}" -o "${name}" || \
+    local repository="$1" name="$2"
     curl --fail --location --retry 3 \
         "https://github.com/${repository}/releases/download/continuous/${name}" -o "${name}"
 }
-download_tool linuxdeploy/linuxdeploy 699514588 linuxdeploy-x86_64.AppImage
-download_tool linuxdeploy/linuxdeploy-plugin-qt 525032210 linuxdeploy-plugin-qt-x86_64.AppImage
+download_tool linuxdeploy/linuxdeploy linuxdeploy-x86_64.AppImage
+download_tool linuxdeploy/linuxdeploy-plugin-qt linuxdeploy-plugin-qt-x86_64.AppImage
 cat > SHA256SUMS <<'HASHES'
 df908b19f1ed1cdafa79508d415aa12d6c56ce4d56d4149aa8c09286718706e5  linuxdeploy-x86_64.AppImage
 cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617  linuxdeploy-plugin-qt-x86_64.AppImage
 HASHES
-sha256sum --check SHA256SUMS
+if ! sha256sum --check SHA256SUMS; then
+    echo "Les outils publiés ne correspondent plus aux empreintes relues." >&2
+    echo "Empreintes observées, à reporter ci-dessus après relecture d'amont :" >&2
+    sha256sum ./*.AppImage >&2
+    exit 1
+fi
 chmod +x ./*.AppImage
 DESTDIR="${trait64_stage}/AppDir" cmake --install "${trait64_build}" --prefix /usr
 export QMAKE=/usr/bin/qmake6
