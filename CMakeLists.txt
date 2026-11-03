@@ -121,7 +121,9 @@ if(T64_BUILD_GUI)
     add_test(NAME desktop_layout COMMAND desktop_tests --ui-layout)
     set_tests_properties(desktop_layout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
     add_test(NAME desktop_interactions COMMAND desktop_tests)
-    set_tests_properties(desktop_interactions PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 60)
+    # Le scénario par défaut traverse toute l'application : il lui faut nettement plus
+    # de temps que les scénarios ciblés ci-dessus, surtout sous sanitizers.
+    set_tests_properties(desktop_interactions PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 300)
   endif()
   install(TARGETS trait64 RUNTIME DESTINATION bin)
   install(FILES assets/trait64.desktop DESTINATION share/applications)
