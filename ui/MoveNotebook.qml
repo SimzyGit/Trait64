@@ -16,6 +16,8 @@ Item {
     property var outerViewport: null
     property int followedNode: -1
     readonly property real numberWidth: Math.max(32, 40 * textScale)
+    // A move pair reads at a glance: cells stop growing on wide panels (long annotations wrap).
+    function cellWidth(available) { return Math.max(0, Math.min((available - numberWidth) / 2, 170 * textScale)) }
     readonly property bool flowMode: backend.preferences.notebookLayout === "flow"
 
     property bool forceFollow: false
@@ -106,7 +108,7 @@ Item {
                     model: [qsTr("Blancs"), qsTr("Noirs")]
                     Label {
                         required property string modelData
-                        width: Math.max(0, (parent.width - root.numberWidth) / 2)
+                        width: root.cellWidth(parent.width)
                         text: modelData; color: root.muted; font.pixelSize: 10 * root.textScale
                     }
                 }
@@ -290,8 +292,8 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         color: root.muted; font.pixelSize: 11 * root.textScale
                     }
-                    Loader { id: whiteCell; width: Math.max(0, (cells.width-root.numberWidth)/2); height: cells.height; property var move: row.modelData.white || ({}); sourceComponent: moveCell }
-                    Loader { id: blackCell; width: Math.max(0, (cells.width-root.numberWidth)/2); height: cells.height; property var move: row.modelData.black || ({}); sourceComponent: moveCell }
+                    Loader { id: whiteCell; width: root.cellWidth(cells.width); height: cells.height; property var move: row.modelData.white || ({}); sourceComponent: moveCell }
+                    Loader { id: blackCell; width: root.cellWidth(cells.width); height: cells.height; property var move: row.modelData.black || ({}); sourceComponent: moveCell }
                 }
                 Component {
                     id: moveCell

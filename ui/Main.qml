@@ -148,21 +148,23 @@ ApplicationWindow {
                     anchors.fill: parent; anchors.leftMargin: 6; anchors.rightMargin: 6; anchors.topMargin: 4; spacing: 6
                     TabBar {
                         id: spaces; objectName: "workspaceTabs"; Layout.alignment: Qt.AlignBottom
+                        // Shrinks and scrolls in a narrow window instead of pushing the buttons out.
+                        Layout.fillWidth: true; Layout.minimumWidth: 0; clip: true
                         background: Item {}
                         currentIndex: win.page
                         onCurrentIndexChanged: if (currentIndex !== win.page) win.page = currentIndex
                         Repeater {
-                            model: win.nav
+                            // A count, not the translated labels: retranslating must not recreate the
+                            // tabs, which would reset the current workspace to the first one.
+                            model: win.nav.length
                             TTabButton {
                                 required property int index
-                                required property string modelData
                                 objectName: "sectionNav" + index
-                                text: modelData; width: implicitWidth
+                                text: win.nav[index]; width: implicitWidth
                                 implicitWidth: contentItem.implicitWidth + 18
                             }
                         }
                     }
-                    Item {Layout.fillWidth: true}
                     Label {text: controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.maximumWidth: 360; Layout.alignment: Qt.AlignVCenter; visible: win.width > 1200}
                     TButton {objectName: "commandPaletteButton"; text: "Ctrl K"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Rechercher une commande"); onClicked: commands.open()}
                     TButton {id: appMenuButton; objectName: "appMenuButton"; text: "⚙"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Apparence et langue"); onClicked: appearanceDialog.open()}
@@ -301,9 +303,9 @@ objectName:"analysisSplit"
                     ColumnLayout {
                         id:boardPanel;SplitView.preferredWidth:analysisSplit.fittedBoardWidth;SplitView.minimumWidth:290;spacing:win.height<820?5:10
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
+                            Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#ffffff":"#1d2125";border.color:"#1d2125"}
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.White||qsTr("Blancs")):(controller.state.tags.Black||qsTr("Noirs"));font.weight:Font.DemiBold}
-                            Item {Layout.fillWidth:true}
-                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):(controller.state.flipped?qsTr("Blancs"):qsTr("Noirs"));color:win.muted;font.pixelSize:Math.round(9*controller.preferences.fontScale*controller.preferences.uiScale)}
+                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):((controller.state.flipped?controller.state.tags.WhiteElo:controller.state.tags.BlackElo)||"");color:win.muted}
                         }
                         Item {
                             Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:200
@@ -311,9 +313,9 @@ objectName:"analysisSplit"
                             Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:Math.min(parent.width-12,parent.height-12);height:width;anchors.centerIn:parent}
                         }
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
+                            Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#1d2125":"#ffffff";border.color:"#1d2125"}
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.Black||qsTr("Noirs")):(controller.state.tags.White||qsTr("Blancs"));font.weight:Font.DemiBold}
-                            Item {Layout.fillWidth:true}
-                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):(controller.state.flipped?qsTr("Noirs"):qsTr("Blancs"));color:win.muted;font.pixelSize:Math.round(9*controller.preferences.fontScale*controller.preferences.uiScale)}
+                            Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):((controller.state.flipped?controller.state.tags.BlackElo:controller.state.tags.WhiteElo)||"");color:win.muted}
                         }
                         RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,430))/2);Layout.rightMargin:Layout.leftMargin
                             TButton {text:"|◀";implicitWidth:38;padding:6;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2);Accessible.name:qsTr("Début de la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Début")}
@@ -345,7 +347,7 @@ objectName:"analysisSplit"
                             SplitView.fillHeight:true;SplitView.minimumHeight:180;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:1;spacing:0
                                 Rectangle {Layout.fillWidth:true;implicitHeight:notationTabs.implicitHeight;color:win.bg
-                                    TabBar {id:notationTabs;anchors.left:parent.left;anchors.bottom:parent.bottom;background:Item {}
+                                    TabBar {id:notationTabs;objectName:"notationTabs";anchors.left:parent.left;anchors.bottom:parent.bottom;background:Item {}
                                         TTabButton {text:qsTr("Notation");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                         TTabButton {text:qsTr("Arbre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                         TTabButton {objectName:"bookTab";text:qsTr("Livre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}

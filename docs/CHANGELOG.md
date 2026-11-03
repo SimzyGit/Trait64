@@ -1,5 +1,11 @@
 # Changements
 
+## Interface classique — 3 novembre 2026
+
+L'interface suit désormais la disposition que connaissent la plupart des joueurs (ChessBase, SCID, analyse Lichess), modernisée : barre de menus, onglets d'espaces de travail, grand échiquier encadré des joueurs (couleur, nom, Elo ou pendule), notation, arbre et livre à droite, moteur dessous, bibliothèque en tableau dense. Thème clair par défaut, gris neutres et un seul accent ; le thème sombre et les tailles restent réglables. L'arbre d'ouvertures montre une barre de résultats Blancs / nulles / Noirs par coup. Le carnet garde des colonnes compactes sur grand écran.
+
+Corrections : changer de langue renvoyait sur l'Accueil ; sur une petite fenêtre, la rangée d'onglets poussait des boutons hors de l'écran.
+
 ## Petits ajouts — 3 novembre 2026
 
 - **Écriture de livres Polyglot** : Bibliothèque → « Exporter un livre Polyglot » écrit un `.bin` des coups joués au moins deux fois, pondérés par le nombre de parties. Les clés du schéma 8 sont des clés Polyglot ; un aller-retour écriture/lecture est testé, roques compris.

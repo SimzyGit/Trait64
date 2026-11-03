@@ -80,6 +80,8 @@ Les autres fonctionnalités majeures de la série 0.3 comprennent :
 
 ![Atelier d’analyse Trait64](docs/screenshots/analysis.png)
 
+![Bibliothèque de parties](docs/screenshots/library.png)
+
 ## Comparaison avec des logiciels similaires
 
 Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son objectif est de combiner **travail local, bases de parties, analyse moteur, préparation et entraînement** dans une interface moderne et libre. Ce tableau compare les orientations et fonctions principales ; il ne remplace pas une comparaison exhaustive des milliers de détails de chaque logiciel.
