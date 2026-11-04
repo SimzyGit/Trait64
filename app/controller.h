@@ -66,6 +66,9 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
     Q_PROPERTY(QVariantList review READ review NOTIFY reviewChanged)
     Q_PROPERTY(QVariantMap reviewState READ reviewState NOTIFY reviewChanged)
+    // Précision par camp et par phase, à la manière de Lichess. Chaque valeur vaut -1
+    // quand elle n'est pas mesurable, faute de coups évalués des deux côtés.
+    Q_PROPERTY(QVariantMap reviewAccuracy READ reviewAccuracy NOTIFY reviewChanged)
     Q_PROPERTY(QVariantList players READ players NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap playerProfile READ playerProfile NOTIFY libraryChanged)
   public:
@@ -171,6 +174,7 @@ class Controller : public QObject {
     QVariantList tabs() const;
     QVariantList review() const { return review_; }
     QVariantMap reviewState() const;
+    QVariantMap reviewAccuracy() const { return reviewAccuracy_; }
     QVariantList players() const { return players_; }
     QVariantMap playerProfile() const { return playerProfile_; }
     Q_INVOKABLE void switchTab(int index);
@@ -428,6 +432,7 @@ class Controller : public QObject {
     int activeTab_ = 0;
     std::deque<Snapshot> undo_, redo_;
     QVariantList review_, players_;
+    QVariantMap reviewAccuracy_;
     QVariantMap advancedFilters_, playerProfile_;
     t64::Uci reviewer_;
     t64::Game reviewGame_;

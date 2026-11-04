@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "game.h"
+#include "accuracy.h"
 #include "explanation.h"
 #include "polyglot.h"
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -341,6 +343,48 @@ int main() {
                       t64::positionHash("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -") ==
                           chess::Board(a).hash(),
                   "Position hash accepts four- or six-field FEN");
+        }
+        {
+            // Précision : une position nulle vaut la moitié des chances de gain, et
+            // l'avantage les fait croître sans jamais atteindre les bornes.
+            check(std::abs(t64::winPercent(0) - 50) < 1e-9, "An equal position is half the winning chances");
+            check(t64::winPercent(300) > 75 && t64::winPercent(300) < 100 &&
+                      std::abs(t64::winPercent(-300) + t64::winPercent(300) - 100) < 1e-9,
+                  "Winning chances grow with the advantage and stay symmetric");
+            check(t64::moveAccuracy(50, 50) == 100 && t64::moveAccuracy(40, 60) == 100,
+                  "Keeping or improving the position is not punished");
+            check(t64::moveAccuracy(50, 20) < 40 && t64::moveAccuracy(50, 47) > 85 &&
+                      t64::moveAccuracy(50, 20) < t64::moveAccuracy(50, 40),
+                  "The mark falls as the lost chances grow");
+            // Même perte en centipions, deux situations : elle compte dans une position
+            // égale, presque pas quand la partie est déjà gagnée. C'est tout l'intérêt
+            // de passer par les chances de gain plutôt que par les centipions.
+            const double tight = t64::moveAccuracy(t64::winPercent(0), t64::winPercent(-100));
+            const double won = t64::moveAccuracy(t64::winPercent(900), t64::winPercent(800));
+            check(tight < won - 20, "The same centipawn loss costs more in a close position");
+            check(t64::aggregateAccuracy({}) < 0, "An unmeasurable set is not a zero");
+            check(std::abs(t64::aggregateAccuracy({100, 100, 100}) - 100) < 1e-9,
+                  "A flawless set is a hundred");
+            // La moyenne harmonique fait peser la gaffe : la note reste sous la moyenne
+            // arithmétique, qui vaudrait 92,5 ici.
+            const double blundered = t64::aggregateAccuracy({100, 100, 100, 70});
+            check(blundered < 92 && blundered > 60, "One blunder weighs on an otherwise clean set");
+            // Phases : position de départ, milieu de jeu après échanges, finale réduite.
+            check(t64::phaseOf(chess::Board(std::string(chess::constants::STARTPOS)), 0) ==
+                      t64::Phase::Opening,
+                  "The initial position is the opening");
+            check(t64::phaseOf(chess::Board(std::string(chess::constants::STARTPOS)), 20) ==
+                      t64::Phase::Middlegame,
+                  "A quiet opening still ends after ten moves each");
+            check(t64::phaseOf(chess::Board("4k3/pp3ppp/8/8/8/8/PP3PPP/4K3 w - - 0 30"), 60) ==
+                      t64::Phase::Endgame,
+                  "Kings and pawns alone are an endgame");
+            check(t64::phaseOf(chess::Board("r3k2r/pp3ppp/8/8/8/8/PP3PPP/R3K2R w - - 0 20"), 40) ==
+                      t64::Phase::Endgame,
+                  "Four rooks and pawns are an endgame");
+            check(t64::phaseOf(chess::Board("r1bqkb1r/pppppppp/2n2n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w - - 0 5"),
+                               8) == t64::Phase::Opening,
+                  "A full board early on is still the opening");
         }
         std::cout << checks << " core checks passed\n";
         return 0;

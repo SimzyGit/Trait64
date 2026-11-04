@@ -39,6 +39,7 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
                 MouseArea {anchors.fill:parent;onClicked:function(mouse){var rows=root.backend.review;if(rows.length){var index=Math.round(Math.max(0,Math.min(1,mouse.x/width))*(rows.length-1));root.backend.navigate(rows[index].node)}}}
             }
         }
+        AccuracyPanel {Layout.fillWidth:true;backend:root.backend}
         Label {text:qsTr("Perte moyenne (centipions) — Blancs : ")+root.average(true)+qsTr(" · Noirs : ")+root.average(false);Layout.fillWidth:true;wrapMode:Text.WordWrap;font.bold:true}
         ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:170;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}
             currentIndex:-1
