@@ -46,10 +46,9 @@ FidePlayer FideList::findInChunks(const std::function<QByteArray()> &next, const
             return false;
         const auto chunk = next();
         if (chunk.isEmpty()) {
+            // Plus rien à lire : la boucle s'arrête sur ce faux, sans quoi elle
+            // attendrait indéfiniment un bloc qui ne viendra pas.
             exhausted = true;
-            // Clôt le document pour que le lecteur signale une fin prématurée plutôt que
-            // d'attendre indéfiniment un bloc qui ne viendra pas.
-            xml.addData(QByteArrayView());
             return false;
         }
         xml.addData(chunk);
