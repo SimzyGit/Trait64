@@ -352,6 +352,22 @@ int main(int argc, char **argv) {
             check(fide["fideId"] == "1503014" && fide["fideStandard"].toInt() == 2100 &&
                       !fide["fideRapid"].isValid() && fide["fideBlitz"].toInt() == 1950,
                   "FIDE details are kept, and an unrated speed stays empty rather than zero");
+            // Une cadence cherchée sans y trouver le joueur garde son chiffre, marqué
+            // douteux ; une cadence non demandée n'apprend rien et reste intacte.
+            c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 1800, 1950);
+            c.applyFideRatings(0, {"standard", "rapid"},
+                               {{"found", true}, {"name", "Nom Officiel"}, {"standard", 2150}});
+            const auto marked = c.profiles()[0].toMap();
+            check(marked["fideStandard"].toInt() == 2150 && !marked["fideStandardStale"].toBool(),
+                  "A confirmed rating is updated and trusted");
+            check(marked["fideRapid"].toInt() == 1800 && marked["fideRapidStale"].toBool(),
+                  "A rating the list no longer confirms is kept and flagged");
+            check(marked["fideBlitz"].toInt() == 1950 && !marked["fideBlitzStale"].toBool(),
+                  "A speed that was never asked for stays untouched");
+            check(marked["fideName"] == "Nom Officiel", "The published name replaces the typed one");
+            c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 1800, 1950);
+            check(!c.profiles()[0].toMap()["fideRapidStale"].toBool(),
+                  "Typing a rating by hand clears the doubt");
             messages.clear();
             c.setFideDetails(0, "12a", {}, 0, 0, 0);
             check(c.profiles()[0].toMap()["fideId"] == "1503014" && messages.size() == 1,

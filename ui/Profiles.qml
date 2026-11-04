@@ -12,12 +12,22 @@ ColumnLayout {
     readonly property real scale: controller.preferences.fontScale * controller.preferences.uiScale
     spacing: 10
 
+    // Un « ? » signale un classement que la dernière liste consultée n'a pas confirmé :
+    // le chiffre est conservé, mais il n'est plus garanti à jour.
     function ratingLine(profile) {
-        const parts = []
-        if (profile.fideStandard) parts.push(qsTr("classique %1").arg(profile.fideStandard))
-        if (profile.fideRapid) parts.push(qsTr("rapide %1").arg(profile.fideRapid))
-        if (profile.fideBlitz) parts.push(qsTr("blitz %1").arg(profile.fideBlitz))
+        const speeds = [
+            {label: qsTr("classique"), value: profile.fideStandard, stale: profile.fideStandardStale},
+            {label: qsTr("rapide"), value: profile.fideRapid, stale: profile.fideRapidStale},
+            {label: qsTr("blitz"), value: profile.fideBlitz, stale: profile.fideBlitzStale}
+        ]
+        const parts = speeds.filter(s => s.value)
+                            .map(s => s.label + " " + s.value + (s.stale ? " ?" : ""))
         return parts.length ? parts.join(" · ") : qsTr("aucun classement saisi")
+    }
+    function anyStale(profile) {
+        return !!(profile.fideStandard && profile.fideStandardStale) ||
+               !!(profile.fideRapid && profile.fideRapidStale) ||
+               !!(profile.fideBlitz && profile.fideBlitzStale)
     }
 
     Label {
@@ -66,6 +76,9 @@ ColumnLayout {
                     font.pixelSize: Math.round(11 * root.scale)
                     text: (card.modelData.fideId ? qsTr("FIDE %1 — %2").arg(card.modelData.fideId).arg(root.ratingLine(card.modelData))
                                                  : qsTr("Aucun profil FIDE rattaché"))
+                    HoverHandler { id: ratings }
+                    ToolTip.visible: ratings.hovered && root.anyStale(card.modelData)
+                    ToolTip.text: qsTr("Un « ? » marque un classement que la dernière liste consultée n’a pas confirmé : le joueur n’y figurait plus pour cette cadence.")
                 }
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap

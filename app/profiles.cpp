@@ -168,6 +168,10 @@ void Controller::setFideDetails(int index, const QString &fideId, const QString 
         profile["fideStandard"] = rating(standard);
         profile["fideRapid"] = rating(rapid);
         profile["fideBlitz"] = rating(blitz);
+        // Un chiffre saisi à la main est tenu pour voulu : il perd la marque de doute
+        // qu'un téléchargement précédent aurait pu lui laisser.
+        for (const auto &key : QStringList{"fideStandardStale", "fideRapidStale", "fideBlitzStale"})
+            profile[key] = false;
         profile["fideUpdated"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
         list[index] = profile;
         settings_.setValue("profiles", list);
@@ -201,10 +205,13 @@ void Controller::fetchFideRatings(int index, const QStringList &speeds) {
             connect(fide_, &t64::FideSync::finished, this, [this](const QVariantMap &player) {
                 fideSync_ = {{"busy", false}, {"status", QString()}};
                 emit fideSyncChanged();
-                applyFideRatings(player);
+                applyFideRatings(fideProfile_, fideSpeeds_, player);
             });
         }
         fideProfile_ = index;
+        // Retenu pour distinguer, au retour, une cadence cherchée sans succès — donc
+        // douteuse — d'une cadence simplement pas demandée, qui reste intacte.
+        fideSpeeds_ = speeds;
         // Le dossier de données accueille les listes le temps de les lire ; elles sont
         // effacées aussitôt, car une liste complète ne sert à rien hors de cette lecture.
         QDir().mkpath(dataPath_ + "/downloads");
@@ -221,29 +228,35 @@ void Controller::cancelFideRatings() {
         fide_->cancel();
 }
 
-void Controller::applyFideRatings(const QVariantMap &player) {
+void Controller::applyFideRatings(int index, const QStringList &requested, const QVariantMap &player) {
     try {
         auto list = settings_.value("profiles").toList();
-        require(fideProfile_ >= 0 && fideProfile_ < list.size(), "Profil introuvable.");
+        require(index >= 0 && index < list.size(), "Profil introuvable.");
         if (!player["found"].toBool()) {
             emit message("Ce numéro FIDE ne figure dans aucune des listes téléchargées.", true);
             return;
         }
-        auto profile = list[fideProfile_].toMap();
+        auto profile = list[index].toMap();
         // Le nom publié par la fédération remplace une saisie approximative, mais on ne
         // vide pas un champ que la liste ne fournit pas.
         for (const auto &key : QStringList{"name", "country", "title"})
             if (!player[key].toString().isEmpty())
                 profile["fide" + key.mid(0, 1).toUpper() + key.mid(1)] = player[key];
-        // Une cadence absente des listes signifie « pas classé » : on efface l'ancien
-        // chiffre plutôt que de laisser croire à un classement toujours valable.
-        const QStringList speeds{"standard", "rapid", "blitz"};
-        for (const auto &speed : speeds) {
+        for (const auto &speed : QStringList{"standard", "rapid", "blitz"}) {
             const auto key = "fide" + speed.mid(0, 1).toUpper() + speed.mid(1);
-            profile[key] = player.contains(speed) ? player[speed] : QVariant();
+            if (player.contains(speed)) {
+                profile[key] = player[speed];
+                profile[key + "Stale"] = false;
+                continue;
+            }
+            // Cadence cherchée sans y trouver le joueur : le chiffre connu est conservé
+            // mais marqué douteux, car il n'est plus confirmé par la liste du mois. Une
+            // cadence qui n'a pas été demandée, elle, n'apprend rien et reste intacte.
+            if (requested.contains(speed) && profile.value(key).isValid())
+                profile[key + "Stale"] = true;
         }
         profile["fideUpdated"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
-        list[fideProfile_] = profile;
+        list[index] = profile;
         settings_.setValue("profiles", list);
         emit profilesChanged();
         emit message(QString("Classements FIDE à jour pour %1.").arg(profile["name"].toString()));

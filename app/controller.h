@@ -194,7 +194,11 @@ class Controller : public QObject {
     Q_INVOKABLE void fetchFideRatings(int index, const QStringList &speeds);
     Q_INVOKABLE void cancelFideRatings();
     QVariantMap fideSync() const { return fideSync_; }
-    void applyFideRatings(const QVariantMap &player);
+    // Reporte sur un profil ce qu'une recherche a rapporté. `requested` nomme les
+    // cadences effectivement cherchées : celles-là seules peuvent devenir douteuses.
+    // Tout passe par les arguments, ce qui la rend vérifiable sans réseau.
+    Q_INVOKABLE void applyFideRatings(int index, const QStringList &requested,
+                                      const QVariantMap &player);
     QVariantMap reviewState() const;
     QVariantMap reviewAccuracy() const { return reviewAccuracy_; }
     QVariantList players() const { return players_; }
@@ -421,6 +425,7 @@ class Controller : public QObject {
     t64::FideSync *fide_ = nullptr;
     QVariantMap fideSync_;
     int fideProfile_ = -1;
+    QStringList fideSpeeds_;
     QString onlineSyncKey_, onlineFile_;
     qint64 onlineSyncTime_ = 0;
     QList<int> syncQueue_;
