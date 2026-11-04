@@ -388,12 +388,16 @@ int main() {
                   "A full board early on is still the opening");
 
             // Bilan d'une partie entière. Les Blancs gardent l'équilibre, les Noirs
-            // lâchent prise au troisième coup : les notes doivent les séparer nettement.
+            // lâchent prise à leur troisième coup : les notes doivent les séparer
+            // nettement. Les évaluations sont comptées du point de vue des Blancs, donc
+            // une faute des Noirs fait monter le chiffre, pas descendre.
             auto reviewed = t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 Nd4 4. Nxd4 exd4 *");
             const auto &played = reviewed.front();
             const auto line = played.mainline();
             std::vector<t64::NodeScore> scores(line.size());
-            const double evaluations[] = {20, 15, 25, 20, 30, -250, -240, -600, -590};
+            // Indice i : position après le i-ième demi-coup. La chute entre 25 et 600
+            // tombe sur 3...Nd4, un coup des Noirs.
+            const double evaluations[] = {20, 15, 25, 20, 30, 25, 600, 590, 610};
             for (size_t i = 0; i < line.size() && i < std::size(evaluations); ++i)
                 scores[i] = {true, evaluations[i]};
             const auto summary = t64::summarize(played, line, scores);
