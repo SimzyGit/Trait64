@@ -25,7 +25,8 @@ def package_manifest(directory, version):
     if not VERSION.fullmatch(version):
         raise ValueError("Invalid release version")
     names = {f"trait64_{version}_debian12_amd64.deb", f"trait64_{version}_debian13_amd64.deb",
-             f"Trait64-{version}-linux-x86_64.AppImage", "Trait64-runtime-sources.tar"}
+             f"Trait64-{version}-linux-x86_64.AppImage", "Trait64-runtime-sources.tar",
+             f"Trait64-{version}-windows-x86_64.zip", f"Trait64-{version}-macos-arm64.dmg"}
     actual = {p.name for p in directory.iterdir()} - {"SHA256SUMS"}
     if actual != names:
         raise ValueError(f"Incomplete package set: missing={names - actual}, unexpected={actual - names}")

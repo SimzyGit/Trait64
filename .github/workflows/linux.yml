@@ -77,9 +77,9 @@ jobs:
           ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: ctest --test-dir build --output-on-failure
-  # Livrables Windows et macOS. Ils ne sont pas encore rattachés à la publication :
-  # on vérifie d'abord qu'ils sortent corrects avant de rendre la release dépendante
-  # de deux machines de plus.
+  # Livrables Windows et macOS. La publication les attend : une version n'est complète
+  # que si les trois systèmes y figurent, et un utilisateur Windows ne doit pas tomber
+  # sur une release qui ne contient que du Linux.
   windows:
     needs: version
     runs-on: windows-2022
@@ -147,7 +147,7 @@ jobs:
           if-no-files-found: error
 
   linux:
-    needs: [version, core-sanitizers, desktop-sanitizers]
+    needs: [version, core-sanitizers, desktop-sanitizers, windows, macos]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -170,6 +170,12 @@ jobs:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: |
           docker run --rm --pull always --mount "type=bind,source=$PWD,target=/source,readonly" --mount "type=bind,source=$PWD/packages,target=/packages" --workdir /source debian:trixie bash packaging/ci-linux.sh 13 "$RELEASE_VERSION"
+      - name: Récupérer les paquets Windows et macOS
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: '*-package'
+          merge-multiple: true
       - name: Verify complete package manifest
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}

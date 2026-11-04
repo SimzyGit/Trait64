@@ -69,7 +69,9 @@ class PublicationTests(unittest.TestCase):
     def make_packages(self):
         for name in [f"trait64_{self.version}_debian12_amd64.deb",
                      f"trait64_{self.version}_debian13_amd64.deb",
-                     f"Trait64-{self.version}-linux-x86_64.AppImage", "Trait64-runtime-sources.tar"]:
+                     f"Trait64-{self.version}-linux-x86_64.AppImage", "Trait64-runtime-sources.tar",
+                     f"Trait64-{self.version}-windows-x86_64.zip",
+                     f"Trait64-{self.version}-macos-arm64.dmg"]:
             (self.directory / name).write_text("test package " + name)
 
     def publish(self):
@@ -83,9 +85,12 @@ class PublicationTests(unittest.TestCase):
         self.assertFalse(result["draft"])
         self.assertTrue(result["prerelease"])
         self.assertEqual(result["target_commitish"], COMMIT)
-        self.assertEqual(len(self.api.files), 5)
+        # Comptés d'après l'ensemble attendu plutôt qu'en dur : ajouter une plateforme ne
+        # doit pas rendre ce test faux, seulement l'étendre.
+        expected = publisher.package_manifest(self.directory, self.version)
+        self.assertEqual(len(self.api.files), len(expected))
         lines = (self.directory / "SHA256SUMS").read_text().splitlines()
-        self.assertEqual(len(lines), 4)
+        self.assertEqual(len(lines), len(expected) - 1)
         for line in lines:
             digest, name = line.split("  ", 1)
             self.assertEqual("sha256:" + digest, publisher.file_info(self.directory / name)["digest"])
