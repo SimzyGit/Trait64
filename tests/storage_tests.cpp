@@ -17,6 +17,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QTemporaryDir>
+#include <source_location>
 #include <sqlite3.h>
 #include <cstring>
 #include <iostream>
@@ -27,12 +28,19 @@ void check(bool ok, const char *text) {
     if (!ok)
         throw std::runtime_error(text);
 }
-template <class F> void rejects(F f) {
+// Vingt et un appels partageaient le même message : un échec ne disait pas lequel avait
+// laissé passer la donnée invalide. La ligne d'appel est jointe automatiquement.
+template <class F>
+void rejects(F f, std::source_location where = std::source_location::current()) {
     bool bad = false;
     try {
         f();
     } catch (const std::exception &) {
         bad = true;
+    }
+    if (!bad) {
+        ++checks;
+        throw std::runtime_error("Invalid data accepted at line " + std::to_string(where.line()));
     }
     check(bad, "Invalid data accepted");
 }

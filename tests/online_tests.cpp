@@ -119,6 +119,9 @@ int main(int argc, char **argv) {
         QFile saved(file);
         check(saved.open(QIODevice::ReadOnly), "Chess.com PGN saved");
         const auto text = saved.readAll();
+        // Windows refuse de remplacer un fichier encore ouvert, là où POSIX l'accepte :
+        // garder ce descripteur faisait échouer l'écriture de la synchronisation suivante.
+        saved.close();
         check(total == 3 && network.requests.size() == 3 &&
                   network.requests[0].url().path() == "/pub/player/simzy/games/archives" &&
                   network.requests[1].url().path().endsWith("/2026/10/pgn") &&
