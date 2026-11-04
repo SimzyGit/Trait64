@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLockFile>
+#include <iostream>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUrl>
@@ -141,8 +142,11 @@ QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const Imp
     p.committedBytes = job["offset"].toLongLong();
     bool transaction = false;
     auto notify = [&] {
-        if (progress && !progress(p))
+        if (progress && !progress(p)) {
+            if (!qEnvironmentVariableIsEmpty("T64_TRACE_IMPORT"))
+                std::cerr << "[import] pause requested, unwinding" << std::endl;
             throw Paused{};
+        }
     };
     auto setStatus = [&](const QString &status, const QString &error) {
         QSqlQuery q(db_);
@@ -259,8 +263,12 @@ QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const Imp
         notify();
         commit(true);
     } catch (const Paused &) {
+        if (!qEnvironmentVariableIsEmpty("T64_TRACE_IMPORT"))
+            std::cerr << "[import] pause caught, rolling back" << std::endl;
         rollback();
         setStatus("paused", "");
+        if (!qEnvironmentVariableIsEmpty("T64_TRACE_IMPORT"))
+            std::cerr << "[import] pause recorded" << std::endl;
     } catch (const std::exception &e) {
         rollback();
         setStatus("failed", QString::fromUtf8(e.what()));
