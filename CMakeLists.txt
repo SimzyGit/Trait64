@@ -135,7 +135,9 @@ if(T64_BUILD_GUI)
     # de temps que les scénarios ciblés ci-dessus, surtout sous sanitizers.
     set_tests_properties(desktop_interactions PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 300)
   endif()
-  install(TARGETS trait64 RUNTIME DESTINATION bin)
+  # BUNDLE ne concerne que macOS, où la cible est un paquet depuis qu'elle porte
+  # MACOSX_BUNDLE ; RUNTIME reste la destination sur les autres systèmes.
+  install(TARGETS trait64 RUNTIME DESTINATION bin BUNDLE DESTINATION .)
   install(FILES assets/trait64.desktop DESTINATION share/applications)
   install(FILES assets/trait64.svg DESTINATION share/icons/hicolor/scalable/apps)
   install(DIRECTORY assets/pieces/ DESTINATION share/doc/trait64/pieces FILES_MATCHING PATTERN "*.txt" PATTERN "*.md")
