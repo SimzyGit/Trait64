@@ -9,7 +9,10 @@ option(T64_BUILD_GUI "Build the Qt desktop application" ON)
 option(T64_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
 option(T64_BENCHMARKS "Build opt-in database and real-PGN benchmarks" OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wformat=2)
+  # -Wshadow ne fait pas partie de -Wall ni de -Wextra, et c'est pourtant lui qui aurait
+  # évité qu'une variable de boucle masque un drapeau dans la recherche d'ouvertures :
+  # le test lisait alors un pointeur toujours non nul. MSVC le signalait déjà (C4456).
+  add_compile_options(-Wall -Wextra -Wpedantic -Wformat=2 -Wshadow)
 endif()
 if(MSVC)
   # Sources are UTF-8 (accents, figurines); /Zc:__cplusplus reports the real standard.

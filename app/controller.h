@@ -197,6 +197,10 @@ class Controller : public QObject {
     // Tableau de bord d'un profil : notes d'ensemble et par phase, fautes, tactique, et
     // l'évolution mois par mois. Un profil sans compte rattaché ne mesure rien.
     Q_INVOKABLE QVariantMap skillDashboard(int profileIndex) const;
+    // Traduit un nom d'ouverture en codes ECO. Fonction pure, exposée pour que ses deux
+    // règles — une famille en début de nom, un fragment de variante n'importe où —
+    // soient vérifiables sans monter une recherche complète.
+    Q_INVOKABLE QVariantMap openingFilters(const QVariantMap &filters) const;
     // Reporte sur un profil ce qu'une recherche a rapporté. `requested` nomme les
     // cadences effectivement cherchées : celles-là seules peuvent devenir douteuses.
     // Tout passe par les arguments, ce qui la rend vérifiable sans réseau.
@@ -383,7 +387,6 @@ class Controller : public QObject {
     QVariantList sources_, importHistory_;
     void initContent();
     void importSourceFile(const QString &url, const QVariantMap &source);
-    QVariantMap openingFilters(const QVariantMap &filters) const;
     struct ImportResult {
         int count = 0, duplicates = 0;
         QString error, detail, operation = "import";

@@ -81,13 +81,18 @@ QVariantMap Controller::openingFilters(const QVariantMap &filters) const {
                                          {"nimzo-indienne", "nimzo-indian"},
                                          {"catalane", "catalan"},
                                          {"slave", "slav"}};
-    bool family = aliases.contains(name);
+    bool wholeFamily = aliases.contains(name);
     for (const auto &english : aliases)
-        family = family || name == english || name == english + " defense" || name == english + " defence";
+        wholeFamily = wholeFamily || name == english || name == english + " defense" ||
+                      name == english + " defence";
     name = aliases.value(name, name);
     QSet<QString> codes;
-    for (const auto *family : {"a", "b", "c", "d", "e"}) {
-        QFile file(":/assets/openings/" + QString(family) + ".tsv");
+    // La variable de boucle s'appelait « family » comme le drapeau ci-dessus, qu'elle
+    // masquait : le test plus bas lisait donc un pointeur toujours non nul, et prenait
+    // toujours la branche « commence par ». Chercher un fragment de variante — Najdorf,
+    // par exemple — ne rendait rien, aucune ouverture ne commençant par ce mot.
+    for (const auto *volume : {"a", "b", "c", "d", "e"}) {
+        QFile file(":/assets/openings/" + QString(volume) + ".tsv");
         if (!file.open(QIODevice::ReadOnly))
             continue;
         while (!file.atEnd()) {
@@ -95,8 +100,8 @@ QVariantMap Controller::openingFilters(const QVariantMap &filters) const {
             // A family belongs at the start of the name: "Franco-Sicilian"
             // is a French line, not the Sicilian family. Variant fragments
             // (e.g. Najdorf) still search anywhere in the complete name.
-            if (columns.size() >= 2 && (family ? columns[1].startsWith(name, Qt::CaseInsensitive)
-                                               : columns[1].contains(name, Qt::CaseInsensitive)))
+            if (columns.size() >= 2 && (wholeFamily ? columns[1].startsWith(name, Qt::CaseInsensitive)
+                                                    : columns[1].contains(name, Qt::CaseInsensitive)))
                 codes.insert(columns[0]);
         }
     }

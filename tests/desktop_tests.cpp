@@ -1014,6 +1014,17 @@ int main(int argc, char **argv) {
             waitSearch();
             check(c.games().size() == 200 && c.games().first().toMap()["eco"] == "C00",
                   "Search recovers after an invalid filter");
+            // Une famille se cherche en début de nom, un fragment de variante n'importe
+            // où : « Najdorf » n'apparaît qu'au milieu de « Sicilian Defense: Najdorf
+            // Variation ». Les deux branches sont éprouvées, car une variable de boucle
+            // masquait le drapeau qui les distingue et la seconde ne servait jamais.
+            const auto variant = c.openingFilters({{"openingName", "najdorf"}});
+            check(variant["openingCodes"].toStringList().contains("B90"),
+                  "A variant fragment is found in the middle of an opening name");
+            const auto whole = c.openingFilters({{"openingName", "sicilienne"}});
+            check(whole["openingCodes"].toStringList().contains("B90") &&
+                      !whole["openingCodes"].toStringList().contains("C00"),
+                  "A family name matches the start of the name and nothing else");
             // Destruction also cancels and joins any outstanding worker.
             c.searchLibrary("Rival", {}, false, false, false, {});
         }
