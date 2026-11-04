@@ -332,8 +332,15 @@ int main(int argc, char **argv) {
             c.addProfile("  Sïmzy  ");
             check(c.profiles().size() == 1 && c.profiles()[0].toMap()["name"] == "Sïmzy",
                   "A profile is created with its name tidied up");
-            c.addProfile("simzy");
-            check(c.profiles().size() == 1 && messages.size() == 1, "The same profile is not added twice");
+            // La comparaison ignore la casse, pas les diacritiques : « sïmzy » est le
+            // même nom, « Simzy » en est un autre, et c'est voulu — un accent distingue
+            // deux prénoms réels aussi sûrement qu'une lettre différente.
+            c.addProfile("sïmzy");
+            check(c.profiles().size() == 1 && messages.size() == 1,
+                  "The same name in another case is not added twice");
+            c.addProfile("Simzy");
+            check(c.profiles().size() == 2, "A different spelling is a different profile");
+            c.removeProfile(1);
             c.addProfile("");
             check(c.profiles().size() == 1 && messages.size() == 2, "A nameless profile is refused");
             c.addOnlineAccount("lichess", "Kim");
