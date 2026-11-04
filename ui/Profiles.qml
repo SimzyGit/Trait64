@@ -9,7 +9,8 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
     required property var backend
-    readonly property real scale: controller.preferences.fontScale * controller.preferences.uiScale
+    // « scale » appartient au type de base : un nom à soi évite de l'écraser.
+    readonly property real uiZoom: controller.preferences.fontScale * controller.preferences.uiScale
     spacing: 10
 
     // Un « ? » signale un classement que la dernière liste consultée n'a pas confirmé :
@@ -54,7 +55,7 @@ ColumnLayout {
                     Label {
                         text: card.modelData.name; font.bold: true; elide: Text.ElideRight
                         Layout.fillWidth: true
-                        font.pixelSize: Math.round(15 * root.scale)
+                        font.pixelSize: Math.round(15 * root.uiZoom)
                     }
                     TButton {
                         text: qsTr("Renommer")
@@ -73,7 +74,7 @@ ColumnLayout {
                 }
                 Label {
                     Layout.fillWidth: true; color: palette.placeholderText; wrapMode: Text.WordWrap
-                    font.pixelSize: Math.round(11 * root.scale)
+                    font.pixelSize: Math.round(11 * root.uiZoom)
                     text: (card.modelData.fideId ? qsTr("FIDE %1 — %2").arg(card.modelData.fideId).arg(root.ratingLine(card.modelData))
                                                  : qsTr("Aucun profil FIDE rattaché"))
                     HoverHandler { id: ratings }
@@ -82,7 +83,7 @@ ColumnLayout {
                 }
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
-                    font.pixelSize: Math.round(11 * root.scale)
+                    font.pixelSize: Math.round(11 * root.uiZoom)
                     text: card.modelData.accounts.length === 0
                           ? qsTr("Aucun compte rattaché : utilisez « Rattacher » sur un compte ci-dessous.")
                           : qsTr("Comptes : ") + card.modelData.accounts.map(
@@ -140,7 +141,7 @@ ColumnLayout {
             anchors.fill: parent; spacing: 8
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
-                font.pixelSize: Math.round(11 * root.scale)
+                font.pixelSize: Math.round(11 * root.uiZoom)
                 text: qsTr("Votre identifiant figure sur votre fiche, à l’adresse ratings.fide.com. Laissez une cadence à zéro si vous n’y êtes pas classé.")
             }
             GridLayout {
@@ -162,7 +163,7 @@ ColumnLayout {
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
-                font.pixelSize: Math.round(11 * root.scale)
+                font.pixelSize: Math.round(11 * root.uiZoom)
                 text: qsTr("Trait64 peut aussi lire vos classements dans les listes mensuelles publiées par la fédération. Chaque cadence est un téléchargement de plusieurs dizaines de mégaoctets : ne cochez que celles qui vous concernent.")
             }
             RowLayout {
@@ -193,7 +194,7 @@ ColumnLayout {
                 }
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap; elide: Text.ElideRight
-                    font.pixelSize: Math.round(11 * root.scale)
+                    font.pixelSize: Math.round(11 * root.uiZoom)
                     text: fide.sync.busy && fide.sync.speed
                           ? qsTr("%1 (%2/%3) — %4 Mio")
                                 .arg(fide.sync.speed).arg(fide.sync.index).arg(fide.sync.count)

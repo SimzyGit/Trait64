@@ -11,9 +11,13 @@ TDialog {
     id: root
     required property var backend
     property int profileIndex: 0
-    // « data » est une propriété finale de QML : le nom est pris.
-    readonly property var report: backend.skillDashboard(profileIndex)
-    readonly property real scale: controller.preferences.fontScale * controller.preferences.uiScale
+    // Les chiffres viennent d'une requête, pas d'une propriété observable : une liaison
+    // ne saurait pas quand les relire. Ils sont donc lus explicitement à l'ouverture,
+    // au changement de profil, et quand un bilan vient d'alimenter la base.
+    // (« data » est un nom pris : c'est une propriété finale de QML.)
+    property var report: ({})
+    // « scale » appartient au type de base : un nom à soi évite de l'écraser.
+    readonly property real uiZoom: controller.preferences.fontScale * controller.preferences.uiScale
     title: qsTr("Bilan de vos compétences")
     width: Math.min(880, parent ? parent.width - 24 : 880)
     height: Math.min(720, parent ? parent.height - 24 : 720)
@@ -21,11 +25,14 @@ TDialog {
     modal: true
     standardButtons: Dialog.Close
 
-    // Recalcule à l'ouverture et quand un bilan vient de s'achever : les chiffres
-    // viennent de la base, pas d'un cache que rien ne rafraîchirait.
-    function refresh() { profileIndex = profileIndex }
+    function refresh() { report = backend.skillDashboard(profileIndex) }
     onOpened: refresh()
-    Connections { target: root.backend; function onLibraryChanged() { root.refresh() } }
+    onProfileIndexChanged: refresh()
+    Connections {
+        target: root.backend
+        // Inutile de recalculer un écran fermé : la lecture parcourt toute la base.
+        function onLibraryChanged() { if (root.visible) root.refresh() }
+    }
 
     function reading(value, suffix) {
         return value === undefined || value === null ? "—" : value.toFixed(1) + (suffix || "")
@@ -71,7 +78,7 @@ TDialog {
 
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
-                    font.pixelSize: Math.round(11 * root.scale); opacity: .75
+                    font.pixelSize: Math.round(11 * root.uiZoom); opacity: .75
                     text: qsTr("%1 partie(s) passée(s) en revue, %2 coup(s) mesuré(s), sous %3.")
                               .arg(root.report.games || 0).arg(root.report.moves || 0)
                               .arg((root.report.accounts || []).join(", "))
@@ -87,22 +94,22 @@ TDialog {
                         ColumnLayout {
                             spacing: 2
                             Label { text: qsTr("Précision"); opacity: .7
-                                    font.pixelSize: Math.round(11 * root.scale) }
+                                    font.pixelSize: Math.round(11 * root.uiZoom) }
                             Label {
                                 text: root.reading(root.report.all, " %")
-                                font.bold: true; font.pixelSize: Math.round(26 * root.scale)
+                                font.bold: true; font.pixelSize: Math.round(26 * root.uiZoom)
                             }
                         }
                         ColumnLayout {
                             spacing: 2
                             visible: root.report.trend !== undefined && root.report.trend !== null
                             Label { text: qsTr("Ce mois-ci"); opacity: .7
-                                    font.pixelSize: Math.round(11 * root.scale) }
+                                    font.pixelSize: Math.round(11 * root.uiZoom) }
                             Label {
                                 readonly property real delta: root.report.trend || 0
                                 text: (delta >= 0 ? "+" : "−") + Math.abs(delta).toFixed(1) + " pt"
                                 color: delta >= 0 ? "#3f9a5c" : "#c05b4d"
-                                font.bold: true; font.pixelSize: Math.round(20 * root.scale)
+                                font.bold: true; font.pixelSize: Math.round(20 * root.uiZoom)
                                 ToolTip.visible: hovered.hovered
                                 ToolTip.text: qsTr("Écart entre votre mois le plus récent et la moyenne de vos mois précédents.")
                                 HoverHandler { id: hovered }
@@ -112,11 +119,11 @@ TDialog {
                         ColumnLayout {
                             spacing: 2
                             Label { text: qsTr("Tactique"); opacity: .7
-                                    font.pixelSize: Math.round(11 * root.scale) }
+                                    font.pixelSize: Math.round(11 * root.uiZoom) }
                             Label {
                                 text: (root.report.tactics && root.report.tactics.solved > 0)
                                       ? root.report.tactics.recentSuccess + " %" : "—"
-                                font.bold: true; font.pixelSize: Math.round(20 * root.scale)
+                                font.bold: true; font.pixelSize: Math.round(20 * root.uiZoom)
                                 ToolTip.visible: puzzles.hovered
                                 ToolTip.text: (root.report.tactics && root.report.tactics.solved > 0)
                                     ? qsTr("Réussite sur vos 50 derniers exercices, %1 résolu(s) en tout.")
@@ -143,12 +150,12 @@ TDialog {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
                                     text: root.reading(root.report[modelData.key], " %")
-                                    font.bold: true; font.pixelSize: Math.round(20 * root.scale)
+                                    font.bold: true; font.pixelSize: Math.round(20 * root.uiZoom)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Label {
                                     text: modelData.label; opacity: .7
-                                    font.pixelSize: Math.round(11 * root.scale)
+                                    font.pixelSize: Math.round(11 * root.uiZoom)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                             }
@@ -171,12 +178,12 @@ TDialog {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
                                     text: root.reading(root.report[modelData.key])
-                                    font.bold: true; font.pixelSize: Math.round(18 * root.scale)
+                                    font.bold: true; font.pixelSize: Math.round(18 * root.uiZoom)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Label {
                                     text: modelData.label + " (" + (root.report[modelData.total] || 0) + ")"
-                                    opacity: .7; font.pixelSize: Math.round(11 * root.scale)
+                                    opacity: .7; font.pixelSize: Math.round(11 * root.uiZoom)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                             }
@@ -205,7 +212,7 @@ TDialog {
                                 Label {
                                     text: modelData.accuracy === undefined || modelData.accuracy === null
                                           ? "—" : modelData.accuracy.toFixed(0)
-                                    font.pixelSize: Math.round(10 * root.scale); opacity: .8
+                                    font.pixelSize: Math.round(10 * root.uiZoom); opacity: .8
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Item {
@@ -222,7 +229,7 @@ TDialog {
                                 }
                                 Label {
                                     text: root.month(modelData.period)
-                                    font.pixelSize: Math.round(9 * root.scale); opacity: .7
+                                    font.pixelSize: Math.round(9 * root.uiZoom); opacity: .7
                                     Layout.alignment: Qt.AlignHCenter
                                     elide: Text.ElideRight; Layout.fillWidth: true
                                     horizontalAlignment: Text.AlignHCenter
@@ -234,7 +241,7 @@ TDialog {
 
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: .7
-                    font.pixelSize: Math.round(10 * root.scale)
+                    font.pixelSize: Math.round(10 * root.uiZoom)
                     text: qsTr("Les notes dépendent du moteur et de la profondeur demandée : comparez des bilans menés aux mêmes réglages. La précision d’ensemble est pondérée par le nombre de coups, celles des phases sont une moyenne par partie.")
                 }
             }

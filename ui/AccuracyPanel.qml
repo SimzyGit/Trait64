@@ -16,7 +16,8 @@ ColumnLayout {
         {key: "endgame", label: qsTr("Finale")},
         {key: "all", label: qsTr("Partie")}
     ]
-    readonly property real scale: controller.preferences.fontScale * controller.preferences.uiScale
+    // « scale » appartient au type de base : un nom à soi évite de l'écraser.
+    readonly property real uiZoom: controller.preferences.fontScale * controller.preferences.uiScale
     visible: !!(scores.white && scores.white.allMoves > 0)
     spacing: 4
 
@@ -48,7 +49,7 @@ ColumnLayout {
                         required property var modelData
                         Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
                         text: modelData.label; opacity: .7; elide: Text.ElideRight
-                        font.pixelSize: Math.round(11 * root.scale)
+                        font.pixelSize: Math.round(11 * root.uiZoom)
                     }
                 }
             }
@@ -61,7 +62,7 @@ ColumnLayout {
                     Layout.fillWidth: true; spacing: 8
                     Label {
                         Layout.preferredWidth: 62; text: line.modelData.label; font.bold: true
-                        font.pixelSize: Math.round(12 * root.scale)
+                        font.pixelSize: Math.round(12 * root.uiZoom)
                     }
                     Repeater {
                         model: root.parts
@@ -69,7 +70,7 @@ ColumnLayout {
                             required property var modelData
                             Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
                             text: root.reading(line.side, modelData.key)
-                            font.pixelSize: Math.round((modelData.key === "all" ? 14 : 12) * root.scale)
+                            font.pixelSize: Math.round((modelData.key === "all" ? 14 : 12) * root.uiZoom)
                             font.bold: modelData.key === "all"
                             HoverHandler { id: cell }
                             ToolTip.visible: cell.hovered && root.moves(line.side, modelData.key) > 0
