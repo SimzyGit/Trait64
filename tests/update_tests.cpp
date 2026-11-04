@@ -238,10 +238,16 @@ int main(int argc, char **argv) {
         // La connexion par GitHub CLI se teste avec un faux « gh » : un script shell, et
         // un PATH séparé par « : ». Les deux sont propres aux systèmes POSIX, donc ce
         // scénario ne dit rien de Windows et n'y est pas joué.
+        // Ce scénario présuppose que la mise à jour ait quelque chose à installer : sans
+        // paquet pour la machine, check() renonce avant même de chercher à s'authentifier,
+        // et le faux « gh » ne démarre jamais. Le faux en question est par ailleurs un
+        // script shell lancé via un PATH séparé par « : », propres aux systèmes POSIX.
 #ifdef Q_OS_WIN
         std::cout << "Skipping GitHub CLI shutdown checks: the fixture is a POSIX shell script\n";
 #else
-        {
+        if (!packaged) {
+            std::cout << "Skipping GitHub CLI shutdown checks: the updater has no package to install\n";
+        } else {
             QTemporaryDir tools;
             QFile fake(tools.path() + "/gh");
             check(fake.open(QIODevice::WriteOnly), "Create isolated authentication fixture");

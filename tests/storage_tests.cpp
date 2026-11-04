@@ -66,10 +66,14 @@ int main(int argc, char **argv) {
             // sur macOS et Windows — mêler les deux plante. On le constate et on passe,
             // au lieu de faire tomber la suite sur une limite connue de la plateforme.
             const bool oneLibrary = t64::QueryCancellation::sameLibrary(connection);
-            if (!oneLibrary)
-                std::cout << "Skipping native-handle checks: Qt reports SQLite "
-                          << connection.exec("SELECT sqlite_version()").record().value(0).toString().toStdString()
+            if (!oneLibrary) {
+                QSqlQuery driverVersion(connection);
+                driverVersion.exec("SELECT sqlite_version()");
+                std::cout << "Skipping native-handle checks: the Qt driver reports SQLite "
+                          << (driverVersion.next() ? driverVersion.value(0).toString().toStdString()
+                                                   : std::string("(unavailable)"))
                           << " while this build links " << sqlite3_libversion() << '\n';
+            }
             if (oneLibrary) {
             struct LookupWork {
                 int calls = 0, maximum = 0;
@@ -679,28 +683,28 @@ int main(int argc, char **argv) {
                 writer.close();
             }
             QSqlDatabase::removeDatabase("slow-query-fixture");
-            auto canceled = std::make_shared<std::atomic_bool>(false);
-            QElapsedTimer timer;
-            timer.start();
-            std::thread canceler([canceled] {
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-                canceled->store(true);
-            });
-            // std::jthread manque encore à la bibliothèque standard d'Apple : on joint à
-            // la main, y compris si la vérification ci-dessous lève, pour ne pas laisser
-            // un fil d'exécution vivant derrière soi.
-            const auto join = qScopeGuard([&] { canceler.join(); });
             // L'annulation repose sur le gestionnaire de progression de SQLite, que l'on
             // ne pose pas quand le pilote Qt embarque sa propre copie de la bibliothèque.
-            // Là où elle est indisponible, la recherche aboutit : on vérifie alors
-            // qu'elle rend un résultat correct plutôt qu'une annulation impossible.
-            if (oneSqlite) {
+            // Là où elle est indisponible, il n'y a rien à mesurer : la requête de ce
+            // montage est volontairement très lente, et la mener au bout coûterait une
+            // demi-minute pour ne vérifier qu'une fonction absente par construction.
+            if (!oneSqlite) {
+                std::cout << "Skipping search-cancellation checks: the Qt driver carries its own SQLite\n";
+            } else {
+                auto canceled = std::make_shared<std::atomic_bool>(false);
+                QElapsedTimer timer;
+                timer.start();
+                std::thread canceler([canceled] {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                    canceled->store(true);
+                });
+                // std::jthread manque encore à la bibliothèque standard d'Apple : on joint
+                // à la main, y compris si la vérification ci-dessous lève, pour ne pas
+                // laisser un fil d'exécution vivant derrière soi.
+                const auto join = qScopeGuard([&] { canceler.join(); });
                 rejects([&] { slow.search({}, {}, false, {}, false, {}, canceled); });
                 check(canceled->load() && timer.elapsed() < 3000,
                       "SQLite stops an executing search promptly");
-            } else {
-                slow.search({}, {}, false, {}, false, {}, canceled);
-                check(true, "Without a shared SQLite the search runs to completion instead of crashing");
             }
             check(slow.stats()["games"].toInt() == 1, "Progress callback removed after interruption");
         }
