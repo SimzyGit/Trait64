@@ -6,6 +6,7 @@
 #include <QFileInfo>
 #include <QLockFile>
 #include <iostream>
+#include <vector>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUrl>
@@ -180,8 +181,11 @@ QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const Imp
         std::ifstream input(QFile::encodeName(path).constData(), std::ios::binary);
         require(bool(input), "Impossible d’ouvrir le PGN.");
         QCryptographicHash hash(QCryptographicHash::Sha256);
-        std::array<char, 1024 * 1024> buffer;
-        while (input.read(buffer.data(), buffer.size()) || input.gcount()) {
+        // Ce mégaoctet vit sur le tas, et non sur la pile : celle du fil principal ne
+        // fait qu'un mégaoctet sous Windows, contre huit sur Linux et macOS, et l'y
+        // placer débordait la pile avant la première instruction de la boucle.
+        std::vector<char> buffer(1024 * 1024);
+        while (input.read(buffer.data(), std::streamsize(buffer.size())) || input.gcount()) {
             hash.addData(QByteArrayView(buffer.data(), input.gcount()));
             p.bytes += input.gcount();
             notify();
