@@ -77,6 +77,71 @@ jobs:
           ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: ctest --test-dir build --output-on-failure
+  # Livrables Windows et macOS. Ils ne sont pas encore rattachés à la publication :
+  # on vérifie d'abord qu'ils sortent corrects avant de rendre la release dépendante
+  # de deux machines de plus.
+  windows:
+    needs: version
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
+      - name: Bibliothèques Windows
+        run: |
+          vcpkg install libarchive:x64-windows sqlite3:x64-windows
+          echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      - run: cmake --build build --config Release --parallel 3
+      - name: Archive portable
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          # vcpkg dépose les DLL à côté de l'exécutable : on emporte tout le dossier,
+          # pas seulement le binaire, sinon l'archive ne démarre pas sur une machine nue.
+          New-Item -ItemType Directory -Force -Path stage | Out-Null
+          Copy-Item -Recurse build/Release stage/Trait64
+          windeployqt --qmldir ui --release --no-translations stage/Trait64/trait64.exe
+          Copy-Item LICENSE, THIRD_PARTY_NOTICES.md stage/Trait64
+          Compress-Archive -Path stage/Trait64 -DestinationPath "Trait64-$env:RELEASE_VERSION-windows-x86_64.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: Trait64-*-windows-x86_64.zip
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
+      - name: Bibliothèques macOS
+        run: |
+          brew install libarchive sqlite
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix libarchive);$(brew --prefix sqlite);$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      - run: cmake --build build --config Release --parallel 3
+      - name: Paquet d'application et image disque
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          cp LICENSE THIRD_PARTY_NOTICES.md build/trait64.app/Contents/Resources/
+          macdeployqt build/trait64.app -qmldir=ui -dmg
+          mv build/trait64.dmg "Trait64-${RELEASE_VERSION}-macos-arm64.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: Trait64-*-macos-arm64.dmg
+          if-no-files-found: error
+
   linux:
     needs: [version, core-sanitizers, desktop-sanitizers]
     runs-on: ubuntu-24.04
