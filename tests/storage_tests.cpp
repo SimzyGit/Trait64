@@ -230,6 +230,14 @@ int main(int argc, char **argv) {
         }
         rejects([&] { db.validateOutputPath(db.path()); });
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
+        // Un lien symbolique vers la base ne doit pas servir de cible d'export : il
+        // permettrait d'écraser la bibliothèque en passant par un autre nom. Sous
+        // Windows, QFile::link produit un raccourci « .lnk » et non un lien symbolique
+        // — la notion visée n'y existe pas sous cette forme, et créer un vrai lien
+        // symbolique y demande des privilèges que la machine d'intégration n'a pas.
+#ifdef Q_OS_WIN
+        std::cout << "Skipping symlink-alias checks: QFile::link creates a shortcut on Windows\n";
+#else
         check(QFile::link(db.path(), dir.path() + "/alias.pgn"), "Create export alias fixture");
         rejects([&] { db.validateOutputPath(dir.path() + "/alias.pgn"); });
         {
@@ -238,6 +246,7 @@ int main(int argc, char **argv) {
             rejects([&] { alias.validateOutputPath(db.path() + ".import.lock"); });
             rejects([&] { alias.validateOutputPath(db.path() + "-wal"); });
         }
+#endif
         auto rows = db.search("Alice");
         check(rows.size() == 1, "Search player");
         auto id = rows[0].toMap()["id"].toLongLong();

@@ -17,6 +17,12 @@ void check(bool ok, const char *message) {
     if (!ok)
         throw std::runtime_error(message);
 }
+// Un arrêt brutal n'a ni message ni pile exploitable sur la machine d'intégration : ce
+// jalon, vidé aussitôt, encadre la dernière étape atteinte. Il reste discret quand tout
+// va bien et devient la seule trace utile quand le processus meurt.
+void milestone(const char *where) {
+    std::cout << "-- " << where << std::endl;
+}
 void write(const QString &path, const QByteArray &bytes) {
     QFile file(path);
     check(file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size(), "Write PGN fixture");
@@ -107,7 +113,11 @@ int main(int argc, char **argv) {
         }
         auto bad = dir.filePath("invalid.pgn");
         write(bad, pgn + "[Event \"Invalid\"]\n1.e5 *\n");
+        // Quatre lecteurs sur un PGN volontairement invalide : une exception traverse la
+        // pile pendant que les fils tournent. C'est l'étape qui plante sous Windows.
+        milestone("parallel import of a malformed PGN with four readers");
         auto failed = db.runImportJob(db.createImportJob(bad), {}, {}, 5, 4);
+        milestone("parallel import returned");
         check(failed["status"] == "failed" && failed["processed"].toInt() == 10 &&
                   !failed["error"].toString().isEmpty(),
               "Malformed game preserves earlier checkpoints and reports failure");
