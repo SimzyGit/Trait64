@@ -65,8 +65,10 @@ int main(int argc, char **argv) {
         t64::Database db(database);
         milestone("resumable import, pause and resume");
         auto id = db.createImportJob(path);
+        milestone("  pausing a four-reader import mid-flight");
         auto paused = db.runImportJob(
             id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3, 4);
+        milestone("  pause returned");
         check(paused["status"] == "paused" && paused["processed"].toInt() == 3 &&
                   db.stats()["games"].toInt() == 3 && db.importHistory().empty(),
               "Pause keeps only atomically committed batches, without a completed history entry");
@@ -74,8 +76,10 @@ int main(int argc, char **argv) {
         check(offset > 0 && offset < pgn.size() && paused["sha256"].toString().size() == 64,
               "Checkpoint stores byte offset and full SHA-256");
         {
+            milestone("  reopening the database");
             t64::Database reopened(database);
             bool resumedAtCheckpoint = false;
+            milestone("  resuming from the checkpoint");
             auto done = reopened.runImportJob(id, [&](const t64::ImportProgress &p) {
                 if (!p.verifying && p.processed == 3 && p.bytes == offset)
                     resumedAtCheckpoint = true;
@@ -84,12 +88,14 @@ int main(int argc, char **argv) {
             check(resumedAtCheckpoint && done["status"] == "completed" && done["processed"].toInt() == 12 &&
                       done["added"].toInt() == 12 && done["offset"].toLongLong() == pgn.size(),
                   "Reopen resumes at checkpoint and completes every game");
+            milestone("  re-running a completed job");
             reopened.runImportJob(id);
             check(reopened.importHistory().size() == 1 && reopened.stats()["games"].toInt() == 12,
                   "Completed job cannot duplicate history or games");
             check(reopened.sources().first().toMap()["games"].toInt() == 12 && reopened.integrity() == "ok",
                   "Source links, positions and counts survive resume");
         }
+        milestone("  resumable phase complete");
         milestone("duplicate import");
         auto duplicate = db.runImportJob(db.createImportJob(path));
         check(duplicate["added"].toInt() == 0 && duplicate["processed"].toInt() == 12,
