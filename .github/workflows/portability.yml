@@ -44,7 +44,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install libarchive sqlite
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix libarchive);$(brew --prefix sqlite);$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+          # CMake lit cette variable d'environnement avec le séparateur de la plateforme,
+          # soit « : » ici. Avec « ; » le chemin entier passait pour un seul dossier et
+          # LibArchive, keg-only chez Homebrew, restait introuvable.
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix libarchive):$(brew --prefix sqlite)${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}" >> "$GITHUB_ENV"
       - name: Windows libraries
         if: runner.os == 'Windows'
         run: |
