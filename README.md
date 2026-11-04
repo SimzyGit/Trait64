@@ -1,13 +1,16 @@
 <div align="center">
 
+<img src="assets/trait64.svg" alt="" width="104" height="104">
+
 # Trait64
 
-**Logiciel d’échecs libre pour Linux : bases de parties, analyse avec Stockfish, préparation d’ouvertures et entraînement. Sans compte, sans cloud, sans publicité.**
+**Votre base de parties, votre analyse, votre progression — sur votre machine.**
+Un logiciel d’échecs libre, dans l’esprit de ChessBase et SCID : bases de parties, analyse Stockfish, préparation d’ouvertures et entraînement. Sans compte, sans cloud, sans publicité.
 
 [![Version](https://img.shields.io/github/v/release/SimzyGit/Trait64?include_prereleases&label=version)](https://github.com/SimzyGit/Trait64/releases)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
-![Linux](https://img.shields.io/badge/plateforme-Linux-FCC624.svg)
-[![Linux CI](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml)
+![Linux · Windows · macOS](https://img.shields.io/badge/plateformes-Linux%20%C2%B7%20Windows%20%C2%B7%20macOS-2f66ad.svg)
+[![Intégration continue](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml/badge.svg)](https://github.com/SimzyGit/Trait64/actions/workflows/linux.yml)
 
 [English](README.en.md) · **Français**
 
@@ -17,48 +20,62 @@
 
 ## Télécharger
 
-**Linux (Debian, Ubuntu, Mint, Fedora…)** : une seule commande dans un terminal.
+**Linux** — une seule commande, aucune compilation, aucun mot de passe :
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SimzyGit/Trait64/main/install.sh | bash
 ```
 
-Elle télécharge la dernière version, vérifie son empreinte SHA-256 et ajoute **Trait64** au menu des applications, sans mot de passe ni compilation. Les mises à jour se font ensuite depuis le logiciel (**Aide → Mises à jour**). Pour désinstaller : même commande suivie de `-s -- --uninstall`.
+Elle prend la dernière version, vérifie son empreinte SHA-256 et ajoute Trait64 au menu des applications. Les mises à jour se font ensuite depuis le logiciel (**Aide → Mises à jour**). Pour désinstaller : la même commande suivie de `-s -- --uninstall`.
 
-Vous préférez télécharger vous-même ? Sur la [page des versions](https://github.com/SimzyGit/Trait64/releases), prenez :
+Ou bien, depuis la [page des versions](https://github.com/SimzyGit/Trait64/releases) :
 
 | Votre système | Fichier | Installation |
 | --- | --- | --- |
-| Debian 12 | `trait64_…_debian12_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
-| Debian 13 | `trait64_…_debian13_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
-| Autre Linux 64 bits | `Trait64-…-linux-x86_64.AppImage` | rendre exécutable (clic droit → Propriétés), puis ouvrir |
+| Windows 10 ou 11 (64 bits) | `Trait64-…-windows-x86_64.zip` | décompressez, lancez `trait64.exe` |
+| macOS (puce Apple) | `Trait64-…-macos-arm64.dmg` | ouvrez l’image, glissez dans Applications |
+| Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
+| Autre Linux 64 bits | `Trait64-…-linux-x86_64.AppImage` | rendez exécutable, puis ouvrez |
 
-Windows et macOS : pas encore publiés. Le code compile déjà sur ces systèmes en intégration continue ; les installateurs viendront ensuite.
+Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et macOS (Gatekeeper) demandent une confirmation. Sur macOS, faites clic droit → **Ouvrir**.
 
-Aucun moteur n’est imposé : installez Stockfish depuis votre distribution (`sudo apt install stockfish`) ou téléchargez Stockfish, Arasan ou PlentyChess depuis **Bibliothèque → Téléchargements**.
+**Un moteur, ensuite.** Aucun n’est imposé ni incorporé. Installez Stockfish depuis votre distribution (`sudo apt install stockfish`), ou prenez Stockfish, Arasan ou PlentyChess dans **Bibliothèque → Téléchargements**.
+
+## Pourquoi Trait64
+
+**Vos données restent vos données.** Une base SQLite dans votre dossier personnel, des sauvegardes automatiques, du PGN et du FEN en entrée comme en sortie. Pas de compte à créer, rien qui parte sur un serveur, aucune télémétrie. Le jour où Trait64 ne vous convient plus, vos parties sont toujours lisibles ailleurs.
+
+**Une vraie base, pas une liste.** L’import PGN avale des centaines de milliers de parties et reprend où il s’était arrêté si vous l’interrompez. Vous cherchez ensuite par joueur, ouverture, Elo, date, résultat, position exacte ou structure de pions.
+
+**L’analyse de Stockfish, expliquée.** Le bilan d’une partie passe le moteur dans un sens puis dans l’autre, puis vous donne un pourcentage de précision — pour la partie entière, et séparément pour l’ouverture, le milieu de jeu et la finale. Chaque faute est située, classée et expliquée.
+
+**Vos progrès, mesurés sur vos parties.** Reliez vos comptes Lichess et Chess.com à un profil, lancez un bilan sur vos dernières parties, et le tableau de bord vous dit où vous en êtes : précision par phase, gaffes pour cent coups, réussite tactique, et l’évolution mois par mois. La comparaison se fait avec vous-même, pas avec une moyenne inventée.
 
 ## Ce que fait Trait64
 
-- **Bibliothèque de parties** : import PGN rapide (même des centaines de milliers de parties), recherche par joueur, ouverture, Elo, date, position exacte ou structure de pions, fiches joueurs.
-- **Vos parties Lichess et Chess.com** : enregistrez vos comptes, la synchronisation ne récupère que les nouvelles parties.
-- **Analyse** : Stockfish ou tout moteur UCI, plusieurs lignes, comparaison de moteurs, bilan de partie (passage avant puis arrière) avec graphe, erreurs expliquées et motifs tactiques.
-- **Ouvertures** : arbre statistique de votre base, livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire.
-- **Entraînement** : puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
-- **Jeu** : contre le moteur à un niveau Elo choisi, à deux avec pendule, tournois entre moteurs.
-- **Vos données restent chez vous** : SQLite local, sauvegardes automatiques, PGN et FEN en entrée comme en sortie.
+- **Bibliothèque** — import PGN reprenable, recherche multicritère, fiches joueurs, collections, corbeille, sauvegardes automatiques.
+- **Comptes en ligne** — Lichess et Chess.com, sans mot de passe ; chaque synchronisation ne récupère que les parties nouvelles.
+- **Profils de joueur** — un seul profil rassemble vos comptes et votre fiche FIDE, dont les classements se lisent dans les listes officielles de la fédération.
+- **Analyse** — Stockfish ou tout moteur UCI, plusieurs variantes, comparaison de moteurs côte à côte, file d’analyse en arrière-plan reprenable.
+- **Bilan de partie** — graphe d’évaluation, précision par phase, gaffes et imprécisions expliquées, motifs tactiques reconnus, annotation du PGN.
+- **Bilan de toute une base** — après une synchronisation ou un import, un bouton passe en revue le lot entier à la profondeur de votre choix, sans refaire ce qui a déjà été vu.
+- **Tableau de bord** — précision, fautes pour cent coups, tactique, progression mois par mois.
+- **Ouvertures** — arbre statistique de votre base, livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire donné.
+- **Entraînement** — puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
+- **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs.
+- **Confort** — thème clair ou sombre, taille d’interface réglable, français et anglais, **Ctrl K** pour la palette de commandes.
 
 ![Bibliothèque de parties](docs/screenshots/library.png)
 
-Trait64 est en **alpha** et évolue vite : voir les [nouveautés](docs/CHANGELOG.md), l'[état du projet](docs/PROJECT-STATUS.md) et la [feuille de route](docs/ROADMAP.md).
+Trait64 est en **alpha** et évolue vite : voir les [nouveautés](docs/CHANGELOG.md), l’[état du projet](docs/PROJECT-STATUS.md) et la [feuille de route](docs/ROADMAP.md).
 
 ## Premiers pas
 
-1. Sur l'accueil, cliquez **Exemples**, puis ouvrez une partie dans la **Bibliothèque**.
+1. Sur l’accueil, cliquez **Exemples**, puis ouvrez une partie dans la **Bibliothèque**.
 2. Parcourez les coups avec ← et →. Jouez un autre coup pour créer une variante.
-3. Installez un moteur (**Bibliothèque → Téléchargements → Moteurs**), puis cliquez **Analyser**, ou **Bilan** pour analyser toute la partie.
-4. Ajoutez vos comptes en ligne avec **Fichier → Comptes Lichess et Chess.com**.
-
-**Ctrl K** ouvre la palette de commandes : toutes les actions y sont accessibles au clavier.
+3. Installez un moteur (**Bibliothèque → Téléchargements → Moteurs**), puis **Analyser** pour la position, ou **Bilan** pour toute la partie.
+4. Ajoutez vos comptes avec **Fichier → Comptes Lichess et Chess.com**, synchronisez, puis lancez le bilan du lot importé.
+5. Ouvrez **Fichier → Bilan de vos compétences** pour voir où vous en êtes.
 
 ## Documentation
 
@@ -72,10 +89,10 @@ Trait64 est en **alpha** et évolue vite : voir les [nouveautés](docs/CHANGELOG
 
 ## Contribuer
 
-Les signalements de bugs, idées et contributions sont bienvenus : lisez [CONTRIBUTING.md](CONTRIBUTING.md), puis ouvrez une [demande](https://github.com/SimzyGit/Trait64/issues/new/choose). Une faille de sécurité se signale en privé ([SECURITY.md](SECURITY.md)).
+Les signalements de bugs, les idées et les contributions sont bienvenus : lisez [CONTRIBUTING.md](CONTRIBUTING.md), puis ouvrez une [demande](https://github.com/SimzyGit/Trait64/issues/new/choose). Une faille de sécurité se signale en privé ([SECURITY.md](SECURITY.md)).
 
 ## Licence et composants
 
-Code Trait64 : **GNU AGPL v3 ou ultérieure**. [LICENSE](LICENSE) et [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Le nom et l’identité visuelle restent distincts de la licence du code ; voir [TRADEMARKS.md](TRADEMARKS.md).
+Code Trait64 : **GNU AGPL v3 ou ultérieure** — [LICENSE](LICENSE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Le nom et l’identité visuelle restent distincts de la licence du code ; voir [TRADEMARKS.md](TRADEMARKS.md).
 
-Trait64 réutilise `chess-library` sous MIT. Qt est lié dynamiquement depuis les paquets système. Les moteurs UCI restent des programmes séparés : le catalogue peut télécharger des versions vérifiées de Stockfish, Arasan et PlentyChess, mais aucun moteur n’est incorporé au binaire Trait64. Les collections PGN restent également des téléchargements provenant de leurs sources. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire pour l’usage local. Les programmes moteurs sélectionnés s’exécutent avec les droits de l’utilisateur : choisis des exécutables de confiance.
+Trait64 réutilise `chess-library` sous MIT, et lie Qt dynamiquement depuis les paquets système. Les moteurs UCI restent des programmes séparés : le catalogue télécharge des versions vérifiées de Stockfish, Arasan et PlentyChess, mais aucun moteur n’est incorporé au binaire. Les collections PGN proviennent également de leurs sources d’origine. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire à l’usage local. Un moteur que vous choisissez s’exécute avec vos droits : ne lancez que des exécutables de confiance.
