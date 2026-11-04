@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "fide.h"
 #include "online.h"
 #include "puzzles.h"
 #include <QProcess>
+#include <memory>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QFile>
@@ -191,6 +193,71 @@ int main(int argc, char **argv) {
                 refused = true;
             }
             check(refused, "A missing file is an error, not an empty bank");
+        }
+        {
+            // Lecture des listes FIDE. Le format publié place chaque joueur dans un
+            // <player> ; on vérifie surtout qu'une liste énorme se lit par morceaux, car
+            // la liste standard dépasse le million de joueurs.
+            const QByteArray head = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<playerslist>\n";
+            const QByteArray wanted =
+                "<player><fideid>1503014</fideid><name>Nom, Prenom</name><country>FRA</country>"
+                "<sex>M</sex><title>g</title><rating>2612</rating><games>14</games><k>10</k>"
+                "<birthday>1990</birthday></player>\n";
+            const QByteArray other =
+                "<player><fideid>600001</fideid><name>Autre, Joueur</name><country>NOR</country>"
+                "<rating>2100</rating><games>0</games><birthday>1985</birthday></player>\n";
+            QByteArray document = head;
+            // Le joueur cherché est noyé au milieu, pour qu'un parcours partiel se voie.
+            for (int i = 0; i < 500; ++i)
+                document += other;
+            document += wanted;
+            for (int i = 0; i < 500; ++i)
+                document += other;
+            document += "</playerslist>\n";
+
+            auto source = [&document](int blockSize) {
+                auto offset = std::make_shared<int>(0);
+                return [&document, offset, blockSize]() -> QByteArray {
+                    if (*offset >= document.size())
+                        return {};
+                    const auto block = document.mid(*offset, blockSize);
+                    *offset += block.size();
+                    return block;
+                };
+            };
+            const auto found = t64::FideList::findInChunks(source(4096), "1503014");
+            check(found.found && found.name == "Nom, Prenom" && found.rating == 2612 &&
+                      found.country == "FRA" && found.title == "g" && found.games == 14 &&
+                      found.birthYear == 1990,
+                  "A player is found in a long rating list");
+            // Blocs minuscules : un élément, et même un texte, se retrouve coupé en deux.
+            // Le lecteur doit recoller sans perdre de caractères.
+            const auto split = t64::FideList::findInChunks(source(7), "1503014");
+            check(split.found && split.name == "Nom, Prenom" && split.rating == 2612,
+                  "Fields split across blocks are reassembled");
+            check(!t64::FideList::findInChunks(source(4096), "999999999").found,
+                  "An absent player is reported as absent, not as an error");
+            check(t64::FideList::validId("1503014") && !t64::FideList::validId("150a014") &&
+                      !t64::FideList::validId(""),
+                  "Only a numeric identifier is accepted");
+            check(t64::FideList::listUrl("standard").toString().endsWith("standard_rating_list_xml.zip") &&
+                      t64::FideList::listUrl("bullet").isEmpty(),
+                  "Only the three published speeds have a list");
+            bool refusedXml = false;
+            try {
+                auto broken = std::make_shared<bool>(false);
+                t64::FideList::findInChunks(
+                    [broken]() -> QByteArray {
+                        if (*broken)
+                            return {};
+                        *broken = true;
+                        return "<playerslist><player><fideid>1</fideid></wrong>";
+                    },
+                    "1503014");
+            } catch (const std::exception &) {
+                refusedXml = true;
+            }
+            check(refusedXml, "Malformed XML is an error, not a silent absence");
         }
         std::cout << checks << " online checks passed\n";
         return 0;
