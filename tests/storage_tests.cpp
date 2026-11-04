@@ -250,15 +250,20 @@ int main(int argc, char **argv) {
                                                          int(game.mainline().size()), id);
                 board.setAnalysisStatus(job, "running");
                 const auto line = game.mainline();
-                // Une chute franche sur le deuxième coup des Noirs dans les deux parties.
-                const double evaluations[] = {20, 15, 25, 600, 590};
+                // Les deux parties doivent être dissemblables : avec les mêmes
+                // évaluations et les couleurs échangées, les deux joueurs obtiendraient
+                // par symétrie exactement la même note, et la vérification ne prouverait
+                // rien. Ici Bob faute dans les deux, une fois avec les Noirs, une fois
+                // avec les Blancs — attendu : Alice 99,8 contre Bob 42,3.
+                const double blackErrs[] = {20, 20, 600, 590, 610};
+                const double whiteErrs[] = {20, 20, 20, -600, -590};
+                const double *evaluations = aliceIsWhite ? blackErrs : whiteErrs;
                 for (size_t i = 0; i < line.size(); ++i)
                     board.saveAnalysisResult(
                         job, int(i), line[i], QString::number(int(i)),
                         QVariantList{QVariantMap{{"rank", 1}, {"scoreType", "cp"},
                                                  {"cp", evaluations[std::min(i, size_t(4))]}}});
                 board.setAnalysisStatus(job, "completed");
-                Q_UNUSED(aliceIsWhite);
             }
             const auto alice = board.reviewSummary({"Alice"});
             check(alice["games"].toInt() == 2 && alice["moves"].toLongLong() > 0,
@@ -267,7 +272,8 @@ int main(int argc, char **argv) {
                   "The aggregate carries an overall and an opening mark");
             check(!alice["endgame"].isValid(), "A phase no game reached stays unmeasured");
             const auto bob = board.reviewSummary({"Bob"});
-            check(bob["games"].toInt() == 2 && bob["all"].toDouble() != alice["all"].toDouble(),
+            check(bob["games"].toInt() == 2 && alice["all"].toDouble() > 95 &&
+                      bob["all"].toDouble() < 60,
                   "Each player is scored from the side he actually played");
             check(board.reviewSummary({"alice"})["games"].toInt() == 2,
                   "Nicknames are matched without regard to case");

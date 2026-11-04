@@ -11,7 +11,8 @@ TDialog {
     id: root
     required property var backend
     property int profileIndex: 0
-    readonly property var data: backend.skillDashboard(profileIndex)
+    // « data » est une propriété finale de QML : le nom est pris.
+    readonly property var report: backend.skillDashboard(profileIndex)
     readonly property real scale: controller.preferences.fontScale * controller.preferences.uiScale
     title: qsTr("Bilan de vos compétences")
     width: Math.min(880, parent ? parent.width - 24 : 880)
@@ -60,20 +61,20 @@ TDialog {
 
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
-                visible: !root.data.ready
-                text: root.data.reason || qsTr("Créez un profil pour suivre vos progrès.")
+                visible: !root.report.ready
+                text: root.report.reason || qsTr("Créez un profil pour suivre vos progrès.")
             }
 
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 12
-                visible: !!root.data.ready
+                visible: !!root.report.ready
 
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
                     font.pixelSize: Math.round(11 * root.scale); opacity: .75
                     text: qsTr("%1 partie(s) passée(s) en revue, %2 coup(s) mesuré(s), sous %3.")
-                              .arg(root.data.games || 0).arg(root.data.moves || 0)
-                              .arg((root.data.accounts || []).join(", "))
+                              .arg(root.report.games || 0).arg(root.report.moves || 0)
+                              .arg((root.report.accounts || []).join(", "))
                 }
 
                 // Note d'ensemble, et l'écart avec les mois précédents.
@@ -88,17 +89,17 @@ TDialog {
                             Label { text: qsTr("Précision"); opacity: .7
                                     font.pixelSize: Math.round(11 * root.scale) }
                             Label {
-                                text: root.reading(root.data.all, " %")
+                                text: root.reading(root.report.all, " %")
                                 font.bold: true; font.pixelSize: Math.round(26 * root.scale)
                             }
                         }
                         ColumnLayout {
                             spacing: 2
-                            visible: root.data.trend !== undefined && root.data.trend !== null
+                            visible: root.report.trend !== undefined && root.report.trend !== null
                             Label { text: qsTr("Ce mois-ci"); opacity: .7
                                     font.pixelSize: Math.round(11 * root.scale) }
                             Label {
-                                readonly property real delta: root.data.trend || 0
+                                readonly property real delta: root.report.trend || 0
                                 text: (delta >= 0 ? "+" : "−") + Math.abs(delta).toFixed(1) + " pt"
                                 color: delta >= 0 ? "#3f9a5c" : "#c05b4d"
                                 font.bold: true; font.pixelSize: Math.round(20 * root.scale)
@@ -113,13 +114,13 @@ TDialog {
                             Label { text: qsTr("Tactique"); opacity: .7
                                     font.pixelSize: Math.round(11 * root.scale) }
                             Label {
-                                text: (root.data.tactics && root.data.tactics.solved > 0)
-                                      ? root.data.tactics.recentSuccess + " %" : "—"
+                                text: (root.report.tactics && root.report.tactics.solved > 0)
+                                      ? root.report.tactics.recentSuccess + " %" : "—"
                                 font.bold: true; font.pixelSize: Math.round(20 * root.scale)
                                 ToolTip.visible: puzzles.hovered
-                                ToolTip.text: (root.data.tactics && root.data.tactics.solved > 0)
+                                ToolTip.text: (root.report.tactics && root.report.tactics.solved > 0)
                                     ? qsTr("Réussite sur vos 50 derniers exercices, %1 résolu(s) en tout.")
-                                          .arg(root.data.tactics.solved)
+                                          .arg(root.report.tactics.solved)
                                     : qsTr("Résolvez des exercices pour mesurer votre tactique.")
                                 HoverHandler { id: puzzles }
                             }
@@ -141,7 +142,7 @@ TDialog {
                             ColumnLayout {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
-                                    text: root.reading(root.data[modelData.key], " %")
+                                    text: root.reading(root.report[modelData.key], " %")
                                     font.bold: true; font.pixelSize: Math.round(20 * root.scale)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -169,12 +170,12 @@ TDialog {
                             ColumnLayout {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
-                                    text: root.reading(root.data[modelData.key])
+                                    text: root.reading(root.report[modelData.key])
                                     font.bold: true; font.pixelSize: Math.round(18 * root.scale)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Label {
-                                    text: modelData.label + " (" + (root.data[modelData.total] || 0) + ")"
+                                    text: modelData.label + " (" + (root.report[modelData.total] || 0) + ")"
                                     opacity: .7; font.pixelSize: Math.round(11 * root.scale)
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -185,19 +186,19 @@ TDialog {
 
                 Label {
                     text: qsTr("Mois par mois"); font.bold: true
-                    visible: (root.data.history || []).length > 0
+                    visible: (root.report.history || []).length > 0
                 }
                 // Une barre par mois, du plus ancien au plus récent : c'est le sens de
                 // lecture d'une progression. La hauteur part de 50 %, plancher au-dessous
                 // duquel une partie n'est plus vraiment jouée.
                 Rectangle {
                     Layout.fillWidth: true; Layout.preferredHeight: 150
-                    visible: (root.data.history || []).length > 0
+                    visible: (root.report.history || []).length > 0
                     color: root.backend.preferences.panel; radius: 8
                     RowLayout {
                         anchors.fill: parent; anchors.margins: 10; spacing: 4
                         Repeater {
-                            model: (root.data.history || []).slice().reverse()
+                            model: (root.report.history || []).slice().reverse()
                             delegate: ColumnLayout {
                                 required property var modelData
                                 Layout.fillWidth: true; Layout.fillHeight: true; spacing: 3
