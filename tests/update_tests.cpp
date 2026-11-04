@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QNetworkReply>
 #include <QSignalSpy>
+#include <QSysInfo>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
@@ -173,6 +174,19 @@ int main(int argc, char **argv) {
         t64::Updater updater(dir.path(), nullptr, &network);
         updater.setSessionToken("test-only-token");
         QSignalSpy offers(&updater, &t64::Updater::offered);
+        // La mise à jour automatique ne vise que les paquets publiés pour Linux x86_64.
+        // Ailleurs — un Mac à puce Apple, par exemple — il n'y a rien à installer, et
+        // c'est le refus qui est le bon comportement, pas l'offre d'une mise à jour.
+        const bool packaged = !updater.state()["packageSuffix"].toString().isEmpty();
+        if (!packaged) {
+            updater.check();
+            wait(updater);
+            check(offers.isEmpty() && !updater.state()["available"].toBool() &&
+                      updater.state()["status"] == "error",
+                  "Without a package for this machine the updater refuses instead of offering one");
+            std::cout << "Skipping update-delivery checks: no published package for "
+                      << QSysInfo::currentCpuArchitecture().toStdString() << '\n';
+        } else {
         network.responses << Response{
             200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash)}).toJson(), {}};
         updater.check();
@@ -216,10 +230,17 @@ int main(int argc, char **argv) {
         updater.cancel();
         QTest::qWait(20);
         check(updater.state()["status"] == "idle", "Cancellation ignores stale callbacks");
+        }
         QSettings persisted;
         check(!persisted.allKeys().join(' ').contains("token", Qt::CaseInsensitive),
               "Session token never persisted");
         check(t64::debianVersion("v0.3.0-beta.2") == "0.3.0~beta.2", "Debian prerelease ordering");
+        // La connexion par GitHub CLI se teste avec un faux « gh » : un script shell, et
+        // un PATH séparé par « : ». Les deux sont propres aux systèmes POSIX, donc ce
+        // scénario ne dit rien de Windows et n'y est pas joué.
+#ifdef Q_OS_WIN
+        std::cout << "Skipping GitHub CLI shutdown checks: the fixture is a POSIX shell script\n";
+#else
         {
             QTemporaryDir tools;
             QFile fake(tools.path() + "/gh");
@@ -249,6 +270,7 @@ int main(int argc, char **argv) {
             qunsetenv("T64_FAKE_AUTH_READY");
             check(!lateSignal, "Shutdown cannot call slots on partially destroyed updater members");
         }
+#endif
         std::cout << checks << " update checks passed\n";
         return 0;
     } catch (const std::exception &e) {

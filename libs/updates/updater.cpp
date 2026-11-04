@@ -113,6 +113,9 @@ QVariantMap Updater::state() const {
             {"authenticated", !token_.isEmpty()},
             {"lastChecked", settings_.value("updates/lastChecked")},
             {"kind", kind_},
+            // Vide là où aucun paquet n'est publié pour la machine : la mise à jour
+            // automatique ne vise aujourd'hui que Linux x86_64, en AppImage ou en .deb.
+            {"packageSuffix", suffix_},
             {"target", target_},
             {"backup", backup_}};
 }
