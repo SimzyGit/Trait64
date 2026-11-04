@@ -21,7 +21,7 @@ void check(bool ok, const char *message) {
 // jalon, vidé aussitôt, encadre la dernière étape atteinte. Il reste discret quand tout
 // va bien et devient la seule trace utile quand le processus meurt.
 void milestone(const char *where) {
-    std::cout << "-- " << where << std::endl;
+    std::cout << "[step] " << where << std::endl;
 }
 void write(const QString &path, const QByteArray &bytes) {
     QFile file(path);
@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
                    "\"]\r\n{Début} 1.e4 (1.d4 d5) e5 2.Nf3 *\r\n\r\n";
         write(path, pgn);
         t64::Database db(database);
+        milestone("resumable import, pause and resume");
         auto id = db.createImportJob(path);
         auto paused = db.runImportJob(
             id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3, 4);
@@ -89,9 +90,11 @@ int main(int argc, char **argv) {
             check(reopened.sources().first().toMap()["games"].toInt() == 12 && reopened.integrity() == "ok",
                   "Source links, positions and counts survive resume");
         }
+        milestone("duplicate import");
         auto duplicate = db.runImportJob(db.createImportJob(path));
         check(duplicate["added"].toInt() == 0 && duplicate["processed"].toInt() == 12,
               "Repeated import reports exact duplicates");
+        milestone("source file changed under a paused job");
         auto changedId = db.createImportJob(path);
         db.runImportJob(changedId, [](const t64::ImportProgress &p) { return p.verifying; });
         auto changed = pgn;
@@ -103,6 +106,7 @@ int main(int argc, char **argv) {
         write(relocated, pgn);
         check(db.runImportJob(changedId, {}, relocated)["status"] == "completed",
               "Identical relocated original can be selected to resume");
+        milestone("locked source file");
         auto locked = db.createImportJob(relocated);
         {
             QLockFile lock(QFileInfo(database).canonicalFilePath() + ".import.lock");
@@ -121,23 +125,31 @@ int main(int argc, char **argv) {
         check(failed["status"] == "failed" && failed["processed"].toInt() == 10 &&
                   !failed["error"].toString().isEmpty(),
               "Malformed game preserves earlier checkpoints and reports failure");
+        milestone("empty PGN");
         auto empty = dir.filePath("empty.pgn");
         write(empty, "\n \r\n");
         check(db.runImportJob(db.createImportJob(empty))["status"] == "failed", "Empty PGN rejected");
+        milestone("pause during verification");
         auto verifyPause = db.createImportJob(relocated);
         check(db.runImportJob(verifyPause, [](const t64::ImportProgress &) { return false; })["status"] ==
                   "paused",
               "Pause during fingerprint verification is recoverable");
         db.forgetImportJob(verifyPause);
         check(db.stats()["games"].toInt() == 12, "Forgetting checkpoint never deletes games");
+        // Mort réelle d'un processus pendant un lot. Sous Windows, le verrouillage de
+        // fichier est contraignant là où POSIX est permissif : c'est un candidat sérieux
+        // pour le plantage, d'où un jalon de part et d'autre du redémarrage.
+        milestone("process death during a batch");
         const auto crashDb = dir.filePath("crash.sqlite");
         QProcess worker;
         worker.start(QCoreApplication::applicationFilePath(), {"--crash", crashDb, relocated});
         check(worker.waitForFinished(20000) && worker.exitCode() == 23, "Worker actually died during batch");
+        milestone("reopening the database the dead process left behind");
         t64::Database recovered(crashDb);
         auto checkpoint = recovered.importJobs().first().toMap();
         check(recovered.stats()["games"].toInt() == 3 && checkpoint["processed"].toInt() == 3,
               "SQLite rolls back the incomplete batch after process death");
+        milestone("resuming the checkpoint left by the dead process");
         auto recovery = recovered.runImportJob(checkpoint["id"].toLongLong());
         check(recovery["status"] == "completed" && recovered.stats()["games"].toInt() == 12 &&
                   recovery["added"].toInt() == 12 && recovered.integrity() == "ok",
