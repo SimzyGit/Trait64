@@ -61,6 +61,9 @@ class Controller : public QObject {
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
     Q_PROPERTY(QVariantList onlineAccounts READ onlineAccounts NOTIFY accountsChanged)
+    // Profils de joueur : un utilisateur rassemble ses comptes en ligne et son profil
+    // FIDE sous un seul nom. Chaque profil porte la liste des comptes qui lui sont liés.
+    Q_PROPERTY(QVariantList profiles READ profiles NOTIFY profilesChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
@@ -173,6 +176,15 @@ class Controller : public QObject {
     bool smokeTest(QString *error);
     QVariantList tabs() const;
     QVariantList review() const { return review_; }
+    QVariantList profiles() const;
+    Q_INVOKABLE void addProfile(const QString &name);
+    Q_INVOKABLE void renameProfile(int index, const QString &name);
+    Q_INVOKABLE void removeProfile(int index);
+    // profileName vide détache le compte sans rien supprimer.
+    Q_INVOKABLE void setAccountProfile(int accountIndex, const QString &profileName);
+    // Un classement à 0 se lit « pas classé dans cette cadence », ce qui est courant.
+    Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName,
+                                    int standard, int rapid, int blitz);
     QVariantMap reviewState() const;
     QVariantMap reviewAccuracy() const { return reviewAccuracy_; }
     QVariantList players() const { return players_; }
@@ -282,6 +294,7 @@ class Controller : public QObject {
     void engineChanged();
     void preferencesChanged();
     void accountsChanged();
+    void profilesChanged();
     void busyChanged();
     void message(const QString &text, bool error = false);
     void promotionNeeded(const QString &prefix);

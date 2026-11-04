@@ -326,6 +326,41 @@ int main(int argc, char **argv) {
             c.removeOnlineAccount(1);
             c.removeOnlineAccount(0);
             check(c.onlineAccounts().isEmpty() && c.games().size() == 2, "Removing accounts keeps their games");
+            // Profils : un utilisateur rassemble ses comptes sous un seul nom. Le
+            // rattachement se fait par nom, donc renommer et retirer doivent suivre.
+            messages.clear();
+            c.addProfile("  Sïmzy  ");
+            check(c.profiles().size() == 1 && c.profiles()[0].toMap()["name"] == "Sïmzy",
+                  "A profile is created with its name tidied up");
+            c.addProfile("simzy");
+            check(c.profiles().size() == 1 && messages.size() == 1, "The same profile is not added twice");
+            c.addProfile("");
+            check(c.profiles().size() == 1 && messages.size() == 2, "A nameless profile is refused");
+            c.addOnlineAccount("lichess", "Kim");
+            online->cancel();
+            settle();
+            c.setAccountProfile(0, "Sïmzy");
+            check(c.profiles()[0].toMap()["accounts"].toList().size() == 1 &&
+                      c.onlineAccounts()[0].toMap()["profile"] == "Sïmzy",
+                  "An account joins a profile");
+            c.renameProfile(0, "Simon");
+            check(c.profiles()[0].toMap()["accounts"].toList().size() == 1 &&
+                      c.onlineAccounts()[0].toMap()["profile"] == "Simon",
+                  "Renaming a profile keeps its accounts attached");
+            c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 0, 1950);
+            const auto fide = c.profiles()[0].toMap();
+            check(fide["fideId"] == "1503014" && fide["fideStandard"].toInt() == 2100 &&
+                      !fide["fideRapid"].isValid() && fide["fideBlitz"].toInt() == 1950,
+                  "FIDE details are kept, and an unrated speed stays empty rather than zero");
+            messages.clear();
+            c.setFideDetails(0, "12a", {}, 0, 0, 0);
+            check(c.profiles()[0].toMap()["fideId"] == "1503014" && messages.size() == 1,
+                  "A FIDE identifier that is not a number is refused");
+            c.removeProfile(0);
+            check(c.profiles().isEmpty() && c.onlineAccounts().size() == 1 &&
+                      c.onlineAccounts()[0].toMap()["profile"].toString().isEmpty(),
+                  "Removing a profile detaches its accounts without deleting them");
+            c.removeOnlineAccount(0);
         }
         {
             Controller c(dir.path() + "/integrity-ui");

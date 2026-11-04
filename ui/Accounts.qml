@@ -30,6 +30,8 @@ TDialog {
                 text: qsTr("Vos parties publiques arrivent dans la bibliothèque, rangées par compte. Chaque synchronisation ne récupère que les parties jouées depuis la précédente. Aucun mot de passe n’est demandé.")
             }
             ReviewImported { Layout.fillWidth: true; backend: root.backend }
+            Profiles { Layout.fillWidth: true; backend: root.backend }
+            Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
             Repeater {
                 model: root.backend.onlineAccounts
                 delegate: Rectangle {
@@ -49,6 +51,22 @@ TDialog {
                             }
                         }
                         BusyIndicator { visible: !!modelData.syncing; running: visible; implicitWidth: 24; implicitHeight: 24 }
+                        TComboBox {
+                            objectName: "accountProfile" + index
+                            visible: root.backend.profiles.length > 0
+                            Layout.preferredWidth: 150
+                            // La première entrée détache le compte ; les suivantes sont les profils.
+                            model: [qsTr("Sans profil")].concat(root.backend.profiles.map(p => p.name))
+                            currentIndex: {
+                                const names = root.backend.profiles.map(p => p.name)
+                                const found = names.indexOf(modelData.profile || "")
+                                return found < 0 ? 0 : found + 1
+                            }
+                            onActivated: function(chosen) {
+                                const names = root.backend.profiles.map(p => p.name)
+                                root.backend.setAccountProfile(index, chosen === 0 ? "" : names[chosen - 1])
+                            }
+                        }
                         TButton { objectName: "syncAccount" + index; text: qsTr("Synchroniser"); enabled: !root.backend.busy; onClicked: root.backend.syncOnlineAccount(index) }
                         TButton { text: "×"; Accessible.name: qsTr("Retirer ce compte"); enabled: !modelData.syncing; onClicked: root.backend.removeOnlineAccount(index)
                             ToolTip.visible: hovered; ToolTip.text: qsTr("Retire le compte ; les parties déjà importées restent.") }
