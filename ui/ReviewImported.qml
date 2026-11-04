@@ -39,7 +39,7 @@ ColumnLayout {
         }
         TButton {
             objectName: "reviewImported"; text: qsTr("Lancer le bilan"); accent: true
-            enabled: !root.backend.busy && !root.backend.state.training
+            enabled: !root.backend.busy && !(root.backend.state && root.backend.state.training)
             onClicked: root.backend.reviewImported(root.depth)
             ToolTip.visible: hovered
             ToolTip.text: qsTr("Profondeur %1, au plus %2 ms par position. Les parties déjà vues aussi loin sont ignorées.")

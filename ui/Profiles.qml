@@ -178,7 +178,7 @@ ColumnLayout {
                     text: fide.sync.busy ? qsTr("Interrompre") : qsTr("Télécharger les classements")
                     // L'identifiant doit être enregistré avant : le téléchargement lit le
                     // profil, pas le champ en cours de saisie.
-                    enabled: fide.sync.busy || (identifier.text.trim().length > 0 &&
+                    enabled: !!fide.sync.busy || (identifier.text.trim().length > 0 &&
                              (wantStandard.checked || wantRapid.checked || wantBlitz.checked))
                     onClicked: {
                         if (fide.sync.busy) return root.backend.cancelFideRatings()
@@ -202,7 +202,9 @@ ColumnLayout {
                 }
             }
             ProgressBar {
-                Layout.fillWidth: true; visible: fide.sync.busy
+                // Avant tout téléchargement l'état est vide : les valeurs y sont
+                // indéfinies, et QML refuse de les affecter à un booléen.
+                Layout.fillWidth: true; visible: !!fide.sync.busy
                 // Une liste annoncée sans taille ne permet pas de pourcentage : l'anneau
                 // indéterminé vaut mieux qu'une barre figée à zéro.
                 indeterminate: !(fide.sync.total > 0)
