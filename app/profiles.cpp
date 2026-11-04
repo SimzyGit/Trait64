@@ -5,6 +5,7 @@
 // synchronisation existante n'en sait rien et n'a pas à changer.
 #include "controller.h"
 #include <QDateTime>
+#include <QDir>
 #include <algorithm>
 
 namespace {
@@ -171,6 +172,81 @@ void Controller::setFideDetails(int index, const QString &fideId, const QString 
         list[index] = profile;
         settings_.setValue("profiles", list);
         emit profilesChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::fetchFideRatings(int index, const QStringList &speeds) {
+    try {
+        auto list = settings_.value("profiles").toList();
+        require(index >= 0 && index < list.size(), "Profil introuvable.");
+        const auto id = list[index].toMap()["fideId"].toString();
+        require(t64::FideList::validId(id), "Renseignez d’abord l’identifiant FIDE de ce profil.");
+        require(!fide_ || !fide_->busy(), "Un téléchargement FIDE est déjà en cours.");
+        if (!fide_) {
+            fide_ = new t64::FideSync(this);
+            connect(fide_, &t64::FideSync::progress, this,
+                    [this](const QString &speed, int position, int count, qint64 received, qint64 total) {
+                        fideSync_ = {{"busy", true},         {"speed", speed},    {"index", position},
+                                     {"count", count},       {"received", received}, {"total", total},
+                                     {"status", QString()}};
+                        emit fideSyncChanged();
+                    });
+            connect(fide_, &t64::FideSync::failed, this, [this](const QString &text) {
+                fideSync_ = {{"busy", false}, {"status", text}};
+                emit fideSyncChanged();
+                emit message(text, true);
+            });
+            connect(fide_, &t64::FideSync::finished, this, [this](const QVariantMap &player) {
+                fideSync_ = {{"busy", false}, {"status", QString()}};
+                emit fideSyncChanged();
+                applyFideRatings(player);
+            });
+        }
+        fideProfile_ = index;
+        // Le dossier de données accueille les listes le temps de les lire ; elles sont
+        // effacées aussitôt, car une liste complète ne sert à rien hors de cette lecture.
+        QDir().mkpath(dataPath_ + "/downloads");
+        fideSync_ = {{"busy", true}, {"status", QString()}};
+        emit fideSyncChanged();
+        fide_->fetch(id, speeds, dataPath_ + "/downloads");
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::cancelFideRatings() {
+    if (fide_)
+        fide_->cancel();
+}
+
+void Controller::applyFideRatings(const QVariantMap &player) {
+    try {
+        auto list = settings_.value("profiles").toList();
+        require(fideProfile_ >= 0 && fideProfile_ < list.size(), "Profil introuvable.");
+        if (!player["found"].toBool()) {
+            emit message("Ce numéro FIDE ne figure dans aucune des listes téléchargées.", true);
+            return;
+        }
+        auto profile = list[fideProfile_].toMap();
+        // Le nom publié par la fédération remplace une saisie approximative, mais on ne
+        // vide pas un champ que la liste ne fournit pas.
+        for (const auto &key : QStringList{"name", "country", "title"})
+            if (!player[key].toString().isEmpty())
+                profile["fide" + key.mid(0, 1).toUpper() + key.mid(1)] = player[key];
+        // Une cadence absente des listes signifie « pas classé » : on efface l'ancien
+        // chiffre plutôt que de laisser croire à un classement toujours valable.
+        const QStringList speeds{"standard", "rapid", "blitz"};
+        for (const auto &speed : speeds) {
+            const auto key = "fide" + speed.mid(0, 1).toUpper() + speed.mid(1);
+            profile[key] = player.contains(speed) ? player[speed] : QVariant();
+        }
+        profile["fideUpdated"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+        list[fideProfile_] = profile;
+        settings_.setValue("profiles", list);
+        emit profilesChanged();
+        emit message(QString("Classements FIDE à jour pour %1.").arg(profile["name"].toString()));
     } catch (const std::exception &e) {
         fail(e);
     }

@@ -3,6 +3,7 @@
 #include "comparison.h"
 #include "tournament.h"
 #include "content.h"
+#include "fide.h"
 #include "database.h"
 #include "online.h"
 #include "polyglot.h"
@@ -64,6 +65,9 @@ class Controller : public QObject {
     // Profils de joueur : un utilisateur rassemble ses comptes en ligne et son profil
     // FIDE sous un seul nom. Chaque profil porte la liste des comptes qui lui sont liés.
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY profilesChanged)
+    // Téléchargement d'une liste FIDE en cours : {busy, speed, index, count, received,
+    // total, status}. Les listes pèsent quelques dizaines de mégaoctets chacune.
+    Q_PROPERTY(QVariantMap fideSync READ fideSync NOTIFY fideSyncChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
@@ -185,6 +189,12 @@ class Controller : public QObject {
     // Un classement à 0 se lit « pas classé dans cette cadence », ce qui est courant.
     Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName,
                                     int standard, int rapid, int blitz);
+    // Télécharge les listes publiées et reporte les classements sur le profil. `speeds`
+    // ne contient que les cadences voulues : chacune est un téléchargement séparé.
+    Q_INVOKABLE void fetchFideRatings(int index, const QStringList &speeds);
+    Q_INVOKABLE void cancelFideRatings();
+    QVariantMap fideSync() const { return fideSync_; }
+    void applyFideRatings(const QVariantMap &player);
     QVariantMap reviewState() const;
     QVariantMap reviewAccuracy() const { return reviewAccuracy_; }
     QVariantList players() const { return players_; }
@@ -295,6 +305,7 @@ class Controller : public QObject {
     void preferencesChanged();
     void accountsChanged();
     void profilesChanged();
+    void fideSyncChanged();
     void busyChanged();
     void message(const QString &text, bool error = false);
     void promotionNeeded(const QString &prefix);
@@ -407,6 +418,9 @@ class Controller : public QObject {
     void finishPuzzle();
     bool acceptPuzzleMate(const QString &uci);
     t64::OnlineGames *online_ = nullptr;
+    t64::FideSync *fide_ = nullptr;
+    QVariantMap fideSync_;
+    int fideProfile_ = -1;
     QString onlineSyncKey_, onlineFile_;
     qint64 onlineSyncTime_ = 0;
     QList<int> syncQueue_;

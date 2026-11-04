@@ -113,6 +113,7 @@ ColumnLayout {
         title: qsTr("Profil FIDE")
         width: Math.min(460, parent ? parent.width - 32 : 460)
         standardButtons: Dialog.Save | Dialog.Cancel
+        readonly property var sync: root.backend.fideSync || ({})
         function load(profile) {
             identifier.text = profile.fideId || ""
             fullName.text = profile.fideName || ""
@@ -144,6 +145,55 @@ ColumnLayout {
                 SpinBox { id: rapid; from: 0; to: 3000; editable: true }
                 Label { text: qsTr("Blitz") }
                 SpinBox { id: blitz; from: 0; to: 3000; editable: true }
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
+            Label {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                font.pixelSize: Math.round(11 * root.scale)
+                text: qsTr("Trait64 peut aussi lire vos classements dans les listes mensuelles publiées par la fédération. Chaque cadence est un téléchargement de plusieurs dizaines de mégaoctets : ne cochez que celles qui vous concernent.")
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                CheckBox { id: wantStandard; text: qsTr("Classique"); checked: true }
+                CheckBox { id: wantRapid; text: qsTr("Rapide") }
+                CheckBox { id: wantBlitz; text: qsTr("Blitz") }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                TButton {
+                    objectName: "fetchFide"
+                    text: fide.sync.busy ? qsTr("Interrompre") : qsTr("Télécharger les classements")
+                    // L'identifiant doit être enregistré avant : le téléchargement lit le
+                    // profil, pas le champ en cours de saisie.
+                    enabled: fide.sync.busy || (identifier.text.trim().length > 0 &&
+                             (wantStandard.checked || wantRapid.checked || wantBlitz.checked))
+                    onClicked: {
+                        if (fide.sync.busy) return root.backend.cancelFideRatings()
+                        const speeds = []
+                        if (wantStandard.checked) speeds.push("standard")
+                        if (wantRapid.checked) speeds.push("rapid")
+                        if (wantBlitz.checked) speeds.push("blitz")
+                        root.backend.setFideDetails(fide.index, identifier.text, fullName.text,
+                                                    standard.value, rapid.value, blitz.value)
+                        root.backend.fetchFideRatings(fide.index, speeds)
+                    }
+                }
+                Label {
+                    Layout.fillWidth: true; wrapMode: Text.WordWrap; elide: Text.ElideRight
+                    font.pixelSize: Math.round(11 * root.scale)
+                    text: fide.sync.busy && fide.sync.speed
+                          ? qsTr("%1 (%2/%3) — %4 Mio")
+                                .arg(fide.sync.speed).arg(fide.sync.index).arg(fide.sync.count)
+                                .arg(Math.round((fide.sync.received || 0) / 1048576))
+                          : (fide.sync.status || "")
+                }
+            }
+            ProgressBar {
+                Layout.fillWidth: true; visible: fide.sync.busy
+                // Une liste annoncée sans taille ne permet pas de pourcentage : l'anneau
+                // indéterminé vaut mieux qu'une barre figée à zéro.
+                indeterminate: !(fide.sync.total > 0)
+                from: 0; to: Math.max(1, fide.sync.total || 1); value: fide.sync.received || 0
             }
         }
     }
