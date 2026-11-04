@@ -74,8 +74,8 @@ void Comparison::start(const QVariantList &profiles, const QString &fen, const Q
             scheduleChanged();
         });
         connect(s->engine.get(), &Uci::completed, this,
-                [this, s](const QString &fen, const QVariantList &lines) {
-                    if (!running_ || fen != fen_)
+                [this, s](const QString &answered, const QVariantList &lines) {
+                    if (!running_ || answered != fen_)
                         return;
                     s->data["lines"] = lines;
                     s->data["status"] = s->engine->name() + " · analyse terminée";

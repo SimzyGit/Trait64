@@ -81,11 +81,11 @@ Controller::Controller(const QString &path, QObject *parent)
         emit message(onlineSyncKey_.section('/', 2) + " : déjà à jour.");
         accountSynced(0);
     });
-    connect(online_, &t64::OnlineGames::finished, this, [this](const QString &path, int) {
+    connect(online_, &t64::OnlineGames::finished, this, [this](const QString &downloaded, int) {
         const auto key = onlineSyncKey_.section('/', 1);
         const auto site = key.section('/', 0, 0), user = key.section('/', 1);
         const bool lichess = site == "lichess";
-        importSourceFile(path, {{"id", site + ":" + user},
+        importSourceFile(downloaded, {{"id", site + ":" + user},
                                 {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
                                 {"source", lichess ? "https://lichess.org/@/" + user
                                                    : "https://www.chess.com/member/" + user},

@@ -246,9 +246,9 @@ void Updater::request(const QUrl &url, bool binary, int redirects) {
             return;
         const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (code >= 300 && code < 400) {
-            const auto url =
+            const auto target =
                 reply->url().resolved(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl());
-            request(url, binary, redirects + 1);
+            request(target, binary, redirects + 1);
             return;
         }
         if (code == 401 || code == 404) {

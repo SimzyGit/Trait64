@@ -203,14 +203,14 @@ void Content::request(const QUrl &url) {
             return;
         const auto redirect = reply_->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
         if (!redirect.isEmpty()) {
-            const auto url = reply_->url().resolved(redirect);
+            const auto target = reply_->url().resolved(redirect);
             reply_->deleteLater();
             reply_ = nullptr;
             if (++redirects_ > 5) {
                 fail("Trop de redirections.");
                 return;
             }
-            this->request(url);
+            this->request(target);
             return;
         }
         if (reply_->error() != QNetworkReply::NoError ||
