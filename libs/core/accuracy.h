@@ -5,6 +5,7 @@
 // gain, puis on note chaque coup par ce qu'il en a fait perdre.
 #pragma once
 #include "chess.hpp"
+#include "game.h"
 #include <vector>
 
 namespace t64 {
@@ -30,5 +31,28 @@ enum class Phase { Opening = 0, Middlegame = 1, Endgame = 2 };
 // quand même par quitter l'ouverture. Le matériel ne faisant que décroître, une partie ne
 // revient jamais à une phase antérieure.
 Phase phaseOf(const chess::Board &board, int ply);
+
+// Évaluation d'une position, du point de vue des Blancs. `known` est faux pour une
+// séquence de mat, qui ne se convertit pas en chances de gain.
+struct NodeScore {
+    bool known = false;
+    double centipawns = 0;
+};
+
+// Bilan chiffré d'une partie. Indice 0 pour les Blancs, 1 pour les Noirs ; les phases
+// suivent l'ordre de Phase, et `all` porte la partie entière. Une note vaut -1 quand
+// elle n'est pas mesurable, ce qui ne se confond pas avec un zéro.
+struct AccuracySummary {
+    double all[2]{-1, -1};
+    double phase[2][3]{{-1, -1, -1}, {-1, -1, -1}};
+    int moves[2][4]{};
+    int blunders[2]{}, mistakes[2]{}, inaccuracies[2]{};
+};
+
+// Note une partie à partir des évaluations de sa ligne principale. `nodes` est la ligne
+// principale, `scores` porte une entrée par nœud dans le même ordre. Un coup n'est noté
+// que si les positions d'avant et d'après sont toutes deux évaluées.
+AccuracySummary summarize(const Game &game, const std::vector<int> &nodes,
+                          const std::vector<NodeScore> &scores);
 
 } // namespace t64

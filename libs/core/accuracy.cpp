@@ -52,6 +52,49 @@ double aggregateAccuracy(const std::vector<double> &moveAccuracies) {
     return std::clamp((arithmetic + harmonic) / 2, 0., 100.);
 }
 
+AccuracySummary summarize(const Game &game, const std::vector<int> &nodes,
+                          const std::vector<NodeScore> &scores) {
+    AccuracySummary summary;
+    std::vector<double> marks[2][4];
+    const auto count = std::min(nodes.size(), scores.size());
+    for (size_t i = 1; i < count; ++i) {
+        const auto &before = scores[i - 1], &after = scores[i];
+        if (!before.known || !after.known)
+            continue;
+        const int parent = nodes[i - 1];
+        const bool white = game.boardAt(parent).sideToMove() == chess::Color::WHITE;
+        const int side = white ? 0 : 1;
+        const double sign = white ? 1 : -1;
+        // Les évaluations sont comptées du point de vue des Blancs : on les retourne pour
+        // celui qui joue, car ce sont ses chances de gain qui le notent.
+        const double mark =
+            moveAccuracy(winPercent(before.centipawns * sign), winPercent(after.centipawns * sign));
+        // La phase se lit sur la position d'avant le coup : celle que le joueur avait
+        // devant lui au moment de décider.
+        const int part = int(phaseOf(game.boardAt(parent), int(i) - 1));
+        marks[side][part].push_back(mark);
+        marks[side][3].push_back(mark);
+        // Mêmes seuils que les étiquettes du bilan, pour qu'un chiffre et un mot ne se
+        // contredisent jamais à l'écran.
+        const double loss = std::max(0., (before.centipawns - after.centipawns) * sign);
+        if (loss >= 250)
+            ++summary.blunders[side];
+        else if (loss >= 100)
+            ++summary.mistakes[side];
+        else if (loss >= 50)
+            ++summary.inaccuracies[side];
+    }
+    for (int side = 0; side < 2; ++side) {
+        summary.all[side] = aggregateAccuracy(marks[side][3]);
+        summary.moves[side][3] = int(marks[side][3].size());
+        for (int part = 0; part < 3; ++part) {
+            summary.phase[side][part] = aggregateAccuracy(marks[side][part]);
+            summary.moves[side][part] = int(marks[side][part].size());
+        }
+    }
+    return summary;
+}
+
 Phase phaseOf(const chess::Board &board, int ply) {
     const int pieces = majorsAndMinors(board);
     if (pieces <= 6)

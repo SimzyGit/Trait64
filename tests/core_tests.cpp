@@ -4,6 +4,7 @@
 #include "explanation.h"
 #include "polyglot.h"
 #include <cmath>
+#include <iterator>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -385,6 +386,30 @@ int main() {
             check(t64::phaseOf(chess::Board("r1bqkb1r/pppppppp/2n2n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w - - 0 5"),
                                8) == t64::Phase::Opening,
                   "A full board early on is still the opening");
+
+            // Bilan d'une partie entière. Les Blancs gardent l'équilibre, les Noirs
+            // lâchent prise au troisième coup : les notes doivent les séparer nettement.
+            auto reviewed = t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 Nd4 4. Nxd4 exd4 *");
+            const auto &played = reviewed.front();
+            const auto line = played.mainline();
+            std::vector<t64::NodeScore> scores(line.size());
+            const double evaluations[] = {20, 15, 25, 20, 30, -250, -240, -600, -590};
+            for (size_t i = 0; i < line.size() && i < std::size(evaluations); ++i)
+                scores[i] = {true, evaluations[i]};
+            const auto summary = t64::summarize(played, line, scores);
+            check(summary.all[0] > 90 && summary.all[1] < summary.all[0],
+                  "The side that holds the balance scores above the side that loses it");
+            check(summary.moves[0][3] > 0 && summary.moves[1][3] > 0, "Both sides have measured moves");
+            check(summary.phase[0][int(t64::Phase::Opening)] > 0 &&
+                      summary.phase[0][int(t64::Phase::Endgame)] < 0,
+                  "A short game scores its opening and leaves the endgame unmeasurable");
+            check(summary.blunders[1] >= 1, "A move that hands over the game counts as a blunder");
+            check(summary.blunders[0] == 0 && summary.mistakes[0] == 0,
+                  "The accurate side collects no blunder or mistake");
+            // Sans évaluation, rien n'est mesurable : aucune note inventée.
+            const auto blind = t64::summarize(played, line, std::vector<t64::NodeScore>(line.size()));
+            check(blind.all[0] < 0 && blind.all[1] < 0 && blind.moves[0][3] == 0,
+                  "Without evaluations nothing is measured and no mark is invented");
         }
         std::cout << checks << " core checks passed\n";
         return 0;

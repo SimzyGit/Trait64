@@ -692,10 +692,16 @@ void Controller::requestReviewPosition() {
 void Controller::rebuildReview() {
     // One row per move whose position before and after are both evaluated.
     review_.clear();
-    // Notes par camp et par phase. Les séquences de mat n'y entrent pas : une évaluation
-    // en nombre de coups avant mat ne se convertit pas en chances de gain, et un mat
-    // annoncé ne dit rien de la qualité du coup qui l'amène.
-    std::vector<double> marks[2][4];
+    // Évaluations de la ligne principale, remises dans la forme que le module de calcul
+    // attend. Les séquences de mat n'y entrent pas : une évaluation en nombre de coups
+    // avant mat ne se convertit pas en chances de gain.
+    std::vector<t64::NodeScore> scores(reviewScores_.size());
+    for (int i = 0; i < reviewScores_.size(); ++i) {
+        const auto entry = reviewScores_[i].toMap();
+        if (entry.isEmpty() || entry["scoreType"] != "cp")
+            continue;
+        scores[i] = {true, entry["cp"].toDouble()};
+    }
     for (int i = 1; i < int(reviewNodes_.size()); ++i) {
         const auto previous = reviewScores_[i - 1].toMap(), score = reviewScores_[i].toMap();
         if (previous.isEmpty() || score.isEmpty())
@@ -716,15 +722,9 @@ void Controller::rebuildReview() {
             // Les évaluations sont comptées du point de vue des Blancs : on les retourne
             // pour celui qui joue, car ce sont ses chances de gain qui le notent.
             const double sign = white ? 1 : -1;
-            const double accuracy =
-                t64::moveAccuracy(t64::winPercent(previous["cp"].toDouble() * sign),
-                                  t64::winPercent(score["cp"].toDouble() * sign));
-            // La phase se lit sur la position d'avant le coup : c'est celle que le joueur
-            // avait devant lui au moment de décider.
-            const auto phase = t64::phaseOf(reviewGame_.boardAt(parent), i - 1);
-            marks[white ? 0 : 1][int(phase)].push_back(accuracy);
-            marks[white ? 0 : 1][3].push_back(accuracy);
-            mark = qRound(accuracy * 10) / 10.;
+            mark = qRound(10 * t64::moveAccuracy(t64::winPercent(previous["cp"].toDouble() * sign),
+                                                 t64::winPercent(score["cp"].toDouble() * sign))) /
+                   10.;
         }
         review_ << QVariantMap{{"node", node},
                                {"parent", parent},
@@ -749,18 +749,26 @@ void Controller::rebuildReview() {
                                {"fen", qs(reviewGame_.nodes[parent].fen)},
                                {"depth", score["depth"]}};
     }
+    const auto summary = t64::summarize(reviewGame_, reviewNodes_, scores);
     const char *keys[] = {"opening", "middlegame", "endgame", "all"};
     reviewAccuracy_.clear();
     for (int side = 0; side < 2; ++side) {
-        QVariantMap scores;
-        for (int part = 0; part < 4; ++part) {
-            const double value = t64::aggregateAccuracy(marks[side][part]);
-            // -1 se lit « pas mesurable » : une phase que la partie n'a pas atteinte, ou
-            // dont aucun coup n'a reçu d'évaluation exacte des deux côtés.
-            scores[keys[part]] = value < 0 ? QVariant() : QVariant(qRound(value * 10) / 10.);
-            scores[QString(keys[part]) + "Moves"] = int(marks[side][part].size());
+        // -1 se lit « pas mesurable » : une phase que la partie n'a pas atteinte, ou dont
+        // aucun coup n'a reçu d'évaluation exacte des deux côtés.
+        auto reading = [](double value) {
+            return value < 0 ? QVariant() : QVariant(qRound(value * 10) / 10.);
+        };
+        QVariantMap side_;
+        for (int part = 0; part < 3; ++part) {
+            side_[keys[part]] = reading(summary.phase[side][part]);
+            side_[QString(keys[part]) + "Moves"] = summary.moves[side][part];
         }
-        reviewAccuracy_[side == 0 ? "white" : "black"] = scores;
+        side_["all"] = reading(summary.all[side]);
+        side_["allMoves"] = summary.moves[side][3];
+        side_["blunders"] = summary.blunders[side];
+        side_["mistakes"] = summary.mistakes[side];
+        side_["inaccuracies"] = summary.inaccuracies[side];
+        reviewAccuracy_[side == 0 ? "white" : "black"] = side_;
     }
 }
 void Controller::finishReviewPosition(const QString &fen, const QVariantList &lines) {
