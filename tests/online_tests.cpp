@@ -143,8 +143,17 @@ int main(int argc, char **argv) {
                 {200, games("Oct", 1)}, {200, games("Sep", 1)}};
             const qint64 september15 = QDateTime(QDate(2026, 9, 15), QTime(12, 0)).toMSecsSinceEpoch();
             auto [path, count] = run(online, [&] { online.fetch("chesscom", "simzy", 50, file, september15); });
-            check(count == 2 && network.requests.size() == 3 && !network.requests.last().url().path().contains("/08/"),
+            // Trois affirmations distinctes : réunies sous un seul message, un échec ne
+            // disait pas laquelle avait cédé, et les valeurs observées restaient muettes.
+            if (count != 2 || network.requests.size() != 3)
+                std::cout << "Chess.com sync observed " << count << " game(s) over "
+                          << network.requests.size() << " request(s), last "
+                          << network.requests.last().url().toString().toStdString() << '\n';
+            check(network.requests.size() == 3,
+                  "Chess.com sync asks for the archive list and the two months since the last sync");
+            check(!network.requests.last().url().path().contains("/08/"),
                   "Chess.com sync skips months before the last sync");
+            check(count == 2, "Chess.com sync keeps one game from each downloaded month");
             network.responses = {{200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08"]})"}};
             upToDate.clear();
             online.fetch("chesscom", "simzy", 50, file, september15);
