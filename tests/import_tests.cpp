@@ -65,6 +65,9 @@ int main(int argc, char **argv) {
         t64::Database db(database);
         milestone("resumable import, pause and resume");
         auto id = db.createImportJob(path);
+        // Interrompre un import à quatre lecteurs fait remonter une exception à travers
+        // tout le lecteur parallèle : c'est le chemin qui plantait sous Windows, les
+        // futures étant détruites avant que les fils ne soient joints.
         milestone("  pausing a four-reader import mid-flight");
         auto paused = db.runImportJob(
             id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3, 4);

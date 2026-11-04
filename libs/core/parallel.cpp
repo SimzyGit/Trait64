@@ -17,6 +17,18 @@ void readPgnParallel(std::istream &input, int workers, const std::function<void(
         return;
     }
     using Parsed = std::optional<Game>;
+    struct Pending {
+        std::future<Parsed> game;
+        uint64_t offset;
+        size_t bytes;
+    };
+    // L'ordre de ces deux déclarations porte une règle, et non un goût : les objets
+    // locaux se détruisent à l'envers de leur déclaration, donc le pool — qui joint ses
+    // fils — s'efface avant les futures qu'il alimente. L'inverse laissait mourir une
+    // future pendant que son producteur écrivait encore dedans, ce qui arrivait à chaque
+    // interruption, puisque l'arrêt remonte par une exception à travers toute la pile.
+    std::deque<Pending> pending;
+    size_t buffered = 0;
     struct Pool {
         std::mutex mutex;
         std::condition_variable ready;
@@ -27,9 +39,13 @@ void readPgnParallel(std::istream &input, int workers, const std::function<void(
             {
                 std::lock_guard lock(mutex);
                 closed = true;
+                // Les tâches encore en file sont abandonnées : leurs futures ne seront
+                // plus attendues, puisque l'appelant s'en va.
                 tasks.clear();
             }
             ready.notify_all();
+            // Aucun fil ne survit à cette ligne, donc plus personne n'écrit dans une
+            // future après elle.
             for (auto &thread : threads)
                 thread.join();
         }
@@ -49,13 +65,6 @@ void readPgnParallel(std::istream &input, int workers, const std::function<void(
                 task(); // packaged_task transports parser exceptions to the ordered consumer.
             }
         });
-    struct Pending {
-        std::future<Parsed> game;
-        uint64_t offset;
-        size_t bytes;
-    };
-    std::deque<Pending> pending;
-    size_t buffered = 0;
     auto drain = [&] {
         auto &front = pending.front();
         auto game = front.game.get();
