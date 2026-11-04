@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QScopeGuard>
 #include <QSet>
 #include <QSqlDriver>
 #include <QSqlQuery>
@@ -662,10 +663,14 @@ int main(int argc, char **argv) {
             auto canceled = std::make_shared<std::atomic_bool>(false);
             QElapsedTimer timer;
             timer.start();
-            std::jthread canceler([canceled] {
+            std::thread canceler([canceled] {
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 canceled->store(true);
             });
+            // std::jthread manque encore à la bibliothèque standard d'Apple : on joint à
+            // la main, y compris si la vérification ci-dessous lève, pour ne pas laisser
+            // un fil d'exécution vivant derrière soi.
+            const auto join = qScopeGuard([&] { canceler.join(); });
             rejects([&] { slow.search({}, {}, false, {}, false, {}, canceled); });
             check(canceled->load() && timer.elapsed() < 3000, "SQLite stops an executing search promptly");
             check(slow.stats()["games"].toInt() == 1, "Progress callback removed after interruption");
