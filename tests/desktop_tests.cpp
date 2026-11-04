@@ -1088,7 +1088,6 @@ int main(int argc, char **argv) {
             c.move("d2d4");
             c.saveGame();
             c.flip();
-            const auto previous = c.state();
             c.createRepertoire("Débuts blancs", true);
             check(c.busy() && c.repertoireTask()["running"].toBool(),
                   "Repertoire creation runs off GUI thread");
@@ -1118,6 +1117,12 @@ int main(int argc, char **argv) {
                 check(grab->saveToFile(capture), "Repertoire screenshot saved");
             }
             QMetaObject::invokeMethod(dialog, "close");
+            // L'état de référence se lit juste avant l'exercice, et non vingt lignes plus
+            // haut : la création du répertoire travaille hors du fil graphique, et les
+            // interactions qui suivent peuvent déplacer l'étude courante. Capturé trop
+            // tôt, il décrivait parfois autre chose que ce que l'exercice allait
+            // remplacer, et la vérification échouait au gré du rythme de la machine.
+            const auto previous = c.state();
             c.startRepertoireTraining(id);
             check(c.state()["training"].toBool() && c.state()["repertoireTraining"].toLongLong() == id &&
                       c.repertoireState()["moves"].toList().empty(),
