@@ -136,6 +136,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: |
+          mkdir -p build/trait64.app/Contents/Resources
           cp LICENSE THIRD_PARTY_NOTICES.md build/trait64.app/Contents/Resources/
           macdeployqt build/trait64.app -qmldir=ui -dmg
           mv build/trait64.dmg "Trait64-${RELEASE_VERSION}-macos-arm64.dmg"

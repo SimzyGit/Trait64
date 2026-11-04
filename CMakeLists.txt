@@ -73,6 +73,16 @@ if(T64_BUILD_GUI)
   target_link_libraries(t64content PUBLIC t64core Qt6::Core Qt6::Network Qt6::Concurrent PRIVATE LibArchive::LibArchive)
   qt_add_executable(trait64 app/main.cpp app/controller.cpp app/features.cpp app/appearance.cpp app/reliability.cpp app/content.cpp app/search.cpp app/imports.cpp app/repertoires.cpp app/repertoire_tasks.cpp app/preparation.cpp app/analyses.cpp app/puzzles.cpp app/accounts.cpp)
   target_link_libraries(trait64 PRIVATE t64analysis t64storage t64engine t64updates t64content Qt6::Gui Qt6::Quick Qt6::QuickControls2 Qt6::Qml Qt6::Concurrent)
+  if(APPLE)
+    # Sans cela, macOS reçoit un exécutable nu : pas de nom lisible, pas d'icône, et
+    # rien que macdeployqt puisse emporter. Le paquet est la forme attendue là-bas.
+    set_target_properties(trait64 PROPERTIES
+      MACOSX_BUNDLE TRUE
+      MACOSX_BUNDLE_BUNDLE_NAME "Trait64"
+      MACOSX_BUNDLE_GUI_IDENTIFIER "org.trait64.Trait64"
+      MACOSX_BUNDLE_BUNDLE_VERSION "${T64_RELEASE_VERSION}"
+      MACOSX_BUNDLE_SHORT_VERSION_STRING "${T64_RELEASE_VERSION}")
+  endif()
   file(GLOB_RECURSE T64_ASSETS CONFIGURE_DEPENDS assets/icons/*.svg assets/pieces/*.svg assets/openings/*.tsv assets/content/*)
   set(T64_UI ui/MoveNotebook.qml ui/TDialog.qml ui/TComboBox.qml translations/en.json ui/T64Sidebar.qml ui/T64Icon.qml ui/AnalysisQueue.qml ui/Preparation.qml ui/Repertoires.qml ui/Imports.qml ui/Downloads.qml ui/EngineOptions.qml ui/Home.qml ui/TTabButton.qml ui/Main.qml ui/Board.qml ui/TButton.qml ui/Piece.qml ui/Appearance.qml ui/PositionEditor.qml ui/Review.qml ui/Players.qml ui/Updates.qml ui/CompareEngines.qml ui/Tournament.qml ui/Puzzles.qml ui/Accounts.qml ui/ReviewImported.qml)
   qt_add_resources(trait64 "app_resources" PREFIX "/" BASE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${T64_UI} ${T64_ASSETS} assets/trait64.svg assets/demo.pgn)
