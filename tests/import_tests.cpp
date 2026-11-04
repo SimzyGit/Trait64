@@ -65,9 +65,24 @@ int main(int argc, char **argv) {
         t64::Database db(database);
         milestone("resumable import, pause and resume");
         auto id = db.createImportJob(path);
+        // Même interruption avec un seul lecteur : ce chemin n'emploie aucun fil
+        // d'exécution. S'il tient alors que celui à quatre lecteurs tombe, la cause est
+        // dans le lecteur parallèle ; s'il tombe aussi, elle est ailleurs.
+        milestone("  pausing a single-reader import mid-flight");
+        {
+            const auto probePath = dir.filePath("probe.pgn");
+            write(probePath, pgn);
+            t64::Database probe(dir.filePath("probe.sqlite"));
+            const auto probeJob = probe.createImportJob(probePath);
+            const auto probePaused = probe.runImportJob(
+                probeJob, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3,
+                1);
+            check(probePaused["status"] == "paused",
+                  "A single-reader import pauses mid-flight as well");
+        }
+        milestone("  single-reader pause returned");
         // Interrompre un import à quatre lecteurs fait remonter une exception à travers
-        // tout le lecteur parallèle : c'est le chemin qui plantait sous Windows, les
-        // futures étant détruites avant que les fils ne soient joints.
+        // tout le lecteur parallèle.
         milestone("  pausing a four-reader import mid-flight");
         auto paused = db.runImportJob(
             id, [](const t64::ImportProgress &p) { return p.verifying || p.processed < 5; }, {}, 3, 4);
