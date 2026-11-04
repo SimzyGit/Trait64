@@ -111,9 +111,7 @@ if(T64_BUILD_GUI)
     add_executable(import_tests tests/import_tests.cpp)
     target_link_libraries(import_tests PRIVATE t64storage Qt6::Test)
     add_test(NAME resumable_import COMMAND import_tests)
-    # La trace de l'interruption reste muette en usage normal ; elle est allumée ici
-    # parce qu'un arrêt brutal n'offre aucune autre vue sur la machine d'intégration.
-    set_tests_properties(resumable_import PROPERTIES TIMEOUT 60 ENVIRONMENT "T64_TRACE_IMPORT=1")
+    set_tests_properties(resumable_import PROPERTIES TIMEOUT 60)
     add_executable(analysis_tests tests/analysis_tests.cpp)
     target_link_libraries(analysis_tests PRIVATE t64analysis Qt6::Test)
     add_test(NAME persistent_analysis COMMAND analysis_tests)
