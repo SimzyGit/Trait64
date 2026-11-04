@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "accuracy.h"
 #include "database.h"
+#include <QHash>
 #include <QJsonDocument>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -98,6 +100,98 @@ QVariantList Database::recentGamesToReview(int count, int depth) const {
     while (q.next())
         ids << q.value(0).toLongLong();
     return ids;
+}
+void Database::upgradeV10(int originalVersion) {
+    if (originalVersion >= 10)
+        return;
+    if (originalVersion > 0)
+        backup(path_ + ".before-v10-" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".sqlite");
+    sql("SAVEPOINT schema10");
+    try {
+        // Bilan chiffré d'une partie, calculé une fois et conservé. Un tableau de bord
+        // qui parcourt des milliers de parties ne peut pas le recalculer à chaque
+        // ouverture. Une note absente reste NULL : la phase n'a pas été atteinte, ou
+        // aucun de ses coups n'a reçu d'évaluation exacte des deux côtés.
+        sql("CREATE TABLE IF NOT EXISTS game_reviews("
+            "game INTEGER PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,"
+            "depth INTEGER NOT NULL,"
+            "reviewed TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),"
+            "white_all REAL,white_opening REAL,white_middlegame REAL,white_endgame REAL,"
+            "black_all REAL,black_opening REAL,black_middlegame REAL,black_endgame REAL,"
+            "white_moves INTEGER NOT NULL DEFAULT 0,black_moves INTEGER NOT NULL DEFAULT 0,"
+            "white_blunders INTEGER NOT NULL DEFAULT 0,white_mistakes INTEGER NOT NULL DEFAULT 0,"
+            "white_inaccuracies INTEGER NOT NULL DEFAULT 0,"
+            "black_blunders INTEGER NOT NULL DEFAULT 0,black_mistakes INTEGER NOT NULL DEFAULT 0,"
+            "black_inaccuracies INTEGER NOT NULL DEFAULT 0)");
+        sql("PRAGMA user_version=10");
+        sql("RELEASE schema10");
+    } catch (...) {
+        sql("ROLLBACK TO schema10");
+        sql("RELEASE schema10");
+        throw;
+    }
+}
+void Database::recordGameReview(qint64 job, qint64 game, int depth) {
+    const auto stored = analysisJob(job, true);
+    auto games = parsePgn(stored["pgn"].toString().toStdString());
+    if (games.size() != 1)
+        return;
+    const auto &played = games.front();
+    const auto line = played.mainline();
+    // Les évaluations sont rangées par nœud ; la ligne principale donne leur ordre.
+    QHash<int, t64::NodeScore> byNode;
+    QSqlQuery q(db_);
+    q.prepare("SELECT node,lines FROM analysis_results WHERE job=?");
+    q.addBindValue(job);
+    run(q);
+    while (q.next()) {
+        const auto lines = decoded(q.value(1)).toList();
+        if (lines.isEmpty())
+            continue;
+        const auto best = lines.first().toMap();
+        // Une séquence de mat ne se convertit pas en chances de gain : on la laisse de
+        // côté plutôt que d'inventer un équivalent en centipions.
+        if (best["scoreType"].toString() != "cp")
+            continue;
+        byNode.insert(q.value(0).toInt(), {true, best["cp"].toDouble()});
+    }
+    std::vector<t64::NodeScore> scores(line.size());
+    for (size_t i = 0; i < line.size(); ++i)
+        scores[i] = byNode.value(line[i]);
+    const auto summary = t64::summarize(played, line, scores);
+    if (summary.moves[0][3] == 0 && summary.moves[1][3] == 0)
+        return; // Rien de mesurable : mieux vaut aucune ligne qu'une ligne vide.
+    auto note = [](double value) { return value < 0 ? QVariant() : QVariant(value); };
+    QSqlQuery write(db_);
+    write.prepare("INSERT INTO game_reviews(game,depth,white_all,white_opening,white_middlegame,"
+                  "white_endgame,black_all,black_opening,black_middlegame,black_endgame,white_moves,"
+                  "black_moves,white_blunders,white_mistakes,white_inaccuracies,black_blunders,"
+                  "black_mistakes,black_inaccuracies) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+                  "ON CONFLICT(game) DO UPDATE SET depth=excluded.depth,"
+                  "reviewed=strftime('%Y-%m-%dT%H:%M:%fZ','now'),white_all=excluded.white_all,"
+                  "white_opening=excluded.white_opening,white_middlegame=excluded.white_middlegame,"
+                  "white_endgame=excluded.white_endgame,black_all=excluded.black_all,"
+                  "black_opening=excluded.black_opening,black_middlegame=excluded.black_middlegame,"
+                  "black_endgame=excluded.black_endgame,white_moves=excluded.white_moves,"
+                  "black_moves=excluded.black_moves,white_blunders=excluded.white_blunders,"
+                  "white_mistakes=excluded.white_mistakes,white_inaccuracies=excluded.white_inaccuracies,"
+                  "black_blunders=excluded.black_blunders,black_mistakes=excluded.black_mistakes,"
+                  "black_inaccuracies=excluded.black_inaccuracies");
+    write.addBindValue(game);
+    write.addBindValue(depth);
+    for (int side = 0; side < 2; ++side) {
+        write.addBindValue(note(summary.all[side]));
+        for (int part = 0; part < 3; ++part)
+            write.addBindValue(note(summary.phase[side][part]));
+    }
+    write.addBindValue(summary.moves[0][3]);
+    write.addBindValue(summary.moves[1][3]);
+    for (int side = 0; side < 2; ++side) {
+        write.addBindValue(summary.blunders[side]);
+        write.addBindValue(summary.mistakes[side]);
+        write.addBindValue(summary.inaccuracies[side]);
+    }
+    run(write);
 }
 qint64 Database::createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations,
                                    int total, qint64 gameId) {
@@ -204,6 +298,12 @@ void Database::setAnalysisStatus(qint64 id, const QString &status, const QString
     mark.addBindValue(game);
     mark.addBindValue(depth);
     run(mark);
+    // Le bilan chiffré est calculé ici, une fois, pendant que les évaluations sont sous
+    // la main. Un échec ne doit pas annuler l'analyse elle-même, qui est bien terminée.
+    try {
+        recordGameReview(id, game, depth);
+    } catch (const std::exception &) {
+    }
 }
 void Database::setAnalysisIdentity(qint64 id, const QVariantMap &identity) {
     const auto existing = analysisJob(id, false)["identity"].toMap();

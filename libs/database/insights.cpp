@@ -154,6 +154,111 @@ QVariantMap Database::player(const QString &name) const {
             {"eloHistory", eloHistory},
             {"score", games > unfinished ? 100. * (wins + .5 * draws) / (games - unfinished) : 0}};
 }
+namespace {
+// Un joueur peut avoir les Blancs ou les Noirs : chaque note est prise du côté où il se
+// trouvait. Les pseudos sont comparés sans égard à la casse, les sites n'en tenant pas
+// compte non plus.
+QString placeholders(int count) {
+    QStringList marks;
+    for (int i = 0; i < count; ++i)
+        marks << "?";
+    return marks.join(',');
+}
+} // namespace
+
+QVariantMap Database::reviewSummary(const QStringList &names) const {
+    if (names.isEmpty())
+        return {{"games", 0}, {"moves", 0}};
+    const auto marks = placeholders(int(names.size()));
+    // Les notes sont pondérées par le nombre de coups mesurés : une partie de soixante
+    // coups pèse plus qu'une de dix, sinon une miniature fausserait la moyenne.
+    const QString statement =
+        "SELECT COUNT(*),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_moves ELSE r.black_moves END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_opening ELSE r.black_opening END),"
+        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_opening ELSE r.black_opening END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_middlegame ELSE r.black_middlegame END),"
+        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_middlegame ELSE r.black_middlegame END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_endgame ELSE r.black_endgame END),"
+        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_endgame ELSE r.black_endgame END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_blunders ELSE r.black_blunders END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_mistakes ELSE r.black_mistakes END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_inaccuracies ELSE r.black_inaccuracies END)"
+        " FROM game_reviews r JOIN games g ON g.id=r.game"
+        " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" + marks + ") OR g.black COLLATE NOCASE IN (" + marks + "))";
+    QSqlQuery q(db_);
+    q.prepare(statement);
+    // La même liste revient treize fois : onze fois dans les colonnes, deux dans le
+    // filtre. Un décalage ici donnerait des chiffres faux sans rien signaler.
+    for (int repeat = 0; repeat < 13; ++repeat)
+        for (const auto &name : names)
+            q.addBindValue(name);
+    run(q);
+    if (!q.next())
+        throw std::runtime_error("Bilan indisponible.");
+    const auto games = q.value(0).toInt();
+    const auto moves = q.value(1).toLongLong();
+    auto weighted = [&](int sumColumn, qint64 weight) {
+        return weight > 0 && !q.value(sumColumn).isNull()
+                   ? QVariant(qRound(10 * q.value(sumColumn).toDouble() / double(weight)) / 10.)
+                   : QVariant();
+    };
+    auto mean = [&](int sumColumn, int countColumn) {
+        const auto count = q.value(countColumn).toLongLong();
+        return count > 0 && !q.value(sumColumn).isNull()
+                   ? QVariant(qRound(10 * q.value(sumColumn).toDouble() / double(count)) / 10.)
+                   : QVariant();
+    };
+    return {{"games", games},
+            {"moves", moves},
+            // La note d'ensemble est pondérée par les coups ; celles des phases sont une
+            // moyenne par partie, le nombre de coups de chaque phase n'étant pas stocké.
+            {"all", weighted(2, moves)},
+            {"opening", mean(3, 4)},
+            {"middlegame", mean(5, 6)},
+            {"endgame", mean(7, 8)},
+            {"blunders", q.value(9).toLongLong()},
+            {"mistakes", q.value(10).toLongLong()},
+            {"inaccuracies", q.value(11).toLongLong()}};
+}
+
+QVariantList Database::reviewHistory(const QStringList &names, int months) const {
+    if (names.isEmpty())
+        return {};
+    const auto marks = placeholders(int(names.size()));
+    // La date PGN s'écrit « AAAA.MM.JJ » : ses sept premiers caractères donnent le mois.
+    // Une date inconnue s'écrit « ???? » et se retrouve donc groupée à part, ce qui vaut
+    // mieux que de la rattacher arbitrairement à un mois.
+    const QString statement =
+        "SELECT substr(g.date,1,7) AS period,COUNT(*),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_moves ELSE r.black_moves END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
+        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_blunders ELSE r.black_blunders END)"
+        " FROM game_reviews r JOIN games g ON g.id=r.game"
+        " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" + marks + ") OR g.black COLLATE NOCASE IN (" + marks + "))"
+        " GROUP BY period ORDER BY period DESC LIMIT ?";
+    QSqlQuery q(db_);
+    q.prepare(statement);
+    for (int repeat = 0; repeat < 5; ++repeat)
+        for (const auto &name : names)
+            q.addBindValue(name);
+    q.addBindValue(std::clamp(months, 1, 120));
+    run(q);
+    QVariantList rows;
+    while (q.next()) {
+        const auto moves = q.value(2).toLongLong();
+        rows << QVariantMap{{"period", q.value(0)},
+                            {"games", q.value(1)},
+                            {"moves", moves},
+                            {"accuracy", moves > 0 && !q.value(3).isNull()
+                                             ? QVariant(qRound(10 * q.value(3).toDouble() / double(moves)) / 10.)
+                                             : QVariant()},
+                            {"blunders", q.value(4).toLongLong()}};
+    }
+    return rows;
+}
+
 QVariantList Database::duplicates() const {
     QSqlQuery q(db_);
     q.prepare("SELECT GROUP_CONCAT(id),COUNT(*),MIN(white),MIN(black) FROM games WHERE deleted=0 AND "

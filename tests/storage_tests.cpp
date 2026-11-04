@@ -228,6 +228,55 @@ int main(int argc, char **argv) {
             check(db.recentGamesToReview(2, 12).size() == 1, "A shallower review changes nothing");
             check(db.recentGamesToReview(2, 24).size() == 2, "A deeper review covers the game again");
         }
+        {
+            // Tableau de bord : le bilan d'une partie est conservé, puis agrégé sous les
+            // pseudos d'un joueur, du côté où il se trouvait.
+            t64::Database board(dir.filePath("dashboard.sqlite"));
+            auto played = t64::parsePgn(
+                "[White \"Alice\"]\n[Black \"Bob\"]\n[Date \"2026.09.10\"]\n1.e4 e5 2.Nf3 Nc6 *\n\n"
+                "[White \"Bob\"]\n[Black \"Alice\"]\n[Date \"2026.10.02\"]\n1.d4 d5 2.c4 e6 *");
+            check(board.importGames(played) == 2, "Seed two games for the dashboard");
+            check(board.reviewSummary({"Alice"})["games"].toInt() == 0,
+                  "Without a stored review nothing is aggregated");
+            // Les évaluations sont comptées du point de vue des Blancs : Alice tient
+            // l'équilibre dans la première partie, Bob lâche prise dans la seconde.
+            const auto rows = board.search({});
+            for (const auto &row : rows) {
+                const auto id = row.toMap()["id"].toLongLong();
+                const auto game = board.load(id);
+                const bool aliceIsWhite = row.toMap()["white"].toString() == "Alice";
+                const auto job = board.createAnalysisJob(QString::fromStdString(game.pgn()),
+                                                         QVariantMap{{"depth", 18}}, false,
+                                                         int(game.mainline().size()), id);
+                board.setAnalysisStatus(job, "running");
+                const auto line = game.mainline();
+                // Une chute franche sur le deuxième coup des Noirs dans les deux parties.
+                const double evaluations[] = {20, 15, 25, 600, 590};
+                for (size_t i = 0; i < line.size(); ++i)
+                    board.saveAnalysisResult(
+                        job, int(i), line[i], QString::number(int(i)),
+                        QVariantList{QVariantMap{{"rank", 1}, {"scoreType", "cp"},
+                                                 {"cp", evaluations[std::min(i, size_t(4))]}}});
+                board.setAnalysisStatus(job, "completed");
+                Q_UNUSED(aliceIsWhite);
+            }
+            const auto alice = board.reviewSummary({"Alice"});
+            check(alice["games"].toInt() == 2 && alice["moves"].toLongLong() > 0,
+                  "Both games count for a player who played each colour");
+            check(alice["all"].isValid() && alice["opening"].isValid(),
+                  "The aggregate carries an overall and an opening mark");
+            check(!alice["endgame"].isValid(), "A phase no game reached stays unmeasured");
+            const auto bob = board.reviewSummary({"Bob"});
+            check(bob["games"].toInt() == 2 && bob["all"].toDouble() != alice["all"].toDouble(),
+                  "Each player is scored from the side he actually played");
+            check(board.reviewSummary({"alice"})["games"].toInt() == 2,
+                  "Nicknames are matched without regard to case");
+            check(board.reviewSummary({})["games"].toInt() == 0, "No nickname means nothing to measure");
+            const auto history = board.reviewHistory({"Alice"}, 12);
+            check(history.size() == 2 && history.first().toMap()["period"].toString() == "2026.10",
+                  "History is grouped by month, most recent first");
+            check(history.first().toMap()["games"].toInt() == 1, "Each month counts its own games");
+        }
         rejects([&] { db.validateOutputPath(db.path()); });
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
         // Un lien symbolique vers la base ne doit pas servir de cible d'export : il
@@ -373,7 +422,7 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 9, "Schema version 9");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 10, "Schema version 10");
                 check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
                           q.value(0).toString() == "integer",
                       "Positions are stored as integers");

@@ -41,6 +41,13 @@ class Database {
     // Parmi les `count` parties les plus récentes, celles qui restent à passer en revue :
     // non supprimées et pas déjà parcourues à une profondeur au moins égale.
     QVariantList recentGamesToReview(int count, int depth) const;
+    // Bilan agrégé des parties d'un joueur. `names` sont les pseudos sous lesquels il
+    // joue : un profil en rassemble plusieurs. Seules les parties déjà passées en revue
+    // comptent, et chaque note est prise du côté où le joueur se trouvait.
+    QVariantMap reviewSummary(const QStringList &names) const;
+    // Même bilan, découpé par mois, du plus récent au plus ancien. Sert à comparer le
+    // joueur à sa propre progression plutôt qu'à une référence extérieure.
+    QVariantList reviewHistory(const QStringList &names, int months = 12) const;
     QVariantList analysisJobs() const;
     QVariantMap analysisJob(qint64 id, bool includePgn = true) const;
     QVariantList analysisResults(qint64 id, int offset = 0, int limit = 200) const;
@@ -125,6 +132,9 @@ class Database {
     void upgradeV6(int originalVersion);
     void upgradeV7(int originalVersion);
     void upgradeV9(int originalVersion);
+    void upgradeV10(int originalVersion);
+    // Calcule et enregistre le bilan chiffré d'une analyse menée à son terme.
+    void recordGameReview(qint64 job, qint64 game, int depth);
     qint64 registerSource(const QVariantMap &source);
     void linkSource(qint64 source, qint64 game);
     void recordImport(qint64 source, const QString &file, const QString &digest, int processed, int added);

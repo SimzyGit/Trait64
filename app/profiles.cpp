@@ -264,3 +264,68 @@ void Controller::applyFideRatings(int index, const QStringList &requested, const
         fail(e);
     }
 }
+
+QVariantMap Controller::skillDashboard(int profileIndex) const {
+    try {
+        const auto all = profiles();
+        if (profileIndex < 0 || profileIndex >= all.size())
+            return {{"ready", false}, {"reason", "Choisissez un profil."}};
+        const auto profile = all[profileIndex].toMap();
+        // Les parties sont rangées sous le pseudo du site : un profil mesure donc ce que
+        // ses comptes rattachés ont joué, et rien d'autre.
+        QStringList names;
+        for (const auto &value : profile["accounts"].toList())
+            names << value.toMap()["user"].toString();
+        names.removeDuplicates();
+        if (names.isEmpty())
+            return {{"ready", false},
+                    {"reason", "Rattachez un compte à ce profil pour mesurer vos parties."},
+                    {"name", profile["name"]}};
+        const auto summary = db_->reviewSummary(names);
+        if (summary["games"].toInt() == 0)
+            return {{"ready", false},
+                    {"reason", "Aucune partie passée en revue. Lancez un bilan depuis l’écran Comptes."},
+                    {"name", profile["name"]},
+                    {"accounts", names}};
+        auto history = db_->reviewHistory(names, 13);
+        // Comparaison à soi-même : le mois le plus récent contre la moyenne, pondérée par
+        // les coups, des mois antérieurs. Sans passé, il n'y a rien à comparer, et un
+        // écart inventé vaudrait moins que pas d'écart du tout.
+        QVariant trend;
+        if (history.size() >= 2) {
+            const auto latest = history.first().toMap();
+            double weighted = 0;
+            qint64 moves = 0;
+            for (int i = 1; i < history.size(); ++i) {
+                const auto row = history[i].toMap();
+                if (row["accuracy"].isValid()) {
+                    weighted += row["accuracy"].toDouble() * row["moves"].toDouble();
+                    moves += row["moves"].toLongLong();
+                }
+            }
+            if (moves > 0 && latest["accuracy"].isValid())
+                trend = qRound(10 * (latest["accuracy"].toDouble() - weighted / double(moves))) / 10.;
+        }
+        auto result = summary;
+        result["ready"] = true;
+        result["name"] = profile["name"];
+        result["accounts"] = names;
+        result["history"] = history;
+        result["trend"] = trend;
+        // Les fautes se lisent par cent coups : un total brut ne dit rien tant qu'on ne
+        // sait pas sur combien de coups il porte.
+        const auto moves = summary["moves"].toLongLong();
+        auto rate = [moves](qint64 count) {
+            return moves > 0 ? QVariant(qRound(1000.0 * double(count) / double(moves)) / 10.) : QVariant();
+        };
+        result["blunderRate"] = rate(summary["blunders"].toLongLong());
+        result["mistakeRate"] = rate(summary["mistakes"].toLongLong());
+        result["inaccuracyRate"] = rate(summary["inaccuracies"].toLongLong());
+        // La tactique ne vient pas des parties mais des exercices résolus : c'est la
+        // seule mesure directe d'une compétence, les parties n'en donnant que le reflet.
+        result["tactics"] = db_->puzzleStats();
+        return result;
+    } catch (const std::exception &e) {
+        return {{"ready", false}, {"reason", QString::fromUtf8(e.what())}};
+    }
+}
