@@ -17,7 +17,7 @@ void require(bool ok, const std::string &message) {
 bool result(const std::string &s) {
     return s == "1-0" || s == "0-1" || s == "1/2-1/2" || s == "*";
 }
-std::string quote(std::string s) {
+std::string quote(const std::string &s) {
     std::string out;
     for (char c : s) {
         if (c == '\\' || c == '"')

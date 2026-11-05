@@ -329,6 +329,9 @@ void Uci::parse(const QString &line) {
                 result << v;
             emit completed(completedFen, result);
         }
+        // La comparaison n'est pas tautologique : « completed » est émis juste au-dessus,
+        // de façon synchrone, et un destinataire qui relance une recherche incrémente
+        // generation_ au passage. On refuse alors de livrer un coup déjà périmé.
         if (deliver && generation == generation_)
             emit bestMove(line.section(' ', 1, 1), completedFen);
         beginSearch();
