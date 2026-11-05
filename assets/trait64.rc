@@ -1,0 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// L'icône d'un programme Windows ne vient ni du fichier .desktop ni de setWindowIcon :
+// elle est compilée dans le binaire. Windows retient celle qui porte le plus petit
+// identifiant pour représenter l'exécutable, d'où le 1.
+1 ICON "trait64.ico"
