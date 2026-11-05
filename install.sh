@@ -6,7 +6,7 @@
 set -euo pipefail
 
 repo="SimzyGit/Trait64"
-api="${T64_API_URL:-https://api.github.com/repos/${repo}/releases?per_page=20}"
+api="${T64_API_URL:-https://api.github.com/repos/${repo}/releases?per_page=100}"
 bin_dir="${HOME}/.local/bin"
 app_dir="${HOME}/.local/share/applications"
 icon_dir="${HOME}/.local/share/icons/hicolor/scalable/apps"
@@ -50,16 +50,21 @@ fi
 read -r version asset_url sums_url asset_name < <(python3 - "${work}/releases.json" "${mode}" "${debian}" <<'PY'
 import json, sys
 releases, mode, debian = json.load(open(sys.argv[1])), sys.argv[2], sys.argv[3]
+suffix = f"_debian{debian}_amd64.deb" if mode == "deb" else "-linux-x86_64.AppImage"
+candidates = []
 for release in releases:
     if release.get("draft"):
         continue
     assets = {a["name"]: a["browser_download_url"] for a in release.get("assets", [])}
-    wanted = [n for n in assets if (n.endswith(f"_debian{debian}_amd64.deb") if mode == "deb" else n.endswith("-linux-x86_64.AppImage"))]
+    wanted = sorted(n for n in assets if n.endswith(suffix))
     if wanted and "SHA256SUMS" in assets:
-        print(release["tag_name"], assets[wanted[0]], assets["SHA256SUMS"], wanted[0])
-        break
-else:
+        candidates.append((release.get("published_at") or "", release["tag_name"],
+                           assets[wanted[0]], assets["SHA256SUMS"], wanted[0]))
+if not candidates:
     sys.exit("Aucune version publiée ne contient ce fichier.")
+# L'API classe par nom d'étiquette, où « dev.99 » passe avant « dev.126 ». Seule la date
+# de publication, comparable telle quelle en ISO 8601, désigne la version la plus récente.
+print(*max(candidates)[1:])
 PY
 )
 echo "Téléchargement de Trait64 ${version} (${asset_name})…"
