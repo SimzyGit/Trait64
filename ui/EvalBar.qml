@@ -46,7 +46,9 @@ Item {
         }
     }
 
-    opacity: known ? 1 : 0.45
+    // Au repos la barre doit rester lisible comme un blanc et un noir : trop effacée, elle
+    // vire au gris sur gris et ne se lit plus comme un échiquier.
+    opacity: known ? 1 : 0.72
     Behavior on opacity {
         enabled: !root.backend.preferences.reduceMotion
         NumberAnimation { duration: 150 }

@@ -324,7 +324,10 @@ objectName:"analysisSplit"
                             readonly property real side:Math.max(0,Math.min(width-12-barSpace,height-12))*controller.preferences.boardScale
                             Row {
                                 anchors.centerIn:parent;spacing:boardArea.barSpace>0?8:0
-                                EvalBar {visible:boardArea.barSpace>0;width:18;height:boardArea.side;anchors.verticalCenter:parent.verticalCenter;backend:controller;flipped:controller.state.flipped}
+                                // Hauteur tenue de l'échiquier lui-même, et non recalculée à
+                                // côté : deux calculs parallèles finissent toujours par
+                                // diverger d'un arrondi, et la barre ne tombe plus juste.
+                                EvalBar {visible:boardArea.barSpace>0;width:18;height:chessboard.height;anchors.verticalCenter:parent.verticalCenter;backend:controller;flipped:controller.state.flipped}
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
@@ -628,9 +631,12 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         function onShowAnalysis(){win.page=2}
         function onShowAnalysisQueue(){analysisQueueDialog.open()}
     }
-    Popup {id:toast;parent:Overlay.overlay;property bool error:false;x:(parent.width-width)/2;y:Math.max(8,parent.height-height-64);width:Math.min(760,win.width-280);height:toastLabel.implicitHeight+topPadding+bottomPadding;padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
+    Popup {id:toast;parent:Overlay.overlay;property bool error:false;x:(parent.width-width)/2;y:Math.max(8,parent.height-height-34);width:Math.min(760,win.width-280);height:toastLabel.implicitHeight+topPadding+bottomPadding;padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
         background:Rectangle {color:toast.error?"#633c37":win.raised;border.color:toast.error?"#a86559":win.line;radius:2}
-        contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg}
+        // Il se pose devant les boutons de navigation : au moins qu'un clic l'écarte, au
+        // lieu d'obliger à attendre qu'il s'efface.
+        contentItem:Label {id:toastLabel;wrapMode:Text.WordWrap;color:toast.error?"#ffffff":win.fg
+            MouseArea {anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:toast.close()}}
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
     Preparation {id:preparationDialog;objectName:"preparationDialog";backend:controller}
