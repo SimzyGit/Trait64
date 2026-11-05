@@ -191,7 +191,8 @@ class Controller : public QObject {
     Q_INVOKABLE void setAccountProfile(int accountIndex, const QString &profileName);
     // Un classement à 0 se lit « pas classé dans cette cadence », ce qui est courant.
     Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName,
-                                    int standard, int rapid, int blitz);
+                                    int standard, int rapid, int blitz, const QString &title = {},
+                                    const QString &federation = {});
     // Télécharge les listes publiées et reporte les classements sur le profil. `speeds`
     // ne contient que les cadences voulues : chacune est un téléchargement séparé.
     Q_INVOKABLE void fetchFideRatings(int index, const QStringList &speeds);

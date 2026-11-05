@@ -361,6 +361,15 @@ int main(int argc, char **argv) {
             check(messages.size() == before + 1, "Reviewing an unknown profile reports exactly one error");
             c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 0, 1950);
             const auto fide = c.profiles()[0].toMap();
+            // Titre et fédération se saisissent à la main : télécharger la liste mensuelle
+            // pour le seul titre coûterait des dizaines de mégaoctets.
+            c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 0, 1950, "gm", "fra");
+            const auto titled = c.profiles()[0].toMap();
+            check(titled["fideTitle"] == "GM" && titled["fideCountry"] == "FRA",
+                  "A typed title and federation are kept, in upper case");
+            c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 0, 1950);
+            check(c.profiles()[0].toMap()["fideTitle"].toString().isEmpty(),
+                  "Leaving the title empty clears it rather than keeping a stale one");
             check(fide["fideId"] == "1503014" && fide["fideStandard"].toInt() == 2100 &&
                       !fide["fideRapid"].isValid() && fide["fideBlitz"].toInt() == 1950,
                   "FIDE details are kept, and an unrated speed stays empty rather than zero");

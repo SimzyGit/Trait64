@@ -148,7 +148,7 @@ void Controller::setAccountProfile(int accountIndex, const QString &profileName)
 }
 
 void Controller::setFideDetails(int index, const QString &fideId, const QString &fideName, int standard,
-                                int rapid, int blitz) {
+                                int rapid, int blitz, const QString &title, const QString &federation) {
     try {
         auto list = settings_.value("profiles").toList();
         require(index >= 0 && index < list.size(), "Profil introuvable.");
@@ -165,6 +165,10 @@ void Controller::setFideDetails(int index, const QString &fideId, const QString 
         auto profile = list[index].toMap();
         profile["fideId"] = id;
         profile["fideName"] = fideName.simplified().left(100);
+        // Saisissables à la main : télécharger la liste mensuelle pour le seul titre
+        // coûterait des dizaines de mégaoctets. Une lecture de la liste les écrasera.
+        profile["fideTitle"] = title.simplified().left(6).toUpper();
+        profile["fideCountry"] = federation.simplified().left(3).toUpper();
         profile["fideStandard"] = rating(standard);
         profile["fideRapid"] = rating(rapid);
         profile["fideBlitz"] = rating(blitz);

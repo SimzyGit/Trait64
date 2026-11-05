@@ -52,10 +52,16 @@ ColumnLayout {
 
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
-                    Label {
-                        text: card.modelData.name; font.bold: true; elide: Text.ElideRight
+                    // Titre et fédération viennent de la fiche FIDE quand elle est
+                    // rattachée : le titre se détache du nom, comme sur Lichess.
+                    PlayerName {
                         Layout.fillWidth: true
-                        font.pixelSize: Math.round(15 * root.uiZoom)
+                        preferences: root.backend.preferences
+                        playerName: card.modelData.name
+                        title: card.modelData.fideTitle || ""
+                        federation: card.modelData.fideCountry || ""
+                        pointSize: 15
+                        nameWeight: Font.Bold
                     }
                     TButton {
                         text: qsTr("Renommer")
@@ -134,9 +140,12 @@ ColumnLayout {
             standard.value = profile.fideStandard || 0
             rapid.value = profile.fideRapid || 0
             blitz.value = profile.fideBlitz || 0
+            fideTitle.text = profile.fideTitle || ""
+            fideCountry.text = profile.fideCountry || ""
         }
         onAccepted: root.backend.setFideDetails(index, identifier.text, fullName.text,
-                                                standard.value, rapid.value, blitz.value)
+                                                standard.value, rapid.value, blitz.value,
+                                                fideTitle.text, fideCountry.text)
         ColumnLayout {
             anchors.fill: parent; spacing: 8
             Label {
@@ -153,6 +162,16 @@ ColumnLayout {
                 }
                 Label { text: qsTr("Nom") }
                 TextField { id: fullName; Layout.fillWidth: true; selectByMouse: true }
+                Label { text: qsTr("Titre") }
+                TextField {
+                    id: fideTitle; objectName: "fideTitle"; Layout.fillWidth: true; selectByMouse: true
+                    placeholderText: qsTr("GM, IM, FM, WGM… laissez vide sans titre")
+                }
+                Label { text: qsTr("Fédération") }
+                TextField {
+                    id: fideCountry; objectName: "fideCountry"; Layout.fillWidth: true; selectByMouse: true
+                    placeholderText: qsTr("code à trois lettres, par exemple FRA")
+                }
                 Label { text: qsTr("Classique") }
                 SpinBox { id: standard; from: 0; to: 3000; editable: true }
                 Label { text: qsTr("Rapide") }
@@ -188,7 +207,8 @@ ColumnLayout {
                         if (wantRapid.checked) speeds.push("rapid")
                         if (wantBlitz.checked) speeds.push("blitz")
                         root.backend.setFideDetails(fide.index, identifier.text, fullName.text,
-                                                    standard.value, rapid.value, blitz.value)
+                                                    standard.value, rapid.value, blitz.value,
+                                                    fideTitle.text, fideCountry.text)
                         root.backend.fetchFideRatings(fide.index, speeds)
                     }
                 }
