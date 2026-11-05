@@ -1,3 +1,37 @@
+## Précision, profils et trois systèmes — 5 novembre 2026
+
+Trait64 s'installe désormais sur **Linux, Windows et macOS**. Sous Linux, une
+seule commande suffit, sans compilation ni mot de passe :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/SimzyGit/Trait64/main/install.sh | bash
+```
+
+Le paquet Debian s'installe par `sudo apt install ./fichier.deb`, l'archive
+Windows se décompresse, l'image macOS se glisse dans Applications. Les paquets
+ne sont pas signés : SmartScreen et Gatekeeper demandent une confirmation.
+
+**Précision à la manière de Lichess.** Le bilan d'une partie donne un
+pourcentage de précision pour l'ensemble, puis séparément pour l'ouverture, le
+milieu de jeu et la finale. Gaffes, erreurs et imprécisions sont situées et
+comptées. Le calcul part des chances de gain, pas des centipions bruts.
+
+**Bilan de toute une base.** Après une synchronisation ou un import, un bouton
+passe en revue le lot entier à la profondeur choisie — Court, Moyen,
+Approfondi, ou une valeur libre — sans refaire ce qui a déjà été vu aussi loin.
+
+**Profils de joueur.** Un seul profil rassemble vos comptes Lichess et
+Chess.com et votre fiche FIDE, dont les classements sont lus dans les listes
+mensuelles officielles de la fédération.
+
+**Tableau de bord des compétences.** Précision par phase, gaffes pour cent
+coups, réussite tactique et progression mois par mois, agrégés sur vos parties.
+La comparaison se fait avec vous-même, pas avec une moyenne inventée.
+
+Corrections notables : l'import ne plante plus sous Windows, l'icône s'affiche
+sur les trois systèmes, et le paquet Debian ne déclare plus deux dépendances
+recommandées introuvables qui le faisaient refuser à l'installation.
+
 ## Carnet de coups côte à côte — 28 octobre 2026
 
 Le lecteur de l'espace Analyse présente désormais une ligne par numéro de coup,
