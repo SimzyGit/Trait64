@@ -40,7 +40,7 @@ ApplicationWindow {
     property bool exportAll: false
     property string promotionPrefix: ""
     property int selectedGame: 0
-    property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils")]
+    property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils"), qsTr("Études")]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
@@ -629,6 +629,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             }
             Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onImportOnline:accountsDialog.open()}
             ProfilePage {objectName:"profilePage";backend:controller}
+            StudiesPage {objectName:"studiesPage";backend:controller;onOpenDetails:repertoiresDialog.open()}
         }
     }
     footer:Rectangle {
@@ -826,7 +827,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:helpScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:helpScroll.availableWidth;spacing:15
             Label {objectName:"helpTitle";Layout.fillWidth:true;Layout.minimumWidth:0;wrapMode:Text.WordWrap;text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
-            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
+            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:qsTr("Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne");Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;lineHeight:1.6}
             Label {text:qsTr("Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
         }}

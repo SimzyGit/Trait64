@@ -102,6 +102,9 @@ class Controller : public QObject {
     Q_INVOKABLE void deleteRepertoire(qint64 id);
     Q_INVOKABLE void addStudyToRepertoire(qint64 id);
     Q_INVOKABLE void importRepertoire(qint64 id, const QString &url);
+    // Un dossier d'études, tel que l'exportent En Croissant et Pawn Appétit : un
+    // répertoire par fichier PGN, sous-dossiers compris, nommés d'après leur chemin.
+    Q_INVOKABLE void importRepertoireFolder(const QString &url, bool white = true);
     Q_INVOKABLE void exportRepertoire(qint64 id, const QString &url);
     Q_INVOKABLE void editRepertoireMove(qint64 id, const QString &fen, const QString &uci,
                                         const QString &note, bool principal);

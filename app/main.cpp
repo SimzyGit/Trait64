@@ -66,13 +66,13 @@ int main(int argc, char *argv[]) {
                 window->resize(qEnvironmentVariableIntValue("T64_SCREENSHOT_WIDTH"),
                                qEnvironmentVariableIntValue("T64_SCREENSHOT_HEIGHT"));
             // Traverse every page so that QML delegates and lazy models are exercised.
-            for (int i = 0; i < 8; ++i)
+            for (int i = 0; i < 9; ++i)
                 QTimer::singleShot(150 + i * 170, &app, [window, i] { window->setProperty("page", i); });
             QTimer::singleShot(1500, &app, [window, &controller] {
                 const int page = qEnvironmentVariableIsSet("T64_SCREENSHOT_PAGE")
                                      ? qEnvironmentVariableIntValue("T64_SCREENSHOT_PAGE")
                                      : 2;
-                window->setProperty("page", qBound(0, page, 7));
+                window->setProperty("page", qBound(0, page, 8));
                 // « dark » manquait : on ne pouvait capturer que le thème clair, donc
                 // vérifier la moitié de ce que l'on voulait voir.
                 const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");

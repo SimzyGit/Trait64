@@ -39,6 +39,8 @@ Item {
           hint: qsTr("Fiches des joueurs de votre base et de vos comptes.") },
         { text: qsTr("Profils"), icon: "players", page: 7,
           hint: qsTr("Vos comptes sous un seul nom, le bilan de vos parties et vos progrès.") },
+        { text: qsTr("Études"), icon: "openings", page: 8,
+          hint: qsTr("Vos répertoires : les créer, les réviser, importer ceux d'un autre logiciel.") },
         { text: qsTr("Outils"), icon: "tools", page: 5,
           hint: qsTr("Comparer des moteurs, organiser un tournoi, jouer une partie.") },
         { text: qsTr("Paramètres"), icon: "settings", action: "settingsDialog",

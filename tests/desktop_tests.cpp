@@ -1188,6 +1188,43 @@ int main(int argc, char **argv) {
             c.renameRepertoire(id, "Ouvertures");
             waitRepertoire();
             check(c.repertoireState()["name"] == "Ouvertures", "Repertoire editor updates persisted name");
+            {
+                // Migrer depuis En Croissant ou Pawn Appétit, c'est reprendre un dossier de
+                // PGN répartis en sous-dossiers, pas un fichier à la fois.
+                const auto folder = dir.path() + "/etudes";
+                check(QDir().mkpath(folder + "/Noirs"), "Create a nested study folder");
+                auto write = [&](const QString &path, const QByteArray &pgn) {
+                    QFile file(path);
+                    check(file.open(QIODevice::WriteOnly) && file.write(pgn) == pgn.size(), "Write study file");
+                };
+                write(folder + "/Italienne.pgn", "1.e4 e5 2.Nf3 Nc6 3.Bc4 (3.Bb5 a6) Bc5 *\n");
+                write(folder + "/Noirs/Caro-Kann.pgn", "1.e4 c6 2.d4 d5 *\n");
+                write(folder + "/casse.pgn", "1.e4 coup-invalide *\n");
+                QList<qint64> established;
+                for (const auto &row : c.repertoires())
+                    established << row.toMap()["id"].toLongLong();
+                c.importRepertoireFolder(QUrl::fromLocalFile(folder).toString());
+                waitRepertoire();
+                QStringList names;
+                for (const auto &row : c.repertoires())
+                    names << row.toMap()["name"].toString();
+                check(c.repertoires().size() == established.size() + 2,
+                      "A folder yields one repertoire per readable PGN, subfolders included");
+                check(names.contains("Italienne"), "A study keeps the name of its file");
+                check(names.contains("Noirs/Caro-Kann"), "A study in a subfolder keeps its relative path");
+                check(!names.contains("casse"), "An unreadable file is set aside, not created empty");
+                // Le scénario continue sur le répertoire d'origine : ce bloc lui rend l'état
+                // qu'il a trouvé, sélection comprise.
+                for (const auto &row : c.repertoires()) {
+                    const auto imported = row.toMap()["id"].toLongLong();
+                    if (!established.contains(imported)) {
+                        c.deleteRepertoire(imported);
+                        waitRepertoire();
+                    }
+                }
+                c.selectRepertoire(id);
+                waitRepertoire();
+            }
             c.removeRepertoireMove(id, c.state()["fen"].toString(), "d2d4");
             waitRepertoire();
             check(c.repertoireState()["moves"].toList().size() == 1, "Editor removes chosen continuation");

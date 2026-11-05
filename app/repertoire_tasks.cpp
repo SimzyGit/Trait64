@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include <QDirIterator>
 #include <QSaveFile>
 #include <QtConcurrent>
 
@@ -178,6 +179,55 @@ void Controller::importRepertoire(qint64 id, const QString &url) {
             RepertoireResult result;
             result.selected = id;
             result.message = QString("%1 partie(s) ajoutée(s), avec variantes et transpositions.").arg(count);
+            return result;
+        });
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::importRepertoireFolder(const QString &url, bool white) {
+    try {
+        const auto root = localPath(url);
+        startRepertoireTask("Import du dossier d’études…", [root, white](auto &db, const auto &progress) {
+            // En Croissant et Pawn Appétit rangent chaque répertoire dans son propre PGN,
+            // souvent répartis en sous-dossiers. On reprend l'arborescence telle quelle :
+            // un répertoire par fichier, nommé d'après son chemin relatif.
+            QStringList files;
+            QDirIterator walk(root, {"*.pgn", "*.PGN"}, QDir::Files, QDirIterator::Subdirectories);
+            while (walk.hasNext() && files.size() < 500)
+                files << walk.next();
+            require(!files.isEmpty(), "Aucun fichier PGN dans ce dossier.");
+            files.sort();
+            const QDir base(root);
+            RepertoireResult result;
+            int created = 0, games = 0;
+            QStringList refused;
+            for (const auto &file : files) {
+                auto name = base.relativeFilePath(file);
+                name.chop(QFileInfo(file).suffix().size() + 1);
+                // Un fichier illisible ne doit pas emporter la migration entière : on le met
+                // de côté et on le nomme à la fin. Le répertoire naît avant la lecture, donc
+                // un échec laisserait une coquille vide derrière lui : on la retire.
+                qint64 id = 0;
+                try {
+                    id = db.createRepertoire(name, white, t64::Game{}, progress);
+                    games += db.importRepertoireFile(id, file, progress);
+                    result.selected = id;
+                    ++created;
+                } catch (const std::exception &) {
+                    if (id)
+                        try {
+                            db.deleteRepertoire(id);
+                        } catch (const std::exception &) {
+                        }
+                    refused << name;
+                }
+            }
+            require(created > 0, "Aucun fichier de ce dossier n’a pu être lu comme répertoire.");
+            result.message = QString("%1 répertoire(s) créé(s), %2 partie(s) lue(s).").arg(created).arg(games);
+            if (!refused.isEmpty())
+                result.message += QString(" Laissés de côté : %1.").arg(refused.join(", "));
             return result;
         });
     } catch (const std::exception &e) {
