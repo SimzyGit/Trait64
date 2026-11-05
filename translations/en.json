@@ -925,5 +925,7 @@
   "Choisissez un profil.": "Choose a profile.",
   "Rattachez un compte à ce profil pour mesurer vos parties.": "Link an account to this profile to measure your games.",
   "Aucune partie passée en revue. Lancez un bilan depuis l’écran Comptes.": "No game reviewed yet. Start a review from the Accounts screen.",
-  "Retirer ce jeu de pièces": "Remove this piece set"
+  "Retirer ce jeu de pièces": "Remove this piece set",
+  "Page %1 · %2 partie(s)%3": "Page %1 · %2 game(s)%3",
+  " · suite disponible": " · more available"
 }

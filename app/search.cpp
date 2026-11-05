@@ -16,11 +16,14 @@ void Controller::initLibrarySearch() {
                 games_.removeLast();
             librarySearching_ = false;
             librarySearchStatus_ = result.error.isEmpty()
-                                       ? QString("Page %1 · %2 partie(s)%3")
+                                       // Ce compteur est le seul texte de la page
+                                       // restait en français quand l'interface est en
+                                       // anglais : il passe par la traduction.
+                                       ? tr("Page %1 · %2 partie(s)%3")
                                              .arg(libraryPage())
                                              .arg(games_.size())
-                                             .arg(libraryHasNext_ ? " · suite disponible" : "")
-                                       : "Recherche impossible.";
+                                             .arg(libraryHasNext_ ? tr(" · suite disponible") : QString())
+                                       : tr("Recherche impossible.");
             emit libraryChanged();
             emit searchChanged();
             if (!result.error.isEmpty())

@@ -245,6 +245,10 @@ ApplicationWindow {
                     }
                 }
                 ListView {id:libraryList;objectName:"libraryResults";Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
+                    // Les lignes sont recyclées plutôt que créées puis détruites : une
+                    // bibliothèque de plusieurs centaines de parties défilait en
+                    // reconstruisant chaque ligne, colonnes comprises.
+                    reuseItems:true
                     readonly property bool detailed:width>900*win.textScale
                     readonly property var columns:({number:40*win.textScale,elo:42*win.textScale,result:56*win.textScale,moves:44*win.textScale,
                                                     eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
@@ -273,7 +277,9 @@ ApplicationWindow {
                             Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;Layout.maximumWidth:libraryList.columns.moves;Layout.minimumWidth:0;color:win.muted}
                             Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco;Layout.maximumWidth:libraryList.columns.eco;Layout.minimumWidth:0;elide:Text.ElideRight}
                             Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;Layout.maximumWidth:libraryList.columns.event;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
-                            Label {text:modelData.date;Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
+                            // Le PGN note une date inconnue « ????.??.?? » : un tiret se
+                            // lit mieux dans une colonne, et dit la même chose.
+                            Label {text:modelData.date && modelData.date.indexOf("?")<0 ? modelData.date : "—";Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
                             RowLayout {Layout.fillWidth:false;Layout.preferredWidth:libraryList.columns.actions;Layout.maximumWidth:libraryList.columns.actions;spacing:2
                                 TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
                                 TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}

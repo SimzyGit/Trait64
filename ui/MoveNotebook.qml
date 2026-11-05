@@ -243,6 +243,9 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: ScrollBar {}
             highlightFollowsCurrentItem: false
+            // Une partie longue avec ses variantes fait beaucoup de lignes : on les
+            // recycle au défilement plutôt que de les rebâtir une à une.
+            reuseItems: true
             delegate: Column {
                 id: row
                 required property var modelData

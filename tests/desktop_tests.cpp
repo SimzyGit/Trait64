@@ -1067,7 +1067,9 @@ int main(int argc, char **argv) {
             check(c.games().size() == 1, "A new search works after cancellation");
             c.searchAdvanced({{"ecoFrom", "invalid"}});
             waitSearch();
-            check(c.games().empty() && c.librarySearchStatus() == "Recherche impossible.",
+            // Le texte dépend de la langue depuis qu'il passe par la traduction : on
+            // vérifie qu'il dit l'échec, pas qu'il le dit en français.
+            check(c.games().empty() && c.librarySearchStatus() == c.uiText("Recherche impossible."),
                   "Worker error clears stale rows and reaches the user");
             c.searchLibrary({}, {}, false, false, false, {{"openingName", "française"}});
             waitSearch();

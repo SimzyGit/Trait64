@@ -8,8 +8,13 @@ Item {
         id: svg
         anchors.fill: parent
         source: !root.code || root.pieceStyle === "unicode" ? "" : root.pieceStyle === "custom" ? "file://"+root.customPath+"/"+root.code+".svg" : "qrc:/assets/pieces/"+root.pieceStyle+"/"+root.code+".svg"
-        sourceSize.width: Math.ceil(width*2)
-        sourceSize.height: Math.ceil(height*2)
+        // Qt redessine le SVG dès que sourceSize change d'un seul pixel : en tirant la
+        // poignée d'un panneau, c'était soixante-quatre pièces redécodées à chaque
+        // image. On arrondit au palier supérieur — la netteté est la même, le
+        // redimensionnement ne redessine plus qu'une fois tous les huit pixels.
+        readonly property int raster: Math.max(32, Math.ceil(Math.max(root.width, root.height)*2/16)*16)
+        sourceSize.width: raster
+        sourceSize.height: raster
         fillMode: Image.PreserveAspectFit
         smooth: true
         visible: status === Image.Ready
