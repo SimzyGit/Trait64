@@ -240,7 +240,12 @@ ApplicationWindow {
                                                     eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
                     ScrollBar.vertical:ScrollBar {}
                     delegate:Rectangle {required property var modelData;required property int index
-                        width:libraryList.width;height:24*win.textScale;color:index%2?win.bg:win.panel
+                        // Des lignes de 24 pixels sans état de survol : on ne savait pas
+                        // laquelle on visait avant de cliquer.
+                        width:libraryList.width;height:24*win.textScale
+                        color:rowHover.hovered?Qt.rgba(win.accent.r,win.accent.g,win.accent.b,controller.preferences.highContrast?.3:.15)
+                                              :(index%2?win.bg:win.panel)
+                        HoverHandler {id:rowHover}
                         Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;opacity:.5}
                         RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
                             Label {text:modelData.id;Layout.preferredWidth:libraryList.columns.number;color:win.muted;elide:Text.ElideRight}
@@ -311,9 +316,21 @@ objectName:"analysisSplit"
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):((controller.state.flipped?controller.state.tags.WhiteElo:controller.state.tags.BlackElo)||"");color:win.muted}
                         }
                         Item {
+                            id:boardArea
                             Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:200
-                            Rectangle {width:chessboard.width+12;height:width;anchors.centerIn:parent;color:"transparent";border.color:win.line}
-                            Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:Math.min(parent.width-12,parent.height-12);height:width;anchors.centerIn:parent}
+                            // La barre prend sa place d'abord : si l'échiquier se dimensionnait
+                            // sur la largeur totale, les deux se poursuivraient sans se poser.
+                            readonly property real barSpace:controller.preferences.evalBar?26:0
+                            readonly property real side:Math.max(0,Math.min(width-12-barSpace,height-12))*controller.preferences.boardScale
+                            Row {
+                                anchors.centerIn:parent;spacing:boardArea.barSpace>0?8:0
+                                EvalBar {visible:boardArea.barSpace>0;width:18;height:boardArea.side;anchors.verticalCenter:parent.verticalCenter;backend:controller;flipped:controller.state.flipped}
+                                Item {
+                                    width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
+                                    Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
+                                    Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
+                                }
+                            }
                         }
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
                             Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#1d2125":"#ffffff";border.color:"#1d2125"}
@@ -417,6 +434,22 @@ objectName:"analysisSplit"
                                         onTextChanged:if(activeFocus&&text!==controller.state.comment)controller.setComment(text)
                                     }
                                 }
+                            }
+                        }
+                        // Courbe du bilan, à côté de l'échiquier : on suit la partie sans
+                        // rouvrir la boîte de dialogue. Absente tant qu'aucun bilan n'existe,
+                        // pour ne pas prendre une place qu'elle ne saurait remplir.
+                        Rectangle {
+                            visible:controller.review.length>0
+                            SplitView.preferredHeight:112*win.textScale;SplitView.minimumHeight:74;SplitView.maximumHeight:210
+                            color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4
+                                RowLayout {Layout.fillWidth:true;spacing:6
+                                    Label {text:qsTr("Bilan");font.weight:Font.DemiBold}
+                                    Label {text:qsTr("Évaluations du point de vue des Blancs");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    TButton {text:qsTr("Détails");flat:true;onClicked:reviewDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ouvrir le bilan complet : précision par phase, fautes expliquées, exercices.")}
+                                }
+                                EvalGraph {Layout.fillWidth:true;Layout.fillHeight:true;backend:controller}
                             }
                         }
                         // Engine pane.
@@ -735,8 +768,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             CheckBox {text:qsTr("Sauvegardes automatiques (14 instantanés)");checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
             TButton {text:qsTr("Créer une sauvegarde automatique maintenant");onClicked:controller.automaticBackup()}
             GridLayout {columns:settingsScroll.availableWidth>700*win.textScale?4:2;columnSpacing:14;rowSpacing:10;Layout.fillWidth:true
-                Label {text:"Threads";color:win.muted} SpinBox {from:1;to:32;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
-                Label {text:qsTr("Mémoire (Mio)");color:win.muted} SpinBox {from:16;to:4096;stepSize:16;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
+                Label {text:qsTr("Fils de calcul");color:win.muted;ToolTip.visible:threadsHover.hovered;ToolTip.text:qsTr("Votre processeur offre %1 cœurs. Trait64 en laisse un libre pour que la machine reste fluide pendant l’analyse.").arg(controller.preferences.cpuCores);HoverHandler {id:threadsHover}}
+                SpinBox {from:1;to:32;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
+                Label {text:qsTr("Mémoire (Mio)");color:win.muted;ToolTip.visible:hashHover.hovered;ToolTip.text:qsTr("Table de hachage du moteur. Votre machine dispose de %1 Mio.").arg(Math.round(controller.preferences.memoryMb));HoverHandler {id:hashHover}}
+                SpinBox {from:16;to:4096;stepSize:16;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
                 Label {text:qsTr("Variantes");color:win.muted} SpinBox {from:1;to:5;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
                 Label {text:qsTr("Niveau de jeu");color:win.muted} SpinBox {from:0;to:20;value:controller.preferences.skill;onValueModified:controller.setPreference("skill",value)}
                 Label {text:qsTr("Réflexion (ms)");color:win.muted} SpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}

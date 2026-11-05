@@ -19,16 +19,28 @@ Item {
     // Les index de pages sont ceux de Main.qml en octobre 2026.
     // Les sections sans page autonome ouvrent un dialogue existant.
     readonly property var sections: [
-        { text: qsTr("Accueil"), icon: "home", page: 0 },
-        { text: qsTr("Analyse"), icon: "analysis", page: 2 },
-        { text: qsTr("Bibliothèque"), icon: "library", page: 1 },
-        { text: qsTr("Ouvertures"), icon: "openings", page: 3 },
-        { text: qsTr("Entraînement"), icon: "training", page: 4 },
-        { text: qsTr("Préparation"), icon: "preparation", action: "preparationDialog" },
-        { text: qsTr("Moteurs"), icon: "engines", action: "engineSettings" },
-        { text: qsTr("Joueurs"), icon: "players", page: 6 },
-        { text: qsTr("Outils"), icon: "tools", page: 5 },
-        { text: qsTr("Paramètres"), icon: "settings", action: "settingsDialog" }
+        // « hint » dit ce qu'on trouve derrière chaque entrée : le seul nom ne suffit pas
+        // à qui ouvre le logiciel pour la première fois.
+        { text: qsTr("Accueil"), icon: "home", page: 0,
+          hint: qsTr("Reprendre où vous en étiez, ouvrir une partie d’exemple.") },
+        { text: qsTr("Analyse"), icon: "analysis", page: 2,
+          hint: qsTr("Échiquier, notation, moteur et bilan de la partie en cours.") },
+        { text: qsTr("Bibliothèque"), icon: "library", page: 1,
+          hint: qsTr("Vos bases : importer du PGN, chercher, trier, sauvegarder.") },
+        { text: qsTr("Ouvertures"), icon: "openings", page: 3,
+          hint: qsTr("Arbre statistique de votre base, livres et répertoires.") },
+        { text: qsTr("Entraînement"), icon: "training", page: 4,
+          hint: qsTr("Puzzles, cartes à répétition espacée, révision de répertoire.") },
+        { text: qsTr("Préparation"), icon: "preparation", action: "preparationDialog",
+          hint: qsTr("Constituer un dossier contre un adversaire donné.") },
+        { text: qsTr("Moteurs"), icon: "engines", action: "engineSettings",
+          hint: qsTr("Choisir le moteur, sa puissance et ses variantes.") },
+        { text: qsTr("Joueurs"), icon: "players", page: 6,
+          hint: qsTr("Fiches des joueurs de votre base et de vos comptes.") },
+        { text: qsTr("Outils"), icon: "tools", page: 5,
+          hint: qsTr("Comparer des moteurs, organiser un tournoi, jouer une partie.") },
+        { text: qsTr("Paramètres"), icon: "settings", action: "settingsDialog",
+          hint: qsTr("Apparence, langue, moteur, sauvegardes et mises à jour.") }
     ]
 
     Rectangle { anchors.fill: parent; color: root.preferences.background
@@ -81,8 +93,11 @@ Item {
                     Accessible.role: modelData.page !== undefined ? Accessible.PageTab : Accessible.Button
                     Accessible.selected: active
                     onActiveFocusChanged: if (activeFocus) navScroll.contentItem.contentY = Math.max(0,Math.min(y,navScroll.contentItem.contentHeight-navScroll.availableHeight))
-                    ToolTip.visible: (hovered || visualFocus) && root.collapsed
-                    ToolTip.text: modelData.text
+                    // Replié, le nom manque ; déplié, c'est ce qu'il y a derrière qui manque.
+                    ToolTip.visible: hovered || visualFocus
+                    ToolTip.delay: 350
+                    ToolTip.text: root.collapsed && modelData.hint ? modelData.text + " — " + modelData.hint
+                                                                   : (modelData.hint || modelData.text)
                     contentItem: RowLayout {
                         spacing: 12
                         anchors.leftMargin: 9
@@ -108,13 +123,23 @@ Item {
                         }
                     }
                     background: Rectangle {
+                        // Le survol doit se voir : la teinte « panel » employée jusqu'ici se
+                        // confondait avec le fond de la barre, si bien qu'on ne savait pas
+                        // sur quoi on se trouvait. Une touche d'accent se lit, elle.
+                        readonly property color accent: root.preferences.accentColor
                         radius: 7
-                        color: navButton.active ? root.preferences.raised :
-                               (navButton.hovered ? root.preferences.panel : "transparent")
+                        color: navButton.active ? root.preferences.raised
+                             : navButton.hovered ? Qt.rgba(accent.r, accent.g, accent.b,
+                                                           root.preferences.highContrast ? .3 : .14)
+                             : "transparent"
                         border.width: navButton.visualFocus ? 2 : 1
-                        border.color: navButton.visualFocus ? root.preferences.accentColor : navButton.active ? root.preferences.line : "transparent"
+                        border.color: navButton.visualFocus ? accent
+                                    : navButton.active ? root.preferences.line
+                                    : navButton.hovered ? Qt.rgba(accent.r, accent.g, accent.b, .45)
+                                    : "transparent"
                         Rectangle {
-                            visible: navButton.active
+                            visible: navButton.active || navButton.hovered
+                            opacity: navButton.active ? 1 : .45
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             height: parent.height - 14

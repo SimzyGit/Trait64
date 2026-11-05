@@ -94,16 +94,33 @@ Item {
         property real downY: 0
         property string from: ""
         property bool moved: false
+        // Qt émet doubleClicked au second appui, avant la relâche qui suit : sans ce
+        // drapeau, celle-ci reposerait aussitôt l'annotation qu'on vient d'effacer.
+        property bool cleared: false
         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+        onDoubleClicked: function(mouse) {
+            if(mouse.button===Qt.RightButton){root.backend.clearAnnotations();cleared=true}
+        }
         onPressed: function(mouse) {downX=mouse.x;downY=mouse.y;from=root.squareAt(mouse.x,mouse.y);moved=false;if(mouse.button===Qt.RightButton)root.arrowFrom=from}
         onPositionChanged: function(mouse) {if(pressed && pressedButtons===Qt.LeftButton && Math.abs(mouse.x-downX)+Math.abs(mouse.y-downY)>12){moved=true;root.draggedFrom=from}}
         onReleased: function(mouse) {
             var to=root.squareAt(mouse.x,mouse.y)
+            if(cleared){cleared=false;root.draggedFrom="";return}
             if(mouse.button===Qt.RightButton && to!==""){root.backend.toggleAnnotation(root.arrowFrom,to,(mouse.modifiers & Qt.ShiftModifier)?"R":(mouse.modifiers & Qt.ControlModifier)?"B":(mouse.modifiers & Qt.AltModifier)?"Y":"G")}
             else if(to!==""){if(moved)root.backend.tryMove(from,to);else root.backend.clickSquare(to)}
             root.draggedFrom=""
         }
-        onCanceled: root.draggedFrom=""
+        onCanceled: {root.draggedFrom="";cleared=false}
+    }
+    // Ctrl + molette règle la taille sur place. Sans Ctrl la molette doit continuer à
+    // faire défiler le panneau qui porte l'échiquier, d'où le filtre sur le modificateur.
+    WheelHandler {
+        acceptedModifiers: Qt.ControlModifier
+        onWheel: function(event) {
+            const step = event.angleDelta.y > 0 ? .05 : -.05
+            root.backend.setPreference("boardScale",
+                                       Math.max(.5, Math.min(1, Number(root.prefs.boardScale) + step)))
+        }
     }
     Piece {
         visible: root.draggedFrom!==""

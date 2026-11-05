@@ -85,6 +85,18 @@ TDialog {
                 CheckBox {text:qsTr("Coordonnées");checked:root.backend.preferences.coordinates;onToggled:root.backend.setPreference("coordinates",checked)}
                 CheckBox {text:qsTr("Coups possibles");checked:root.backend.preferences.legalMoves;onToggled:root.backend.setPreference("legalMoves",checked)}
                 CheckBox {text:qsTr("Dernier coup");checked:root.backend.preferences.lastMove;onToggled:root.backend.setPreference("lastMove",checked)}
+                CheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
+                    ToolTip.visible:hovered;ToolTip.text:qsTr("Bande verticale contre l’échiquier : la part claire est l’avantage des Blancs.")}
+            }
+            RowLayout {Layout.fillWidth:true;spacing:10
+                Label {text:qsTr("Taille de l’échiquier");color:root.backend.preferences.muted}
+                Slider {
+                    id:boardSizeSlider;Layout.fillWidth:true;Layout.maximumWidth:260
+                    from:.5;to:1;stepSize:.05;value:root.backend.preferences.boardScale
+                    onMoved:root.backend.setPreference("boardScale",value)
+                    ToolTip.visible:hovered||pressed;ToolTip.text:qsTr("Réglable aussi à la molette, en maintenant Ctrl au-dessus de l’échiquier.")
+                }
+                Label {text:Math.round(root.backend.preferences.boardScale*100)+" %";color:root.backend.preferences.muted}
             }
             TButton {text:qsTr("Rétablir l’apparence par défaut");onClicked:root.backend.resetAppearance()}
             Label {text:qsTr("Pièces : C. M. L. Burnett et A. Hernandez Marroquin (GPL-2.0+), Maurizio Monge (MIT), therealqtpi (AGPL-3.0+). Les choix sont enregistrés automatiquement.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);opacity:.7}
