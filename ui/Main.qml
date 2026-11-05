@@ -213,6 +213,8 @@ ApplicationWindow {
                     TButton {text:qsTr("Mes compétences");objectName:"showSkills";onClicked:skillDialog.open()}
                     TButton {text:qsTr("Imports reprenables");objectName:"showImports";onClicked:importsDialog.open()}
                     TButton {text:qsTr("Exporter cette base");enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
+                    TButton {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onClicked:controller.groupLibraryByOpening()
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.")}
                 }
                 RowLayout {Layout.fillWidth:true;spacing:10
                     TextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}

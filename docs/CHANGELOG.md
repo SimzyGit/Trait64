@@ -1,5 +1,16 @@
 # Changements
 
+## Profils, études et confort — 5 novembre 2026
+
+- **Page Profils** : chaque joueur suivi a sa page, avec « Analyser le profil » qui passe en revue les parties synchronisées encore sans bilan et alimente le tableau de bord.
+- **Onglet Études**, à la manière d'En Croissant et de Pawn Appétit : import d'un dossier entier, y compris les études imbriquées les unes dans les autres.
+- **Ranger par ouverture** (Bibliothèque) : chaque partie reçoit la collection de sa famille d'ouverture d'après son code ECO, sans rien télécharger. Les parties sans code ECO restent inchangées.
+- **Barre d'évaluation** le long de l'échiquier, et courbe de la partie au-dessus du moteur.
+- **Titre et drapeau** : le titre FIDE se détache du nom comme sur Lichess, et le drapeau de la fédération accompagne le joueur.
+- Le logo sert désormais d'icône de l'application, sur les trois systèmes.
+- Plus de bridage du moteur : fils d'exécution et table de hachage suivent la machine.
+- Corrections : les colonnes de la bibliothèque ne tombaient pas sous leurs titres ; le survol d'un menu peignait le texte en noir sur noir ; le `.deb` était refusé par les installateurs graphiques de Debian ; Windows et macOS annonçaient une version de développement.
+
 ## Bilan, comptes en ligne et installation — 3 novembre 2026
 
 - **Bilan en deux passages** : un premier passage rapide va du début vers la fin, puis un passage complet remonte de la fin vers le début. Le moteur garde sa table de hachage d'une position à l'autre : en remontant, il connaît déjà la suite de la partie, ce qui rend les évaluations des positions précédentes plus fiables (c'est ce que font les analyses « backward » de ChessBase et SCID). Un seul passage reste possible.

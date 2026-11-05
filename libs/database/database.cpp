@@ -631,6 +631,36 @@ void Database::collection(qint64 id, const QString &value) {
     q.addBindValue(id);
     run(q);
 }
+int Database::groupByOpening(const QVariantMap &labels, const RepertoireProgress &progress) {
+    sql("SAVEPOINT group_openings");
+    try {
+        sql("CREATE TEMP TABLE IF NOT EXISTS opening_labels(eco TEXT PRIMARY KEY, label TEXT NOT NULL)");
+        sql("DELETE FROM opening_labels");
+        QSqlQuery q(db_);
+        q.prepare("INSERT OR REPLACE INTO opening_labels(eco,label) VALUES(?,?)");
+        qint64 seen = 0;
+        for (auto it = labels.cbegin(); it != labels.cend(); ++it) {
+            check(!progress || progress(++seen), "Regroupement interrompu.");
+            q.addBindValue(it.key());
+            q.addBindValue(it.value().toString().left(200));
+            run(q);
+        }
+        // Un seul parcours de la bibliothèque, l'étiquette venant d'une table indexée.
+        // L'index des parties commence par « deleted, result » : filtrer sur le seul code
+        // ECO relirait toutes les parties, et une mise à jour par code en ferait autant
+        // de fois qu'il y a de codes.
+        q.prepare("UPDATE games SET collection=(SELECT label FROM opening_labels WHERE eco=games.eco)"
+                  " WHERE deleted=0 AND eco IN (SELECT eco FROM opening_labels)");
+        run(q);
+        const int touched = q.numRowsAffected();
+        sql("RELEASE group_openings");
+        return touched;
+    } catch (...) {
+        sql("ROLLBACK TO group_openings");
+        sql("RELEASE group_openings");
+        throw;
+    }
+}
 QString Database::exportPgn() const {
     QBuffer buffer;
     buffer.open(QIODevice::WriteOnly);

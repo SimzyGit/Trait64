@@ -1422,6 +1422,36 @@ int main(int argc, char **argv) {
             check(original.open(QIODevice::ReadOnly) && original.readAll() == bytes,
                   "Invalid session structure keeps its exact original bytes");
         }
+        {
+            // Ranger la bibliothèque par ouverture lit la table ECO embarquée : si elle
+            // devenait illisible, la commande n'étiquetterait plus rien en silence.
+            QTemporaryDir shelf;
+            Controller ranger(shelf.path());
+            QSignalSpy messages(&ranger, &Controller::message);
+            QElapsedTimer settle;
+            auto idle = [&] {
+                settle.restart();
+                while ((ranger.busy() || ranger.librarySearching()) && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+            };
+            ranger.importText("[Event \"a\"]\n[ECO \"B90\"]\n\n1.e4 c5 *\n\n"
+                              "[Event \"b\"]\n[ECO \"C42\"]\n\n1.e4 e5 2.Nf3 Nf6 *");
+            idle();
+            messages.clear();
+            ranger.groupLibraryByOpening();
+            idle();
+            check(messages.count() >= 1, "Ranging the library reports what it did");
+            const auto report = messages.last().first().toString();
+            check(report.contains("2 partie"), "Both games with an ECO code are ranged");
+            QStringList collections;
+            for (const auto &row : ranger.games())
+                collections << row.toMap()["collection"].toString();
+            collections.sort();
+            check(collections.size() == 2 && !collections[0].isEmpty() && collections[0] != collections[1],
+                  "Each game lands in the collection of its own opening family");
+            check(!collections[0].contains("B90") && !collections[0].contains(QString::fromUtf8("·")),
+                  "The collection carries the family name, not the ECO code");
+        }
         std::cout << checks << " desktop interaction checks passed\n";
         return 0;
     } catch (const std::exception &e) {

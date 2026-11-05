@@ -915,5 +915,7 @@
   "Titre": "Title",
   "GM, IM, FM, WGM… laissez vide sans titre": "GM, IM, FM, WGM… leave empty if untitled",
   "Fédération": "Federation",
-  "code à trois lettres, par exemple FRA": "three-letter code, for example FRA"
+  "code à trois lettres, par exemple FRA": "three-letter code, for example FRA",
+  "Ranger par ouverture": "Range by opening",
+  "Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.": "Gives every game the collection of its opening family, from its ECO code. Nothing to download; games without an ECO code are left unchanged."
 }

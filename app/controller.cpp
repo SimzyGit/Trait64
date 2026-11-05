@@ -1056,6 +1056,52 @@ void Controller::setCollection(qint64 id, const QString &c) {
         fail(e);
     }
 }
+void Controller::groupLibraryByOpening() {
+    try {
+        require(!busy_, "Traitement en cours.");
+        // On range par famille — « Défense sicilienne » — et non par chacune de ses
+        // dizaines de variantes : une collection par variante ne range rien.
+        QMap<QString, QMap<QString, int>> tally;
+        for (const auto *volume : {"a", "b", "c", "d", "e"}) {
+            QFile file(":/assets/openings/" + QString(volume) + ".tsv");
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+                continue;
+            file.readLine(); // en-tête
+            while (!file.atEnd()) {
+                const auto columns = QString::fromUtf8(file.readLine()).trimmed().split('\t');
+                if (columns.size() < 2 || columns[0].size() != 3)
+                    continue;
+                const auto family = columns[1].section(':', 0, 0).trimmed();
+                if (!family.isEmpty())
+                    ++tally[columns[0]][family];
+            }
+        }
+        QVariantMap labels;
+        for (auto code = tally.cbegin(); code != tally.cend(); ++code) {
+            // Un code couvre parfois plusieurs familles : on retient celle qu'il désigne
+            // le plus souvent, pour que l'étiquette dise ce qu'on rencontre d'ordinaire.
+            QString best;
+            int most = 0;
+            for (auto family = code.value().cbegin(); family != code.value().cend(); ++family)
+                if (family.value() > most) {
+                    most = family.value();
+                    best = family.key();
+                }
+            // La collection porte le seul nom de famille : le code ECO a déjà sa colonne,
+            // et le répéter ici ferait une collection par code au lieu d'une par ouverture.
+            labels[code.key()] = best;
+        }
+        require(!labels.isEmpty(), "Table des ouvertures illisible.");
+        QSet<QString> families;
+        for (const auto &label : labels)
+            families.insert(label.toString());
+        const int ranged = db_->groupByOpening(labels);
+        refreshLibrary();
+        emit message(QString("%1 partie(s) rangée(s) en %2 ouverture(s).").arg(ranged).arg(families.size()));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::copyText(const QString &what) {
     QGuiApplication::clipboard()->setText(what == "fen" ? s(game_.nodes[node_].fen) : s(game_.pgn()));
     emit message(what.toUpper() + " copié.");

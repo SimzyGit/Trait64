@@ -289,6 +289,9 @@ class Controller : public QObject {
     Q_INVOKABLE void favorite(qint64 id, bool value);
     Q_INVOKABLE void trash(qint64 id, bool value);
     Q_INVOKABLE void setCollection(qint64 id, const QString &collection);
+    // Range toute la bibliothèque en collections par famille d'ouverture, sans rien
+    // télécharger : la table ECO est embarquée.
+    Q_INVOKABLE void groupLibraryByOpening();
     Q_INVOKABLE void copyText(const QString &what);
     Q_INVOKABLE void setPreference(const QString &key, const QVariant &value);
     Q_INVOKABLE void retranslateUi(QObject *window);

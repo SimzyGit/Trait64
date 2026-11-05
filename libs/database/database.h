@@ -95,6 +95,9 @@ class Database {
     void favorite(qint64 id, bool value);
     void trash(qint64 id, bool value);
     void collection(qint64 id, const QString &value);
+    // Étiquette chaque partie avec le nom de famille de son ouverture, d'après la table
+    // ECO fournie par l'appelant. Renvoie le nombre de parties rangées.
+    int groupByOpening(const QVariantMap &labels, const RepertoireProgress &progress = {});
     QString exportPgn() const;
     void exportPgn(QIODevice &output) const;
     void validateOutputPath(const QString &path) const;

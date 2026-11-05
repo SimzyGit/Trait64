@@ -293,6 +293,38 @@ int main(int argc, char **argv) {
             check(board.gamesToReviewFor({"Carol"}, 24).isEmpty(), "Another player's games are left alone");
             check(board.gamesToReviewFor({}, 24).isEmpty(), "No nickname means nothing to queue");
         }
+        {
+            // Ranger la bibliothèque par famille d'ouverture : une seule passe, et seules
+            // les parties dont le code figure dans la table sont touchées.
+            t64::Database shelf(dir.filePath("openings.sqlite"));
+            const QString sicilian = "B20", queens = "D00";
+            check(shelf.importGames(t64::parsePgn("[Event \"a\"]\n[ECO \"B20\"]\n\n1.e4 c5 *\n\n"
+                                                  "[Event \"b\"]\n[ECO \"D00\"]\n\n1.d4 d5 *\n\n"
+                                                  "[Event \"c\"]\n\n1.c4 e5 *")) == 3,
+                  "Seed games with and without an ECO code");
+            check(shelf.groupByOpening({{sicilian, sicilian + " · Famille"}}) == 1,
+                  "Only the games whose code is listed are ranged");
+            auto collectionOf = [&](const QString &event) {
+                for (const auto &row : shelf.search({}))
+                    if (row.toMap()["event"] == event)
+                        return row.toMap()["collection"].toString();
+                return QString();
+            };
+            check(collectionOf("a") == sicilian + " · Famille", "A ranged game carries its family label");
+            check(collectionOf("b").isEmpty(), "A game outside the table keeps its collection");
+            check(collectionOf("c").isEmpty(), "A game without an ECO code is left alone");
+            // Relancer doit réétiqueter, non empiler : l'opération est rejouable.
+            check(shelf.groupByOpening({{sicilian, sicilian + " · Autre"}}) == 1,
+                  "Grouping again relabels the same games");
+            check(collectionOf("a") == sicilian + " · Autre", "The new label replaces the previous one");
+            bool stopped = false;
+            rejects([&] { shelf.groupByOpening({{sicilian, "x"}, {queens, "y"}}, [&](qint64 n) {
+                              stopped = true;
+                              return n < 2;
+                          }); });
+            check(stopped && collectionOf("a") == sicilian + " · Autre",
+                  "A canceled grouping leaves every label untouched");
+        }
         rejects([&] { db.validateOutputPath(db.path()); });
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });
         // Un lien symbolique vers la base ne doit pas servir de cible d'export : il
