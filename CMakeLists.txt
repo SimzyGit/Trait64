@@ -65,6 +65,10 @@ if(T64_BUILD_GUI)
       find_package(Python3 REQUIRED COMPONENTS Interpreter)
       add_test(NAME pgn_benchmark_safety COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_pgn_benchmark.py $<TARGET_FILE:pgn_benchmark>)
       set_tests_properties(pgn_benchmark_safety PROPERTIES TIMEOUT 60)
+      # Une seconde à peine, à la plus petite échelle acceptée : c'est l'absence de ce
+      # test qui a laissé le banc de base planter pendant toute une migration de schéma.
+      add_test(NAME database_benchmark_safety COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_database_benchmark.py $<TARGET_FILE:database_benchmark>)
+      set_tests_properties(database_benchmark_safety PROPERTIES TIMEOUT 300)
     endif()
   endif()
   add_library(t64engine libs/engine/uci.cpp libs/engine/comparison.cpp libs/engine/tournament.cpp)
