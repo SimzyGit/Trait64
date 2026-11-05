@@ -608,10 +608,13 @@ int main(int argc, char **argv) {
             c.undo();
             check(c.state()["arrows"].toList().size() == 2, "Undo restores annotations");
             c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH", "/usr/games/stockfish"));
+            // Le nombre de fils dépend désormais de la machine : comparer à la valeur
+            // observée, et non à une constante, sinon le test suit le matériel du runner.
+            const int threads = c.preferences()["threads"].toInt();
             c.saveEngineProfile("Test");
-            c.setPreference("threads", 2);
+            c.setPreference("threads", threads == 1 ? 2 : 1);
             c.loadEngineProfile(0);
-            check(c.preferences()["threads"].toInt() == 1, "Engine profile restores settings");
+            check(c.preferences()["threads"].toInt() == threads, "Engine profile restores settings");
             if (QFileInfo(c.preferences()["enginePath"].toString()).isExecutable()) {
                 QElapsedTimer optionsTimer;
                 optionsTimer.start();

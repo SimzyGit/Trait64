@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "queue.h"
 #include "database.h"
+#include "hardware.h"
 #include "uci.h"
 #include <QCryptographicHash>
 #include <QDir>
@@ -64,8 +65,8 @@ QVariantMap normalizedProfile(QVariantMap profile) {
     const auto engine = QFileInfo(profile["enginePath"].toString());
     require(engine.isFile() && engine.isExecutable(), "Choisissez un moteur UCI dans les paramètres.");
     result["enginePath"] = engine.canonicalFilePath();
-    result["threads"] = std::clamp(profile.value("threads", 1).toInt(), 1, 32);
-    result["hash"] = std::clamp(profile.value("hash", 128).toInt(), 16, 4096);
+    result["threads"] = std::clamp(profile.value("threads", t64::recommendedThreads()).toInt(), 1, 32);
+    result["hash"] = std::clamp(profile.value("hash", t64::recommendedHashMb()).toInt(), 16, 4096);
     result["multiPV"] = std::clamp(profile.value("multiPV", 3).toInt(), 1, 5);
     result["milliseconds"] = std::clamp(profile.value("milliseconds", 500).toInt(), 100, 10000);
     // 0 : la durée seule décide, comme avant. Au-delà, la profondeur décide et la durée plafonne.

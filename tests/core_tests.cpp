@@ -2,7 +2,9 @@
 #include "game.h"
 #include "accuracy.h"
 #include "explanation.h"
+#include "hardware.h"
 #include "polyglot.h"
+#include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <cstdio>
@@ -414,6 +416,19 @@ int main() {
             const auto blind = t64::summarize(played, line, std::vector<t64::NodeScore>(line.size()));
             check(blind.all[0] < 0 && blind.all[1] < 0 && blind.moves[0][3] == 0,
                   "Without evaluations nothing is measured and no mark is invented");
+        }
+        {
+            // Les valeurs dépendent de la machine : on vérifie ce qui doit tenir partout,
+            // y compris là où le système ne révèle ni ses cœurs ni sa mémoire.
+            const int threads = t64::recommendedThreads(), hash = t64::recommendedHashMb();
+            const unsigned cores = std::thread::hardware_concurrency();
+            check(threads >= 1 && threads <= 32, "The advised thread count stays within the accepted range");
+            check(cores == 0 || threads <= int(cores), "The engine never claims more cores than exist");
+            check(cores < 2 || threads == std::min(int(cores) - 1, 32),
+                  "One core is left free on a machine that has more than one");
+            check(hash >= 64 && hash <= 4096, "The advised hash stays within the accepted range");
+            check((hash & (hash - 1)) == 0, "The advised hash is a power of two");
+            check(t64::installedMemoryMb() >= 0, "Installed memory is never negative");
         }
         std::cout << checks << " core checks passed\n";
         return 0;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "hardware.h"
 #include <QColor>
 #include <QDir>
 #include <QFile>
@@ -11,17 +12,20 @@
 #include <QUuid>
 #include <algorithm>
 #include <cmath>
+#include <thread>
 
 QVariantMap Controller::preferences() const {
     QVariantMap defaults{{"enginePath", ""},
                          {"uciOptions", QVariantMap()},
-                         {"threads", 1},
-                         {"hash", 128},
+                         // Mesurées sur la machine : une valeur fixe n'utilisait qu'une
+                         // fraction d'un processeur moderne, et personne ne songe à la régler.
+                         {"threads", t64::recommendedThreads()},
+                         {"hash", t64::recommendedHashMb()},
                          {"multiPV", 3},
                          {"skill", 12}, {"playElo", 0},
                          {"moveTime", 1000},
                          {"analysisDepth", 24},
-                         {"importWorkers", 2},
+                         {"importWorkers", t64::recommendedImportWorkers()},
                          {"syzygyPath", ""}, {"bookPath", ""},
                          {"lightTheme", true},
                          {"fontFamily", QGuiApplication::font().family()},
@@ -30,6 +34,7 @@ QVariantMap Controller::preferences() const {
                          {"reduceMotion", false}, {"language", "auto"},
                          {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
                          {"coordinates", true},
+                         {"boardScale", 1.0}, {"evalBar", true},
                          {"pieceStyle", "cburnett"},
                          {"customPiecePath", ""},
                          {"boardLight", "#e9dfcb"},
@@ -46,12 +51,20 @@ QVariantMap Controller::preferences() const {
     for (auto it = defaults.begin(); it != defaults.end(); ++it)
         it.value() = settings_.value(it.key(), it.value());
     defaults["dataPath"] = dataPath_;
+    // Posées après la fusion : ce sont des constats sur la machine, pas des réglages.
+    // L'interface s'en sert pour dire ce qu'elle a trouvé plutôt qu'un nombre nu.
+    defaults["cpuCores"] = int(std::max(1u, std::thread::hardware_concurrency()));
+    defaults["memoryMb"] = double(t64::installedMemoryMb());
     static const auto fonts = QFontDatabase::families();
     for (const auto &key : {"fontScale", "uiScale", "analysisPanelRatio"}) {
         const double value = defaults[key].toDouble();
         const bool ratio = key == QString("analysisPanelRatio");
         defaults[key] = std::isfinite(value) ? std::clamp(value, ratio ? .3 : .9, ratio ? .75 : key == QString("fontScale") ? 1.5 : 1.25) : ratio ? .58 : 1.0;
     }
+    // Part de la place disponible qu'occupe l'échiquier. En deçà de la moitié il devient
+    // illisible, et au-delà de sa case il déborderait sur la notation.
+    const double board = defaults["boardScale"].toDouble();
+    defaults["boardScale"] = std::isfinite(board) ? std::clamp(board, .5, 1.0) : 1.0;
     if (!fonts.contains(defaults["fontFamily"].toString())) defaults["fontFamily"] = QGuiApplication::font().family();
     defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());

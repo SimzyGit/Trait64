@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "hardware.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
@@ -17,8 +18,8 @@ void Controller::initContent() {
                 }
             profiles << QVariantMap{{"name", item["title"].toString() + " " + item["version"].toString()},
                                     {"enginePath", path},
-                                    {"threads", 1},
-                                    {"hash", 128},
+                                    {"threads", t64::recommendedThreads()},
+                                    {"hash", t64::recommendedHashMb()},
                                     {"multiPV", 3},
                                     {"skill", 12},
                                     {"moveTime", 1000},

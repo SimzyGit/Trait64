@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "hardware.h"
 #include <QtConcurrent>
 
 QVariantMap Controller::importProgress() const {
@@ -55,7 +56,8 @@ void Controller::resumeImport(qint64 id, const QString &replacement) {
             importView_->elapsed = 0;
             importView_->startBytes = job["offset"].toLongLong();
         }
-        const int workers = std::clamp(settings_.value("importWorkers", 2).toInt(), 1, 8);
+        const int workers =
+            std::clamp(settings_.value("importWorkers", t64::recommendedImportWorkers()).toInt(), 1, 8);
         const auto databasePath = db_->path();
         const auto canceled = cancelTask_;
         const auto progress = taskProgress_;
