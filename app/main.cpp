@@ -25,7 +25,13 @@ int main(int argc, char *argv[]) {
     // par le nom du fichier .desktop et ignore setWindowIcon, X11 fait l'inverse. Sans
     // ces deux lignes, la fenêtre porte l'icône générique quoi qu'on installe.
     QGuiApplication::setDesktopFileName("trait64");
-    QGuiApplication::setWindowIcon(QIcon(":/assets/trait64.svg"));
+    // Bâtie depuis des PNG, non depuis le SVG : charger une icône vectorielle réclame le
+    // greffon d'icônes de Qt, absent des dépendances sous Debian 12 — l'icône serait
+    // alors silencieusement vide, sans rien pour le signaler.
+    QIcon logo;
+    for (int side : {16, 24, 32, 48, 64, 128, 256})
+        logo.addFile(QString(":/assets/app/trait64-%1.png").arg(side), QSize(side, side));
+    QGuiApplication::setWindowIcon(logo);
     QQuickStyle::setStyle("Basic");
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
@@ -66,13 +72,17 @@ int main(int argc, char *argv[]) {
                 window->resize(qEnvironmentVariableIntValue("T64_SCREENSHOT_WIDTH"),
                                qEnvironmentVariableIntValue("T64_SCREENSHOT_HEIGHT"));
             // Traverse every page so that QML delegates and lazy models are exercised.
-            for (int i = 0; i < 9; ++i)
-                QTimer::singleShot(150 + i * 170, &app, [window, i] { window->setProperty("page", i); });
-            QTimer::singleShot(1500, &app, [window, &controller] {
+            // Les instants suivent le nombre de pages : figés, l'ajout d'une page faisait
+            // tomber le dernier pas de la traversée après le choix de la page à capturer,
+            // qui se retrouvait écrasé.
+            constexpr int pages = 9, step = 170, sweep = 150 + pages * step;
+            for (int i = 0; i < pages; ++i)
+                QTimer::singleShot(150 + i * step, &app, [window, i] { window->setProperty("page", i); });
+            QTimer::singleShot(sweep, &app, [window, &controller] {
                 const int page = qEnvironmentVariableIsSet("T64_SCREENSHOT_PAGE")
                                      ? qEnvironmentVariableIntValue("T64_SCREENSHOT_PAGE")
                                      : 2;
-                window->setProperty("page", qBound(0, page, 8));
+                window->setProperty("page", qBound(0, page, pages - 1));
                 // « dark » manquait : on ne pouvait capturer que le thème clair, donc
                 // vérifier la moitié de ce que l'on voulait voir.
                 const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");
@@ -90,7 +100,7 @@ int main(int argc, char *argv[]) {
                             opened->setProperty("currentIndex", 0);
                     }
             });
-            QTimer::singleShot(2000, &app, [&, window, screenshot] {
+            QTimer::singleShot(sweep + 500, &app, [&, window, screenshot] {
                 if (screenshot.isEmpty()) {
                     qInfo() << "Desktop smoke test completed";
                     app.exit(qmlWarnings ? 5 : 0);

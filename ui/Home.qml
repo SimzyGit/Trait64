@@ -17,6 +17,33 @@ ScrollView {
     contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
     ColumnLayout {
         width:root.availableWidth;spacing:16
+        // Le logiciel ne se nommait nulle part dans sa propre fenêtre, sinon en petit
+        // dans la barre d'état. L'accueil est l'endroit où le dire.
+        RowLayout {
+            Layout.fillWidth:true;spacing:12
+            Image {
+                source:"qrc:/assets/app/trait64-128.png"
+                Layout.preferredWidth:Math.round(38*root.p.uiScale)
+                Layout.preferredHeight:Layout.preferredWidth
+                sourceSize.width:128;sourceSize.height:128
+                fillMode:Image.PreserveAspectFit
+                smooth:true
+            }
+            ColumnLayout {
+                Layout.fillWidth:true;spacing:0
+                Label {
+                    text:"Trait64"
+                    font.pixelSize:Math.round(22*root.p.fontScale*root.p.uiScale)
+                    font.weight:Font.DemiBold
+                }
+                Label {
+                    Layout.fillWidth:true;elide:Text.ElideRight
+                    color:root.p.muted
+                    font.pixelSize:Math.round(12*root.p.fontScale*root.p.uiScale)
+                    text:qsTr("Vos parties, votre analyse, votre progression — sur votre machine.")
+                }
+            }
+        }
         Flow {Layout.fillWidth:true;spacing:8
             TButton {text:qsTr("Nouvelle étude");accent:true;onClicked:root.newStudy()}
             TButton {text:qsTr("Importer un PGN");onClicked:root.importStudy()}
