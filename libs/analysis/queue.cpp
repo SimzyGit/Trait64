@@ -218,6 +218,9 @@ class AnalysisWorker : public QObject {
             const auto id = active_;
             active_ = 0;
             engine_->shutdown();
+            // On ferme : si la base refuse encore cette écriture, rien ne doit faire
+            // échouer la fermeture. La tâche restera « en cours », et recoverAnalyses()
+            // la repassera en pause au prochain démarrage. Ne pas propager.
             try {
                 db_->setAnalysisStatus(id, "paused");
             } catch (...) {

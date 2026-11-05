@@ -100,7 +100,12 @@ chess::Board checkedBoard(const std::string &fen, bool variant960) {
             "La position doit comporter huit rangées et un roi par couleur.");
     require(whitePieces <= 16 && blackPieces <= 16 && whitePawns <= 8 && blackPawns <= 8,
             "Trop de pièces ou de pions dans la position.");
-    require(f[2] == "-" || std::regex_match(f[2], std::regex(variant960 ? "[A-HKQa-hkq]{1,4}" : "K?Q?k?q?")),
+    // std::regex bâtit son automate à la construction : la refaire à chaque position
+    // validée revient à la rebâtir des millions de fois au cours d'un import. Statiques,
+    // elles sont construites une fois ; regex_match ne les modifie pas, donc les fils
+    // de lecture peuvent les partager.
+    static const std::regex classicCastling("K?Q?k?q?"), chess960Castling("[A-HKQa-hkq]{1,4}");
+    require(f[2] == "-" || std::regex_match(f[2], variant960 ? chess960Castling : classicCastling),
             "Droits de roque invalides.");
     if (variant960 && f[2] != "-") {
         std::string seen;
@@ -441,7 +446,8 @@ std::vector<Game> parsePgn(const std::string &text, size_t maxGames,
             continue;
         }
         if (token[0] == '$') {
-            require(std::regex_match(token, std::regex("\\$[0-9]{1,3}")), "NAG invalide.");
+            static const std::regex nagPattern("\\$[0-9]{1,3}");
+            require(std::regex_match(token, nagPattern), "NAG invalide.");
             int nag = std::stoi(token.substr(1));
             require(nag <= 255, "NAG hors limites.");
             game.nodes[node].nags.push_back(nag);
