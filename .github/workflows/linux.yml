@@ -94,7 +94,9 @@ jobs:
         run: |
           vcpkg install libarchive:x64-windows sqlite3:x64-windows
           echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      # Sans la version, le binaire annonce celle par défaut et se croit indéfiniment
+      # en retard : l'updater proposerait une mise à jour juste après l'installation.
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DT64_RELEASE_VERSION="${{ needs.version.outputs.version }}"
       - run: cmake --build build --config Release --parallel 3
       - name: Archive portable
         env:
@@ -130,7 +132,9 @@ jobs:
           # soit « : » ici. Avec « ; » le chemin entier passait pour un seul dossier et
           # LibArchive, keg-only chez Homebrew, restait introuvable.
           echo "CMAKE_PREFIX_PATH=$(brew --prefix libarchive):$(brew --prefix sqlite)${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}" >> "$GITHUB_ENV"
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      # Même raison que pour Windows : la version nourrit aussi Info.plist, donc ce que
+      # macOS affiche dans « À propos » et dans le Finder.
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DT64_RELEASE_VERSION="${{ needs.version.outputs.version }}"
       - run: cmake --build build --config Release --parallel 3
       - name: Paquet d'application et image disque
         env:

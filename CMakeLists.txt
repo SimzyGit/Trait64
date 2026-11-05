@@ -98,8 +98,10 @@ if(T64_BUILD_GUI)
       MACOSX_BUNDLE_BUNDLE_NAME "Trait64"
       MACOSX_BUNDLE_GUI_IDENTIFIER "org.trait64.Trait64"
       MACOSX_BUNDLE_ICON_FILE "trait64.icns"
+      # Apple attend trois nombres dans la version courte ; le détail du canal de
+      # développement tient dans l'autre, que le Finder affiche entre parenthèses.
       MACOSX_BUNDLE_BUNDLE_VERSION "${T64_RELEASE_VERSION}"
-      MACOSX_BUNDLE_SHORT_VERSION_STRING "${T64_RELEASE_VERSION}")
+      MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
   elseif(WIN32)
     target_sources(trait64 PRIVATE assets/trait64.rc)
   endif()
