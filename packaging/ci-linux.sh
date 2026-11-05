@@ -12,6 +12,13 @@ if apt-cache show qt6-svg-plugins >/dev/null 2>&1; then apt-get install -y --no-
 cmake -S /source -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON -DT64_RELEASE_VERSION="$trait64_version"
 cmake --build /build --parallel 2
 export T64_STOCKFISH=/usr/games/stockfish
+# Monté seulement quand on veut regarder le résultat : les tests écrivent alors une image
+# de l'écran d'analyse, qu'aucune relecture de QML ne remplace. Volume distinct de
+# /packages, dont le script de publication refuse tout fichier inattendu.
+if [[ -d /captures ]]; then
+    export T64_BOARD_SCREENSHOT=/captures/analyse-debian${trait64_debian}.png
+    export T64_ANALYSIS_SCREENSHOT=/captures/analyses-en-cours-debian${trait64_debian}.png
+fi
 ctest --test-dir /build --output-on-failure
 cd /build
 cpack -G DEB

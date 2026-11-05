@@ -830,6 +830,15 @@ int main(int argc, char **argv) {
                 auto *queueDialog = window->findChild<QObject *>("analysisQueueDialog");
                 const auto previousSize = window->size();
                 window->resize(960, 720);
+                // L'écran lui-même avant d'ouvrir quoi que ce soit : c'est la seule façon
+                // de juger sa mise en page autrement qu'en la relisant.
+                const auto screen = qEnvironmentVariable("T64_BOARD_SCREENSHOT");
+                if (!screen.isEmpty()) {
+                    auto board = window->contentItem()->grabToImage();
+                    check(bool(board), "Prepare analysis screen capture");
+                    QSignalSpy drawn(board.data(), &QQuickItemGrabResult::ready);
+                    check(drawn.wait(3000) && board->saveToFile(screen), "Capture the analysis screen");
+                }
                 QMetaObject::invokeMethod(queueDialog, "open");
                 QTest::qWait(80);
                 const auto screenshot = qEnvironmentVariable("T64_ANALYSIS_SCREENSHOT");

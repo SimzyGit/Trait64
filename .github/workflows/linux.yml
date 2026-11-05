@@ -167,8 +167,16 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: |
-          mkdir packages
-          docker run --rm --pull always --mount "type=bind,source=$PWD,target=/source,readonly" --mount "type=bind,source=$PWD/packages,target=/packages" --workdir /source debian:bookworm bash packaging/ci-linux.sh 12 "$RELEASE_VERSION"
+          mkdir packages captures
+          docker run --rm --pull always --mount "type=bind,source=$PWD,target=/source,readonly" --mount "type=bind,source=$PWD/packages,target=/packages" --mount "type=bind,source=$PWD/captures,target=/captures" --workdir /source debian:bookworm bash packaging/ci-linux.sh 12 "$RELEASE_VERSION"
+      # Les captures servent à relire la mise en page après coup ; elles ne conditionnent
+      # rien et ne doivent jamais faire échouer une livraison saine.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interface-captures
+          path: captures/
+          if-no-files-found: ignore
       - name: Debian 13 tests and installed package
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
