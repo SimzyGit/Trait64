@@ -25,7 +25,10 @@ int main(int argc, char **argv) {
         const QString path = temp.path() + "/synthetic.sqlite";
         t64::Database db(path);
         const auto start = QString::fromStdString(chess::constants::STARTPOS);
-        const auto key = QString::fromStdString(t64::positionKey(chess::constants::STARTPOS));
+        // La même clé que celle dont l'explorateur se sert. L'index des positions est passé
+        // d'une clé textuelle à un entier haché ; le banc était resté à l'ancienne, si bien
+        // que ses arêtes n'étaient jamais retrouvées et que l'arbre d'ouvertures sortait vide.
+        const auto key = static_cast<qint64>(t64::positionHash(chess::constants::STARTPOS));
         auto writer = QSqlDatabase::addDatabase("QSQLITE", "benchmark-writer");
         writer.setDatabaseName(path);
         must(writer.open(), writer.lastError().text());
@@ -107,7 +110,11 @@ int main(int argc, char **argv) {
         });
         measure("statistics", [&] { must(db.stats()["games"].toInt() == count, "Materialized game count"); });
         measure("opening_tree", [&] {
-            must(db.explorer(start).first().toMap()["count"].toInt() == count, "Materialized opening count");
+            const auto tree = db.explorer(start);
+            // first() sur une liste vide est un comportement indéfini : le banc plantait
+            // au lieu de dire ce qui manquait.
+            must(!tree.empty(), "L'explorateur d'ouvertures ne renvoie aucune ligne");
+            must(tree.first().toMap()["count"].toInt() == count, "Materialized opening count");
         });
         measure("top_players", [&] { must(db.players().size() == 1000, "Top player count"); });
         std::cout << QJsonDocument(report).toJson().constData();
