@@ -8,6 +8,7 @@
 - **Pièces et échiquiers** : seize palettes d'échiquier au lieu de neuf, dont sept qui tiennent dans la pénombre, chacune avec un aperçu de ses deux cases. On peut désormais garder plusieurs jeux de pièces installés et passer de l'un à l'autre, au lieu qu'un import remplace le précédent.
 - **Barre d'évaluation** le long de l'échiquier, et courbe de la partie au-dessus du moteur.
 - **Portrait** : chaque profil peut recevoir une photo ; Trait64 en range une copie réduite dans son dossier de données, le profil ne dépend donc pas d’un fichier que l’on peut déplacer. Sans photo, les initiales tiennent la place.
+- **L'interface anglaise parle anglais partout** : les cent soixante messages du logiciel étaient écrits en français dans le code et le restaient quand on choisissait l'anglais. Un test refuse désormais toute phrase sans traduction.
 - **Fluidité** : les lignes de la bibliothèque et du carnet de coups sont recyclées au défilement plutôt que rebâties une à une, et les pièces ne sont plus redessinées à chaque pixel quand on tire une poignée de panneau.
 - **Titre et drapeau** : le titre FIDE se détache du nom comme sur Lichess, et le drapeau de la fédération accompagne le joueur.
 - Le logo sert désormais d'icône de l'application, sur les trois systèmes.

@@ -270,7 +270,7 @@ void Controller::initFeatures() {
             need(QFile::copy(sessionPath_, preserved),
                  "Impossible de préserver les onglets de session illisibles.");
             QTimer::singleShot(0, this, [this, preserved] {
-                emit message("Certains onglets n’ont pas été restaurés. Session originale conservée : " +
+                emit message(tr("Certains onglets n’ont pas été restaurés. Session originale conservée : ") +
                                  preserved,
                              true);
             });
@@ -385,7 +385,7 @@ void Controller::mergeGame(qint64 id) {
         review_.clear();
         refresh(true);
         emit reviewChanged();
-        emit message("Variantes et commentaires fusionnés dans l’étude courante.");
+        emit message(tr("Variantes et commentaires fusionnés dans l’étude courante."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -437,7 +437,7 @@ void Controller::findDuplicates() {
             text << v["white"].toString() + " — " + v["black"].toString() + " : identifiants " +
                         v["ids"].toString();
         }
-        emit message(text.empty() ? "Aucun doublon de ligne principale." : text.join('\n'));
+        emit message(text.empty() ? tr("Aucun doublon de ligne principale.") : text.join('\n'));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -450,7 +450,7 @@ void Controller::nextDueCard() {
             return;
         }
     }
-    emit message("Toutes les cartes dues ont été révisées.");
+    emit message(tr("Toutes les cartes dues ont été révisées."));
 }
 void Controller::saveEngineProfile(const QString &name) {
     if (name.trimmed().isEmpty())
@@ -466,7 +466,7 @@ void Controller::saveEngineProfile(const QString &name) {
             break;
         }
     if (list.size() >= 100) {
-        emit message("100 profils maximum.", true);
+        emit message(tr("100 profils maximum."), true);
         return;
     }
     list << p;
@@ -653,8 +653,8 @@ void Controller::requestReviewPosition() {
         reviewing_ = false;
         reviewer_.shutdown();
         emit reviewChanged();
-        emit message(reviewTwoPasses_ ? "Bilan terminé (début → fin, puis fin → début)."
-                                      : "Analyse de la ligne principale terminée.");
+        emit message(reviewTwoPasses_ ? tr("Bilan terminé (début → fin, puis fin → début).")
+                                      : tr("Analyse de la ligne principale terminée."));
         return;
     }
     const int node = reviewNodes_[reviewIndex_];
@@ -922,7 +922,7 @@ void Controller::annotateReview() {
             game_.nodes[node].nags.push_back(nag);
     }
     refresh(true);
-    emit message("Évaluations et erreurs ajoutées aux annotations PGN.");
+    emit message(tr("Évaluations et erreurs ajoutées aux annotations PGN."));
 }
 void Controller::createMistakeCards() {
     try {
@@ -941,7 +941,7 @@ void Controller::createMistakeCards() {
             ++count;
         }
         refreshLibrary();
-        emit message(QString("%1 carte(s) créée(s) depuis les erreurs analysées.").arg(count));
+        emit message(tr("%1 carte(s) créée(s) depuis les erreurs analysées.").arg(count));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -1025,7 +1025,7 @@ void Controller::claimDraw() {
     auto b = game_.boardAt(node_);
     auto e = t64::gameResult(b);
     if (e.second == chess::GameResult::NONE) {
-        emit message("Aucune nulle réclamable dans cette position.");
+        emit message(tr("Aucune nulle réclamable dans cette position."));
         return;
     }
     remember();
@@ -1108,7 +1108,7 @@ void Controller::exportStudyPdf(const QString &url) {
             doc.print(&writer);
         }
         need(file.commit(), file.errorString());
-        emit message("Étude exportée en PDF.");
+        emit message(tr("Étude exportée en PDF."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -1118,14 +1118,14 @@ void Controller::identifyOpening() {
         return;
     const auto eco = state_["openingEco"].toString(), name = state_["openingName"].toString();
     if (eco.isEmpty()) {
-        emit message("Aucune ouverture nommée trouvée sur ce chemin.");
+        emit message(tr("Aucune ouverture nommée trouvée sur ce chemin."));
         return;
     }
     remember();
     game_.tags["ECO"] = eco.toStdString();
     game_.tags["Opening"] = name.toStdString();
     refresh(true);
-    emit message("Ouverture ajoutée aux informations de la partie.");
+    emit message(tr("Ouverture ajoutée aux informations de la partie."));
 }
 QByteArray Controller::diagramSvg() const {
     // Same geometry, colours, pieces and annotations as the PNG export, as scalable vectors.
@@ -1232,7 +1232,7 @@ void Controller::exportDiagram(const QString &url) {
             need(file.open(QIODevice::WriteOnly), file.errorString());
             const auto bytes = diagramSvg();
             need(file.write(bytes) == bytes.size() && file.commit(), file.errorString());
-            emit message("Diagramme SVG exporté avec votre apparence et vos flèches.");
+            emit message(tr("Diagramme SVG exporté avec votre apparence et vos flèches."));
             return;
         }
         const auto pref = preferences();
@@ -1318,7 +1318,7 @@ void Controller::exportDiagram(const QString &url) {
         need(file.open(QIODevice::WriteOnly), file.errorString());
         need(diagram.save(&file, "PNG"), "Écriture PNG impossible.");
         need(file.commit(), file.errorString());
-        emit message("Diagramme PNG exporté avec votre apparence et vos flèches.");
+        emit message(tr("Diagramme PNG exporté avec votre apparence et vos flèches."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -1346,5 +1346,5 @@ void Controller::setEngineOption(const QString &name, const QVariant &value) {
 }
 void Controller::pressEngineOption(const QString &name) {
     if (!engine_.pressOption(name))
-        emit message("Arrêtez l’analyse avant cette commande UCI.", true);
+        emit message(tr("Arrêtez l’analyse avant cette commande UCI."), true);
 }

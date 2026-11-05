@@ -44,7 +44,7 @@ void Controller::enqueueLibrary(int milliseconds, int profile, int maxGames) {
         const auto rows = db_->search(query_, resultFilter_, favoritesOnly_, position, trashFilter_, filters);
         for (const auto &row : rows)
             analysisQueue_.enqueue(QString::fromStdString(db_->load(row.toMap()["id"].toLongLong()).pgn()), config, false);
-        emit message(QString("%1 partie(s) ajoutée(s) à la file d’analyse (lignes principales).").arg(rows.size()));
+        emit message(tr("%1 partie(s) ajoutée(s) à la file d’analyse (lignes principales).").arg(rows.size()));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -69,7 +69,7 @@ void Controller::reviewImported(int depth, int profile) {
             throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");
         const auto ids = db_->recentGamesToReview(importedGames_, wanted);
         if (ids.isEmpty()) {
-            emit message(QString("Ces %1 partie(s) ont déjà été passées en revue au moins aussi loin.")
+            emit message(tr("Ces %1 partie(s) ont déjà été passées en revue au moins aussi loin.")
                              .arg(importedGames_));
             return;
         }
@@ -77,7 +77,7 @@ void Controller::reviewImported(int depth, int profile) {
             const auto id = value.toLongLong();
             analysisQueue_.enqueue(QString::fromStdString(db_->load(id).pgn()), config, false, id);
         }
-        emit message(QString("%1 partie(s) ajoutée(s) à la file de bilan, profondeur %2.")
+        emit message(tr("%1 partie(s) ajoutée(s) à la file de bilan, profondeur %2.")
                          .arg(ids.size())
                          .arg(wanted));
     } catch (const std::exception &e) {
@@ -98,14 +98,14 @@ void Controller::reviewProfile(int profileIndex, int depth, int enginePreset) {
             throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");
         const auto ids = db_->gamesToReviewFor(names, wanted);
         if (ids.isEmpty()) {
-            emit message("Toutes les parties de ce profil ont déjà été passées en revue au moins aussi loin.");
+            emit message(tr("Toutes les parties de ce profil ont déjà été passées en revue au moins aussi loin."));
             return;
         }
         for (const auto &value : ids) {
             const auto id = value.toLongLong();
             analysisQueue_.enqueue(QString::fromStdString(db_->load(id).pgn()), config, false, id);
         }
-        emit message(QString("%1 partie(s) de ce profil ajoutée(s) à la file de bilan, profondeur %2.")
+        emit message(tr("%1 partie(s) de ce profil ajoutée(s) à la file de bilan, profondeur %2.")
                          .arg(ids.size())
                          .arg(wanted));
     } catch (const std::exception &e) {
@@ -115,7 +115,7 @@ void Controller::reviewProfile(int profileIndex, int depth, int enginePreset) {
 void Controller::exportPolyglot(const QString &url, int minGames) {
     try {
         const int entries = db_->exportPolyglot(localPath(url), minGames);
-        emit message(QString("Livre Polyglot écrit : %1 coup(s) joués au moins %2 fois.").arg(entries).arg(minGames));
+        emit message(tr("Livre Polyglot écrit : %1 coup(s) joués au moins %2 fois.").arg(entries).arg(minGames));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -124,8 +124,8 @@ void Controller::findNovelty() {
     try {
         const auto result = db_->novelty(game_, gameId_);
         if (!result["found"].toBool()) {
-            emit message(result["reason"] == "known" ? "Toute la ligne principale est déjà jouée dans votre bibliothèque."
-                                                     : "La partie quitte la bibliothèque dès son départ.");
+            emit message(result[tr("reason")] == tr("known") ? tr("Toute la ligne principale est déjà jouée dans votre bibliothèque.")
+                                                     : tr("La partie quitte la bibliothèque dès son départ."));
             return;
         }
         QStringList known;
@@ -134,7 +134,7 @@ void Controller::findNovelty() {
         const int ply = result["ply"].toInt();
         const auto number = QString::number(ply / 2 + 1) + (ply % 2 == 0 ? ". " : "… ");
         navigate(result["node"].toInt());
-        emit message(QString("Nouveauté : %1%2 — position atteinte dans %3 partie(s)%4.")
+        emit message(tr("Nouveauté : %1%2 — position atteinte dans %3 partie(s)%4.")
                          .arg(number, result["san"].toString())
                          .arg(result["reached"].toLongLong())
                          .arg(known.isEmpty() ? QString() : ", suites connues : " + known.join(", ")));

@@ -15,9 +15,9 @@ void Controller::initPreparation() {
             preparation_["fen"] = result.fen;
             preparation_["error"] = result.error;
             preparation_["status"] = result.error.isEmpty()
-                                         ? QString("%1 suite(s) observée(s) dans les parties sélectionnées.")
+                                         ? tr("%1 suite(s) observée(s) dans les parties sélectionnées.")
                                                .arg(result.rows.size())
-                                         : "Statistiques indisponibles.";
+                                         : tr("Statistiques indisponibles.");
             emit preparationChanged();
         }
         if (preparationPending_)
@@ -113,7 +113,7 @@ void Controller::exportPreparation(const QString &url) {
         }
         if (file.write(bytes) != bytes.size() || !file.commit())
             throw std::runtime_error(file.errorString().toStdString());
-        emit message("Statistiques exportées en CSV.");
+        emit message(tr("Statistiques exportées en CSV."));
     } catch (const std::exception &e) {
         fail(e);
     }

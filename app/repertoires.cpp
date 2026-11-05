@@ -143,8 +143,7 @@ bool Controller::playRepertoireAnswer(const QString &uci) {
             accepted = value.toMap();
     if (accepted.isEmpty()) {
         trainingFailed_ = true;
-        emit message("Ce coup ne figure pas dans les réponses préparées. Réessayez ; cela ne signifie pas "
-                     "qu’il est mauvais.");
+        emit message(tr("Ce coup ne figure pas dans les réponses préparées. Réessayez ; cela ne signifie pas qu’il est mauvais."));
         return true;
     }
     auto candidate = game_;
@@ -159,7 +158,7 @@ bool Controller::playRepertoireAnswer(const QString &uci) {
     trainingComplete_ = true;
     refreshRepertoires();
     refresh();
-    emit message(trainingFailed_ ? "Position terminée. Nouveau rappel programmé demain."
-                                 : "Coup du répertoire retrouvé. Prochaine révision programmée.");
+    emit message(trainingFailed_ ? tr("Position terminée. Nouveau rappel programmé demain.")
+                                 : tr("Coup du répertoire retrouvé. Prochaine révision programmée."));
     return true;
 }

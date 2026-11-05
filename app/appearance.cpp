@@ -259,7 +259,7 @@ void Controller::importPieceSet(const QString &folder) {
         settings_.setValue("customPiecePath", destination);
         settings_.setValue("pieceStyle", "custom");
         emit preferencesChanged();
-        emit message(QString("Jeu de pièces « %1 » installé.").arg(label));
+        emit message(tr("Jeu de pièces « %1 » installé.").arg(label));
     } catch (const std::exception &e) {
         if (!destination.isEmpty())
             QDir(destination).removeRecursively();
@@ -303,5 +303,5 @@ void Controller::removeCustomPieceSet(int index) {
             settings_.setValue("pieceStyle", "cburnett");
     }
     emit preferencesChanged();
-    emit message("Jeu de pièces retiré.");
+    emit message(tr("Jeu de pièces retiré."));
 }

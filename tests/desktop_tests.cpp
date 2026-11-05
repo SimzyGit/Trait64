@@ -455,7 +455,8 @@ int main(int argc, char **argv) {
             wait.start();
             while (c.busy() && wait.elapsed() < 5000)
                 QTest::qWait(5);
-            check(!c.busy() && messages.last()[0].toString().contains("interrompue") &&
+            // Le message dépend de la langue depuis qu'il passe par la traduction.
+            check(!c.busy() && messages.last()[0].toString() == c.uiText("Vérification interrompue.") &&
                       !messages.last()[1].toBool(),
                   "Canceled verification finishes without claiming integrity success");
             check(c.state()["fen"] == original["fen"] && c.state()["dirty"] == original["dirty"],
@@ -464,7 +465,7 @@ int main(int argc, char **argv) {
             wait.restart();
             while (c.busy() && wait.elapsed() < 5000)
                 QTest::qWait(5);
-            check(!c.busy() && messages.last()[0].toString() == "Vérification SQLite : ok" &&
+            check(!c.busy() && messages.last()[0].toString() == c.uiText("Vérification SQLite : ") + "ok" &&
                       !messages.last()[1].toBool(),
                   "A new verification succeeds after cancellation");
             messages.clear();
@@ -486,8 +487,8 @@ int main(int argc, char **argv) {
                 QTest::qWait(5);
             QObject::disconnect(restart);
             check(restarted && !c.busy() && messages.size() == 2 &&
-                      messages[0][0].toString().contains("interrompue") &&
-                      messages[1][0].toString() == "Vérification SQLite : ok",
+                      messages[0][0].toString() == c.uiText("Vérification interrompue.") &&
+                      messages[1][0].toString() == c.uiText("Vérification SQLite : ") + "ok",
                   "Reentrant restart retains the distinct results of both verifications");
         }
         {
@@ -1475,14 +1476,15 @@ int main(int argc, char **argv) {
             messages.clear();
             ranger.groupLibraryByOpening();
             idle();
-            check(messages.count() >= 1, "Ranging the library reports what it did");
-            const auto report = messages.last().first().toString();
-            check(report.contains("2 partie"), "Both games with an ECO code are ranged");
+            check(messages.count() >= 1 && !messages.last().at(1).toBool(),
+                  "Ranging the library reports what it did, as news rather than an error");
             QStringList collections;
             for (const auto &row : ranger.games())
                 collections << row.toMap()["collection"].toString();
             collections.sort();
-            check(collections.size() == 2 && !collections[0].isEmpty() && collections[0] != collections[1],
+            // On vérifie le résultat plutôt que la phrase : celle-ci dépend de la langue.
+            check(collections.size() == 2 && !collections[0].isEmpty() && !collections[1].isEmpty() &&
+                      collections[0] != collections[1],
                   "Each game lands in the collection of its own opening family");
             check(!collections[0].contains("B90") && !collections[0].contains(QString::fromUtf8("·")),
                   "The collection carries the family name, not the ECO code");

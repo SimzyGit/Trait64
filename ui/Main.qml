@@ -654,7 +654,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
 
     Timer {id:searchTimer;interval:220;onTriggered:win.filterLibrary()}
     Connections {target:controller
-        function onMessage(text,error){toastLabel.text=text;toast.error=error;toast.open();toastTimer.restart()}
+        // Les messages du contrôleur sont écrits en français dans le code ; on les
+        // traduit à l'affichage, où ils passent tous, plutôt qu'à chacun des cent
+        // soixante endroits qui les produisent. Un texte sans traduction revient tel quel.
+        function onMessage(text,error){toastLabel.text=controller.uiText(text);toast.error=error;toast.open();toastTimer.restart()}
         function onPromotionNeeded(prefix){win.promotionPrefix=prefix;promotionDialog.open()}
         function onShowAnalysis(){win.page=2}
         function onShowAnalysisQueue(){analysisQueueDialog.open()}

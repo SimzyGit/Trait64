@@ -12,8 +12,7 @@ void Controller::initContent() {
             auto profiles = settings_.value("engineProfiles").toList();
             for (const auto &profile : profiles)
                 if (profile.toMap()["enginePath"] == path) {
-                    emit message("Ce moteur possède déjà un profil. Vous pouvez en mémoriser d’autres dans "
-                                 "les paramètres.");
+                    emit message(tr("Ce moteur possède déjà un profil. Vous pouvez en mémoriser d’autres dans les paramètres."));
                     return;
                 }
             profiles << QVariantMap{{"name", item["title"].toString() + " " + item["version"].toString()},
@@ -28,8 +27,8 @@ void Controller::initContent() {
                                     {"uciOptions", QVariantMap()}};
             settings_.setValue("engineProfiles", profiles);
             emit preferencesChanged();
-            emit message("Profil ajouté : " + item["title"].toString() +
-                         ". Ouvrez les paramètres pour le charger.");
+            emit message(tr("Profil ajouté : ") + item[tr("title")].toString() +
+                         tr(". Ouvrez les paramètres pour le charger."));
         } else
             importSourceFile(path, item);
     });
@@ -54,7 +53,7 @@ void Controller::exportSource(const QString &url, qint64 source) {
         db_->exportSource(out, source);
         if (!out.commit())
             throw std::runtime_error(out.errorString().toStdString());
-        emit message("Base exportée en PGN.");
+        emit message(tr("Base exportée en PGN."));
     } catch (const std::exception &e) {
         fail(e);
     }

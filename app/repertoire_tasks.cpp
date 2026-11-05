@@ -178,7 +178,7 @@ void Controller::importRepertoire(qint64 id, const QString &url) {
             const auto count = db.importRepertoireFile(id, path, progress);
             RepertoireResult result;
             result.selected = id;
-            result.message = QString("%1 partie(s) ajoutée(s), avec variantes et transpositions.").arg(count);
+            result.message = tr("%1 partie(s) ajoutée(s), avec variantes et transpositions.").arg(count);
             return result;
         });
     } catch (const std::exception &e) {
@@ -225,7 +225,7 @@ void Controller::importRepertoireFolder(const QString &url, bool white) {
                 }
             }
             require(created > 0, "Aucun fichier de ce dossier n’a pu être lu comme répertoire.");
-            result.message = QString("%1 répertoire(s) créé(s), %2 partie(s) lue(s).").arg(created).arg(games);
+            result.message = tr("%1 répertoire(s) créé(s), %2 partie(s) lue(s).").arg(created).arg(games);
             if (!refused.isEmpty())
                 result.message += QString(" Laissés de côté : %1.").arg(refused.join(", "));
             return result;

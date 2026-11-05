@@ -185,7 +185,7 @@ void Controller::setProfilePhoto(int index, const QString &url) {
         list[index] = profile;
         settings_.setValue("profiles", list);
         emit profilesChanged();
-        emit message(url.trimmed().isEmpty() ? "Portrait retiré." : "Portrait enregistré.");
+        emit message(url.trimmed().isEmpty() ? tr("Portrait retiré.") : tr("Portrait enregistré."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -281,7 +281,7 @@ void Controller::applyFideRatings(int index, const QStringList &requested, const
         auto list = settings_.value("profiles").toList();
         require(index >= 0 && index < list.size(), "Profil introuvable.");
         if (!player["found"].toBool()) {
-            emit message("Ce numéro FIDE ne figure dans aucune des listes téléchargées.", true);
+            emit message(tr("Ce numéro FIDE ne figure dans aucune des listes téléchargées."), true);
             return;
         }
         auto profile = list[index].toMap();
@@ -307,7 +307,7 @@ void Controller::applyFideRatings(int index, const QStringList &requested, const
         list[index] = profile;
         settings_.setValue("profiles", list);
         emit profilesChanged();
-        emit message(QString("Classements FIDE à jour pour %1.").arg(profile["name"].toString()));
+        emit message(tr("Classements FIDE à jour pour %1.").arg(profile["name"].toString()));
     } catch (const std::exception &e) {
         fail(e);
     }

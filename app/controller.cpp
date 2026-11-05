@@ -79,7 +79,7 @@ Controller::Controller(const QString &path, QObject *parent)
     connect(online_, &t64::OnlineGames::upToDate, this, [this] {
         settings_.setValue(onlineSyncKey_, onlineSyncTime_);
         emit busyChanged();
-        emit message(onlineSyncKey_.section('/', 2) + " : déjà à jour.");
+        emit message(onlineSyncKey_.section('/', 2) + tr(" : déjà à jour."));
         accountSynced(0);
     });
     connect(online_, &t64::OnlineGames::finished, this, [this](const QString &downloaded, int) {
@@ -162,17 +162,17 @@ Controller::Controller(const QString &path, QObject *parent)
         emit busyChanged();
         if (r.operation == "verify") {
             if (r.canceled)
-                emit message("Vérification interrompue.");
+                emit message(tr("Vérification interrompue."));
             else if (!r.error.isEmpty())
                 emit message(r.error, true);
             else
-                emit message("Vérification SQLite : " + r.detail, r.detail != "ok");
+                emit message(tr("Vérification SQLite : ") + r.detail, r.detail != tr("ok"));
             return;
         }
         if (r.operation == "puzzles") {
             refreshPuzzleStats();
             emit changed();
-            emit message(r.error.isEmpty() ? QString("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
+            emit message(r.error.isEmpty() ? tr("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
                                            : r.error, !r.error.isEmpty());
             return;
         }
@@ -183,7 +183,7 @@ Controller::Controller(const QString &path, QObject *parent)
         }
         if (r.operation == "source" && content_)
             content_->reportImport(r.error.isEmpty()
-                                       ? QString("Base importée : %1 nouvelles parties, %2 déjà présentes.")
+                                       ? tr("Base importée : %1 nouvelles parties, %2 déjà présentes.")
                                              .arg(r.count)
                                              .arg(r.duplicates)
                                        : r.error);
@@ -196,15 +196,15 @@ Controller::Controller(const QString &path, QObject *parent)
         if (!r.error.isEmpty())
             emit message(r.error, true);
         else if (r.operation == "reindex")
-            emit message(QString("Index reconstruits pour %1 partie(s).").arg(r.count));
+            emit message(tr("Index reconstruits pour %1 partie(s).").arg(r.count));
         else if (r.operation == "resumable")
-            emit message(QString("Import %1 : %2 parties validées, dont %3 nouvelles.")
-                             .arg(r.job["status"] == "completed" ? "terminé" : "en pause")
+            emit message(tr("Import %1 : %2 parties validées, dont %3 nouvelles.")
+                             .arg(r.job["status"] == "completed" ? tr("terminé") : tr("en pause"))
                              .arg(r.job["processed"].toLongLong())
                              .arg(r.job["added"].toLongLong()));
         else
             emit message(
-                QString("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
+                tr("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
     });
     QFile session(sessionPath_);
     if (session.open(QIODevice::ReadOnly)) {
@@ -231,7 +231,7 @@ Controller::Controller(const QString &path, QObject *parent)
             require(QFile::copy(sessionPath_, preserved),
                     "Impossible de préserver la session illisible ; ouverture interrompue.");
             QTimer::singleShot(0, this, [this, preserved] {
-                emit message("Session illisible conservée pour récupération : " + preserved, true);
+                emit message(tr("Session illisible conservée pour récupération : ") + preserved, true);
             });
         }
     }
@@ -594,7 +594,7 @@ void Controller::saveGame(bool copy) {
         writeSession();
         refreshLibrary();
         refresh();
-        emit message("Partie enregistrée dans la bibliothèque.");
+        emit message(tr("Partie enregistrée dans la bibliothèque."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -684,7 +684,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             auto games = t64::parseEpd(f.readAll().toStdString());
             int count = db_->importGames(games);
             refreshLibrary();
-            emit message(QString("%1 position(s) EPD importée(s).").arg(count));
+            emit message(tr("%1 position(s) EPD importée(s).").arg(count));
         } else if (path.endsWith(".fen", Qt::CaseInsensitive))
             setFen(QString::fromUtf8(f.readAll()));
         else
@@ -695,7 +695,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
 }
 void Controller::importBytes(const QByteArray &bytes) {
     if (busy_) {
-        emit message("Un import est déjà en cours.", true);
+        emit message(tr("Un import est déjà en cours."), true);
         return;
     }
     if (trainingActive())
@@ -744,7 +744,7 @@ void Controller::exportFile(const QString &url, bool all) {
             else
                 atomicWrite(path, data);
         }
-        emit message("Export terminé : " + QFileInfo(path).fileName());
+        emit message(tr("Export terminé : ") + QFileInfo(path).fileName());
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -754,7 +754,7 @@ void Controller::backup(const QString &url) {
         require(!busy_, "Attendez la fin du traitement.");
         checkpoint();
         db_->backup(localPath(url));
-        emit message("Sauvegarde complète créée, entraînements inclus.");
+        emit message(tr("Sauvegarde complète créée, entraînements inclus."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -798,7 +798,7 @@ void Controller::openBackup(const QString &url) {
         emit libraryOpened();
         refreshLibrary();
         refresh();
-        emit message("Bibliothèque ouverte : " + QFileInfo(path).fileName());
+        emit message(tr("Bibliothèque ouverte : ") + QFileInfo(path).fileName());
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -852,7 +852,7 @@ void Controller::tryMove(const QString &from, const QString &to) {
     else {
         selected_ = -1;
         refresh();
-        emit message("Ce coup n’est pas légal.");
+        emit message(tr("Ce coup n’est pas légal."));
     }
 }
 void Controller::move(const QString &uci) {
@@ -869,7 +869,7 @@ void Controller::move(const QString &uci) {
             const bool mate = acceptPuzzleMate(uci);
             if (!mate && (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_])) {
                 trainingFailed_ = true;
-                emit message(puzzleId_ ? "Pas le bon coup. Essaie encore." : "Ce n’est pas le coup du répertoire. Essaie encore.");
+                emit message(puzzleId_ ? tr("Pas le bon coup. Essaie encore.") : tr("Ce n’est pas le coup du répertoire. Essaie encore."));
                 return;
             }
             node_ = game_.play(node_, uci.toStdString());
@@ -885,8 +885,8 @@ void Controller::move(const QString &uci) {
                 trainingComplete_ = true;
                 db_->review(cardId_, !trainingFailed_);
                 refreshLibrary();
-                emit message(trainingFailed_ ? "Ligne terminée. Nouvelle révision demain."
-                                             : "Bien joué ! La prochaine révision est programmée.");
+                emit message(trainingFailed_ ? tr("Ligne terminée. Nouvelle révision demain.")
+                                             : tr("Bien joué ! La prochaine révision est programmée."));
             }
             selected_ = -1;
             refresh();
@@ -982,7 +982,7 @@ void Controller::setTags(const QVariantMap &tags) {
         return;
     if (tags.contains("Result") &&
         !QStringList{"*", "1-0", "0-1", "1/2-1/2"}.contains(tags["Result"].toString())) {
-        emit message("Résultat invalide : utilisez *, 1-0, 0-1 ou 1/2-1/2.", true);
+        emit message(tr("Résultat invalide : utilisez *, 1-0, 0-1 ou 1/2-1/2."), true);
         return;
     }
     remember();
@@ -1098,14 +1098,14 @@ void Controller::groupLibraryByOpening() {
             families.insert(label.toString());
         const int ranged = db_->groupByOpening(labels);
         refreshLibrary();
-        emit message(QString("%1 partie(s) rangée(s) en %2 ouverture(s).").arg(ranged).arg(families.size()));
+        emit message(tr("%1 partie(s) rangée(s) en %2 ouverture(s).").arg(ranged).arg(families.size()));
     } catch (const std::exception &e) {
         fail(e);
     }
 }
 void Controller::copyText(const QString &what) {
     QGuiApplication::clipboard()->setText(what == "fen" ? s(game_.nodes[node_].fen) : s(game_.pgn()));
-    emit message(what.toUpper() + " copié.");
+    emit message(what.toUpper() + tr(" copié."));
 }
 void Controller::startEngine() {
     auto options = settings_.value("uciOptions").toMap();
@@ -1212,7 +1212,7 @@ void Controller::createCard(const QString &title) {
         require(!moves.empty(), "Placez-vous avant le premier coup à apprendre dans une ligne existante.");
         db_->addCard(title.isEmpty() ? "Ma position" : title, s(game_.nodes[node_].fen), moves.join(' '));
         refreshLibrary();
-        emit message("Carte ajoutée à l’entraînement.");
+        emit message(tr("Carte ajoutée à l’entraînement."));
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -1263,7 +1263,7 @@ void Controller::revealCard() {
         QStringList answers;
         for (const auto &answer : repertoireExercise_["answers"].toList())
             answers << answer.toMap()["san"].toString();
-        emit message("Réponses préparées : " + answers.join(", "));
+        emit message(tr("Réponses préparées : ") + answers.join(", "));
         return;
     }
     QStringList san;
@@ -1273,7 +1273,7 @@ void Controller::revealCard() {
         n = g.play(n, solution_[i].toStdString());
         san << s(g.nodes[n].san);
     }
-    emit message("Solution : " + san.join(' '));
+    emit message(tr("Solution : ") + san.join(' '));
 }
 void Controller::finishTraining() {
     if (!trainingActive())
@@ -1339,7 +1339,7 @@ void Controller::runPerft(int depth) {
         require(depth >= 1 && depth <= 4, "Choisissez une profondeur de 1 à 4.");
         auto board = game_.boardAt(node_);
         auto count = t64::perft(board, depth);
-        emit message(QString("Perft %1 : %2 positions légales.").arg(depth).arg(count));
+        emit message(tr("Perft %1 : %2 positions légales.").arg(depth).arg(count));
     } catch (const std::exception &e) {
         fail(e);
     }

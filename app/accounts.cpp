@@ -20,13 +20,13 @@ QVariantList Controller::onlineAccounts() const {
 void Controller::addOnlineAccount(const QString &site, const QString &user) {
     const auto name = user.trimmed();
     if (!QStringList{"lichess", "chesscom"}.contains(site) || !t64::OnlineGames::validUser(name)) {
-        emit message("Pseudo invalide : lettres, chiffres, - et _ uniquement.", true);
+        emit message(tr("Pseudo invalide : lettres, chiffres, - et _ uniquement."), true);
         return;
     }
     auto list = settings_.value("onlineAccounts").toList();
     for (const auto &value : list)
         if (value.toMap()["site"] == site && value.toMap()["user"].toString().compare(name, Qt::CaseInsensitive) == 0) {
-            emit message("Ce compte est déjà enregistré.");
+            emit message(tr("Ce compte est déjà enregistré."));
             return;
         }
     list << QVariantMap{{"site", site}, {"user", name}, {"games", 0}};
