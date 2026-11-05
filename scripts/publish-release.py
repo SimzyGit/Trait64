@@ -11,6 +11,8 @@ import subprocess
 import time
 
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(beta|rc|dev)\.(0|[1-9][0-9]*))?")
+DEVELOPMENT_TAG = re.compile(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev\.(0|[1-9][0-9]*)")
+KEEP_DEVELOPMENT_RELEASES = 5
 
 
 def file_info(path):
@@ -46,6 +48,22 @@ def validate_draft(release, tag, commit, marker):
     if (not release.get("draft") or release.get("tag_name") != tag
             or release.get("target_commitish") != commit or marker not in (release.get("body") or "")):
         raise ValueError("Refusing to modify a published release or an unrelated draft")
+
+
+def prune_development_releases(api, keep, protected):
+    """Drop superseded development builds, whose packages dominate the storage used."""
+    builds = []
+    for release in api.api("releases?per_page=100", pages=True):
+        match = DEVELOPMENT_TAG.fullmatch(release["tag_name"])
+        # Only the development channel is disposable, and a draft may still belong to a
+        # run in flight: a stable release, a draft or a tag read otherwise is left alone.
+        if match and release["prerelease"] and not release["draft"]:
+            builds.append((tuple(int(number) for number in match.groups()), release["id"]))
+    # The listing order follows neither the version nor the date, so sort on the numbers.
+    removed = [i for _, i in sorted(builds, reverse=True)[keep:] if i != protected]
+    for release_id in removed:
+        api.delete_release(release_id)
+    return removed
 
 
 def verify_assets(assets, manifest):
@@ -151,6 +169,12 @@ class GitHub:
             raise ValueError("Draft is not indexed yet; retry this tested version later")
         self.release_command("upload", tag, *map(str, paths), "--clobber")
 
+    def delete_release(self, release_id):
+        # A deletion answers 204 with an empty body, which the JSON helper cannot read.
+        # The git tag survives: it costs nothing and records what was once built.
+        subprocess.run(["gh", "api", "--method", "DELETE", "--silent",
+                        f"repos/{self.repository}/releases/{release_id}"], check=True)
+
     def publish(self, release_id, prerelease):
         # The PATCH response describes this precise release even while the
         # listing still shows its earlier draft state.
@@ -173,10 +197,17 @@ def main():
         raise ValueError("Publication requires main or the matching release tag")
     if event == "push" and ref == "refs/heads/main" and "-dev." not in args.version:
         raise ValueError("An ordinary main commit may only publish a development version")
-    release = publish(GitHub(os.environ["GITHUB_REPOSITORY"]), args.directory, args.version,
-                      os.environ["GITHUB_SHA"], "Trait64 " + args.version + "\n\n" +
+    api = GitHub(os.environ["GITHUB_REPOSITORY"])
+    release = publish(api, args.directory, args.version, os.environ["GITHUB_SHA"],
+                      "Trait64 " + args.version + "\n\n" +
                       Path("docs/RELEASE-NOTES.md").read_text(encoding="utf-8"))
     print("Published verified release:", release["html_url"])
+    # The release is out and verified; failing to tidy up behind it must not fail the run.
+    try:
+        removed = prune_development_releases(api, KEEP_DEVELOPMENT_RELEASES, release["id"])
+        print(f"Pruned {len(removed)} superseded development release(s)")
+    except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
+        print("Could not prune superseded releases:", error)
 
 
 if __name__ == "__main__":
