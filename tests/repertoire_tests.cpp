@@ -165,6 +165,21 @@ int main(int argc, char **argv) {
         check(db.exportRepertoire(id).pgn().find("Imported note") != std::string::npos &&
                   db.repertoireWeaknesses(id) == reviewsBefore,
               "Successful streaming import preserves annotations and training history");
+        {
+            // Les répertoires d'En Croissant et de Pawn Appétit sont du PGN ordinaire dont
+            // les variantes s'emboîtent. Les autres jeux d'essai de ce fichier sont plats :
+            // rien ne vérifiait qu'une variante imbriquée survivait à l'import.
+            writeInput("1.e4 e5 2.Nf3 (2.Bc4 Nf6 (2...Bc5 3.Qh5) 3.d3) 2...Nc6 3.Bb5 *\n");
+            const auto nested = db.createRepertoire("Imbriqué", true, t64::Game{});
+            check(db.importRepertoireFile(nested, inputPath) == 1, "Nested repertoire file imported");
+            const auto pgn = db.exportRepertoire(nested).pgn();
+            auto kept = [&](const char *move) { return pgn.find(move) != std::string::npos; };
+            check(kept("Bc4"), "Nested import keeps the first-level variation");
+            check(kept("Qh5"), "Nested import keeps the variation nested inside it");
+            check(kept("d3"), "Nested import keeps the move that follows a nested variation");
+            check(kept("Bb5"), "Nested import keeps the mainline continuation");
+            db.deleteRepertoire(nested);
+        }
         calls = 0;
         rejects([&] {
             t64::parsePgn("1.e4 e5 2.Nf3 Nc6 *", 1, [&] {
