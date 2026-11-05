@@ -166,6 +166,28 @@ QString placeholders(int count) {
 }
 } // namespace
 
+QVariantList Database::gamesToReviewFor(const QStringList &names, int depth, int count) const {
+    if (names.isEmpty())
+        return {};
+    const auto marks = placeholders(int(names.size()));
+    QSqlQuery q(db_);
+    // Les plus récentes d'abord pour choisir le lot, puis remises dans l'ordre : on passe
+    // en revue de la plus ancienne à la plus récente, comme un import.
+    q.prepare("SELECT id FROM games WHERE deleted=0 AND reviewed_depth<? AND (white COLLATE NOCASE IN (" +
+              marks + ") OR black COLLATE NOCASE IN (" + marks + ")) ORDER BY id DESC LIMIT ?");
+    q.addBindValue(std::clamp(depth, 1, 99));
+    // La liste revient deux fois : une par côté de l'échiquier.
+    for (int side = 0; side < 2; ++side)
+        for (const auto &name : names)
+            q.addBindValue(name);
+    q.addBindValue(std::clamp(count, 1, 100000));
+    run(q);
+    QVariantList ids;
+    while (q.next())
+        ids << q.value(0).toLongLong();
+    std::reverse(ids.begin(), ids.end());
+    return ids;
+}
 QVariantMap Database::reviewSummary(const QStringList &names) const {
     if (names.isEmpty())
         return {{"games", 0}, {"moves", 0}};

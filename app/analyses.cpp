@@ -84,6 +84,34 @@ void Controller::reviewImported(int depth, int profile) {
         fail(e);
     }
 }
+void Controller::reviewProfile(int profileIndex, int depth, int enginePreset) {
+    try {
+        if (trainingActive())
+            throw std::runtime_error("Terminez l’entraînement avant de lancer un bilan.");
+        const auto names = profileAccountNames(profileIndex);
+        if (names.isEmpty())
+            throw std::runtime_error("Rattachez un compte à ce profil avant d’analyser ses parties.");
+        const int wanted = std::clamp(depth, 1, 40);
+        const auto config = analysisConfig(reviewTimeCeiling(wanted), enginePreset, wanted);
+        // Un seul message clair, plutôt qu'un échec par partie.
+        if (!QFileInfo(config["enginePath"].toString()).isExecutable())
+            throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");
+        const auto ids = db_->gamesToReviewFor(names, wanted);
+        if (ids.isEmpty()) {
+            emit message("Toutes les parties de ce profil ont déjà été passées en revue au moins aussi loin.");
+            return;
+        }
+        for (const auto &value : ids) {
+            const auto id = value.toLongLong();
+            analysisQueue_.enqueue(QString::fromStdString(db_->load(id).pgn()), config, false, id);
+        }
+        emit message(QString("%1 partie(s) de ce profil ajoutée(s) à la file de bilan, profondeur %2.")
+                         .arg(ids.size())
+                         .arg(wanted));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::exportPolyglot(const QString &url, int minGames) {
     try {
         const int entries = db_->exportPolyglot(localPath(url), minGames);

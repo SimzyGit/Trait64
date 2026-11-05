@@ -40,7 +40,7 @@ ApplicationWindow {
     property bool exportAll: false
     property string promotionPrefix: ""
     property int selectedGame: 0
-    property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs")]
+    property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils")]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
@@ -628,6 +628,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 }
             }
             Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onImportOnline:accountsDialog.open()}
+            ProfilePage {objectName:"profilePage";backend:controller}
         }
     }
     footer:Rectangle {

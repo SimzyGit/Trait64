@@ -197,6 +197,9 @@ class Controller : public QObject {
     // Tableau de bord d'un profil : notes d'ensemble et par phase, fautes, tactique, et
     // l'évolution mois par mois. Un profil sans compte rattaché ne mesure rien.
     Q_INVOKABLE QVariantMap skillDashboard(int profileIndex) const;
+    // Passe en revue les parties synchronisées de ce profil qui n'ont pas encore de
+    // bilan, afin d'alimenter son tableau de bord.
+    Q_INVOKABLE void reviewProfile(int profileIndex, int depth, int enginePreset = -1);
     // Traduit un nom d'ouverture en codes ECO. Fonction pure, exposée pour que ses deux
     // règles — une famille en début de nom, un fragment de variante n'importe où —
     // soient vérifiables sans monter une recherche complète.
@@ -360,6 +363,9 @@ class Controller : public QObject {
     // depth 0 : la durée par position décide seule, comme pour une analyse ponctuelle.
     // Au-delà, c'est la profondeur qui décide et la durée devient un plafond.
     QVariantMap analysisConfig(int milliseconds, int profile, int depth = 0) const;
+    // Les pseudos sous lesquels ce profil joue. Partagé par le tableau de bord et par la
+    // mise en revue : deux résolutions distinctes finiraient par désigner deux lots.
+    QStringList profileAccountNames(int profileIndex) const;
     qint64 selectedRepertoire_ = 0;
     QVariantList repertoires_;
     QVariantMap repertoireState_, repertoireExercise_;

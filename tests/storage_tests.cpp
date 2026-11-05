@@ -282,6 +282,16 @@ int main(int argc, char **argv) {
             check(history.size() == 2 && history.first().toMap()["period"].toString() == "2026.10",
                   "History is grouped by month, most recent first");
             check(history.first().toMap()["games"].toInt() == 1, "Each month counts its own games");
+            // Le bouton « analyser le profil » doit désigner exactement les parties que le
+            // tableau de bord ne sait pas encore compter : mêmes pseudos, même casse.
+            check(board.gamesToReviewFor({"Alice"}, 18).isEmpty(),
+                  "A game already reviewed that deep is not queued again");
+            check(board.gamesToReviewFor({"Alice"}, 24).size() == 2,
+                  "A deeper review queues the games again");
+            check(board.gamesToReviewFor({"alice"}, 24).size() == 2,
+                  "Games to review are matched without regard to case");
+            check(board.gamesToReviewFor({"Carol"}, 24).isEmpty(), "Another player's games are left alone");
+            check(board.gamesToReviewFor({}, 24).isEmpty(), "No nickname means nothing to queue");
         }
         rejects([&] { db.validateOutputPath(db.path()); });
         rejects([&] { db.validateOutputPath(db.path() + "-wal"); });

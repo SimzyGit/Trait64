@@ -354,6 +354,11 @@ int main(int argc, char **argv) {
             check(c.profiles()[0].toMap()["accounts"].toList().size() == 1 &&
                       c.onlineAccounts()[0].toMap()["profile"] == "Simon",
                   "Renaming a profile keeps its accounts attached");
+            // Analyser un profil qui n'existe pas doit le dire une fois, clairement,
+            // plutôt que de parcourir la base pour ne rien trouver.
+            const int before = messages.size();
+            c.reviewProfile(42, 18);
+            check(messages.size() == before + 1, "Reviewing an unknown profile reports exactly one error");
             c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 0, 1950);
             const auto fide = c.profiles()[0].toMap();
             check(fide["fideId"] == "1503014" && fide["fideStandard"].toInt() == 2100 &&

@@ -265,18 +265,26 @@ void Controller::applyFideRatings(int index, const QStringList &requested, const
     }
 }
 
+QStringList Controller::profileAccountNames(int profileIndex) const {
+    const auto all = profiles();
+    if (profileIndex < 0 || profileIndex >= all.size())
+        return {};
+    // Les parties sont rangées sous le pseudo du site : un profil mesure donc ce que ses
+    // comptes rattachés ont joué, et rien d'autre.
+    QStringList names;
+    for (const auto &value : all[profileIndex].toMap()["accounts"].toList())
+        names << value.toMap()["user"].toString();
+    names.removeAll(QString());
+    names.removeDuplicates();
+    return names;
+}
 QVariantMap Controller::skillDashboard(int profileIndex) const {
     try {
         const auto all = profiles();
         if (profileIndex < 0 || profileIndex >= all.size())
             return {{"ready", false}, {"reason", "Choisissez un profil."}};
         const auto profile = all[profileIndex].toMap();
-        // Les parties sont rangées sous le pseudo du site : un profil mesure donc ce que
-        // ses comptes rattachés ont joué, et rien d'autre.
-        QStringList names;
-        for (const auto &value : profile["accounts"].toList())
-            names << value.toMap()["user"].toString();
-        names.removeDuplicates();
+        const auto names = profileAccountNames(profileIndex);
         if (names.isEmpty())
             return {{"ready", false},
                     {"reason", "Rattachez un compte à ce profil pour mesurer vos parties."},

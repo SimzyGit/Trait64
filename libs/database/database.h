@@ -41,6 +41,10 @@ class Database {
     // Parmi les `count` parties les plus récentes, celles qui restent à passer en revue :
     // non supprimées et pas déjà parcourues à une profondeur au moins égale.
     QVariantList recentGamesToReview(int count, int depth) const;
+    // Les parties d'un joueur qui restent à passer en revue. Mêmes règles de
+    // correspondance que reviewSummary : sans cela on analyserait un lot et le tableau
+    // de bord en compterait un autre.
+    QVariantList gamesToReviewFor(const QStringList &names, int depth, int count = 1000) const;
     // Bilan agrégé des parties d'un joueur. `names` sont les pseudos sous lesquels il
     // joue : un profil en rassemble plusieurs. Seules les parties déjà passées en revue
     // comptent, et chaque note est prise du côté où le joueur se trouvait.

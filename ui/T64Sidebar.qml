@@ -37,6 +37,8 @@ Item {
           hint: qsTr("Choisir le moteur, sa puissance et ses variantes.") },
         { text: qsTr("Joueurs"), icon: "players", page: 6,
           hint: qsTr("Fiches des joueurs de votre base et de vos comptes.") },
+        { text: qsTr("Profils"), icon: "players", page: 7,
+          hint: qsTr("Vos comptes sous un seul nom, le bilan de vos parties et vos progrès.") },
         { text: qsTr("Outils"), icon: "tools", page: 5,
           hint: qsTr("Comparer des moteurs, organiser un tournoi, jouer une partie.") },
         { text: qsTr("Paramètres"), icon: "settings", action: "settingsDialog",
