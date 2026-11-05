@@ -158,13 +158,20 @@ if(T64_BUILD_GUI)
   install(FILES LICENSE THIRD_PARTY_NOTICES.md DESTINATION share/doc/trait64)
   set(CPACK_PACKAGE_NAME trait64)
   set(CPACK_PACKAGE_CONTACT "Sïmzy — Trait64")
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+      "Chess database, engine analysis and opening preparation")
+  set(CPACK_DEBIAN_PACKAGE_SECTION games)
   string(REPLACE "-" "~" CPACK_PACKAGE_VERSION "${T64_RELEASE_VERSION}")
   set(CPACK_GENERATOR "DEB;TGZ")
   set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
   set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-dialogs, qml6-module-qtquick-templates, qml6-module-qtquick-window, qml6-module-qtqml-workerscript, qml6-module-qtqml, qml6-module-qtqml-models, libqt6sql6-sqlite, fonts-dejavu-core, libqt6svg6")
-  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "stockfish, qt6-wayland, policykit-1, gh")
+  # Ces deux-là seulement : Debian n'empaquette pas « gh », et une recommandation
+  # introuvable suffit à faire refuser le paquet par un installateur graphique, là où
+  # apt se contente d'un avertissement. L'application n'élève aucun privilège, donc
+  # polkit n'a rien à y faire non plus.
+  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "stockfish, qt6-wayland")
   # Bookworm includes libqsvg in libqt6svg6; Trixie Qt 6.8 packages it separately.
   if(Qt6_VERSION VERSION_GREATER_EQUAL "6.8")
     string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", qt6-svg-plugins")
