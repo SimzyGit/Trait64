@@ -256,16 +256,22 @@ ApplicationWindow {
                         HoverHandler {id:rowHover}
                         Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;opacity:.5}
                         RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
-                            Label {text:modelData.id;Layout.preferredWidth:libraryList.columns.number;color:win.muted;elide:Text.ElideRight}
-                            Label {text:modelData.white;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="1-0"?Font.DemiBold:Font.Normal}
-                            Label {text:modelData.whiteElo>0?modelData.whiteElo:"";Layout.preferredWidth:libraryList.columns.elo;color:win.muted}
-                            Label {text:modelData.black;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="0-1"?Font.DemiBold:Font.Normal}
-                            Label {text:modelData.blackElo>0?modelData.blackElo:"";Layout.preferredWidth:libraryList.columns.elo;color:win.muted}
-                            Label {text:modelData.result==="1/2-1/2"?"½-½":modelData.result;Layout.preferredWidth:libraryList.columns.result}
-                            Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;color:win.muted}
-                            Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco}
-                            Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;elide:Text.ElideRight;color:win.muted}
-                            Label {text:modelData.date;Layout.preferredWidth:libraryList.columns.date;color:win.muted;elide:Text.ElideRight}
+                            // Mêmes contraintes que l'en-tête, colonne par colonne. Sans la
+                            // largeur préférée commune, les deux colonnes extensibles se
+                            // partageaient l'espace restant différemment des titres — « Noirs »
+                            // démarrait vingt-cinq pixels plus loin que son en-tête. Et sans
+                            // plafond, une valeur un peu large élargit sa colonne et pousse
+                            // toutes les suivantes.
+                            Label {text:modelData.id;Layout.preferredWidth:libraryList.columns.number;Layout.maximumWidth:libraryList.columns.number;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
+                            Label {text:modelData.white;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="1-0"?Font.DemiBold:Font.Normal}
+                            Label {text:modelData.whiteElo>0?modelData.whiteElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
+                            Label {text:modelData.black;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="0-1"?Font.DemiBold:Font.Normal}
+                            Label {text:modelData.blackElo>0?modelData.blackElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
+                            Label {text:modelData.result==="1/2-1/2"?"½-½":modelData.result;Layout.preferredWidth:libraryList.columns.result;Layout.maximumWidth:libraryList.columns.result;Layout.minimumWidth:0;elide:Text.ElideRight}
+                            Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;Layout.maximumWidth:libraryList.columns.moves;Layout.minimumWidth:0;color:win.muted}
+                            Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco;Layout.maximumWidth:libraryList.columns.eco;Layout.minimumWidth:0;elide:Text.ElideRight}
+                            Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;Layout.maximumWidth:libraryList.columns.event;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
+                            Label {text:modelData.date;Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
                             RowLayout {Layout.fillWidth:false;Layout.preferredWidth:libraryList.columns.actions;Layout.maximumWidth:libraryList.columns.actions;spacing:2
                                 TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
                                 TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}
