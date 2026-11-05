@@ -34,8 +34,10 @@ Ou bien, depuis la [page des versions](https://github.com/SimzyGit/Trait64/relea
 | --- | --- | --- |
 | Windows 10 ou 11 (64 bits) | `Trait64-…-windows-x86_64.zip` | décompressez, lancez `trait64.exe` |
 | macOS (puce Apple) | `Trait64-…-macos-arm64.dmg` | ouvrez l’image, glissez dans Applications |
-| Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | double-clic, ou `sudo apt install ./fichier.deb` |
+| Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | `sudo apt install ./fichier.deb` |
 | Autre Linux 64 bits | `Trait64-…-linux-x86_64.AppImage` | rendez exécutable, puis ouvrez |
+
+Le paquet Debian s'installe depuis un terminal : le double-clic ne mène nulle part, Debian n'installant plus d'installateur graphique de `.deb` par défaut.
 
 Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et macOS (Gatekeeper) demandent une confirmation. Sur macOS, faites clic droit → **Ouvrir**.
 

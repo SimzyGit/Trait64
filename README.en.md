@@ -34,8 +34,10 @@ Or pick a file from the [releases page](https://github.com/SimzyGit/Trait64/rele
 | --- | --- | --- |
 | Windows 10 or 11 (64-bit) | `Trait64-…-windows-x86_64.zip` | unzip, run `trait64.exe` |
 | macOS (Apple silicon) | `Trait64-…-macos-arm64.dmg` | open the image, drag into Applications |
-| Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | double-click, or `sudo apt install ./file.deb` |
+| Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | `sudo apt install ./file.deb` |
 | Other 64-bit Linux | `Trait64-…-linux-x86_64.AppImage` | make it executable, then open |
+
+The Debian package installs from a terminal: double-clicking it leads nowhere, since Debian no longer ships a graphical `.deb` installer by default.
 
 The packages are unsigned: on first launch Windows (SmartScreen) and macOS (Gatekeeper) ask for confirmation. On macOS, right-click → **Open**.
 
