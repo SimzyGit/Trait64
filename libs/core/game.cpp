@@ -6,13 +6,16 @@
 #include <functional>
 #include <regex>
 #include <sstream>
+#include <string_view>
 #include <stdexcept>
 
 namespace t64 {
 namespace {
-void require(bool ok, const std::string &message) {
+// La vue évite de bâtir une std::string à chaque appel : le lecteur en fait un par
+// balise et par coup, et le message ne sert que dans le cas qui échoue.
+void require(bool ok, std::string_view message) {
     if (!ok)
-        throw std::runtime_error(message);
+        throw std::runtime_error(std::string(message));
 }
 bool result(const std::string &s) {
     return s == "1-0" || s == "0-1" || s == "1/2-1/2" || s == "*";
