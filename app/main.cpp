@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QLockFile>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -20,6 +21,11 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationName("Trait64");
     QCoreApplication::setOrganizationName("Trait64");
     QCoreApplication::setApplicationVersion(T64_VERSION);
+    // Les deux sessions de bureau nomment l'icône autrement : Wayland ne la trouve que
+    // par le nom du fichier .desktop et ignore setWindowIcon, X11 fait l'inverse. Sans
+    // ces deux lignes, la fenêtre porte l'icône générique quoi qu'on installe.
+    QGuiApplication::setDesktopFileName("trait64");
+    QGuiApplication::setWindowIcon(QIcon(":/assets/trait64.svg"));
     QQuickStyle::setStyle("Basic");
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
