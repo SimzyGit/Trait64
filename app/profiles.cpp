@@ -6,6 +6,8 @@
 #include "controller.h"
 #include <QDateTime>
 #include <QDir>
+#include <QImageReader>
+#include <QUuid>
 #include <algorithm>
 
 namespace {
@@ -142,6 +144,48 @@ void Controller::setAccountProfile(int accountIndex, const QString &profileName)
         settings_.setValue("onlineAccounts", accounts);
         emit profilesChanged();
         emit accountsChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::setProfilePhoto(int index, const QString &url) {
+    try {
+        auto list = settings_.value("profiles").toList();
+        require(index >= 0 && index < list.size(), "Profil introuvable.");
+        auto profile = list[index].toMap();
+        const auto previous = profile["photo"].toString();
+        if (url.trimmed().isEmpty()) {
+            profile.remove("photo");
+        } else {
+            const auto source = localPath(url);
+            QImageReader reader(source);
+            // On lit les dimensions avant de décoder : une image de 20 000 pixels de côté
+            // ne doit pas être dépliée en mémoire pour finir en vignette.
+            require(reader.canRead(), "Image illisible.");
+            const auto size = reader.size();
+            require(size.isValid() && size.width() <= 8000 && size.height() <= 8000,
+                    "Image trop grande (8000 pixels de côté au maximum).");
+            reader.setScaledSize(size.scaled(256, 256, Qt::KeepAspectRatio));
+            const auto image = reader.read();
+            require(!image.isNull(), "Image illisible.");
+            const auto folder = dataPath_ + "/avatars";
+            require(QDir().mkpath(folder), "Dossier des portraits impossible à créer.");
+            // Un nom neuf à chaque fois : QML garde l'ancienne image en cache tant que
+            // l'adresse ne change pas, et le portrait ne se serait pas rafraîchi.
+            const auto destination =
+                folder + "/" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".png";
+            require(image.save(destination, "PNG"), "Enregistrement du portrait impossible.");
+            profile["photo"] = destination;
+        }
+        // L'ancienne copie ne sert plus personne : la garder ferait grossir le dossier
+        // de données à chaque changement de portrait.
+        if (!previous.isEmpty() && previous.startsWith(dataPath_ + "/avatars/"))
+            QFile::remove(previous);
+        list[index] = profile;
+        settings_.setValue("profiles", list);
+        emit profilesChanged();
+        emit message(url.trimmed().isEmpty() ? "Portrait retiré." : "Portrait enregistré.");
     } catch (const std::exception &e) {
         fail(e);
     }
@@ -286,17 +330,19 @@ QVariantMap Controller::skillDashboard(int profileIndex) const {
     try {
         const auto all = profiles();
         if (profileIndex < 0 || profileIndex >= all.size())
-            return {{"ready", false}, {"reason", "Choisissez un profil."}};
+            // Un code plutôt qu'une phrase : ces trois cas se produisent sur une
+            // installation neuve, et l'interface doit pouvoir les dire dans sa langue.
+            return {{"ready", false}, {"reason", "noProfile"}};
         const auto profile = all[profileIndex].toMap();
         const auto names = profileAccountNames(profileIndex);
         if (names.isEmpty())
             return {{"ready", false},
-                    {"reason", "Rattachez un compte à ce profil pour mesurer vos parties."},
+                    {"reason", "noAccount"},
                     {"name", profile["name"]}};
         const auto summary = db_->reviewSummary(names);
         if (summary["games"].toInt() == 0)
             return {{"ready", false},
-                    {"reason", "Aucune partie passée en revue. Lancez un bilan depuis l’écran Comptes."},
+                    {"reason", "noReview"},
                     {"name", profile["name"]},
                     {"accounts", names}};
         auto history = db_->reviewHistory(names, 13);

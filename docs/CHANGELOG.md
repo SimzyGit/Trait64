@@ -6,6 +6,7 @@
 - **Onglet Études**, à la manière d'En Croissant et de Pawn Appétit : import d'un dossier entier, y compris les études imbriquées les unes dans les autres.
 - **Ranger par ouverture** (Bibliothèque) : chaque partie reçoit la collection de sa famille d'ouverture d'après son code ECO, sans rien télécharger. Les parties sans code ECO restent inchangées.
 - **Barre d'évaluation** le long de l'échiquier, et courbe de la partie au-dessus du moteur.
+- **Portrait** : chaque profil peut recevoir une photo ; Trait64 en range une copie réduite dans son dossier de données, le profil ne dépend donc pas d’un fichier que l’on peut déplacer. Sans photo, les initiales tiennent la place.
 - **Titre et drapeau** : le titre FIDE se détache du nom comme sur Lichess, et le drapeau de la fédération accompagne le joueur.
 - Le logo sert désormais d'icône de l'application, sur les trois systèmes.
 - Plus de bridage du moteur : fils d'exécution et table de hachage suivent la machine.

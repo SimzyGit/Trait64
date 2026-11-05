@@ -1355,6 +1355,10 @@ bool Controller::smokeTest(QString *error) {
         gameId_ = db_->save(game_);
         auto loaded = db_->load(gameId_);
         require(loaded.nodes.size() == 4, "Smoke: save/load mismatch");
+        // Un profil d'exemple : sans lui la page Profils n'a aucune carte à peindre,
+        // et sa fiche — portrait, titre, drapeau — échappait à la traversée.
+        addProfile("Sïmzy");
+        setFideDetails(0, "1503014", "Exemple, Profil", 2100, 0, 1950, "gm", "fra");
         refreshLibrary();
         return true;
     } catch (const std::exception &e) {

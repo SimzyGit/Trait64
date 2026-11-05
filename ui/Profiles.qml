@@ -5,6 +5,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Native
 
 ColumnLayout {
     id: root
@@ -52,6 +53,30 @@ ColumnLayout {
 
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
+                    Avatar {
+                        objectName: "profileAvatar"
+                        preferences: root.backend.preferences
+                        source: card.modelData.photo || ""
+                        playerName: card.modelData.name
+                        side: Math.round(38 * root.uiZoom)
+                        Layout.alignment: Qt.AlignVCenter
+                        TapHandler { onTapped: { photo.index = card.index; photo.open() } }
+                        HoverHandler { id: portraitHover; cursorShape: Qt.PointingHandCursor }
+                        ToolTip.visible: portraitHover.hovered
+                        ToolTip.text: card.modelData.photo ? qsTr("Changer le portrait")
+                                                           : qsTr("Choisir un portrait")
+                        // Le retrait ne se montre que s'il y a quelque chose à retirer,
+                        // et seulement au survol : la carte reste calme au repos.
+                        TButton {
+                            objectName: "clearProfilePhoto"
+                            visible: !!card.modelData.photo && portraitHover.hovered
+                            anchors.top: parent.top; anchors.right: parent.right
+                            text: "×"; flat: true
+                            implicitWidth: 18; implicitHeight: 18
+                            Accessible.name: qsTr("Retirer le portrait")
+                            onClicked: root.backend.setProfilePhoto(card.index, "")
+                        }
+                    }
                     // Titre et fédération viennent de la fiche FIDE quand elle est
                     // rattachée : le titre se détache du nom, comme sur Lichess.
                     PlayerName {
@@ -111,6 +136,14 @@ ColumnLayout {
             enabled: created.text.trim().length > 0
             onClicked: { root.backend.addProfile(created.text); created.text = "" }
         }
+    }
+
+    Native.FileDialog {
+        id: photo
+        property int index: -1
+        title: qsTr("Choisir un portrait")
+        nameFilters: [qsTr("Images (*.png *.jpg *.jpeg *.webp *.bmp)"), qsTr("Tous les fichiers (*)")]
+        onAccepted: root.backend.setProfilePhoto(index, selectedFile.toString())
     }
 
     TDialog {

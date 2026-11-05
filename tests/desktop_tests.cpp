@@ -373,6 +373,39 @@ int main(int argc, char **argv) {
             check(fide["fideId"] == "1503014" && fide["fideStandard"].toInt() == 2100 &&
                       !fide["fideRapid"].isValid() && fide["fideBlitz"].toInt() == 1950,
                   "FIDE details are kept, and an unrated speed stays empty rather than zero");
+            {
+                // Le portrait est recopié réduit dans le dossier de données : le profil
+                // ne doit pas dépendre d'un fichier que l'on peut déplacer ou effacer.
+                QTemporaryDir pictures;
+                const auto original = pictures.filePath("moi.png");
+                check(QImage(900, 600, QImage::Format_RGB32).save(original, "PNG"),
+                      "Write a portrait to choose");
+                c.setProfilePhoto(0, QUrl::fromLocalFile(original).toString());
+                const auto stored = c.profiles()[0].toMap()["photo"].toString();
+                check(QFileInfo(stored).isFile() && stored != original,
+                      "The portrait is copied into the data folder, not merely pointed at");
+                const QImage thumbnail(stored);
+                check(thumbnail.width() == 256 && thumbnail.height() > 0 &&
+                          thumbnail.height() < thumbnail.width(),
+                      "The copy is scaled down and keeps its proportions");
+                c.setProfilePhoto(0, QUrl::fromLocalFile(original).toString());
+                const auto replaced = c.profiles()[0].toMap()["photo"].toString();
+                check(replaced != stored && !QFileInfo::exists(stored),
+                      "Choosing again replaces the copy instead of piling them up");
+                QSignalSpy refused(&c, &Controller::message);
+                const auto broken = pictures.filePath("cassee.png");
+                QFile junk(broken);
+                check(junk.open(QIODevice::WriteOnly) && junk.write("pas une image") > 0,
+                      "Write a file that is not an image");
+                junk.close();
+                c.setProfilePhoto(0, QUrl::fromLocalFile(broken).toString());
+                check(refused.count() == 1 && refused.first().at(1).toBool() &&
+                          c.profiles()[0].toMap()["photo"] == replaced,
+                      "An unreadable file is refused and leaves the portrait in place");
+                c.setProfilePhoto(0, "");
+                check(!c.profiles()[0].toMap().contains("photo") && !QFileInfo::exists(replaced),
+                      "Clearing the portrait removes both the setting and the copy");
+            }
             // Une cadence cherchée sans y trouver le joueur garde son chiffre, marqué
             // douteux ; une cadence non demandée n'apprend rien et reste intacte.
             c.setFideDetails(0, "1503014", "Nom, Prénom", 2100, 1800, 1950);

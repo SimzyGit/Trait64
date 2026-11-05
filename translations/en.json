@@ -917,5 +917,12 @@
   "Fédération": "Federation",
   "code à trois lettres, par exemple FRA": "three-letter code, for example FRA",
   "Ranger par ouverture": "Range by opening",
-  "Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.": "Gives every game the collection of its opening family, from its ECO code. Nothing to download; games without an ECO code are left unchanged."
+  "Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.": "Gives every game the collection of its opening family, from its ECO code. Nothing to download; games without an ECO code are left unchanged.",
+  "Changer le portrait": "Change the portrait",
+  "Choisir un portrait": "Choose a portrait",
+  "Retirer le portrait": "Remove the portrait",
+  "Images (*.png *.jpg *.jpeg *.webp *.bmp)": "Images (*.png *.jpg *.jpeg *.webp *.bmp)",
+  "Choisissez un profil.": "Choose a profile.",
+  "Rattachez un compte à ce profil pour mesurer vos parties.": "Link an account to this profile to measure your games.",
+  "Aucune partie passée en revue. Lancez un bilan depuis l’écran Comptes.": "No game reviewed yet. Start a review from the Accounts screen."
 }

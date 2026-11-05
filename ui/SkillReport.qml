@@ -66,7 +66,14 @@ Item {
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
                 visible: !root.report.ready
-                text: root.report.reason || qsTr("Créez un profil pour suivre vos progrès.")
+                // Les trois cas attendus arrivent sous forme de code ; tout autre texte
+                // est le message d'une erreur, que l'on affiche tel quel.
+                text: ({
+                    noProfile: qsTr("Choisissez un profil."),
+                    noAccount: qsTr("Rattachez un compte à ce profil pour mesurer vos parties."),
+                    noReview: qsTr("Aucune partie passée en revue. Lancez un bilan depuis l’écran Comptes.")
+                })[root.report.reason] || root.report.reason
+                       || qsTr("Créez un profil pour suivre vos progrès.")
             }
 
             ColumnLayout {

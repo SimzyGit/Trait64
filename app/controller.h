@@ -190,6 +190,9 @@ class Controller : public QObject {
     // profileName vide détache le compte sans rien supprimer.
     Q_INVOKABLE void setAccountProfile(int accountIndex, const QString &profileName);
     // Un classement à 0 se lit « pas classé dans cette cadence », ce qui est courant.
+    // Range une copie réduite de l'image dans le dossier de données : le profil ne
+    // dépend pas d'un fichier que l'on peut déplacer ou effacer. Une URL vide efface.
+    Q_INVOKABLE void setProfilePhoto(int index, const QString &url);
     Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName,
                                     int standard, int rapid, int blitz, const QString &title = {},
                                     const QString &federation = {});
