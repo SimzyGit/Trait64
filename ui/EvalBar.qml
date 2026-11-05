@@ -9,7 +9,9 @@ Item {
     property bool flipped: false
     property color lightSide: "#f4f6f8"
     property color darkSide: "#1d2125"
-    property color line: "#00000022"
+    // Le trait du thème, pas une teinte fixe : sur fond clair la moitié blanche se
+    // confondait avec la page, et la barre semblait flotter sans bas.
+    property color line: backend.preferences.line
     implicitWidth: 18
 
     readonly property var best: (backend.engineLines && backend.engineLines.length) ? backend.engineLines[0] : null

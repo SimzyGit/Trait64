@@ -323,7 +323,7 @@ objectName:"analysisSplit"
                             readonly property real barSpace:controller.preferences.evalBar?26:0
                             readonly property real side:Math.max(0,Math.min(width-12-barSpace,height-12))*controller.preferences.boardScale
                             Row {
-                                anchors.centerIn:parent;spacing:boardArea.barSpace>0?8:0
+                                anchors.centerIn:parent;spacing:boardArea.barSpace>0?5:0
                                 // Hauteur tenue de l'échiquier lui-même, et non recalculée à
                                 // côté : deux calculs parallèles finissent toujours par
                                 // diverger d'un arrondi, et la barre ne tombe plus juste.
@@ -462,7 +462,10 @@ objectName:"analysisSplit"
                                 RowLayout {Layout.fillWidth:true;spacing:6
                                     Label {text:qsTr("Moteur");font.weight:Font.DemiBold}
                                     Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    TButton {objectName:"toggleEngineAnalysis";text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
+                                    // Sans moteur configuré, « Analyser » ne mène nulle part et rien
+                                    // ne dit où en choisir un : premier mur venu pour qui découvre.
+                                    TButton {visible:!controller.preferences.enginePath;text:qsTr("Choisir un moteur…");accent:true;onClicked:settingsDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
+                                    TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
                                 }
                                 ListView {
                                     Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:2
