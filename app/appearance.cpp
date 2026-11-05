@@ -36,7 +36,10 @@ QVariantMap Controller::preferences() const {
                          {"coordinates", true},
                          {"boardScale", 1.0}, {"evalBar", true},
                          {"pieceStyle", "cburnett"},
+                         // Le chemin reste celui du jeu qui sert : les échiquiers le
+                         // lisent tel quel. La liste tient les jeux installés à côté.
                          {"customPiecePath", ""},
+                         {"customPieceSets", QVariantList()},
                          {"boardLight", "#e9dfcb"},
                          {"boardDark", "#71838c"},
                          {"boardHighlight", "#d6a166"},
@@ -175,16 +178,40 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         fail(e);
     }
 }
-void Controller::applyBoardPreset(const QString &name) {
-    static const QMap<QString, QStringList> presets{
+// Une seule table pour les deux usages : l'interface listait les noms de son côté, si
+// bien qu'une palette ajoutée ici pouvait n'apparaître nulle part. Une liste et non une
+// table associative : l'ordre est voulu — les claires d'abord, les sombres ensuite.
+static const std::vector<std::pair<QString, QStringList>> &boardPresetTable() {
+    static const std::vector<std::pair<QString, QStringList>> presets{
         {"Trait64", {"#e9dfcb", "#71838c", "#d6a166"}}, {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
         {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},   {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},
         {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}}, {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},
         {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}}, {"Contraste", {"#ffffff", "#494949", "#e2ab31"}},
-        {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}}};
-    if (!presets.contains(name))
+        {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}},
+        // Les neuf premiers sont clairs : sur un thème sombre, l'échiquier éclairait
+        // l'écran à lui seul. Ceux-ci tiennent dans la pénombre.
+        {"Nuit", {"#9aa3ad", "#4a5560", "#7f6f3f"}},
+        {"Forêt", {"#b9c4ac", "#4f6350", "#8a8b42"}},
+        {"Café", {"#c9b39a", "#6b4f3a", "#9b7b3c"}},
+        {"Encre", {"#aab2c4", "#454d66", "#6f6a9c"}},
+        {"Brique", {"#dcc4b4", "#8c5544", "#b58243"}},
+        {"Jade", {"#cfe0d8", "#527a6c", "#9aa84f"}},
+        {"Papier", {"#f4f1ea", "#b6b0a2", "#c8b05a"}}};
+    return presets;
+}
+QVariantList Controller::boardPresets() const {
+    QVariantList list;
+    for (const auto &[name, c] : boardPresetTable())
+        list.append(QVariantMap{{"name", name}, {"light", c[0]}, {"dark", c[1]}, {"highlight", c[2]}});
+    return list;
+}
+void Controller::applyBoardPreset(const QString &name) {
+    const auto &presets = boardPresetTable();
+    const auto found = std::find_if(presets.cbegin(), presets.cend(),
+                                    [&](const auto &entry) { return entry.first == name; });
+    if (found == presets.cend())
         return;
-    const auto c = presets[name];
+    const auto c = found->second;
     settings_.setValue("boardLight", c[0]);
     settings_.setValue("boardDark", c[1]);
     settings_.setValue("boardHighlight", c[2]);
@@ -219,13 +246,62 @@ void Controller::importPieceSet(const QString &folder) {
         for (const auto &name : names)
             if (!QFile::copy(src.filePath(name), destination + "/" + name))
                 throw std::runtime_error("Copie du jeu de pièces impossible.");
+        // Un nom lisible plutôt qu'un identifiant : c'est celui du dossier choisi, et
+        // c'est sous ce nom que le joueur retrouvera son jeu dans la liste.
+        auto label = src.dirName().simplified().left(40);
+        if (label.isEmpty())
+            label = "Jeu personnel";
+        auto installed = settings_.value("customPieceSets").toList();
+        if (installed.size() >= 24)
+            throw std::runtime_error("Vingt-quatre jeux de pièces installés : retirez-en un.");
+        installed.append(QVariantMap{{"name", label}, {"path", destination}});
+        settings_.setValue("customPieceSets", installed);
         settings_.setValue("customPiecePath", destination);
         settings_.setValue("pieceStyle", "custom");
         emit preferencesChanged();
-        emit message("Jeu de pièces personnel installé.");
+        emit message(QString("Jeu de pièces « %1 » installé.").arg(label));
     } catch (const std::exception &e) {
         if (!destination.isEmpty())
             QDir(destination).removeRecursively();
         fail(e);
     }
+}
+// Avant que plusieurs jeux soient possibles, un seul chemin était retenu : sans cette
+// reprise, le jeu déjà installé continuerait de s'afficher sans figurer dans la liste,
+// donc sans pouvoir être retiré ni remis en service.
+void Controller::adoptLoneCustomPieceSet() {
+    const auto path = settings_.value("customPiecePath").toString();
+    if (path.isEmpty() || !settings_.value("customPieceSets").toList().isEmpty())
+        return;
+    settings_.setValue("customPieceSets",
+                       QVariantList{QVariantMap{{"name", QStringLiteral("Jeu personnel")}, {"path", path}}});
+}
+void Controller::useCustomPieceSet(int index) {
+    const auto installed = settings_.value("customPieceSets").toList();
+    if (index < 0 || index >= installed.size())
+        return;
+    settings_.setValue("customPiecePath", installed[index].toMap()["path"]);
+    settings_.setValue("pieceStyle", "custom");
+    emit preferencesChanged();
+}
+void Controller::removeCustomPieceSet(int index) {
+    auto installed = settings_.value("customPieceSets").toList();
+    if (index < 0 || index >= installed.size())
+        return;
+    const auto path = installed.takeAt(index).toMap()["path"].toString();
+    // On n'efface que ce que nous avons nous-mêmes copié : un chemin venu d'ailleurs
+    // désignerait un dossier du joueur, qui n'a pas à disparaître.
+    if (path.startsWith(dataPath_ + "/pieces/"))
+        QDir(path).removeRecursively();
+    settings_.setValue("customPieceSets", installed);
+    // Le jeu retiré était peut-être celui qui servait : on reprend un jeu fourni
+    // plutôt que de laisser l'échiquier chercher des fichiers qui n'existent plus.
+    if (settings_.value("customPiecePath").toString() == path) {
+        settings_.setValue("customPiecePath", installed.isEmpty() ? QVariant("")
+                                                                  : installed[0].toMap()["path"]);
+        if (installed.isEmpty())
+            settings_.setValue("pieceStyle", "cburnett");
+    }
+    emit preferencesChanged();
+    emit message("Jeu de pièces retiré.");
 }

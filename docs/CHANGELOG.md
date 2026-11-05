@@ -5,6 +5,7 @@
 - **Page Profils** : chaque joueur suivi a sa page, avec « Analyser le profil » qui passe en revue les parties synchronisées encore sans bilan et alimente le tableau de bord.
 - **Onglet Études**, à la manière d'En Croissant et de Pawn Appétit : import d'un dossier entier, y compris les études imbriquées les unes dans les autres.
 - **Ranger par ouverture** (Bibliothèque) : chaque partie reçoit la collection de sa famille d'ouverture d'après son code ECO, sans rien télécharger. Les parties sans code ECO restent inchangées.
+- **Pièces et échiquiers** : seize palettes d'échiquier au lieu de neuf, dont sept qui tiennent dans la pénombre, chacune avec un aperçu de ses deux cases. On peut désormais garder plusieurs jeux de pièces installés et passer de l'un à l'autre, au lieu qu'un import remplace le précédent.
 - **Barre d'évaluation** le long de l'échiquier, et courbe de la partie au-dessus du moteur.
 - **Portrait** : chaque profil peut recevoir une photo ; Trait64 en range une copie réduite dans son dossier de données, le profil ne dépend donc pas d’un fichier que l’on peut déplacer. Sans photo, les initiales tiennent la place.
 - **Titre et drapeau** : le titre FIDE se détache du nom comme sur Lichess, et le drapeau de la fédération accompagne le joueur.

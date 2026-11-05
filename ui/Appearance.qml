@@ -8,7 +8,9 @@ TDialog {
     function systemText(value) {var language=backend.preferences.language;return backend.uiText(value)}
     title: qsTr("Apparence et langue")
     width: Math.min(760,parent ? parent.width-32 : 760)
-    height: Math.min(700,parent ? parent.height-32 : 700)
+    // Le dialogue s'arrêtait à 700 pixels même sur un grand écran : on faisait défiler
+    // beaucoup pour rien. Il prend la hauteur disponible, sans devenir démesuré.
+    height: Math.min(960,parent ? parent.height-64 : 700)
     anchors.centerIn: parent
     modal: true
     standardButtons: Dialog.Close
@@ -57,12 +59,41 @@ TDialog {
             }
             Flow {Layout.fillWidth:true;spacing:8
                 TButton {text:qsTr("Importer mes 12 SVG…");onClicked:customFolder.open()}
-                TButton {text:qsTr("Mes pièces");visible:!!root.backend.preferences.customPiecePath;onClicked:root.backend.setPreference("pieceStyle","custom")}
+                // Un jeu par bouton : on peut en garder plusieurs et passer de l'un à
+                // l'autre, au lieu que chaque import remplace le précédent.
+                Repeater {model:root.backend.preferences.customPieceSets
+                    delegate:TButton {required property var modelData;required property int index
+                        text:modelData.name
+                        checkable:true
+                        checked:root.backend.preferences.pieceStyle === "custom"
+                                && root.backend.preferences.customPiecePath === modelData.path
+                        onClicked:root.backend.useCustomPieceSet(index)
+                        TButton {
+                            anchors.left:parent.right;anchors.leftMargin:-4
+                            anchors.verticalCenter:parent.verticalCenter
+                            text:"×";flat:true;implicitWidth:18;implicitHeight:18
+                            Accessible.name:qsTr("Retirer ce jeu de pièces")
+                            onClicked:root.backend.removeCustomPieceSet(parent.index)
+                        }
+                    }
+                }
             }
             Label {text:qsTr("Palettes de l’échiquier");font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
-                Repeater {model:["Trait64","Sauge","Noyer","Océan","Lavande","Rose","Ardoise","Contraste","Sable"]
-                    delegate:TButton {required property string modelData;text:modelData;onClicked:root.backend.applyBoardPreset(modelData)}
+                // Les noms viennent du contrôleur : une palette ajoutée là apparaît ici
+                // sans retouche, et deux cases montrent ce qu'on va obtenir.
+                Repeater {model:root.backend.boardPresets()
+                    delegate:TButton {required property var modelData;text:modelData.name
+                        onClicked:root.backend.applyBoardPreset(modelData.name)
+                        // Le bouton se dimensionne sur son seul libellé : sans ce
+                        // rattrapage, la place prise par l'aperçu rognait le nom.
+                        leftPadding:28
+                        implicitWidth:contentItem.implicitWidth+18+leftPadding
+                        Row {x:8;anchors.verticalCenter:parent.verticalCenter;spacing:0
+                            Rectangle {width:7;height:14;color:parent.parent.modelData.light}
+                            Rectangle {width:7;height:14;color:parent.parent.modelData.dark}
+                        }
+                    }
                 }
             }
             GridLayout {columns:3;Layout.fillWidth:true;columnSpacing:12;rowSpacing:9

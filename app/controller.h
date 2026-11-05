@@ -225,9 +225,13 @@ class Controller : public QObject {
     Q_INVOKABLE void duplicateStudy();
     Q_INVOKABLE void undo();
     Q_INVOKABLE void redo();
+    Q_INVOKABLE QVariantList boardPresets() const;
     Q_INVOKABLE void applyBoardPreset(const QString &name);
     Q_INVOKABLE void resetAppearance();
     Q_INVOKABLE void importPieceSet(const QString &folder);
+    void adoptLoneCustomPieceSet();
+    Q_INVOKABLE void useCustomPieceSet(int index);
+    Q_INVOKABLE void removeCustomPieceSet(int index);
     Q_INVOKABLE void setPosition(const QString &fen, bool chess960);
     Q_INVOKABLE void newChess960(int number);
     Q_INVOKABLE void toggleAnnotation(const QString &from, const QString &to, const QString &color = "G");

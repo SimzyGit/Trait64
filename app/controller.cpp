@@ -49,6 +49,7 @@ Controller::Controller(const QString &path, QObject *parent)
       comparison_(this) {
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "auto").toString());
+    adoptLoneCustomPieceSet();
     openBook();
     connect(&engine_, &t64::Uci::initialized, this, [this] {
         const int elo = settings_.value("playElo", 0).toInt();

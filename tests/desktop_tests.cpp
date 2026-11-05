@@ -1485,6 +1485,71 @@ int main(int argc, char **argv) {
             check(!collections[0].contains("B90") && !collections[0].contains(QString::fromUtf8("·")),
                   "The collection carries the family name, not the ECO code");
         }
+        {
+            // Plusieurs jeux de pièces côte à côte : avant, chaque import remplaçait le
+            // précédent et le joueur ne pouvait pas revenir en arrière.
+            QTemporaryDir home;
+            Controller dresser(home.path());
+            auto writeSet = [](const QString &folder) {
+                QDir().mkpath(folder);
+                for (QChar side : QString("wb"))
+                    for (QChar kind : QString("KQRBNP")) {
+                        QFile svg(folder + "/" + side + kind + ".svg");
+                        if (!svg.open(QIODevice::WriteOnly))
+                            return false;
+                        svg.write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"45\" height=\"45\">"
+                                  "<rect width=\"45\" height=\"45\" fill=\"#808080\"/></svg>");
+                    }
+                return true;
+            };
+            QTemporaryDir sources;
+            check(writeSet(sources.filePath("Alpha")) && writeSet(sources.filePath("Merida")),
+                  "Write two piece sets to import");
+            dresser.importPieceSet(QUrl::fromLocalFile(sources.filePath("Alpha")).toString());
+            dresser.importPieceSet(QUrl::fromLocalFile(sources.filePath("Merida")).toString());
+            auto sets = [&] { return dresser.preferences()["customPieceSets"].toList(); };
+            check(sets().size() == 2 && sets()[0].toMap()["name"] == "Alpha" &&
+                      sets()[1].toMap()["name"] == "Merida",
+                  "Both sets are kept, named after the folder they came from");
+            check(dresser.preferences()["pieceStyle"] == "custom" &&
+                      dresser.preferences()["customPiecePath"] == sets()[1].toMap()["path"],
+                  "The last import is the one in use");
+            dresser.useCustomPieceSet(0);
+            check(dresser.preferences()["customPiecePath"] == sets()[0].toMap()["path"],
+                  "Switching back to the first set is one call");
+            const auto dropped = sets()[0].toMap()["path"].toString();
+            dresser.removeCustomPieceSet(0);
+            check(sets().size() == 1 && !QFileInfo::exists(dropped),
+                  "Removing a set drops it from the list and deletes its copy");
+            check(dresser.preferences()["customPiecePath"] == sets()[0].toMap()["path"],
+                  "Removing the set in use falls back to one that still exists");
+            dresser.removeCustomPieceSet(0);
+            check(sets().isEmpty() && dresser.preferences()["pieceStyle"] == "cburnett",
+                  "With no custom set left, the board goes back to a bundled one");
+            // Le dossier doit contenir les douze pièces : un dossier incomplet ne doit
+            // pas laisser un jeu à moitié installé derrière lui.
+            QSignalSpy refused(&dresser, &Controller::message);
+            QDir().mkpath(sources.filePath("Vide"));
+            dresser.importPieceSet(QUrl::fromLocalFile(sources.filePath("Vide")).toString());
+            check(refused.count() == 1 && refused.first().at(1).toBool() && sets().isEmpty(),
+                  "An incomplete folder is refused and installs nothing");
+        }
+        {
+            // Reprise de l'ancien réglage : un seul chemin était retenu avant que
+            // plusieurs jeux soient possibles.
+            QTemporaryDir home;
+            {
+                QSettings settings;
+                settings.setValue("customPiecePath", home.filePath("pieces/ancien"));
+                settings.setValue("customPieceSets", QVariantList());
+            }
+            Controller inherited(home.path());
+            const auto adopted = inherited.preferences()["customPieceSets"].toList();
+            check(adopted.size() == 1 && adopted[0].toMap()["path"] == home.filePath("pieces/ancien"),
+                  "A set installed before the list existed joins it at startup");
+            QSettings().remove("customPiecePath");
+            QSettings().remove("customPieceSets");
+        }
         std::cout << checks << " desktop interaction checks passed\n";
         return 0;
     } catch (const std::exception &e) {
