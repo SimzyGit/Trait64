@@ -73,12 +73,22 @@ int main(int argc, char *argv[]) {
                                      ? qEnvironmentVariableIntValue("T64_SCREENSHOT_PAGE")
                                      : 2;
                 window->setProperty("page", qBound(0, page, 6));
-                if (qEnvironmentVariable("T64_SCREENSHOT_THEME") == "light")
-                    controller.setPreference("lightTheme", true);
+                // « dark » manquait : on ne pouvait capturer que le thème clair, donc
+                // vérifier la moitié de ce que l'on voulait voir.
+                const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");
+                if (theme == "light" || theme == "dark")
+                    controller.setPreference("lightTheme", theme == "light");
+                // Un nom finissant par « Menu » ouvre ce menu et surligne sa première
+                // entrée : l'état survolé ne se voyait sur aucune capture, et c'est
+                // justement là que le fond du menu peignait le texte en noir sur noir.
                 const auto preview = qEnvironmentVariable("T64_PREVIEW");
+                const bool menu = preview.endsWith("Menu");
                 if (!preview.isEmpty())
-                    if (auto *dialog = window->findChild<QObject *>(preview + "Dialog"))
-                        QMetaObject::invokeMethod(dialog, "open");
+                    if (auto *opened = window->findChild<QObject *>(menu ? preview : preview + "Dialog")) {
+                        QMetaObject::invokeMethod(opened, "open");
+                        if (menu)
+                            opened->setProperty("currentIndex", 0);
+                    }
             });
             QTimer::singleShot(2000, &app, [&, window, screenshot] {
                 if (screenshot.isEmpty()) {

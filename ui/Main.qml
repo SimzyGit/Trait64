@@ -45,7 +45,15 @@ ApplicationWindow {
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
     palette.placeholderText: muted
-    palette.dark: muted;palette.light:fg;palette.midlight:line;palette.shadow:line;palette.brightText:fg
+    // « light » et « dark » sont des nuances de surface, pas des couleurs de texte : le
+    // thème Basic s'en sert comme fond du survol des menus. Affectés au texte, ils
+    // peignaient l'entrée survolée en noir sur noir — ou en blanc sur blanc en thème
+    // sombre —, rendant illisible ce que l'on désignait.
+    palette.dark: Qt.darker(panel, light ? 1.12 : 1.4)
+    palette.light: Qt.rgba(accent.r, accent.g, accent.b, .16)
+    palette.midlight: raised
+    palette.shadow: line
+    palette.brightText: light ? "#ffffff" : "#101010"
     color: bg
     font.family: controller.preferences.fontFamily
     font.pixelSize: Math.round(12*textScale)
@@ -135,7 +143,7 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem {text: qsTr("Paramètres…"); onTriggered: settingsDialog.open()}
         }
-        Menu { title: qsTr("&Aide")
+        Menu { objectName:"helpMenu"; title: qsTr("&Aide")
             MenuItem {text: qsTr("Aide et raccourcis"); onTriggered: helpDialog.open()}
             MenuItem {text: qsTr("Mises à jour…"); onTriggered: updatesDialog.open()}
         }
