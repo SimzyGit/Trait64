@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "cancellation.h"
 #include "database.h"
 #include <QSqlError>
 #include <QSqlQuery>
@@ -9,6 +10,10 @@ namespace {
 void run(QSqlQuery &q) {
     if (!q.exec())
         throw std::runtime_error(q.lastError().text().toStdString());
+}
+void check(bool ok, const QString &message) {
+    if (!ok)
+        throw std::runtime_error(message.toStdString());
 }
 } // namespace
 QVariantList Database::players() const {
@@ -25,9 +30,10 @@ QVariantList Database::players() const {
 }
 QVariantMap Database::player(const QString &name) const {
     QSqlQuery q(db_);
-    q.prepare("SELECT white,black,result,eco,date,white_elo,black_elo,id,plies FROM games WHERE deleted=0 AND "
-              "id IN(SELECT id FROM games WHERE deleted=0 AND white=? UNION SELECT id FROM games WHERE "
-              "deleted=0 AND black=?) ORDER BY date DESC,id DESC");
+    q.prepare(
+        "SELECT white,black,result,eco,date,white_elo,black_elo,id,plies FROM games WHERE deleted=0 AND "
+        "id IN(SELECT id FROM games WHERE deleted=0 AND white=? UNION SELECT id FROM games WHERE "
+        "deleted=0 AND black=?) ORDER BY date DESC,id DESC");
     q.addBindValue(name);
     q.addBindValue(name);
     run(q);
@@ -35,10 +41,12 @@ QVariantMap Database::player(const QString &name) const {
         rating = 0;
     QMap<QString, QVariantMap> openings;
     QVariantList recent, eloHistory;
-    QHash<qint64, bool> colourOf;          // game id -> played white
-    QHash<qint64, double> pointsOf;        // game id -> points scored, finished games only
+    QHash<qint64, bool> colourOf;   // game id -> played white
+    QHash<qint64, double> pointsOf; // game id -> points scored, finished games only
     // Game length as a proxy for the phase where it was decided.
-    struct Phase { int wins = 0, draws = 0, losses = 0; };
+    struct Phase {
+        int wins = 0, draws = 0, losses = 0;
+    };
     Phase phases[3];
     while (q.next()) {
         bool white = q.value(0).toString() == name;
@@ -85,25 +93,30 @@ QVariantMap Database::player(const QString &name) const {
     for (const auto &o : openings) {
         openingList << o;
         if (o["finished"].toInt() >= 3)
-            weakest << QVariantMap{{"label", o["label"]}, {"count", o["finished"]},
+            weakest << QVariantMap{{"label", o["label"]},
+                                   {"count", o["finished"]},
                                    {"score", qRound(100 * o["points"].toDouble() / o["finished"].toInt())}};
     }
     std::sort(weakest.begin(), weakest.end(), [](const QVariant &a, const QVariant &b) {
         return a.toMap()["score"].toInt() < b.toMap()["score"].toInt();
     });
-    while (weakest.size() > 5) weakest.removeLast();
+    while (weakest.size() > 5)
+        weakest.removeLast();
     // The first six plies of every game, grouped into the lines the player actually reaches.
     QHash<qint64, QStringList> starts;
     QSqlQuery moves(db_);
-    moves.prepare("SELECT p.game_id,p.san FROM positions p JOIN games g ON g.id=p.game_id WHERE g.deleted=0 AND "
-                  "(g.white=? OR g.black=?) AND p.ply<6 AND p.san<>'' ORDER BY p.game_id,p.ply");
+    moves.prepare(
+        "SELECT p.game_id,p.san FROM positions p JOIN games g ON g.id=p.game_id WHERE g.deleted=0 AND "
+        "(g.white=? OR g.black=?) AND p.ply<6 AND p.san<>'' ORDER BY p.game_id,p.ply");
     moves.addBindValue(name);
     moves.addBindValue(name);
     run(moves);
-    while (moves.next()) starts[moves.value(0).toLongLong()] << moves.value(1).toString();
+    while (moves.next())
+        starts[moves.value(0).toLongLong()] << moves.value(1).toString();
     QMap<QString, QVariantMap> lines[2];
     for (auto it = starts.cbegin(); it != starts.cend(); ++it) {
-        if (!colourOf.contains(it.key())) continue;
+        if (!colourOf.contains(it.key()))
+            continue;
         QStringList numbered;
         for (int i = 0; i < it.value().size(); ++i)
             numbered << (i % 2 == 0 ? QString::number(i / 2 + 1) + ". " : QString()) + it.value()[i];
@@ -125,13 +138,16 @@ QVariantMap Database::player(const QString &name) const {
         std::sort(list.begin(), list.end(), [](const QVariant &a, const QVariant &b) {
             return a.toMap()["count"].toInt() > b.toMap()["count"].toInt();
         });
-        while (list.size() > 8) list.removeLast();
+        while (list.size() > 8)
+            list.removeLast();
         return list;
     };
     QVariantList phaseList;
     const char *phaseNames[] = {"Courtes (≤ 25 coups)", "Moyennes (26–50 coups)", "Longues (> 50 coups)"};
     for (int i = 0; i < 3; ++i)
-        phaseList << QVariantMap{{"label", phaseNames[i]}, {"wins", phases[i].wins}, {"draws", phases[i].draws},
+        phaseList << QVariantMap{{"label", phaseNames[i]},
+                                 {"wins", phases[i].wins},
+                                 {"draws", phases[i].draws},
                                  {"losses", phases[i].losses}};
     std::sort(openingList.begin(), openingList.end(), [](const QVariant &a, const QVariant &b) {
         return a.toMap()["count"].toInt() > b.toMap()["count"].toInt();
@@ -194,21 +210,43 @@ QVariantMap Database::reviewSummary(const QStringList &names) const {
     const auto marks = placeholders(int(names.size()));
     // Les notes sont pondérées par le nombre de coups mesurés : une partie de soixante
     // coups pèse plus qu'une de dix, sinon une miniature fausserait la moyenne.
-    const QString statement =
-        "SELECT COUNT(*),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_moves ELSE r.black_moves END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_opening ELSE r.black_opening END),"
-        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_opening ELSE r.black_opening END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_middlegame ELSE r.black_middlegame END),"
-        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_middlegame ELSE r.black_middlegame END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_endgame ELSE r.black_endgame END),"
-        "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_endgame ELSE r.black_endgame END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_blunders ELSE r.black_blunders END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_mistakes ELSE r.black_mistakes END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_inaccuracies ELSE r.black_inaccuracies END)"
-        " FROM game_reviews r JOIN games g ON g.id=r.game"
-        " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" + marks + ") OR g.black COLLATE NOCASE IN (" + marks + "))";
+    const QString statement = "SELECT COUNT(*),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_moves ELSE r.black_moves END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_opening ELSE r.black_opening END),"
+                              "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_opening ELSE r.black_opening END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_middlegame ELSE r.black_middlegame END),"
+                              "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_middlegame ELSE r.black_middlegame END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_endgame ELSE r.black_endgame END),"
+                              "COUNT(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_endgame ELSE r.black_endgame END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_blunders ELSE r.black_blunders END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_mistakes ELSE r.black_mistakes END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_inaccuracies ELSE r.black_inaccuracies END)"
+                              " FROM game_reviews r JOIN games g ON g.id=r.game"
+                              " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" +
+                              marks + ") OR g.black COLLATE NOCASE IN (" + marks + "))";
     QSqlQuery q(db_);
     q.prepare(statement);
     // La même liste revient treize fois : onze fois dans les colonnes, deux dans le
@@ -252,14 +290,21 @@ QVariantList Database::reviewHistory(const QStringList &names, int months) const
     // La date PGN s'écrit « AAAA.MM.JJ » : ses sept premiers caractères donnent le mois.
     // Une date inconnue s'écrit « ???? » et se retrouve donc groupée à part, ce qui vaut
     // mieux que de la rattacher arbitrairement à un mois.
-    const QString statement =
-        "SELECT substr(g.date,1,7) AS period,COUNT(*),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_moves ELSE r.black_moves END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
-        "SUM(CASE WHEN g.white COLLATE NOCASE IN (" + marks + ") THEN r.white_blunders ELSE r.black_blunders END)"
-        " FROM game_reviews r JOIN games g ON g.id=r.game"
-        " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" + marks + ") OR g.black COLLATE NOCASE IN (" + marks + "))"
-        " GROUP BY period ORDER BY period DESC LIMIT ?";
+    const QString statement = "SELECT substr(g.date,1,7) AS period,COUNT(*),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_moves ELSE r.black_moves END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_all*r.white_moves ELSE r.black_all*r.black_moves END),"
+                              "SUM(CASE WHEN g.white COLLATE NOCASE IN (" +
+                              marks +
+                              ") THEN r.white_blunders ELSE r.black_blunders END)"
+                              " FROM game_reviews r JOIN games g ON g.id=r.game"
+                              " WHERE g.deleted=0 AND (g.white COLLATE NOCASE IN (" +
+                              marks + ") OR g.black COLLATE NOCASE IN (" + marks +
+                              "))"
+                              " GROUP BY period ORDER BY period DESC LIMIT ?";
     QSqlQuery q(db_);
     q.prepare(statement);
     for (int repeat = 0; repeat < 5; ++repeat)
@@ -270,13 +315,14 @@ QVariantList Database::reviewHistory(const QStringList &names, int months) const
     QVariantList rows;
     while (q.next()) {
         const auto moves = q.value(2).toLongLong();
-        rows << QVariantMap{{"period", q.value(0)},
-                            {"games", q.value(1)},
-                            {"moves", moves},
-                            {"accuracy", moves > 0 && !q.value(3).isNull()
-                                             ? QVariant(qRound(10 * q.value(3).toDouble() / double(moves)) / 10.)
-                                             : QVariant()},
-                            {"blunders", q.value(4).toLongLong()}};
+        rows << QVariantMap{
+            {"period", q.value(0)},
+            {"games", q.value(1)},
+            {"moves", moves},
+            {"accuracy", moves > 0 && !q.value(3).isNull()
+                             ? QVariant(qRound(10 * q.value(3).toDouble() / double(moves)) / 10.)
+                             : QVariant()},
+            {"blunders", q.value(4).toLongLong()}};
     }
     return rows;
 }
@@ -352,5 +398,128 @@ int Database::importPgnFile(const QString &path, const std::function<bool(int)> 
         throw;
     }
     return stats()["games"].toInt() - before;
+}
+QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names, int limit,
+                                    const std::shared_ptr<std::atomic_bool> &canceled) const {
+    QueryCancellation cancellation(db_, canceled);
+    if (names.isEmpty())
+        return {{"games", 0}, {"touched", 0}, {"left", 0}, {"rows", QVariantList()}};
+    QSqlQuery meta(db_);
+    meta.prepare("SELECT white FROM repertoires WHERE id=?");
+    meta.addBindValue(repertoire);
+    run(meta);
+    check(meta.next(), "Répertoire introuvable.");
+    const bool white = meta.value(0).toBool();
+    // Les positions d'un répertoire sont rangées sous une clé textuelle, les parties sous
+    // l'empreinte Zobrist : on dresse la correspondance une fois, en mémoire, plutôt que
+    // de rejouer les coups de chaque partie.
+    sql("CREATE TEMP TABLE IF NOT EXISTS gap_positions(key INTEGER PRIMARY KEY, textkey TEXT NOT NULL)");
+    sql("CREATE TEMP TABLE IF NOT EXISTS gap_moves(key INTEGER NOT NULL, uci TEXT NOT NULL, "
+        "PRIMARY KEY(key,uci))");
+    sql("DELETE FROM gap_positions");
+    sql("DELETE FROM gap_moves");
+    QSqlQuery read(db_), insert(db_);
+    read.prepare("SELECT key,fen FROM repertoire_positions WHERE repertoire=?");
+    read.addBindValue(repertoire);
+    run(read);
+    insert.prepare("INSERT OR IGNORE INTO gap_positions(key,textkey) VALUES(?,?)");
+    QMap<QString, qint64> keys;
+    while (read.next()) {
+        const auto textkey = read.value(0).toString();
+        const auto key = qint64(positionHash(read.value(1).toString().toStdString()));
+        keys.insert(textkey, key);
+        insert.addBindValue(key);
+        insert.addBindValue(textkey);
+        run(insert);
+    }
+    read.prepare("SELECT key,uci FROM repertoire_moves WHERE repertoire=?");
+    read.addBindValue(repertoire);
+    run(read);
+    insert.prepare("INSERT OR IGNORE INTO gap_moves(key,uci) VALUES(?,?)");
+    while (read.next()) {
+        const auto it = keys.constFind(read.value(0).toString());
+        if (it == keys.cend())
+            continue;
+        insert.addBindValue(*it);
+        insert.addBindValue(read.value(1));
+        run(insert);
+    }
+    const auto marks = placeholders(int(names.size()));
+    auto bindNames = [&](QSqlQuery &q, int times) {
+        for (int i = 0; i < times; ++i)
+            for (const auto &name : names)
+                q.addBindValue(name);
+    };
+    // Le joueur ne dévie que de son propre trait : les plis pairs sont aux Blancs.
+    const QString ownSide = white ? "0" : "1";
+    const QString mine =
+        white ? "g.white COLLATE NOCASE IN (" + marks + ")" : "g.black COLLATE NOCASE IN (" + marks + ")";
+    // « Entrée dans le répertoire » veut dire avoir joué au moins un coup préparé. La
+    // seule présence d'une position connue ne dit rien : la position de départ l'est
+    // toujours, et toute partie y passe.
+    const QString entered = "EXISTS(SELECT 1 FROM positions p JOIN gap_moves m ON m.key=p.key AND"
+                            " m.uci=p.uci WHERE p.game_id=g.id AND p.ply%" +
+                            QString("2=") + ownSide + ")";
+    QSqlQuery counts(db_);
+    counts.prepare("SELECT COUNT(*),SUM(" + entered + ") FROM games g WHERE g.deleted=0 AND " + mine);
+    bindNames(counts, 1);
+    run(counts);
+    qint64 played = 0, touched = 0;
+    if (counts.next()) {
+        played = counts.value(0).toLongLong();
+        touched = counts.value(1).toLongLong();
+    }
+    // Premier pli où le joueur quitte sa propre préparation : la position est connue du
+    // répertoire, le coup joué n'y figure pas.
+    QSqlQuery leave(db_);
+    leave.prepare("SELECT g.id,g.white,g.black,g.date,g.result,g.eco,d.ply,d.san,d.key FROM games g JOIN"
+                  " (SELECT p.game_id,MIN(p.ply) AS ply,p.key,p.san FROM positions p"
+                  "  JOIN gap_positions r ON r.key=p.key"
+                  "  LEFT JOIN gap_moves m ON m.key=p.key AND m.uci=p.uci"
+                  "  WHERE p.uci<>'' AND m.uci IS NULL AND p.ply%2=" +
+                  ownSide +
+                  "  GROUP BY p.game_id) d ON d.game_id=g.id"
+                  " WHERE g.deleted=0 AND " +
+                  entered + " AND " + mine + " ORDER BY d.ply,g.date DESC LIMIT ?");
+    bindNames(leave, 1);
+    leave.addBindValue(std::clamp(limit, 1, 500));
+    run(leave);
+    QVariantList rows;
+    QSqlQuery expected(db_);
+    expected.prepare(
+        "SELECT san FROM repertoire_moves WHERE repertoire=? AND key=? ORDER BY priority DESC,san");
+    while (leave.next()) {
+        QStringList prepared;
+        for (auto it = keys.cbegin(); it != keys.cend(); ++it)
+            if (*it == leave.value(8).toLongLong()) {
+                expected.addBindValue(repertoire);
+                expected.addBindValue(it.key());
+                run(expected);
+                while (expected.next())
+                    prepared << expected.value(0).toString();
+                break;
+            }
+        rows.append(QVariantMap{{"id", leave.value(0)},
+                                {"white", leave.value(1)},
+                                {"black", leave.value(2)},
+                                {"date", leave.value(3)},
+                                {"result", leave.value(4)},
+                                {"eco", leave.value(5)},
+                                // Le numéro du coup, pas le pli : c'est ce qu'on lit sur une feuille.
+                                {"move", leave.value(6).toInt() / 2 + 1},
+                                {"played", leave.value(7)},
+                                {"expected", prepared}});
+    }
+    QSqlQuery total(db_);
+    total.prepare("SELECT COUNT(*) FROM games g JOIN"
+                  " (SELECT p.game_id FROM positions p JOIN gap_positions r ON r.key=p.key"
+                  "  LEFT JOIN gap_moves m ON m.key=p.key AND m.uci=p.uci"
+                  "  WHERE p.uci<>'' AND m.uci IS NULL AND p.ply%2=" +
+                  ownSide + "  GROUP BY p.game_id) d ON d.game_id=g.id WHERE g.deleted=0 AND " + entered +
+                  " AND " + mine);
+    bindNames(total, 1);
+    run(total);
+    const qint64 left = total.next() ? total.value(0).toLongLong() : 0;
+    return {{"games", played}, {"touched", touched}, {"left", left}, {"rows", rows}, {"white", white}};
 }
 } // namespace t64

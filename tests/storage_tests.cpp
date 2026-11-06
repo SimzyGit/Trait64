@@ -289,6 +289,48 @@ int main(int argc, char **argv) {
             check(board.gamesToReviewFor({}, 24).isEmpty(), "No nickname means nothing to queue");
         }
         {
+            // L'écart entre un répertoire et les parties réellement jouées : personne
+            // d'autre ne peut le dire, il faut les deux au même endroit.
+            t64::Database mine(dir.filePath("gap.sqlite"));
+            const auto prep = t64::parsePgn("1.e4 e5 2.Nf3 Nc6 3.Bb5 *").front();
+            const auto id = mine.createRepertoire("Espagnole", true, prep);
+            auto game = [](const char *w, const char *b, const char *moves, const char *result) {
+                return QString("[Event \"x\"]\n[White \"%1\"]\n[Black \"%2\"]\n[Result \"%3\"]\n"
+                               "[Date \"2026.01.01\"]\n\n%4 %3\n\n")
+                    .arg(w, b, result, moves);
+            };
+            const auto pgn =
+                // Suit la préparation jusqu'au bout.
+                game("Simzy", "X", "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6", "1-0") +
+                // La quitte au troisième coup : Bc4 au lieu de Bb5.
+                game("Simzy", "Y", "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5", "0-1") +
+                // N'y entre jamais.
+                game("Simzy", "Z", "1.d4 d5 2.c4 e6", "1/2-1/2") +
+                // Celle d'un autre joueur ne doit pas compter.
+                game("Autre", "W", "1.e4 e5 2.Nf3 Nc6 3.Bc4", "1-0") +
+                // Simzy avec les Noirs : le répertoire est celui des Blancs.
+                game("V", "Simzy", "1.e4 e5 2.Nf3 Nc6 3.Bc4", "1-0");
+            check(mine.importGames(t64::parsePgn(pgn.toStdString())) == 5, "Seed five games");
+            const auto gap = mine.repertoireGap(id, {"Simzy"});
+            check(gap["games"].toLongLong() == 3, "Only the player's games with that colour are counted");
+            check(gap["touched"].toLongLong() == 2, "Two of them reached the repertoire");
+            check(gap["left"].toLongLong() == 1, "One of them left the preparation");
+            const auto rows = gap["rows"].toList();
+            check(rows.size() == 1, "One row per game that left, not per position");
+            const auto row = rows.first().toMap();
+            check(row["black"] == "Y", "The row names the game that left");
+            check(row["move"].toInt() == 3 && row["played"] == "Bc4",
+                  "The row says at which move and with which move the player left");
+            check(row["expected"].toStringList() == QStringList{"Bb5"},
+                  "And what the repertoire had prepared instead");
+            // Un joueur inconnu de la base n'est pas une erreur : c'est zéro.
+            const auto none = mine.repertoireGap(id, {"Personne"});
+            check(none["games"].toLongLong() == 0 && none["rows"].toList().isEmpty(),
+                  "A name no game carries reports nothing rather than failing");
+            check(mine.repertoireGap(id, {})["games"].toLongLong() == 0,
+                  "No name at all reports nothing rather than every game");
+        }
+        {
             // Dossier d'une position : ce que la bibliothèque sait de ce qui s'y joue.
             t64::Database desk(dir.filePath("report.sqlite"));
             auto game = [](const char *w, const char *b, const char *result, const char *we, const char *be,

@@ -1584,6 +1584,41 @@ int main(int argc, char **argv) {
                   "The collection carries the family name, not the ECO code");
         }
         {
+            // Comparer un répertoire aux parties du joueur : le profil dit lesquelles
+            // sont les siennes, et son nom compte autant que ses comptes en ligne — les
+            // parties jouées sur l'échiquier portent celui-là.
+            QTemporaryDir home;
+            Controller mine(home.path());
+            QElapsedTimer settle;
+            auto idle = [&] {
+                settle.restart();
+                while ((mine.busy() || mine.librarySearching()) && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+            };
+            check(mine.repertoireGap(1, 0)["reason"] == "noProfile",
+                  "Without a profile the comparison says what is missing, not an error");
+            mine.addProfile("Simzy");
+            mine.importText("[Event \"x\"]\n[White \"Simzy\"]\n[Black \"Y\"]\n[Result \"1-0\"]\n\n"
+                            "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 1-0");
+            idle();
+            mine.navigate(0);
+            for (const auto &uci : {"e2e4", "e7e5", "g1f3", "b8c6", "f1b5"})
+                mine.move(uci);
+            mine.createRepertoire("Espagnole", true);
+            // La création d'un répertoire a sa propre tâche de fond.
+            settle.restart();
+            while (mine.repertoires().isEmpty() && settle.elapsed() < 15000)
+                QTest::qWait(20);
+            const auto repertoires = mine.repertoires();
+            check(!repertoires.isEmpty(), "The repertoire is created from the open study");
+            const auto gap = mine.repertoireGap(repertoires.first().toMap()["id"].toLongLong(), 0);
+            check(gap["ready"].toBool(), "A profile with no online account still names the player");
+            check(gap["left"].toLongLong() == 1 && gap["rows"].toList().size() == 1,
+                  "The game that left the preparation is found through the profile name alone");
+            check(gap["rows"].toList().first().toMap()["played"] == "Bc4",
+                  "And the move actually played is the one reported");
+        }
+        {
             // Classer les ouvertures : sans cela, `eco` ne valait que la balise PGN, et un
             // PGN sans balise — le cas courant — restait invisible à la recherche par
             // ouverture. Le classement doit suivre l'import sans qu'on le demande.

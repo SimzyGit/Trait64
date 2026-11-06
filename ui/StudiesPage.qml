@@ -237,6 +237,14 @@ ColumnLayout {
                         enabled: root.editable
                         onClicked: exportPgn.open()
                     }
+                    TButton {
+                        objectName: "repertoireGap"
+                        text: qsTr("Comparer à mes parties")
+                        enabled: root.editable && root.selectedId > 0
+                        onClicked: { gap.load(); gap.open() }
+                        ToolTip.visible: hovered || visualFocus
+                        ToolTip.text: qsTr("Où vous quittez votre propre préparation, dans vos parties déjà importées.")
+                    }
                 }
 
                 Label {
@@ -275,6 +283,84 @@ ColumnLayout {
                 id: createWhite
                 text: qsTr("Préparée pour les Blancs")
                 checked: true
+            }
+        }
+    }
+
+    TDialog {
+        id: gap
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        title: qsTr("Mon répertoire face à mes parties")
+        width: Math.min(760, parent ? parent.width - 48 : 760)
+        height: Math.min(620, parent ? parent.height - 64 : 620)
+        property var found: ({})
+        // Le premier profil : c'est celui dont les comptes et le nom désignent le joueur.
+        function load() { found = root.backend.repertoireGap(root.selectedId, 0) }
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 12
+            Label {
+                Layout.fillWidth: true
+                visible: !gap.found.ready
+                wrapMode: Text.WordWrap
+                color: root.preferences.muted
+                text: gap.found.reason === "noProfile"
+                      ? qsTr("Créez un profil pour comparer : c’est lui qui dit quelles parties sont les vôtres.")
+                      : gap.found.reason === "noAccount"
+                        ? qsTr("Rattachez un compte à votre profil, ou donnez-lui le nom sous lequel vous jouez.")
+                        : root.backend.uiText(gap.found.reason || "")
+            }
+            Label {
+                Layout.fillWidth: true
+                visible: !!gap.found.ready
+                wrapMode: Text.WordWrap
+                color: root.preferences.muted
+                text: qsTr("%1 de vos parties avec cette couleur · %2 sont entrées dans ce répertoire · "
+                           + "vous l’avez quitté dans %3")
+                        .arg(gap.found.games || 0).arg(gap.found.touched || 0).arg(gap.found.left || 0)
+            }
+            Label {
+                Layout.fillWidth: true
+                visible: !!gap.found.ready && (gap.found.touched || 0) === 0
+                wrapMode: Text.WordWrap
+                color: root.preferences.muted
+                text: qsTr("Aucune de vos parties n’a joué un coup de ce répertoire. Importez vos parties, "
+                           + "ou vérifiez que le nom du profil est bien celui sous lequel vous jouez.")
+            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: (gap.found.rows || []).length > 0
+                clip: true
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 6
+                    Repeater {
+                        model: gap.found.rows || []
+                        Label {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: hovered.hovered ? root.preferences.accent : root.preferences.foreground
+                            text: qsTr("Coup %1 : vous avez joué %2, le répertoire prévoyait %3")
+                                    .arg(modelData.move)
+                                    .arg(modelData.played)
+                                    .arg((modelData.expected || []).join(", ") || qsTr("rien ici"))
+                                  + "   —   " + (modelData.white || "?") + " / " + (modelData.black || "?")
+                                  + "   " + (modelData.result || "*")
+                            HoverHandler {id: hovered; cursorShape: Qt.PointingHandCursor}
+                            TapHandler {onTapped: {root.backend.loadGame(modelData.id); gap.close()}}
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item {Layout.fillWidth: true}
+                TButton {text: qsTr("Fermer"); onClicked: gap.close()}
             }
         }
     }

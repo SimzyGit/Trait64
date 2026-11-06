@@ -1153,5 +1153,15 @@
   "Tournoi": "Tournament",
   "Maîtres": "Masters",
   "Dernière": "Last",
-  "Parties modèles": "Model games"
+  "Parties modèles": "Model games",
+  "Comparer à mes parties": "Compare with my games",
+  "Où vous quittez votre propre préparation, dans vos parties déjà importées.": "Where you leave your own preparation, in the games you have already imported.",
+  "Mon répertoire face à mes parties": "My repertoire against my games",
+  "Créez un profil pour comparer : c’est lui qui dit quelles parties sont les vôtres.": "Create a profile to compare: it is what says which games are yours.",
+  "Rattachez un compte à votre profil, ou donnez-lui le nom sous lequel vous jouez.": "Link an account to your profile, or give it the name you play under.",
+  "%1 de vos parties avec cette couleur · %2 sont entrées dans ce répertoire · vous l’avez quitté dans %3": "%1 of your games with that colour · %2 entered this repertoire · you left it in %3",
+  "Aucune de vos parties n’a joué un coup de ce répertoire. Importez vos parties, ou vérifiez que le nom du profil est bien celui sous lequel vous jouez.": "None of your games played a move from this repertoire. Import your games, or check that the profile name is the one you play under.",
+  "Coup %1 : vous avez joué %2, le répertoire prévoyait %3": "Move %1: you played %2, the repertoire prepared %3",
+  "rien ici": "nothing here",
+  "Répertoire introuvable.": "Repertoire not found."
 }

@@ -1,5 +1,11 @@
 # Changements
 
+## Ouvertures — 6 novembre 2026
+
+- **Les parties sans balise ECO sont classées** d'après les coups joués, à l'import comme sur une base déjà constituée. Sans cela, `eco` ne valait que ce que le PGN portait — et la plupart n'en portent rien : la recherche par ouverture les ignorait en silence.
+- **Dossier d'une position** : les coups joués ici, leur score, le même découpage selon la force des joueurs, et les parties les mieux classées qui y sont passées. Zéro partie se lit comme une nouveauté pour votre bibliothèque, pas comme une panne.
+- **Comparer un répertoire à ses propres parties** : où vous quittez votre préparation, à quel coup, avec quel coup, et ce qui était prévu à la place.
+
 ## Analyse et études — 6 novembre 2026
 
 - **Désinstallation** : `--uninstall` ne retirait que l'AppImage et annonçait quand même « Trait64 est désinstallé » à qui avait posé le paquet Debian. Il retire maintenant le paquet par apt-get, dit quoi faire s'il ne trouve rien, et rappelle où est restée la bibliothèque.

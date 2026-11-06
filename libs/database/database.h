@@ -86,6 +86,11 @@ class Database {
     void reviewRepertoire(qint64 id, const QString &fen, bool success);
     QVariantList repertoireWeaknesses(qint64 id) const;
     QVariantList repertoireGaps(qint64 id) const;
+    // L'écart entre un répertoire et les parties réellement jouées : combien de parties y
+    // sont entrées, dans combien le joueur a quitté sa propre préparation, et où. Personne
+    // d'autre ne peut le dire : il faut le répertoire et le corpus du joueur au même endroit.
+    QVariantMap repertoireGap(qint64 repertoire, const QStringList &names, int limit = 50,
+                              const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void exportSource(QIODevice &output, qint64 source) const;
     Game load(qint64 id) const;
     QVariantList search(const QString &query = {}, const QString &result = {}, bool favorite = false,

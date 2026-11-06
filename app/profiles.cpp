@@ -383,3 +383,24 @@ QVariantMap Controller::skillDashboard(int profileIndex) const {
         return {{"ready", false}, {"reason", QString::fromUtf8(e.what())}};
     }
 }
+
+QVariantMap Controller::repertoireGap(qint64 repertoireId, int profileIndex) const {
+    try {
+        const auto all = profiles();
+        if (profileIndex < 0 || profileIndex >= all.size())
+            return {{"ready", false}, {"reason", "noProfile"}};
+        auto names = profileAccountNames(profileIndex);
+        // Le nom du profil compte aussi : les parties jouées sur l'échiquier portent
+        // celui-là, pas un pseudo de site.
+        const auto own = all[profileIndex].toMap()["name"].toString().trimmed();
+        if (!own.isEmpty() && !names.contains(own, Qt::CaseInsensitive))
+            names << own;
+        if (names.isEmpty())
+            return {{"ready", false}, {"reason", "noAccount"}};
+        auto gap = db_->repertoireGap(repertoireId, names);
+        gap["ready"] = true;
+        return gap;
+    } catch (const std::exception &e) {
+        return {{"ready", false}, {"reason", QString::fromUtf8(e.what())}};
+    }
+}
