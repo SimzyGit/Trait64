@@ -93,6 +93,12 @@ class Database {
                         const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantMap stats() const;
     QVariantList explorer(const QString &position) const;
+    // Dossier d'une position : ce que la bibliothèque sait de ce qui s'y joue. Les coups
+    // avec leur score, le même découpage par force des joueurs — un coup qui réussit chez
+    // les amateurs et disparaît au-dessus de 2300 ne se voit pas autrement — et les
+    // parties les mieux classées qui y sont passées.
+    QVariantMap openingReport(const QString &fen, int models = 6,
+                              const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantList positionStatistics(const QString &fen, const QVariantMap &filters = {},
                                     const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void favorite(qint64 id, bool value);

@@ -6,6 +6,17 @@
 #include <QtConcurrent>
 
 void Controller::initPreparation() {
+    connect(&reportWorker_, &QFutureWatcher<QVariantMap>::finished, this, [this] {
+        auto result = reportWorker_.result();
+        // Une réponse d'une position qu'on a déjà quittée ne doit pas s'afficher.
+        if (result["generation"].toLongLong() == reportGeneration_) {
+            result["running"] = false;
+            report_ = result;
+            emit reportChanged();
+        }
+        if (reportPending_)
+            buildOpeningReport();
+    });
     connect(&preparationWorker_, &QFutureWatcher<PreparationResult>::finished, this, [this] {
         preparationActive_ = false;
         const auto result = preparationWorker_.result();
@@ -14,10 +25,10 @@ void Controller::initPreparation() {
             preparation_["rows"] = result.rows;
             preparation_["fen"] = result.fen;
             preparation_["error"] = result.error;
-            preparation_["status"] = result.error.isEmpty()
-                                         ? tr("%1 suite(s) observée(s) dans les parties sélectionnées.")
-                                               .arg(result.rows.size())
-                                         : tr("Statistiques indisponibles.");
+            preparation_["status"] =
+                result.error.isEmpty()
+                    ? tr("%1 suite(s) observée(s) dans les parties sélectionnées.").arg(result.rows.size())
+                    : tr("Statistiques indisponibles.");
             emit preparationChanged();
         }
         if (preparationPending_)
@@ -117,4 +128,36 @@ void Controller::exportPreparation(const QString &url) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+
+void Controller::buildOpeningReport() {
+    // Même schéma que la préparation : la requête peut parcourir toutes les parties
+    // passées par la position, et l'interface ne doit pas se figer pendant ce temps.
+    if (reportWorker_.isRunning()) {
+        reportPending_ = true;
+        return;
+    }
+    ++reportGeneration_;
+    if (cancelReport_)
+        cancelReport_->store(true);
+    cancelReport_ = std::make_shared<std::atomic_bool>(false);
+    reportPending_ = false;
+    const auto path = db_->path(), fen = QString::fromStdString(game_.nodes[node_].fen);
+    const auto name = state_["opening"].toString();
+    const auto generation = reportGeneration_;
+    const auto canceled = cancelReport_;
+    report_ = {{"running", true}, {"fen", fen}, {"name", name}};
+    emit reportChanged();
+    reportWorker_.setFuture(QtConcurrent::run([=] {
+        QVariantMap result{{"generation", generation}, {"fen", fen}, {"name", name}};
+        try {
+            t64::Database db(path);
+            const auto found = db.openingReport(fen, 6, canceled);
+            for (auto it = found.cbegin(); it != found.cend(); ++it)
+                result[it.key()] = it.value();
+        } catch (const std::exception &e) {
+            result["error"] = QString::fromUtf8(e.what());
+        }
+        return result;
+    }));
 }

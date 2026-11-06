@@ -126,6 +126,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Recherche avancée…"); onTriggered: {win.page = 1; advancedDialog.open()}}
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
             MenuSeparator {}
+            MenuItem {text: qsTr("Dossier de la position…"); onTriggered: openingReportDialog.open()}
             MenuItem {text: qsTr("Préparation par position…"); onTriggered: preparationDialog.open()}
             MenuItem {text: qsTr("Mes répertoires…"); onTriggered: repertoiresDialog.open()}
             MenuItem {text: qsTr("Joueurs"); onTriggered: win.page = 6}
@@ -515,7 +516,10 @@ objectName:"analysisSplit"
 ColumnLayout {width:openingsViewport.availableWidth;height:Math.max(openingsViewport.availableHeight,implicitHeight);
                 Layout.margins:0;spacing:20
                 Label {text:qsTr("Les suites jouées dans votre bibliothèque, depuis la position actuelle de l’échiquier.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("←  Reculer");enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:qsTr("Position initiale");onClicked:controller.step(-2)} TButton {text:qsTr("Voir l’échiquier");onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:qsTr("Préparer");onClicked:preparationDialog.open()} TButton {text:qsTr("Mes répertoires");objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:qsTr("Créer une carte depuis ici");accent:true;onClicked:cardDialog.open()}}
+                Flow {Layout.fillWidth:true;spacing:8
+                    TButton {objectName:"openingReport";text:qsTr("Dossier de la position");accent:true;onClicked:openingReportDialog.open()
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Les coups joués ici, leur score, le même découpage par force des joueurs, et les parties les mieux classées qui y sont passées.")}
+                    TButton {text:qsTr("←  Reculer");enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:qsTr("Position initiale");onClicked:controller.step(-2)} TButton {text:qsTr("Voir l’échiquier");onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:qsTr("Préparer");onClicked:preparationDialog.open()} TButton {text:qsTr("Mes répertoires");objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:qsTr("Créer une carte depuis ici");accent:true;onClicked:cardDialog.open()}}
                 Label {text:controller.state.fen;color:win.muted;font.family:"monospace";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);elide:Text.ElideRight;Layout.fillWidth:true}
                 Rectangle {Layout.fillWidth:true;height:1;color:win.line}
                 RowLayout {Layout.fillWidth:true;Label {text:qsTr("Coup");Layout.preferredWidth:95;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("Parties");Layout.preferredWidth:90;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("BLANCS / NULLES / NOIRS (RÉSULTATS TERMINÉS)");color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true}}
@@ -672,6 +676,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     }
     Timer {id:toastTimer;interval:6500;onTriggered:toast.close()}
     Preparation {id:preparationDialog;objectName:"preparationDialog";backend:controller}
+    OpeningReport {id:openingReportDialog;objectName:"openingReportDialog";parent:Overlay.overlay;anchors.centerIn:parent;backend:controller}
     Repertoires {id:repertoiresDialog;objectName:"repertoiresDialog";backend:controller}
     Imports {id:importsDialog;objectName:"importsDialog";backend:controller}
     Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}

@@ -289,6 +289,47 @@ int main(int argc, char **argv) {
             check(board.gamesToReviewFor({}, 24).isEmpty(), "No nickname means nothing to queue");
         }
         {
+            // Dossier d'une position : ce que la bibliothèque sait de ce qui s'y joue.
+            t64::Database desk(dir.filePath("report.sqlite"));
+            auto game = [](const char *w, const char *b, const char *result, const char *we, const char *be,
+                           const char *moves, const char *year) {
+                return QString("[Event \"x\"]\n[White \"%1\"]\n[Black \"%2\"]\n[Result \"%3\"]\n"
+                               "[WhiteElo \"%4\"]\n[BlackElo \"%5\"]\n[Date \"%6.01.01\"]\n\n%7 %3\n\n")
+                    .arg(w, b, result, we, be, year, moves);
+            };
+            const auto pgn = game("A", "B", "1-0", "2500", "2480", "1.e4 c5 2.Nf3", "2024") +
+                             game("C", "D", "0-1", "2400", "2390", "1.e4 c5 2.Nf3", "2023") +
+                             game("E", "F", "1/2-1/2", "1800", "1750", "1.e4 c5 2.Nf3", "2022") +
+                             game("G", "H", "1-0", "1900", "1850", "1.e4 c5 2.d4", "2021") +
+                             game("I", "J", "1-0", "0", "0", "1.e4 c5 2.c3", "2020");
+            check(desk.importGames(t64::parsePgn(pgn.toStdString())) == 5, "Seed five games on one position");
+            const QString sicilian = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+            const auto report = desk.openingReport(sicilian);
+            check(report["total"].toLongLong() == 5, "Every game through the position is counted");
+            check(report["whiteWins"].toLongLong() == 3 && report["draws"].toLongLong() == 1 &&
+                      report["blackWins"].toLongLong() == 1,
+                  "The result split is the one of the games that reached it");
+            const auto moves = report["moves"].toList();
+            check(moves.size() == 3, "One line per move played from the position");
+            check(moves[0].toMap()["san"] == "Nf3" && moves[0].toMap()["count"].toLongLong() == 3,
+                  "Moves come most played first");
+            // La tranche de force : trois Nf3, deux chez les maîtres, un au club.
+            const auto bands = moves[0].toMap()["bands"].toMap();
+            check(bands["maitre"].toLongLong() == 2 && bands["club"].toLongLong() == 1,
+                  "A move is split by the strength of those who played it");
+            check(!bands.contains(""), "A game missing an Elo is counted, but ranked in no band");
+            check(moves[0].toMap()["last"].toString() == "2024",
+                  "The most recent year the move was played is kept");
+            const auto models = report["models"].toList();
+            check(models.size() == 5 && models[0].toMap()["white"] == "A",
+                  "Model games come best rated first");
+            // Une position que personne n'a jouée n'est pas une erreur : c'est zéro.
+            const auto empty = desk.openingReport("8/8/8/4k3/8/8/4K3/8 w - - 0 1");
+            check(empty["total"].toLongLong() == 0 && empty["moves"].toList().isEmpty() &&
+                      empty["models"].toList().isEmpty(),
+                  "A position no game reached reports nothing rather than failing");
+        }
+        {
             // Classer les ouvertures : `eco` ne venait que de la balise PGN, et la plupart
             // des bases n'en portent aucune. Le classement passe par l'empreinte de
             // position que la base indexe déjà — encore faut-il que celle d'une position

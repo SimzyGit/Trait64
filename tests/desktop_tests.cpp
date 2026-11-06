@@ -1605,6 +1605,23 @@ int main(int argc, char **argv) {
             };
             check(ecoOf("sans balise").startsWith("B"),
                   "A game imported without an ECO tag is classified from its moves");
+            // Le dossier de la position se construit en arrière-plan : l'interface ne doit
+            // pas se figer sur une bibliothèque où des milliers de parties y sont passées.
+            shelf.navigate(0);
+            shelf.move("e2e4");
+            shelf.buildOpeningReport();
+            check(shelf.openingReport()["running"].toBool(),
+                  "The dossier announces itself as running rather than freezing the window");
+            settle.restart();
+            while (shelf.openingReport()["running"].toBool() && settle.elapsed() < 10000)
+                QTest::qWait(10);
+            const auto dossier = shelf.openingReport();
+            check(dossier["total"].toLongLong() == 1 && dossier["moves"].toList().size() == 1,
+                  "The dossier counts the games that reached the position");
+            check(dossier["moves"].toList()[0].toMap()["san"] == "c5",
+                  "The move played from the position is the one reported");
+            check(dossier["name"].toString().contains("B"),
+                  "The dossier names the opening of the position it describes");
             // Et la commande explicite doit rattraper ce qui est déjà en base.
             QSignalSpy said(&shelf, &Controller::message);
             shelf.classifyLibraryOpenings();

@@ -52,6 +52,9 @@ class Controller : public QObject {
     Q_PROPERTY(int importedGames READ importedGames NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
+    // Dossier de la position courante : coups joués, scores, tranches de force et
+    // parties modèles. Construit en arrière-plan, comme la préparation.
+    Q_PROPERTY(QVariantMap openingReport READ openingReport NOTIFY reportChanged)
     Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
     Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
@@ -314,6 +317,8 @@ class Controller : public QObject {
     // télécharger : la table ECO est embarquée.
     // Donne son code ECO à chaque partie qui n'en porte pas : la plupart des PGN n'en
     // portent aucun, et la recherche par ouverture restait alors vide en silence.
+    Q_INVOKABLE void buildOpeningReport();
+    QVariantMap openingReport() const { return report_; }
     Q_INVOKABLE void classifyLibraryOpenings();
     // Le même classement, sans message : il suit chaque import, et un import réussi ne
     // doit pas échouer parce que le classement a manqué.
@@ -348,6 +353,7 @@ class Controller : public QObject {
     void repertoireTaskChanged();
     void showAnalysisQueue();
     void preparationChanged();
+    void reportChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -513,6 +519,11 @@ class Controller : public QObject {
     std::deque<Snapshot> undo_, redo_;
     QVariantList review_, players_;
     QVariantMap reviewAccuracy_, reviewQuality_;
+    QVariantMap report_;
+    QFutureWatcher<QVariantMap> reportWorker_;
+    std::shared_ptr<std::atomic_bool> cancelReport_;
+    qint64 reportGeneration_ = 0;
+    bool reportPending_ = false;
     QVariantMap advancedFilters_, playerProfile_;
     t64::Uci reviewer_;
     t64::Game reviewGame_;

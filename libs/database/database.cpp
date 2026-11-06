@@ -550,6 +550,83 @@ void Database::favorite(qint64 id, bool value) {
     q.addBindValue(id);
     run(q);
 }
+QVariantMap Database::openingReport(const QString &fen, int models,
+                                    const std::shared_ptr<std::atomic_bool> &canceled) const {
+    QueryCancellation cancellation(db_, canceled);
+    const auto key = hashKey(fen.toStdString());
+    // Les tranches sont celles que l'on distingue réellement : le club, le joueur de
+    // tournoi, le maître. Une partie dont un seul Elo manque n'est pas rangée de force.
+    const QString band = "CASE WHEN g.white_elo<=0 OR g.black_elo<=0 THEN '' "
+                         "WHEN (g.white_elo+g.black_elo)/2<2000 THEN 'club' "
+                         "WHEN (g.white_elo+g.black_elo)/2<2300 THEN 'tournoi' ELSE 'maitre' END";
+    QSqlQuery q(db_);
+    q.prepare("SELECT p.uci,MIN(p.san)," + band +
+              " AS band,COUNT(*),SUM(g.result='1-0'),SUM(g.result='1/2-1/2'),SUM(g.result='0-1'),"
+              "MAX(substr(g.date,1,4)) FROM positions p JOIN games g ON g.id=p.game_id"
+              " WHERE p.key=? AND p.uci<>'' AND g.deleted=0 GROUP BY p.uci,band");
+    q.addBindValue(key);
+    run(q);
+    // Un coup par ligne, ses tranches rassemblées : l'agrégat SQL en rend une par
+    // tranche, et c'est le coup que l'on veut lire d'un bloc.
+    QMap<QString, QVariantMap> byMove;
+    QVariantMap bandTotals;
+    qint64 total = 0, white = 0, draw = 0, black = 0;
+    while (q.next()) {
+        const auto uci = q.value(0).toString();
+        auto move = byMove.value(uci);
+        const qint64 count = q.value(3).toLongLong(), w = q.value(4).toLongLong(),
+                     d = q.value(5).toLongLong(), b = q.value(6).toLongLong();
+        move["uci"] = uci;
+        move["san"] = q.value(1);
+        move["count"] = move["count"].toLongLong() + count;
+        move["white"] = move["white"].toLongLong() + w;
+        move["draw"] = move["draw"].toLongLong() + d;
+        move["black"] = move["black"].toLongLong() + b;
+        if (q.value(7).toString() > move["last"].toString())
+            move["last"] = q.value(7);
+        const auto name = q.value(2).toString();
+        if (!name.isEmpty()) {
+            auto bands = move["bands"].toMap();
+            bands[name] = bands[name].toLongLong() + count;
+            move["bands"] = bands;
+            bandTotals[name] = bandTotals[name].toLongLong() + count;
+        }
+        byMove[uci] = move;
+        total += count;
+        white += w;
+        draw += d;
+        black += b;
+    }
+    QVariantList moves;
+    for (const auto &move : byMove)
+        moves.append(move);
+    // Du plus joué au moins joué : c'est l'ordre dans lequel on lit une position.
+    std::sort(moves.begin(), moves.end(), [](const QVariant &a, const QVariant &b) {
+        return a.toMap()["count"].toLongLong() > b.toMap()["count"].toLongLong();
+    });
+    QVariantList best;
+    if (models > 0) {
+        QSqlQuery games(db_);
+        games.prepare("SELECT g.id,g.white,g.black,g.result,g.date,g.event,g.white_elo,g.black_elo"
+                      " FROM positions p JOIN games g ON g.id=p.game_id"
+                      " WHERE p.key=? AND g.deleted=0 GROUP BY g.id"
+                      " ORDER BY (g.white_elo+g.black_elo) DESC,g.date DESC LIMIT ?");
+        games.addBindValue(key);
+        games.addBindValue(std::clamp(models, 1, 50));
+        run(games);
+        while (games.next())
+            best.append(QVariantMap{{"id", games.value(0)},
+                                    {"white", games.value(1)},
+                                    {"black", games.value(2)},
+                                    {"result", games.value(3)},
+                                    {"date", games.value(4)},
+                                    {"event", games.value(5)},
+                                    {"whiteElo", games.value(6)},
+                                    {"blackElo", games.value(7)}});
+    }
+    return {{"total", total}, {"whiteWins", white},  {"draws", draw}, {"blackWins", black},
+            {"moves", moves}, {"bands", bandTotals}, {"models", best}};
+}
 QVariantList Database::positionStatistics(const QString &fen, const QVariantMap &filters,
                                           const std::shared_ptr<std::atomic_bool> &canceled) const {
     QueryCancellation cancellation(db_, canceled);

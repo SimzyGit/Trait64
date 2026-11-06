@@ -1140,5 +1140,18 @@
   "%1 partie(s) classée(s) par ouverture.": "%1 game(s) classified by opening.",
   "Toutes les parties portent déjà un code d’ouverture.": "Every game already carries an opening code.",
   "Table des ouvertures vide.": "Opening table empty.",
-  "Classement interrompu.": "Classification interrupted."
+  "Classement interrompu.": "Classification interrupted.",
+  "Dossier de la position": "Position dossier",
+  "Dossier de la position…": "Position dossier…",
+  "Les coups joués ici, leur score, le même découpage par force des joueurs, et les parties les mieux classées qui y sont passées.": "The moves played here, their score, the same split by the strength of those who played them, and the best-rated games that went through.",
+  "Position hors des ouvertures nommées": "Position outside the named openings",
+  "Recherche dans la bibliothèque…": "Searching the library…",
+  "Aucune partie de votre bibliothèque n’est passée par cette position. C’est une nouveauté pour elle — pas nécessairement pour la théorie.": "No game in your library went through this position. It is a novelty for your library — not necessarily for theory.",
+  "%1 partie(s) · Blancs %2 · nulles %3 · Noirs %4": "%1 game(s) · White %2 · draws %3 · Black %4",
+  "Score blanc": "White score",
+  "Club": "Club",
+  "Tournoi": "Tournament",
+  "Maîtres": "Masters",
+  "Dernière": "Last",
+  "Parties modèles": "Model games"
 }
