@@ -1584,6 +1584,35 @@ int main(int argc, char **argv) {
                   "The collection carries the family name, not the ECO code");
         }
         {
+            // Classer les ouvertures : sans cela, `eco` ne valait que la balise PGN, et un
+            // PGN sans balise — le cas courant — restait invisible à la recherche par
+            // ouverture. Le classement doit suivre l'import sans qu'on le demande.
+            QTemporaryDir home;
+            Controller shelf(home.path());
+            QElapsedTimer settle;
+            auto idle = [&] {
+                settle.restart();
+                while ((shelf.busy() || shelf.librarySearching()) && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+            };
+            shelf.importText("[Event \"sans balise\"]\n\n1.e4 c5 2.Nf3 d6 *");
+            idle();
+            auto ecoOf = [&](const QString &event) {
+                for (const auto &row : shelf.games())
+                    if (row.toMap()["event"] == event)
+                        return row.toMap()["eco"].toString();
+                return QString();
+            };
+            check(ecoOf("sans balise").startsWith("B"),
+                  "A game imported without an ECO tag is classified from its moves");
+            // Et la commande explicite doit rattraper ce qui est déjà en base.
+            QSignalSpy said(&shelf, &Controller::message);
+            shelf.classifyLibraryOpenings();
+            idle();
+            check(said.count() == 1 && !said.first().at(1).toBool(),
+                  "Classifying again says what it did, as news rather than an error");
+        }
+        {
             // Plusieurs jeux de pièces côte à côte : avant, chaque import remplaçait le
             // précédent et le joueur ne pouvait pas revenir en arrière.
             QTemporaryDir home;

@@ -237,8 +237,10 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         }
         if (enhanced_) {
             QSqlQuery edges(db_);
-            edges.prepare("INSERT INTO opening_edges SELECT game_id," + column + ",uci,MIN(san) FROM positions "
-                          "WHERE game_id=? AND uci<>'' GROUP BY game_id," + column + ",uci");
+            edges.prepare("INSERT INTO opening_edges SELECT game_id," + column +
+                          ",uci,MIN(san) FROM positions "
+                          "WHERE game_id=? AND uci<>'' GROUP BY game_id," +
+                          column + ",uci");
             edges.addBindValue(id);
             run(edges);
         }
@@ -272,7 +274,8 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             all.bindValue(1, n);
             all.bindValue(2, positionValue(node));
             all.bindValue(3, material);
-            if (keyed_) all.bindValue(4, pawnsKey(node.fen));
+            if (keyed_)
+                all.bindValue(4, pawnsKey(node.fen));
             run(all);
             pending.insert(pending.end(), node.children.begin(), node.children.end());
         }
@@ -383,7 +386,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (!position.isEmpty()) {
         // Same pawn structure (any other pieces) or the exact position.
         const bool pawns = filters.value("pawnStructure").toBool();
-        statement += QString(" AND g.id IN(SELECT game_id FROM all_positions WHERE ") + (pawns ? "pawns" : "key") + "=?)";
+        statement += QString(" AND g.id IN(SELECT game_id FROM all_positions WHERE ") +
+                     (pawns ? "pawns" : "key") + "=?)";
         args << (pawns ? pawnsKey(position.toStdString()) : hashKey(position.toStdString()));
     }
     for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
@@ -494,10 +498,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     run(q);
     QVariantList rows;
     while (q.next())
-        rows << QVariantMap{{"id", q.value(0)},      {"white", q.value(1)},      {"black", q.value(2)},
-                            {"event", q.value(3)},   {"date", q.value(4)},       {"result", q.value(5)},
-                            {"eco", q.value(6)},     {"collection", q.value(7)}, {"favorite", q.value(8)},
-                            {"updated", q.value(9)}, {"rating", q.value(10)},    {"plies", q.value(11)},
+        rows << QVariantMap{{"id", q.value(0)},        {"white", q.value(1)},      {"black", q.value(2)},
+                            {"event", q.value(3)},     {"date", q.value(4)},       {"result", q.value(5)},
+                            {"eco", q.value(6)},       {"collection", q.value(7)}, {"favorite", q.value(8)},
+                            {"updated", q.value(9)},   {"rating", q.value(10)},    {"plies", q.value(11)},
                             {"whiteElo", q.value(12)}, {"blackElo", q.value(13)}};
     check(!q.lastError().isValid(), q.lastError().text());
     check(!canceled || !canceled->load(), "Recherche annulée.");
@@ -630,6 +634,46 @@ void Database::collection(qint64 id, const QString &value) {
     q.addBindValue(value.left(200));
     q.addBindValue(id);
     run(q);
+}
+int Database::classifyOpenings(const QVariantMap &ecoByPosition, const RepertoireProgress &progress) {
+    // Sans ce classement, `eco` ne valait que ce que le PGN portait en balise, et la
+    // plupart des bases n'en portent aucune : recherche, statistiques et rangement par
+    // ouverture restaient vides sans que rien ne le signale.
+    sql("SAVEPOINT classify_openings");
+    try {
+        sql("CREATE TEMP TABLE IF NOT EXISTS opening_positions(key INTEGER PRIMARY KEY, eco TEXT NOT NULL)");
+        sql("DELETE FROM opening_positions");
+        QSqlQuery q(db_);
+        q.prepare("INSERT OR IGNORE INTO opening_positions(key,eco) VALUES(?,?)");
+        qint64 seen = 0;
+        for (auto it = ecoByPosition.cbegin(); it != ecoByPosition.cend(); ++it) {
+            check(!progress || progress(++seen), "Classement interrompu.");
+            bool number = false;
+            const auto key = it.key().toLongLong(&number);
+            if (!number)
+                continue;
+            q.addBindValue(key);
+            q.addBindValue(it.value().toString().left(8));
+            run(q);
+        }
+        // `positions` ne tient que la ligne principale, indexée par (game_id, ply) : le
+        // code retenu est celui de la position d'ouverture la plus profonde atteinte,
+        // comme le font ChessBase et SCID. Une seule passe, sans rejouer les coups.
+        q.prepare(
+            "UPDATE games SET eco=(SELECT o.eco FROM positions p JOIN opening_positions o ON o.key=p.key"
+            " WHERE p.game_id=games.id ORDER BY p.ply DESC LIMIT 1)"
+            " WHERE deleted=0 AND COALESCE(eco,'')=''"
+            " AND EXISTS(SELECT 1 FROM positions p JOIN opening_positions o ON o.key=p.key"
+            " WHERE p.game_id=games.id)");
+        run(q);
+        const int touched = q.numRowsAffected();
+        sql("RELEASE classify_openings");
+        return touched;
+    } catch (...) {
+        sql("ROLLBACK TO classify_openings");
+        sql("RELEASE classify_openings");
+        throw;
+    }
 }
 int Database::groupByOpening(const QVariantMap &labels, const RepertoireProgress &progress) {
     sql("SAVEPOINT group_openings");

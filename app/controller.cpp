@@ -208,6 +208,11 @@ Controller::Controller(const QString &path, QObject *parent)
         // reconstruction d'index n'ajoutent rien de neuf à passer en revue.
         if (r.operation != "reindex")
             importedGames_ = r.error.isEmpty() ? std::max(0, r.count) : 0;
+        // Les parties qui viennent d'entrer n'ont pour la plupart aucune balise ECO :
+        // sans ce classement, la recherche par ouverture les ignorerait en silence. Avant
+        // le rafraîchissement, sans quoi la liste montrerait encore l'état d'avant.
+        if (r.error.isEmpty() && r.count > 0 && r.operation != "reindex")
+            classifyQuietly();
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())
@@ -1088,6 +1093,45 @@ void Controller::setCollection(qint64 id, const QString &c) {
         require(!busy_, "Traitement en cours.");
         db_->collection(id, c);
         refreshLibrary();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+int Controller::classifyQuietly() {
+    try {
+        return db_->classifyOpenings(openingPositions());
+    } catch (const std::exception &) {
+        // Un classement manqué ne doit pas faire échouer l'import qui vient de réussir.
+        return 0;
+    }
+}
+QVariantMap Controller::openingPositions() const {
+    // La table des ouvertures est une ressource de l'application : la base ne peut pas la
+    // lire elle-même, on la lui passe. Clé = empreinte Zobrist de la position, celle-là
+    // même qu'elle indexe. Lue une fois, elle resservira au rapport d'ouverture.
+    static QVariantMap table;
+    if (!table.isEmpty())
+        return table;
+    QFile file(":/assets/openings/positions.tsv");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return table;
+    while (!file.atEnd()) {
+        const auto columns = QString::fromUtf8(file.readLine()).trimmed().split('\t');
+        if (columns.size() < 2 || columns[0].isEmpty())
+            continue;
+        table[QString::number(qint64(t64::positionHash(columns[0].toStdString())))] = columns[1];
+    }
+    return table;
+}
+void Controller::classifyLibraryOpenings() {
+    try {
+        require(!busy_, "Traitement en cours.");
+        const auto ecoByPosition = openingPositions();
+        require(!ecoByPosition.isEmpty(), "Table des ouvertures illisible.");
+        const int classified = db_->classifyOpenings(ecoByPosition);
+        refreshLibrary();
+        emit message(classified ? tr("%1 partie(s) classée(s) par ouverture.").arg(classified)
+                                : tr("Toutes les parties portent déjà un code d’ouverture."));
     } catch (const std::exception &e) {
         fail(e);
     }

@@ -101,6 +101,10 @@ class Database {
     // Étiquette chaque partie avec le nom de famille de son ouverture, d'après la table
     // ECO fournie par l'appelant. Renvoie le nombre de parties rangées.
     int groupByOpening(const QVariantMap &labels, const RepertoireProgress &progress = {});
+    // Donne son code ECO à chaque partie qui n'en a pas. `ecoByPosition` associe la clé
+    // de position (son empreinte Zobrist, en texte) au code : la table vient de
+    // l'appelant, qui seul a la ressource. Renvoie le nombre de parties classées.
+    int classifyOpenings(const QVariantMap &ecoByPosition, const RepertoireProgress &progress = {});
     QString exportPgn() const;
     void exportPgn(QIODevice &output) const;
     void validateOutputPath(const QString &path) const;

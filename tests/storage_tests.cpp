@@ -6,8 +6,8 @@
 #include "polyglot.h"
 #include <QBuffer>
 #include <QCoreApplication>
-#include <QElapsedTimer>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -17,10 +17,10 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QTemporaryDir>
-#include <source_location>
-#include <sqlite3.h>
 #include <cstring>
 #include <iostream>
+#include <source_location>
+#include <sqlite3.h>
 #include <thread>
 int checks = 0;
 void check(bool ok, const char *text) {
@@ -30,8 +30,7 @@ void check(bool ok, const char *text) {
 }
 // Vingt et un appels partageaient le même message : un échec ne disait pas lequel avait
 // laissé passer la donnée invalide. La ligne d'appel est jointe automatiquement.
-template <class F>
-void rejects(F f, std::source_location where = std::source_location::current()) {
+template <class F> void rejects(F f, std::source_location where = std::source_location::current()) {
     bool bad = false;
     try {
         f();
@@ -60,11 +59,10 @@ int main(int argc, char **argv) {
                     connection = candidate;
             }
             QSqlQuery seed(connection);
-            check(seed.exec(
-                      "WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4096) "
-                      "INSERT INTO games(uuid,white,black,event,date,result,pgn,digest,updated) "
-                      "SELECT 'seed-'||x,'White','Black','','2026.10.22','*','*','seed-'||x,"
-                      "'2026-10-22T00:00:00Z' FROM n"),
+            check(seed.exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4096) "
+                            "INSERT INTO games(uuid,white,black,event,date,result,pgn,digest,updated) "
+                            "SELECT 'seed-'||x,'White','Black','','2026.10.22','*','*','seed-'||x,"
+                            "'2026-10-22T00:00:00Z' FROM n"),
                   "Seed a populated library without query-planner statistics");
             auto native = connection.driver()->handle();
             check(native.isValid() && QByteArray(native.typeName()) == "sqlite3*", "Native SQLite handle");
@@ -83,77 +81,77 @@ int main(int argc, char **argv) {
                           << " while this build links " << sqlite3_libversion() << '\n';
             }
             if (oneLibrary) {
-            struct LookupWork {
-                int calls = 0, maximum = 0;
-            } work;
-            sqlite3_trace_v2(
-                handle, SQLITE_TRACE_PROFILE,
-                [](unsigned, void *context, void *statement, void *) {
-                    auto *stmt = static_cast<sqlite3_stmt *>(statement);
-                    const char *sql = sqlite3_sql(stmt);
-                    if (sql && std::strncmp(sql, "SELECT id FROM games ", 21) == 0 &&
-                        std::strstr(sql, "digest=")) {
-                        auto &work = *static_cast<LookupWork *>(context);
-                        ++work.calls;
-                        work.maximum =
-                            std::max(work.maximum, sqlite3_stmt_status(stmt, SQLITE_STMTSTATUS_VM_STEP, 0));
-                    }
-                    return 0;
-                },
-                &work);
-            qint64 first = 0, duplicate = 0, restored = 0;
-            const auto game = t64::parsePgn("[White \"Real game\"]\n1.e4 e5 *").front();
-            try {
-                first = large.save(game);
-                duplicate = large.save(game);
-                large.trash(first, true);
-                restored = large.save(game);
-            } catch (...) {
+                struct LookupWork {
+                    int calls = 0, maximum = 0;
+                } work;
+                sqlite3_trace_v2(
+                    handle, SQLITE_TRACE_PROFILE,
+                    [](unsigned, void *context, void *statement, void *) {
+                        auto *stmt = static_cast<sqlite3_stmt *>(statement);
+                        const char *sql = sqlite3_sql(stmt);
+                        if (sql && std::strncmp(sql, "SELECT id FROM games ", 21) == 0 &&
+                            std::strstr(sql, "digest=")) {
+                            auto &work = *static_cast<LookupWork *>(context);
+                            ++work.calls;
+                            work.maximum = std::max(work.maximum,
+                                                    sqlite3_stmt_status(stmt, SQLITE_STMTSTATUS_VM_STEP, 0));
+                        }
+                        return 0;
+                    },
+                    &work);
+                qint64 first = 0, duplicate = 0, restored = 0;
+                const auto game = t64::parsePgn("[White \"Real game\"]\n1.e4 e5 *").front();
+                try {
+                    first = large.save(game);
+                    duplicate = large.save(game);
+                    large.trash(first, true);
+                    restored = large.save(game);
+                } catch (...) {
+                    sqlite3_trace_v2(handle, 0, nullptr, nullptr);
+                    throw;
+                }
                 sqlite3_trace_v2(handle, 0, nullptr, nullptr);
-                throw;
-            }
-            sqlite3_trace_v2(handle, 0, nullptr, nullptr);
-            check(work.calls == 3 && work.maximum < 100,
-                  "Digest lookups stay bounded despite thousands of unrelated active games");
-            check(first == duplicate && restored != first && large.load(first).pgn() == game.pgn() &&
-                      large.load(restored).pgn() == game.pgn() && large.stats()["games"].toInt() == 4097,
-                  "Bounded deduplication preserves active copies and games in the trash");
-            auto canceled = std::make_shared<std::atomic_bool>(true);
-            rejects([&] { large.integrity(canceled); });
-            canceled->store(false);
-            // Cancel after SQLite has begun preparing the actual integrity check,
-            // without sleeps or a race against the speed of this machine.
-            sqlite3_set_authorizer(
-                handle,
-                [](void *flag, int action, const char *name, const char *, const char *, const char *) {
-                    if (action == SQLITE_PRAGMA && name && std::strcmp(name, "integrity_check") == 0)
-                        static_cast<std::atomic_bool *>(flag)->store(true);
-                    return SQLITE_OK;
-                },
-                canceled.get());
-            QString interruption;
-            try {
-                large.integrity(canceled);
-            } catch (const std::exception &e) {
-                interruption = QString::fromUtf8(e.what());
-            }
-            sqlite3_set_authorizer(handle, nullptr, nullptr);
-            check(canceled->load() && interruption.contains("interrupt", Qt::CaseInsensitive),
-                  "SQLite interrupts an executing integrity check, never reporting partial success");
-            check(large.integrity() == "ok" && large.stats()["games"].toInt() == 4097,
-                  "Cancellation leaves data intact and removes the temporary progress handler");
+                check(work.calls == 3 && work.maximum < 100,
+                      "Digest lookups stay bounded despite thousands of unrelated active games");
+                check(first == duplicate && restored != first && large.load(first).pgn() == game.pgn() &&
+                          large.load(restored).pgn() == game.pgn() && large.stats()["games"].toInt() == 4097,
+                      "Bounded deduplication preserves active copies and games in the trash");
+                auto canceled = std::make_shared<std::atomic_bool>(true);
+                rejects([&] { large.integrity(canceled); });
+                canceled->store(false);
+                // Cancel after SQLite has begun preparing the actual integrity check,
+                // without sleeps or a race against the speed of this machine.
+                sqlite3_set_authorizer(
+                    handle,
+                    [](void *flag, int action, const char *name, const char *, const char *, const char *) {
+                        if (action == SQLITE_PRAGMA && name && std::strcmp(name, "integrity_check") == 0)
+                            static_cast<std::atomic_bool *>(flag)->store(true);
+                        return SQLITE_OK;
+                    },
+                    canceled.get());
+                QString interruption;
+                try {
+                    large.integrity(canceled);
+                } catch (const std::exception &e) {
+                    interruption = QString::fromUtf8(e.what());
+                }
+                sqlite3_set_authorizer(handle, nullptr, nullptr);
+                check(canceled->load() && interruption.contains("interrupt", Qt::CaseInsensitive),
+                      "SQLite interrupts an executing integrity check, never reporting partial success");
+                check(large.integrity() == "ok" && large.stats()["games"].toInt() == 4097,
+                      "Cancellation leaves data intact and removes the temporary progress handler");
             }
         }
         {
             t64::Database materialDb(dir.filePath("material.sqlite"));
-            const auto specimens = t64::parsePgn(
-                "[Event \"Capture and variation\"]\n1.e4 d5 2.exd5 (2.e5) *\n\n"
-                "[SetUp \"1\"]\n[FEN \"8/P6k/8/8/8/8/6p1/4K3 w - - 0 1\"]\n"
-                "1.a8=N g1=R+ *\n\n"
-                "[SetUp \"1\"]\n[FEN \"4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1\"]\n"
-                "1.exd6 *\n\n"
-                "[Variant \"Chess960\"]\n[SetUp \"1\"]\n"
-                "[FEN \"4k3/8/8/8/8/8/8/RK5R w HA - 0 1\"]\n1.O-O *");
+            const auto specimens =
+                t64::parsePgn("[Event \"Capture and variation\"]\n1.e4 d5 2.exd5 (2.e5) *\n\n"
+                              "[SetUp \"1\"]\n[FEN \"8/P6k/8/8/8/8/6p1/4K3 w - - 0 1\"]\n"
+                              "1.a8=N g1=R+ *\n\n"
+                              "[SetUp \"1\"]\n[FEN \"4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1\"]\n"
+                              "1.exd6 *\n\n"
+                              "[Variant \"Chess960\"]\n[SetUp \"1\"]\n"
+                              "[FEN \"4k3/8/8/8/8/8/8/RK5R w HA - 0 1\"]\n1.O-O *");
             QMap<QString, QSet<qint64>> matching;
             QMap<QPair<qint64, int>, QString> expected;
             for (const auto &game : specimens) {
@@ -188,8 +186,7 @@ int main(int argc, char **argv) {
                     std::reverse(input.begin(), input.end());
                     input += QString::fromUtf8(" 123/.-É♔");
                     QSet<qint64> ids;
-                    for (const auto &row : materialDb.search({}, {}, false, {}, false,
-                                                           {{"material", input}}))
+                    for (const auto &row : materialDb.search({}, {}, false, {}, false, {{"material", input}}))
                         ids.insert(row.toMap()["id"].toLongLong());
                     check(ids == it.value(),
                           "Material search keeps counts, colours, variants and ignored characters");
@@ -198,9 +195,8 @@ int main(int argc, char **argv) {
             verify();
             check(materialDb.rebuildIndexes() == int(specimens.size()), "Rebuild material fixtures");
             verify();
-            rejects([&] {
-                materialDb.rebuildIndexes([&](int count) { return count < int(specimens.size()); });
-            });
+            rejects(
+                [&] { materialDb.rebuildIndexes([&](int count) { return count < int(specimens.size()); }); });
             verify();
             check(materialDb.integrity() == "ok", "Material indexes remain valid after canceled rebuild");
         }
@@ -245,9 +241,9 @@ int main(int argc, char **argv) {
                 const auto id = row.toMap()["id"].toLongLong();
                 const auto game = board.load(id);
                 const bool aliceIsWhite = row.toMap()["white"].toString() == "Alice";
-                const auto job = board.createAnalysisJob(QString::fromStdString(game.pgn()),
-                                                         QVariantMap{{"depth", 18}}, false,
-                                                         int(game.mainline().size()), id);
+                const auto job =
+                    board.createAnalysisJob(QString::fromStdString(game.pgn()), QVariantMap{{"depth", 18}},
+                                            false, int(game.mainline().size()), id);
                 board.setAnalysisStatus(job, "running");
                 const auto line = game.mainline();
                 // Les deux parties doivent être dissemblables : avec les mêmes
@@ -261,8 +257,8 @@ int main(int argc, char **argv) {
                 for (size_t i = 0; i < line.size(); ++i)
                     board.saveAnalysisResult(
                         job, int(i), line[i], QString::number(int(i)),
-                        QVariantList{QVariantMap{{"rank", 1}, {"scoreType", "cp"},
-                                                 {"cp", evaluations[std::min(i, size_t(4))]}}});
+                        QVariantList{QVariantMap{
+                            {"rank", 1}, {"scoreType", "cp"}, {"cp", evaluations[std::min(i, size_t(4))]}}});
                 board.setAnalysisStatus(job, "completed");
             }
             const auto alice = board.reviewSummary({"Alice"});
@@ -272,8 +268,7 @@ int main(int argc, char **argv) {
                   "The aggregate carries an overall and an opening mark");
             check(!alice["endgame"].isValid(), "A phase no game reached stays unmeasured");
             const auto bob = board.reviewSummary({"Bob"});
-            check(bob["games"].toInt() == 2 && alice["all"].toDouble() > 95 &&
-                      bob["all"].toDouble() < 60,
+            check(bob["games"].toInt() == 2 && alice["all"].toDouble() > 95 && bob["all"].toDouble() < 60,
                   "Each player is scored from the side he actually played");
             check(board.reviewSummary({"alice"})["games"].toInt() == 2,
                   "Nicknames are matched without regard to case");
@@ -292,6 +287,44 @@ int main(int argc, char **argv) {
                   "Games to review are matched without regard to case");
             check(board.gamesToReviewFor({"Carol"}, 24).isEmpty(), "Another player's games are left alone");
             check(board.gamesToReviewFor({}, 24).isEmpty(), "No nickname means nothing to queue");
+        }
+        {
+            // Classer les ouvertures : `eco` ne venait que de la balise PGN, et la plupart
+            // des bases n'en portent aucune. Le classement passe par l'empreinte de
+            // position que la base indexe déjà — encore faut-il que celle d'une position
+            // à quatre champs soit la même que celle d'un FEN complet.
+            t64::Database shelf(dir.filePath("classify.sqlite"));
+            check(
+                shelf.importGames(t64::parsePgn("[Event \"sicilienne\"]\n\n1.e4 c5 2.Nf3 d6 *\n\n"
+                                                "[Event \"balise\"]\n[ECO \"Z99\"]\n\n1.e4 c5 2.Nf3 d6 *\n\n"
+                                                "[Event \"inconnue\"]\n\n1.a4 h5 2.Ra3 Rh6 *")) == 3,
+                "Seed a game to classify, one already tagged, and one off the books");
+            // La clé est celle du FEN à quatre champs, comme dans positions.tsv.
+            const QString afterD6 = "rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -";
+            const QString afterC5 = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -";
+            QVariantMap table;
+            table[QString::number(qint64(t64::positionHash(afterC5.toStdString())))] = "B20";
+            table[QString::number(qint64(t64::positionHash(afterD6.toStdString())))] = "B50";
+            check(shelf.classifyOpenings(table) == 1, "Only the untagged game that matches is classified");
+            auto ecoOf = [&](const QString &event) {
+                for (const auto &row : shelf.search({}))
+                    if (row.toMap()["event"] == event)
+                        return row.toMap()["eco"].toString();
+                return QString();
+            };
+            check(ecoOf("sicilienne") == "B50",
+                  "The deepest opening position reached decides the code, not the first");
+            check(ecoOf("balise") == "Z99", "A code already in the PGN is left alone");
+            check(ecoOf("inconnue").isEmpty(), "A game off the books keeps no code rather than a wrong one");
+            check(shelf.classifyOpenings(table) == 0, "Running it again classifies nothing more");
+            bool stopped = false;
+            rejects([&] {
+                shelf.classifyOpenings(table, [&](qint64 n) {
+                    stopped = true;
+                    return n < 2;
+                });
+            });
+            check(stopped, "A canceled classification stops rather than finishing quietly");
         }
         {
             // Ranger la bibliothèque par famille d'ouverture : une seule passe, et seules
@@ -318,10 +351,12 @@ int main(int argc, char **argv) {
                   "Grouping again relabels the same games");
             check(collectionOf("a") == sicilian + " · Autre", "The new label replaces the previous one");
             bool stopped = false;
-            rejects([&] { shelf.groupByOpening({{sicilian, "x"}, {queens, "y"}}, [&](qint64 n) {
-                              stopped = true;
-                              return n < 2;
-                          }); });
+            rejects([&] {
+                shelf.groupByOpening({{sicilian, "x"}, {queens, "y"}}, [&](qint64 n) {
+                    stopped = true;
+                    return n < 2;
+                });
+            });
             check(stopped && collectionOf("a") == sicilian + " · Autre",
                   "A canceled grouping leaves every label untouched");
         }
@@ -444,7 +479,8 @@ int main(int argc, char **argv) {
             const auto searchBefore = db.search({}, {}, false, variant).size();
             const auto explorerBefore = db.explorer(start);
             downgradePositionsToV7(v7Path);
-            const auto pawnBefore = db.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size();
+            const auto pawnBefore =
+                db.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size();
             const auto legacySize = QFileInfo(v7Path).size();
             {
                 t64::Database migrated(v7Path);
@@ -453,7 +489,8 @@ int main(int argc, char **argv) {
                 check(migrated.explorer(start) == explorerBefore && !explorerBefore.empty(),
                       "Migration 8 keeps opening statistics exactly");
                 check(migrated.integrity() == "ok", "Migration 8 integrity");
-                check(migrated.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size() == pawnBefore &&
+                check(migrated.search({}, {}, false, variant, false, {{"pawnStructure", true}}).size() ==
+                              pawnBefore &&
                           pawnBefore >= searchBefore,
                       "Migration 8 computes pawn structure keys");
                 auto copy = migrated.load(migrated.search().first().toMap()["id"].toLongLong());
@@ -463,14 +500,16 @@ int main(int argc, char **argv) {
                           explorerBefore.first().toMap()["count"].toInt() + 1,
                       "Opening statistics triggers work on hashed keys");
             }
-            check(!QDir(dir.path()).entryList({"v7.sqlite.before-v8-*.sqlite"}).empty(), "Backup before migration 8");
+            check(!QDir(dir.path()).entryList({"v7.sqlite.before-v8-*.sqlite"}).empty(),
+                  "Backup before migration 8");
             QSqlDatabase::removeDatabase("v8-check");
             {
                 auto v8 = QSqlDatabase::addDatabase("QSQLITE", "v8-check");
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 10, "Schema version 10");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 10,
+                      "Schema version 10");
                 check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
                           q.value(0).toString() == "integer",
                       "Positions are stored as integers");
@@ -478,27 +517,33 @@ int main(int argc, char **argv) {
                 v8.close();
             }
             QSqlDatabase::removeDatabase("v8-check");
-            std::cout << "v7 fixture " << legacySize << " bytes, v8 " << QFileInfo(v7Path).size() << " bytes\n";
+            std::cout << "v7 fixture " << legacySize << " bytes, v8 " << QFileInfo(v7Path).size()
+                      << " bytes\n";
         }
         {
             // Same pawns, different pieces: only the structure search links the two games.
             t64::Database pawns(dir.path() + "/pawns.sqlite");
-            for (const auto *pgn : {"[Event \"A\"]\n\n1. e4 e5 2. Nf3 Nc6 *", "[Event \"B\"]\n\n1. e4 e5 2. Nc3 Nf6 *",
-                                    "[Event \"C\"]\n\n1. d4 d5 *"})
+            for (const auto *pgn : {"[Event \"A\"]\n\n1. e4 e5 2. Nf3 Nc6 *",
+                                    "[Event \"B\"]\n\n1. e4 e5 2. Nc3 Nf6 *", "[Event \"C\"]\n\n1. d4 d5 *"})
                 pawns.save(t64::parsePgn(pgn).front());
-            const auto target = QString::fromStdString(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 *").front().nodes.back().fen);
+            const auto target =
+                QString::fromStdString(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 *").front().nodes.back().fen);
             check(pawns.search({}, {}, false, target).size() == 1 &&
                       pawns.search({}, {}, false, target, false, {{"pawnStructure", true}}).size() == 2,
                   "Pawn structure search finds games with other piece placements");
         }
         {
             t64::Database scout(dir.path() + "/dossier.sqlite");
-            const char *games[] = {
-                "[White \"Kim\"]\n[Black \"A\"]\n[Result \"1-0\"]\n[WhiteElo \"1800\"]\n[Date \"2026.01.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 1-0",
-                "[White \"Kim\"]\n[Black \"B\"]\n[Result \"0-1\"]\n[WhiteElo \"1850\"]\n[Date \"2026.02.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 0-1",
-                "[White \"C\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1900\"]\n[Date \"2026.03.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
-                "[White \"D\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1880\"]\n[Date \"2026.04.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
-                "[White \"E\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo \"1870\"]\n[Date \"2026.05.01\"]\n\n1. d4 d5 2. c4 e6 1-0"};
+            const char *games[] = {"[White \"Kim\"]\n[Black \"A\"]\n[Result \"1-0\"]\n[WhiteElo "
+                                   "\"1800\"]\n[Date \"2026.01.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 1-0",
+                                   "[White \"Kim\"]\n[Black \"B\"]\n[Result \"0-1\"]\n[WhiteElo "
+                                   "\"1850\"]\n[Date \"2026.02.01\"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 0-1",
+                                   "[White \"C\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo "
+                                   "\"1900\"]\n[Date \"2026.03.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
+                                   "[White \"D\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo "
+                                   "\"1880\"]\n[Date \"2026.04.01\"]\n\n1. d4 d5 2. c4 e6 1-0",
+                                   "[White \"E\"]\n[Black \"Kim\"]\n[Result \"1-0\"]\n[BlackElo "
+                                   "\"1870\"]\n[Date \"2026.05.01\"]\n\n1. d4 d5 2. c4 e6 1-0"};
             for (const auto *pgn : games) {
                 auto game = t64::parsePgn(pgn).front();
                 game.tags["ECO"] = game.nodes[1].uci == "e2e4" ? "B54" : "D30";
@@ -509,10 +554,12 @@ int main(int argc, char **argv) {
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,
                   "Dossier groups the player's white lines with their score");
-            check(black.size() == 1 && black[0].toMap()["line"] == "1. d4 d5 2. c4 e6" && black[0].toMap()["score"] == 0,
+            check(black.size() == 1 && black[0].toMap()["line"] == "1. d4 d5 2. c4 e6" &&
+                      black[0].toMap()["score"] == 0,
                   "Dossier separates black lines");
             const auto weakest = kim["weakest"].toList();
-            check(!weakest.isEmpty() && weakest[0].toMap()["label"] == "Noirs · D30" && weakest[0].toMap()["score"] == 0,
+            check(!weakest.isEmpty() && weakest[0].toMap()["label"] == "Noirs · D30" &&
+                      weakest[0].toMap()["score"] == 0,
                   "Weakest opening needs three finished games and comes first");
             const auto phases = kim["phases"].toList();
             check(phases.size() == 3 && phases[0].toMap()["wins"] == 1 && phases[0].toMap()["losses"] == 4,
@@ -528,13 +575,15 @@ int main(int argc, char **argv) {
             const auto study = t64::parsePgn("1. e4 e5 2. Nf3 d6 3. d4 *").front();
             auto found = theory.novelty(study);
             const auto known = found["known"].toList();
-            check(found["found"].toBool() && found["ply"] == 3 && found["san"] == "d6" && found["reached"] == 2 &&
-                      known.size() == 2,
+            check(found["found"].toBool() && found["ply"] == 3 && found["san"] == "d6" &&
+                      found["reached"] == 2 && known.size() == 2,
                   "Novelty: first move never played from a known position, with the known replies");
             const auto saved = theory.save(study);
             found = theory.novelty(theory.load(saved), saved);
-            check(found["found"].toBool() && found["san"] == "d6", "A saved game does not count as its own precedent");
-            check(theory.novelty(t64::parsePgn("1. e4 e5 *").front())["reason"] == "known", "Fully known line has no novelty");
+            check(found["found"].toBool() && found["san"] == "d6",
+                  "A saved game does not count as its own precedent");
+            check(theory.novelty(t64::parsePgn("1. e4 e5 *").front())["reason"] == "known",
+                  "Fully known line has no novelty");
             theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 *").front());
             theory.save(t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O d6 *").front());
             const auto bookPath = dir.path() + "/library.bin";
@@ -549,10 +598,13 @@ int main(int argc, char **argv) {
             check(castling.size() == 1 && castling[0].move.typeOf() == chess::Move::CASTLING,
                   "Castling is written the Polyglot way and reads back as castling");
             const auto sparse = theory.exportPolyglot(dir.path() + "/sparse.bin", 3);
-            check(sparse > 0 && sparse < theory.exportPolyglot(dir.path() + "/all.bin", 1), "Rare moves can be left out");
-            check(theory.novelty(t64::parsePgn("1. a3 *").front())["ply"] == 0, "A first move can be the novelty");
-            check(theory.novelty(t64::parsePgn("[SetUp \"1\"]\n[FEN \"8/8/8/8/8/8/6k1/4K2R w K - 0 1\"]\n\n1. Ke2 *").front())["reason"] ==
-                      "unknownStart",
+            check(sparse > 0 && sparse < theory.exportPolyglot(dir.path() + "/all.bin", 1),
+                  "Rare moves can be left out");
+            check(theory.novelty(t64::parsePgn("1. a3 *").front())["ply"] == 0,
+                  "A first move can be the novelty");
+            check(theory.novelty(
+                      t64::parsePgn("[SetUp \"1\"]\n[FEN \"8/8/8/8/8/8/6k1/4K2R w K - 0 1\"]\n\n1. Ke2 *")
+                          .front())["reason"] == "unknownStart",
                   "An unknown starting position is reported as such");
         }
         const auto oldPath = dir.path() + "/old.sqlite";

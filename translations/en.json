@@ -1134,5 +1134,11 @@
   "Dépôt privé : activez votre connexion GitHub CLI ou fournissez un jeton ayant accès en lecture.": "Private repository: turn on your GitHub CLI sign-in, or supply a token with read access.",
   "Dépôt privé : activez votre connexion GitHub CLI ou fournissez un jeton ayant accès en lecture au dépôt Trait64.": "Private repository: turn on your GitHub CLI sign-in, or supply a token with read access to the Trait64 repository.",
   "GitHub a refusé la requête ou sa limite est atteinte. Réessayez plus tard et vérifiez votre accès au dépôt.": "GitHub refused the request, or its rate limit was reached. Try again later and check your access to the repository.",
-  "Vérification/téléchargement impossible. Vérifiez la connexion et réessayez ; le logiciel reste utilisable hors ligne.": "Could not check or download. Check the connection and try again; the software still works offline."
+  "Vérification/téléchargement impossible. Vérifiez la connexion et réessayez ; le logiciel reste utilisable hors ligne.": "Could not check or download. Check the connection and try again; the software still works offline.",
+  "Classer les ouvertures": "Classify openings",
+  "Donne son code ECO à chaque partie qui n’en porte pas, d’après les coups joués. La plupart des PGN n’en portent aucun, et la recherche par ouverture les ignorait alors.": "Gives an ECO code to every game that carries none, from the moves played. Most PGN files carry none, and the opening search passed those games over.",
+  "%1 partie(s) classée(s) par ouverture.": "%1 game(s) classified by opening.",
+  "Toutes les parties portent déjà un code d’ouverture.": "Every game already carries an opening code.",
+  "Table des ouvertures vide.": "Opening table empty.",
+  "Classement interrompu.": "Classification interrupted."
 }

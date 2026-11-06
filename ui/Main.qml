@@ -213,6 +213,8 @@ ApplicationWindow {
                     TButton {text:qsTr("Mes compétences");objectName:"showSkills";onClicked:skillDialog.open()}
                     TButton {text:qsTr("Imports reprenables");objectName:"showImports";onClicked:importsDialog.open()}
                     TButton {text:qsTr("Exporter cette base");enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
+                    TButton {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onClicked:controller.classifyLibraryOpenings()
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Donne son code ECO à chaque partie qui n’en porte pas, d’après les coups joués. La plupart des PGN n’en portent aucun, et la recherche par ouverture les ignorait alors.")}
                     TButton {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onClicked:controller.groupLibraryByOpening()
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.")}
                 }
