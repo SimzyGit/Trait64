@@ -1158,6 +1158,41 @@ int main(int argc, char **argv) {
             check(whole["openingCodes"].toStringList().contains("B90") &&
                       !whole["openingCodes"].toStringList().contains("C00"),
                   "A family name matches the start of the name and nothing else");
+            // Parcourir la liste depuis l'analyse : l'aperçu lit la partie sans la
+            // charger, et la navigation la remplace dans l'onglet courant.
+            c.searchLibrary("Fixture 404", {}, false, false, false, {});
+            waitSearch();
+            {
+                const auto only = c.games().first().toMap()["id"].toLongLong();
+                const auto line = c.gameLine(only);
+                check(line.size() > 1 && line.first().toMap()["san"].toString().isEmpty() &&
+                          !line.at(1).toMap()["fen"].toString().isEmpty(),
+                      "A preview line starts at the initial position and carries each FEN");
+                check(c.squaresForFen(line.at(1).toMap()["fen"].toString(),
+                                      line.at(1).toMap()["uci"].toString())
+                              .size() == 64,
+                      "A preview position fills the sixty-four squares");
+                check(c.gameLine(-1).isEmpty(), "An unknown game previews as nothing at all");
+            }
+            c.searchLibrary({}, {}, false, false, false, {});
+            waitSearch();
+            const int listed = c.games().size();
+            check(listed > 2, "The library lists enough games to walk through");
+            c.loadGame(c.games().first().toMap()["id"].toLongLong());
+            const int tabs = c.tabs().size();
+            check(c.state()["gameIndex"].toInt() == 0 && c.state()["gameCount"].toInt() == listed,
+                  "Analysis says where the open game sits in the list");
+            c.stepGame(1);
+            check(c.state()["gameIndex"].toInt() == 1 && c.tabs().size() == tabs,
+                  "The next game takes the place of the open one instead of opening a tab");
+            c.stepGame(-1);
+            check(c.state()["gameIndex"].toInt() == 0, "And the previous one comes back");
+            {
+                QSignalSpy edge(&c, &Controller::message);
+                c.stepGame(-1);
+                check(edge.size() == 1 && edge.first().at(1).toBool() && c.state()["gameIndex"].toInt() == 0,
+                      "The first game refuses to step back, and says so");
+            }
             // Destruction also cancels and joins any outstanding worker.
             c.searchLibrary("Rival", {}, false, false, false, {});
         }

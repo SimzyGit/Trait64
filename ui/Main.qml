@@ -234,62 +234,85 @@ ApplicationWindow {
                 }
                 Label {text:controller.busy?qsTr("Traitement en cours…"):controller.librarySearchStatus;color:win.muted;font.pixelSize:Math.round(11*win.textScale);Layout.fillWidth:true;wrapMode:Text.WordWrap}
                 // Dense game table, one row per game, like a ChessBase or SCID list.
-                Rectangle {Layout.fillWidth:true;implicitHeight:24*win.textScale;color:win.raised;border.color:win.line
-                    RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
-                        Repeater {
-                            model:[{t:qsTr("N°"),w:libraryList.columns.number},{t:qsTr("Blancs"),w:-1},{t:"Elo",w:libraryList.columns.elo},
-                                   {t:qsTr("Noirs"),w:-1},{t:"Elo",w:libraryList.columns.elo},{t:qsTr("Résultat"),w:libraryList.columns.result},
-                                   {t:qsTr("Coups"),w:libraryList.columns.moves},{t:"ECO",w:libraryList.columns.eco},
-                                   {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0},{t:qsTr("Date"),w:libraryList.columns.date},
-                                   {t:"",w:libraryList.columns.actions}]
-                            Label {required property var modelData;text:modelData.t;visible:modelData.w!==0;color:win.muted;elide:Text.ElideRight
-                                Layout.fillWidth:modelData.w<0;Layout.preferredWidth:modelData.w<0?80:modelData.w;Layout.maximumWidth:modelData.w<0?100000:modelData.w;Layout.minimumWidth:0}
-                        }
-                    }
-                }
-                ListView {id:libraryList;objectName:"libraryResults";Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
-                    // Les lignes sont recyclées plutôt que créées puis détruites : une
-                    // bibliothèque de plusieurs centaines de parties défilait en
-                    // reconstruisant chaque ligne, colonnes comprises.
-                    reuseItems:true
-                    readonly property bool detailed:width>900*win.textScale
-                    readonly property var columns:({number:40*win.textScale,elo:42*win.textScale,result:56*win.textScale,moves:44*win.textScale,
-                                                    eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
-                    ScrollBar.vertical:ScrollBar {}
-                    delegate:Rectangle {required property var modelData;required property int index
-                        // Des lignes de 24 pixels sans état de survol : on ne savait pas
-                        // laquelle on visait avant de cliquer.
-                        width:libraryList.width;height:24*win.textScale
-                        color:rowHover.hovered?Qt.rgba(win.accent.r,win.accent.g,win.accent.b,controller.preferences.highContrast?.3:.15)
-                                              :(index%2?win.bg:win.panel)
-                        HoverHandler {id:rowHover}
-                        Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;opacity:.5}
-                        RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
-                            // Mêmes contraintes que l'en-tête, colonne par colonne. Sans la
-                            // largeur préférée commune, les deux colonnes extensibles se
-                            // partageaient l'espace restant différemment des titres — « Noirs »
-                            // démarrait vingt-cinq pixels plus loin que son en-tête. Et sans
-                            // plafond, une valeur un peu large élargit sa colonne et pousse
-                            // toutes les suivantes.
-                            Label {text:modelData.id;Layout.preferredWidth:libraryList.columns.number;Layout.maximumWidth:libraryList.columns.number;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
-                            Label {text:modelData.white;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="1-0"?Font.DemiBold:Font.Normal}
-                            Label {text:modelData.whiteElo>0?modelData.whiteElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
-                            Label {text:modelData.black;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="0-1"?Font.DemiBold:Font.Normal}
-                            Label {text:modelData.blackElo>0?modelData.blackElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
-                            Label {text:modelData.result==="1/2-1/2"?"½-½":modelData.result;Layout.preferredWidth:libraryList.columns.result;Layout.maximumWidth:libraryList.columns.result;Layout.minimumWidth:0;elide:Text.ElideRight}
-                            Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;Layout.maximumWidth:libraryList.columns.moves;Layout.minimumWidth:0;color:win.muted}
-                            Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco;Layout.maximumWidth:libraryList.columns.eco;Layout.minimumWidth:0;elide:Text.ElideRight}
-                            Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;Layout.maximumWidth:libraryList.columns.event;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
-                            // Le PGN note une date inconnue « ????.??.?? » : un tiret se
-                            // lit mieux dans une colonne, et dit la même chose.
-                            Label {text:modelData.date && modelData.date.indexOf("?")<0 ? modelData.date : "—";Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
-                            RowLayout {Layout.fillWidth:false;Layout.preferredWidth:libraryList.columns.actions;Layout.maximumWidth:libraryList.columns.actions;spacing:2
-                                TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
-                                TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}
-                                TButton {text:"⋮";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Actions de la partie");onClicked:{win.selectedGame=modelData.id;collectionField.text=modelData.collection||"";gameMenu.open()}}
+                // Le tableau et, à côté, un aperçu : on y fait défiler les coups de la partie
+                // choisie sans quitter l’onglet ni perdre l’étude en cours d’analyse.
+                RowLayout {
+                    Layout.fillWidth:true;Layout.fillHeight:true;spacing:10
+                    ColumnLayout {
+                        Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumWidth:360;spacing:0
+                        Rectangle {Layout.fillWidth:true;implicitHeight:24*win.textScale;color:win.raised;border.color:win.line
+                            RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
+                                Repeater {
+                                    model:[{t:qsTr("N°"),w:libraryList.columns.number},{t:qsTr("Blancs"),w:-1},{t:"Elo",w:libraryList.columns.elo},
+                                           {t:qsTr("Noirs"),w:-1},{t:"Elo",w:libraryList.columns.elo},{t:qsTr("Résultat"),w:libraryList.columns.result},
+                                           {t:qsTr("Coups"),w:libraryList.columns.moves},{t:"ECO",w:libraryList.columns.eco},
+                                           {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0},{t:qsTr("Date"),w:libraryList.columns.date},
+                                           {t:"",w:libraryList.columns.actions}]
+                                    Label {required property var modelData;text:modelData.t;visible:modelData.w!==0;color:win.muted;elide:Text.ElideRight
+                                        Layout.fillWidth:modelData.w<0;Layout.preferredWidth:modelData.w<0?80:modelData.w;Layout.maximumWidth:modelData.w<0?100000:modelData.w;Layout.minimumWidth:0}
+                                }
                             }
                         }
-                        TapHandler {onDoubleTapped:controller.loadGame(modelData.id)}
+                        ListView {id:libraryList;objectName:"libraryResults";Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
+                            // Les lignes sont recyclées plutôt que créées puis détruites : une
+                            // bibliothèque de plusieurs centaines de parties défilait en
+                            // reconstruisant chaque ligne, colonnes comprises.
+                            reuseItems:true
+                            readonly property bool detailed:width>900*win.textScale
+                            readonly property var columns:({number:40*win.textScale,elo:42*win.textScale,result:56*win.textScale,moves:44*win.textScale,
+                                                            eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
+                            ScrollBar.vertical:ScrollBar {}
+                            delegate:Rectangle {required property var modelData;required property int index
+                                // Des lignes de 24 pixels sans état de survol : on ne savait pas
+                                // laquelle on visait avant de cliquer.
+                                width:libraryList.width;height:24*win.textScale
+                                color:rowHover.hovered?Qt.rgba(win.accent.r,win.accent.g,win.accent.b,controller.preferences.highContrast?.3:.15)
+                                                      :(index%2?win.bg:win.panel)
+                                HoverHandler {id:rowHover}
+                                Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;opacity:.5}
+                                RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
+                                    // Mêmes contraintes que l'en-tête, colonne par colonne. Sans la
+                                    // largeur préférée commune, les deux colonnes extensibles se
+                                    // partageaient l'espace restant différemment des titres — « Noirs »
+                                    // démarrait vingt-cinq pixels plus loin que son en-tête. Et sans
+                                    // plafond, une valeur un peu large élargit sa colonne et pousse
+                                    // toutes les suivantes.
+                                    Label {text:modelData.id;Layout.preferredWidth:libraryList.columns.number;Layout.maximumWidth:libraryList.columns.number;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
+                                    Label {text:modelData.white;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="1-0"?Font.DemiBold:Font.Normal}
+                                    Label {text:modelData.whiteElo>0?modelData.whiteElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
+                                    Label {text:modelData.black;Layout.fillWidth:true;Layout.preferredWidth:80;Layout.minimumWidth:0;elide:Text.ElideRight;font.weight:modelData.result==="0-1"?Font.DemiBold:Font.Normal}
+                                    Label {text:modelData.blackElo>0?modelData.blackElo:"";Layout.preferredWidth:libraryList.columns.elo;Layout.maximumWidth:libraryList.columns.elo;Layout.minimumWidth:0;color:win.muted}
+                                    Label {text:modelData.result==="1/2-1/2"?"½-½":modelData.result;Layout.preferredWidth:libraryList.columns.result;Layout.maximumWidth:libraryList.columns.result;Layout.minimumWidth:0;elide:Text.ElideRight}
+                                    Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;Layout.maximumWidth:libraryList.columns.moves;Layout.minimumWidth:0;color:win.muted}
+                                    Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco;Layout.maximumWidth:libraryList.columns.eco;Layout.minimumWidth:0;elide:Text.ElideRight}
+                                    Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;Layout.maximumWidth:libraryList.columns.event;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
+                                    // Le PGN note une date inconnue « ????.??.?? » : un tiret se
+                                    // lit mieux dans une colonne, et dit la même chose.
+                                    Label {text:modelData.date && modelData.date.indexOf("?")<0 ? modelData.date : "—";Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
+                                    RowLayout {Layout.fillWidth:false;Layout.preferredWidth:libraryList.columns.actions;Layout.maximumWidth:libraryList.columns.actions;spacing:2
+                                        TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
+                                        TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}
+                                        TButton {text:"⋮";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Actions de la partie");onClicked:{win.selectedGame=modelData.id;collectionField.text=modelData.collection||"";gameMenu.open()}}
+                                    }
+                                }
+                                // Un clic choisit la partie pour l'aperçu, un double-clic l'ouvre
+                                // dans Analyse : regarder ne doit pas coûter l'étude en cours.
+                                TapHandler {onSingleTapped:libraryPreview.gameId=modelData.id
+                                            onDoubleTapped:controller.loadGame(modelData.id)}
+                            }
+                        }
+                    }
+                    GamePreview {
+                        id:libraryPreview;objectName:"libraryPreview"
+                        // Largeur fixe : sans plafond, l'aperçu réclame la place de ses
+                        // boutons et le tableau se réduit à rien.
+                        Layout.preferredWidth:Math.round(300*win.textScale)
+                        Layout.minimumWidth:Layout.preferredWidth;Layout.maximumWidth:Layout.preferredWidth
+                        Layout.alignment:Qt.AlignTop
+                        // En dessous, l'aperçu mangerait les colonnes du tableau.
+                        visible:win.width>Math.round(1040*win.textScale)
+                        backend:controller
+                        boardSide:Math.round(260*win.textScale)
                     }
                 }
                 Flow {Layout.fillWidth:true;spacing:8
@@ -311,6 +334,20 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                             TButton {text:(modelData.dirty?"• ":"")+modelData.title;accent:modelData.active;flat:!modelData.active;implicitHeight:26*win.textScale;implicitWidth:Math.min(240,Math.max(120,text.length*7+24));onClicked:controller.switchTab(index)}
                             TButton {text:"×";implicitWidth:27*win.textScale;implicitHeight:26*win.textScale;Accessible.name:qsTr("Fermer l’étude");onClicked:controller.closeTab(index)}
                         }
+                    }
+                    // Parcourir la base ou le recueil depuis l'analyse : la partie
+                    // voisine de la liste de la bibliothèque remplace celle-ci, sans
+                    // aller-retour par l'onglet ni onglet d'étude en plus.
+                    RowLayout {spacing:2;visible:!controller.state.training&&controller.state.gameCount>0
+                        TButton {objectName:"previousGame";text:"◀";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
+                                 enabled:controller.state.gameIndex!==0;onClicked:controller.stepGame(-1)
+                                 Accessible.name:qsTr("Partie précédente");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie précédente de la liste (Alt+←)")}
+                        Label {color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
+                               text:controller.state.gameIndex>=0?qsTr("%1 / %2").arg(controller.state.gameIndex+1).arg(controller.state.gameCount)
+                                                                 :qsTr("hors liste")}
+                        TButton {objectName:"nextGame";text:"▶";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
+                                 enabled:controller.state.gameIndex<controller.state.gameCount-1;onClicked:controller.stepGame(1)
+                                 Accessible.name:qsTr("Partie suivante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie suivante de la liste (Alt+→)")}
                     }
                     Label {visible:controller.state.training;Layout.maximumWidth:420;elide:Text.ElideRight;color:win.fg;font.weight:Font.DemiBold
                         text:controller.puzzles.active?qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress}
@@ -931,6 +968,9 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!preparationDialog.visible&&!repertoiresDialog.visible&&!importsDialog.visible&&!advancedDialog.visible&&!helpDialog.visible&&!pgnDialog.visible&&!collectionDialog.visible&&!promotionDialog.visible&&!chess960Dialog.visible&&!deleteCardDialog.visible&&!deleteVariationDialog.visible&&!analysisMenu.visible&&!positionMenu.visible}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
+    // Les flèches parcourent les coups, Alt + flèche les parties de la liste.
+    Shortcut {sequence:"Alt+Left";enabled:win.navigationKeys();onActivated:controller.stepGame(-1)}
+    Shortcut {sequence:"Alt+Right";enabled:win.navigationKeys();onActivated:controller.stepGame(1)}
     Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}
     Shortcut {sequence:"End";enabled:win.navigationKeys();onActivated:controller.step(2)}
     Shortcut {sequence:"F";enabled:win.navigationKeys();onActivated:controller.flip()}

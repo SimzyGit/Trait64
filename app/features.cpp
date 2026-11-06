@@ -1435,3 +1435,90 @@ void Controller::pressEngineOption(const QString &name) {
     if (!engine_.pressOption(name))
         emit message(tr("Arrêtez l’analyse avant cette commande UCI."), true);
 }
+
+QVariantList Controller::squaresForFen(const QString &fen, const QString &lastUci) const {
+    // Les mêmes cases que l'échiquier principal, mais pour une position quelconque et
+    // sans toucher à l'étude ouverte : c'est ce qui permet un aperçu dans la
+    // bibliothèque sans quitter l'onglet ni perdre ce qu'on analysait.
+    QVariantList cells;
+    chess::Board board;
+    try {
+        board = chess::Board(fen.toStdString());
+    } catch (...) {
+        return cells;
+    }
+    auto squareName = [](int i) { return QString(QChar('a' + i % 8)) + QChar('1' + i / 8); };
+    for (int i = 0; i < 64; ++i) {
+        const auto p = board.at(chess::Square(i));
+        const bool occupied = p != chess::Piece::NONE;
+        static const QStringList glyphs = {"♟", "♞", "♝", "♜", "♛", "♚"};
+        cells << QVariantMap{
+            {"square", squareName(i)},
+            {"piece", occupied ? glyphs[int(p.type())] : QString()},
+            {"code", occupied ? (p.color() == chess::Color::WHITE ? QString("w") : QString("b")) +
+                                    QString("PNBRQK")[int(p.type())]
+                              : QString()},
+            {"white", occupied && p.color() == chess::Color::WHITE},
+            {"occupied", occupied},
+            {"legal", false},
+            {"last",
+             lastUci.size() >= 4 && (lastUci.left(2) == squareName(i) || lastUci.mid(2, 2) == squareName(i))},
+            {"check", board.inCheck() && i == board.kingSq(board.sideToMove()).index()}};
+    }
+    return cells;
+}
+
+QVariantList Controller::gameLine(qint64 id) const {
+    // La ligne principale d'une partie, position par position. L'aperçu la fait défiler
+    // sans charger la partie : ouvrir pour regarder ferait perdre l'étude en cours.
+    QVariantList line;
+    try {
+        const auto game = db_->load(id);
+        line << QVariantMap{
+            {"san", QString()}, {"uci", QString()}, {"fen", QString::fromStdString(game.nodes[0].fen)}};
+        int node = 0;
+        while (!game.nodes[node].children.empty() && line.size() < 600) {
+            node = game.nodes[node].children.front();
+            const auto &step = game.nodes[node];
+            line << QVariantMap{{"san", QString::fromStdString(step.san)},
+                                {"uci", QString::fromStdString(step.uci)},
+                                {"fen", QString::fromStdString(step.fen)}};
+        }
+    } catch (const std::exception &) {
+        return {};
+    }
+    return line;
+}
+
+int Controller::gameIndex() const {
+    for (int i = 0; i < games_.size(); ++i)
+        if (games_[i].toMap()["id"].toLongLong() == gameId_)
+            return i;
+    return -1;
+}
+
+void Controller::stepGame(int delta) {
+    // Parcourir une base ou un recueil depuis l'analyse : la partie voisine
+    // remplace celle de l'onglet courant au lieu d'en ouvrir un de plus. La liste
+    // parcourue est celle de la bibliothèque, filtres et tri compris.
+    try {
+        need(!trainingActive(), "Terminez l’entraînement avant de changer de partie.");
+        need(!busy_, "Attendez la fin du traitement avant de changer de partie.");
+        need(!games_.isEmpty(), "La bibliothèque ne contient aucune partie à parcourir.");
+        const int at = gameIndex();
+        // Partie absente de la liste (nouvelle, ou filtrée) : on entre par le bout
+        // qui correspond au sens demandé.
+        const int next = at < 0 ? (delta > 0 ? 0 : games_.size() - 1) : at + delta;
+        need(next >= 0, "C’est la première partie de la liste.");
+        need(next < games_.size(), "C’est la dernière partie de la liste.");
+        const qint64 id = games_[next].toMap()["id"].toLongLong();
+        if (id == gameId_)
+            return;
+        checkpoint();
+        cancelReview();
+        stopPlaying();
+        adoptGame(db_->load(id), id);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}

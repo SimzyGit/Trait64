@@ -125,6 +125,13 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList studyCollections READ studyCollections NOTIFY sourcesChanged)
     QVariantList studyCollections() const;
     Q_INVOKABLE QVariantList studyGames(qint64 sourceId) const;
+    // Un aperçu : les cases d'une position quelconque, et la ligne principale d'une
+    // partie. Ni l'un ni l'autre ne touche à l'étude ouverte.
+    Q_INVOKABLE QVariantList squaresForFen(const QString &fen, const QString &lastUci = {}) const;
+    Q_INVOKABLE QVariantList gameLine(qint64 id) const;
+    // delta = +1 ou -1 : la partie suivante ou précédente de la liste affichée par
+    // la bibliothèque, chargée dans l’onglet courant.
+    Q_INVOKABLE void stepGame(int delta);
     Q_INVOKABLE void importRepertoire(qint64 id, const QString &url, bool white = true);
     // Un dossier d'études, tel que l'exportent En Croissant et Pawn Appétit : un
     // répertoire par fichier PGN, sous-dossiers compris, nommés d'après leur chemin.
@@ -576,6 +583,9 @@ class Controller : public QObject {
     void checkpoint();
     void writeSession();
     void replaceGame(t64::Game game, qint64 id = 0);
+    void adoptGame(t64::Game game, qint64 id);
+    // Rang de la partie ouverte dans la liste de la bibliothèque, -1 si absente.
+    int gameIndex() const;
     void importBytes(const QByteArray &bytes);
     void requestEngine();
     QString positionCommand() const;

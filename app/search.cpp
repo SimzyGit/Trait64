@@ -26,6 +26,9 @@ void Controller::initLibrarySearch() {
                                        : tr("Recherche impossible.");
             emit libraryChanged();
             emit searchChanged();
+            // L'analyse affiche le rang de la partie ouverte dans cette liste :
+            // une nouvelle recherche le déplace.
+            refresh();
             if (!result.error.isEmpty())
                 emit message(result.error, true);
         }

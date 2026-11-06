@@ -422,6 +422,10 @@ void Controller::refresh(bool content) {
         {"tags", tags},
         {"dirty", dirty_},
         {"savedId", gameId_},
+        // Où l'on en est dans la liste de la bibliothèque : l'analyse s'en sert
+        // pour passer à la partie suivante sans revenir à l'onglet.
+        {"gameIndex", gameIndex()},
+        {"gameCount", games_.size()},
         {"analysis", analysis_},
         {"playing", playing_ || localGame_},
         {"clockRunning", clockRunning_},
@@ -606,6 +610,12 @@ void Controller::replaceGame(t64::Game game, qint64 id) {
     storeTab();
     studies_.emplace_back();
     activeTab_ = int(studies_.size()) - 1;
+    adoptGame(std::move(game), id);
+}
+// La partie prend la place de celle de l’onglet courant : tout ce qui
+// appartenait à la précédente — analyse, variantes essayées, horloge — s’en va
+// avec elle.
+void Controller::adoptGame(t64::Game game, qint64 id) {
     undo_.clear();
     redo_.clear();
     review_.clear();

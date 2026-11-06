@@ -229,6 +229,7 @@ ColumnLayout {
             // Un recueil : ses parties, l'une après l'autre. Un clic en ouvre une dans
             // Analyse, avec ses variantes et ses commentaires.
             ColumnLayout {
+                id: collectionPane
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: !!root.collection
@@ -248,50 +249,68 @@ ColumnLayout {
                     Layout.fillWidth: true
                     color: root.preferences.muted
                     wrapMode: Text.WordWrap
-                    text: qsTr("%1 partie(s) · cliquez-en une pour l’ouvrir dans Analyse. "
+                    text: qsTr("%1 partie(s) · cliquez-en une pour la parcourir à côté, "
+                               + "double-cliquez pour l’ouvrir dans Analyse. "
                                + "Ce recueil est aussi une base de la bibliothèque : "
                                + "recherche, filtres et bilan s’y appliquent.")
                             .arg(root.collection ? (root.collection.games || 0) : 0)
                 }
-                ListView {
-                    objectName: "studyGames"
+                RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
-                    model: parent.games
-                    reuseItems: true
-                    ScrollBar.vertical: ScrollBar {}
-                    delegate: Rectangle {
-                        required property var modelData
-                        width: ListView.view.width
-                        height: 34 * controller.preferences.fontScale * controller.preferences.uiScale
-                        color: gameHover.hovered
-                               ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
-                                         root.preferences.accentColor.b, .12)
-                               : "transparent"
-                        HoverHandler { id: gameHover; cursorShape: Qt.PointingHandCursor }
-                        TapHandler { onTapped: root.backend.loadGame(modelData.id) }
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 8; anchors.rightMargin: 8
-                            spacing: 10
-                            Label {
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                text: (modelData.white || "?") + " — " + (modelData.black || "?")
-                                      + (modelData.event ? "   " + modelData.event : "")
-                            }
-                            Label {
-                                text: modelData.result || "*"
-                                color: root.preferences.muted
-                            }
-                            Label {
-                                // Le PGN note une date inconnue « ????.??.?? » : un tiret se lit mieux.
-                                text: modelData.date && modelData.date.indexOf("?") < 0
-                                      ? modelData.date : "—"
-                                color: root.preferences.muted
+                    spacing: 10
+                    ListView {
+                        objectName: "studyGames"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: collectionPane.games
+                        reuseItems: true
+                        ScrollBar.vertical: ScrollBar {}
+                        delegate: Rectangle {
+                            required property var modelData
+                            width: ListView.view.width
+                            height: 34 * controller.preferences.fontScale * controller.preferences.uiScale
+                            color: gameHover.hovered
+                                   ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
+                                             root.preferences.accentColor.b, .12)
+                                   : "transparent"
+                            HoverHandler { id: gameHover; cursorShape: Qt.PointingHandCursor }
+                            // Un clic montre la partie à côté, un double-clic l'ouvre dans
+                            // Analyse : parcourir un recueil ne doit pas coûter l'étude ouverte.
+                            TapHandler { onSingleTapped: studyPreview.gameId = modelData.id
+                                         onDoubleTapped: root.backend.loadGame(modelData.id) }
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8; anchors.rightMargin: 8
+                                spacing: 10
+                                Label {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: (modelData.white || "?") + " — " + (modelData.black || "?")
+                                          + (modelData.event ? "   " + modelData.event : "")
+                                }
+                                Label {
+                                    text: modelData.result || "*"
+                                    color: root.preferences.muted
+                                }
+                                Label {
+                                    // Le PGN note une date inconnue « ????.??.?? » : un tiret se lit mieux.
+                                    text: modelData.date && modelData.date.indexOf("?") < 0
+                                          ? modelData.date : "—"
+                                    color: root.preferences.muted
+                                }
                             }
                         }
+                    }
+                    GamePreview {
+                        id: studyPreview
+                        objectName: "studyPreview"
+                        Layout.preferredWidth: Math.round(280 * controller.preferences.uiScale)
+                        Layout.alignment: Qt.AlignTop
+                        visible: parent.width > Math.round(760 * controller.preferences.uiScale)
+                        backend: root.backend
+                        boardSide: Math.round(240 * controller.preferences.uiScale)
                     }
                 }
             }

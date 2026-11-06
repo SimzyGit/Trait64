@@ -7,6 +7,11 @@ Item {
     property bool coordinates: true
     property var prefs: backend.preferences
     property var arrows: backend.state.arrows || []
+    // L'échiquier sert aussi d'aperçu : il peut alors montrer une position qui n'est pas
+    // celle de l'étude ouverte, et ne doit pas réagir aux clics.
+    property var squares: backend.squares
+    property bool interactive: true
+    property bool flipped: backend.state.flipped
     property string arrowFrom: ""
     property string draggedFrom: ""
     property real cell: width / 8
@@ -14,7 +19,7 @@ Item {
     implicitHeight: width
     function displayIndex(square) {
         var n = square.charCodeAt(0)-97+(square.charCodeAt(1)-49)*8
-        return backend.state.flipped ? Math.floor(n/8)*8+7-n%8 : (7-Math.floor(n/8))*8+n%8
+        return root.flipped ? Math.floor(n/8)*8+7-n%8 : (7-Math.floor(n/8))*8+n%8
     }
     function squareAt(x,y) {
         var col=Math.floor(x/cell),row=Math.floor(y/cell)
@@ -30,8 +35,8 @@ Item {
             delegate: Rectangle {
                 id: tile
                 required property int index
-                property int sqIndex: root.backend.state.flipped ? Math.floor(index/8)*8+7-index%8 : (7-Math.floor(index/8))*8+index%8
-                property var cellData: root.backend.squares[sqIndex] || ({})
+                property int sqIndex: root.flipped ? Math.floor(index/8)*8+7-index%8 : (7-Math.floor(index/8))*8+index%8
+                property var cellData: root.squares[sqIndex] || ({})
                 width: root.cell; height: root.cell
                 color: (Math.floor(index/8)+index%8)%2===0 ? root.prefs.boardLight : root.prefs.boardDark
                 Rectangle {anchors.fill:parent;color:tile.cellData.check ? "#d34545" : root.prefs.boardHighlight;opacity:tile.cellData.check?.78:root.backend.state.selected===tile.sqIndex?.85:.48;visible:!!tile.cellData.check || root.backend.state.selected===tile.sqIndex || (!!tile.cellData.last && root.prefs.lastMove)}
@@ -87,6 +92,9 @@ Item {
     }
     MouseArea {
         id: input
+        // Désactivée pour un aperçu : on y fait défiler des coups, on n'y joue pas.
+        enabled: root.interactive
+        visible: root.interactive
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: true
@@ -125,7 +133,7 @@ Item {
     Piece {
         visible: root.draggedFrom!==""
         property int index: root.draggedFrom!=="" ? root.draggedFrom.charCodeAt(0)-97+(root.draggedFrom.charCodeAt(1)-49)*8 : 0
-        property var cellData: root.backend.squares[index] || ({})
+        property var cellData: root.squares[index] || ({})
         x: input.mouseX-width/2; y: input.mouseY-height/2
         width:root.cell*.94;height:width
         code:cellData.code||"";pieceStyle:root.prefs.pieceStyle;customPath:root.prefs.customPiecePath
