@@ -1584,6 +1584,21 @@ int main(int argc, char **argv) {
                   "The collection carries the family name, not the ECO code");
         }
         {
+            // Fermer la fenêtre pendant que les tâches de fond tournent : sans attente à
+            // la destruction, leur réponse toucherait des membres déjà détruits.
+            QTemporaryDir home;
+            auto closing = std::make_unique<Controller>(home.path());
+            closing->importText("[Event \"x\"]\n\n1.e4 c5 *");
+            QElapsedTimer settle;
+            settle.restart();
+            while (closing->busy() && settle.elapsed() < 10000)
+                QTest::qWait(10);
+            closing->classifyLibraryOpenings();
+            closing->buildOpeningReport();
+            closing.reset();
+            check(true, "Destroying the window while background tasks run leaves nothing dangling");
+        }
+        {
             // Comparer un répertoire aux parties du joueur : le profil dit lesquelles
             // sont les siennes, et son nom compte autant que ses comptes en ligne — les
             // parties jouées sur l'échiquier portent celui-là.
@@ -1632,6 +1647,12 @@ int main(int argc, char **argv) {
             };
             shelf.importText("[Event \"sans balise\"]\n\n1.e4 c5 2.Nf3 d6 *");
             idle();
+            // Le classement tourne en arrière-plan : mesuré à deux secondes sur cent mille
+            // parties, il figeait la fenêtre après chaque import quand il était sur son fil.
+            settle.restart();
+            while (shelf.games().size() == 1 && shelf.games().first().toMap()["eco"].toString().isEmpty() &&
+                   settle.elapsed() < 10000)
+                QTest::qWait(20);
             auto ecoOf = [&](const QString &event) {
                 for (const auto &row : shelf.games())
                     if (row.toMap()["event"] == event)
@@ -1659,8 +1680,15 @@ int main(int argc, char **argv) {
                   "The dossier names the opening of the position it describes");
             // Et la commande explicite doit rattraper ce qui est déjà en base.
             QSignalSpy said(&shelf, &Controller::message);
+            QElapsedTimer hand;
+            hand.start();
             shelf.classifyLibraryOpenings();
-            idle();
+            // Mesuré à deux secondes sur cent mille parties : l'appel doit rendre la main
+            // tout de suite, sans quoi la fenêtre se fige le temps du classement.
+            check(hand.elapsed() < 200, "Classifying hands control back at once rather than blocking");
+            settle.restart();
+            while (said.isEmpty() && settle.elapsed() < 10000)
+                QTest::qWait(20);
             check(said.count() == 1 && !said.first().at(1).toBool(),
                   "Classifying again says what it did, as news rather than an error");
         }

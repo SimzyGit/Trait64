@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "cancellation.h"
 #include "database.h"
+#include <QHash>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <algorithm>
@@ -484,21 +485,26 @@ QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names,
     bindNames(leave, 1);
     leave.addBindValue(std::clamp(limit, 1, 500));
     run(leave);
+    // L'empreinte revient vers la clé textuelle du répertoire : parcourir toutes les
+    // positions pour chaque ligne rendait la lecture quadratique sans raison.
+    QHash<qint64, QString> textOf;
+    textOf.reserve(keys.size());
+    for (auto it = keys.cbegin(); it != keys.cend(); ++it)
+        textOf.insert(*it, it.key());
     QVariantList rows;
     QSqlQuery expected(db_);
     expected.prepare(
         "SELECT san FROM repertoire_moves WHERE repertoire=? AND key=? ORDER BY priority DESC,san");
     while (leave.next()) {
         QStringList prepared;
-        for (auto it = keys.cbegin(); it != keys.cend(); ++it)
-            if (*it == leave.value(8).toLongLong()) {
-                expected.addBindValue(repertoire);
-                expected.addBindValue(it.key());
-                run(expected);
-                while (expected.next())
-                    prepared << expected.value(0).toString();
-                break;
-            }
+        const auto text = textOf.value(leave.value(8).toLongLong());
+        if (!text.isEmpty()) {
+            expected.addBindValue(repertoire);
+            expected.addBindValue(text);
+            run(expected);
+            while (expected.next())
+                prepared << expected.value(0).toString();
+        }
         rows.append(QVariantMap{{"id", leave.value(0)},
                                 {"white", leave.value(1)},
                                 {"black", leave.value(2)},

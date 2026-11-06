@@ -122,6 +122,20 @@ Controller::Controller(const QString &path, QObject *parent)
     analysisTimer_.setSingleShot(true);
     analysisTimer_.setInterval(180);
     connect(&analysisTimer_, &QTimer::timeout, this, &Controller::requestEngine);
+    connect(&classifier_, &QFutureWatcher<int>::finished, this, [this] {
+        const int classified = classifier_.result();
+        // Seulement la liste, pas tout le reste : `refreshLibrary` annule la préparation
+        // en cours, et une tâche de fond n'a pas à interrompre ce que le joueur demande.
+        if (classified > 0)
+            requestLibrarySearch(false);
+        if (!classifyAnnounces_)
+            return;
+        if (classified < 0)
+            emit message(tr("Classement des ouvertures impossible."), true);
+        else
+            emit message(classified ? tr("%1 partie(s) classée(s) par ouverture.").arg(classified)
+                                    : tr("Toutes les parties portent déjà un code d’ouverture."));
+    });
     connect(&engine_, &t64::Uci::optionsChanged, this, &Controller::engineChanged);
     connect(&engine_, &t64::Uci::status, this, [this](const QString &v) {
         engineStatus_ = v;
@@ -212,7 +226,7 @@ Controller::Controller(const QString &path, QObject *parent)
         // sans ce classement, la recherche par ouverture les ignorerait en silence. Avant
         // le rafraîchissement, sans quoi la liste montrerait encore l'état d'avant.
         if (r.error.isEmpty() && r.count > 0 && r.operation != "reindex")
-            classifyQuietly();
+            classifyQuietly(false);
         refreshLibrary();
         refresh();
         if (!r.error.isEmpty())
@@ -294,6 +308,14 @@ Controller::~Controller() {
     if (cancelPreparation_)
         cancelPreparation_->store(true);
     preparationWorker_.waitForFinished();
+    // Les deux tâches ajoutées en dernier : sans cette attente, une réponse arrivant
+    // pendant la destruction toucherait des membres déjà détruits.
+    disconnect(&classifier_, nullptr, this, nullptr);
+    classifier_.waitForFinished();
+    disconnect(&reportWorker_, nullptr, this, nullptr);
+    if (cancelReport_)
+        cancelReport_->store(true);
+    reportWorker_.waitForFinished();
     comparison_.stop();
     backupWorker_.waitForFinished();
     reviewer_.shutdown();
@@ -1097,13 +1119,28 @@ void Controller::setCollection(qint64 id, const QString &c) {
         fail(e);
     }
 }
-int Controller::classifyQuietly() {
-    try {
-        return db_->classifyOpenings(openingPositions());
-    } catch (const std::exception &) {
-        // Un classement manqué ne doit pas faire échouer l'import qui vient de réussir.
-        return 0;
+void Controller::classifyQuietly(bool announce) {
+    // Mesuré : deux secondes sur cent mille parties sans code. Sur le fil de l'interface,
+    // c'était la fenêtre figée après chaque import d'une grande base.
+    if (classifier_.isRunning())
+        return;
+    const auto path = db_->path();
+    const auto table = openingPositions();
+    if (table.isEmpty()) {
+        if (announce)
+            emit message(tr("Table des ouvertures illisible."), true);
+        return;
     }
+    classifyAnnounces_ = announce;
+    classifier_.setFuture(QtConcurrent::run([path, table] {
+        try {
+            t64::Database db(path);
+            return db.classifyOpenings(table);
+        } catch (const std::exception &) {
+            // Un classement manqué ne doit pas faire échouer l'import qui vient de réussir.
+            return -1;
+        }
+    }));
 }
 QVariantMap Controller::openingPositions() const {
     // La table des ouvertures est une ressource de l'application : la base ne peut pas la
@@ -1125,13 +1162,8 @@ QVariantMap Controller::openingPositions() const {
 }
 void Controller::classifyLibraryOpenings() {
     try {
-        require(!busy_, "Traitement en cours.");
-        const auto ecoByPosition = openingPositions();
-        require(!ecoByPosition.isEmpty(), "Table des ouvertures illisible.");
-        const int classified = db_->classifyOpenings(ecoByPosition);
-        refreshLibrary();
-        emit message(classified ? tr("%1 partie(s) classée(s) par ouverture.").arg(classified)
-                                : tr("Toutes les parties portent déjà un code d’ouverture."));
+        require(!busy_ && !classifier_.isRunning(), "Traitement en cours.");
+        classifyQuietly(true);
     } catch (const std::exception &e) {
         fail(e);
     }

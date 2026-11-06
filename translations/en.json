@@ -1163,5 +1163,6 @@
   "Aucune de vos parties n’a joué un coup de ce répertoire. Importez vos parties, ou vérifiez que le nom du profil est bien celui sous lequel vous jouez.": "None of your games played a move from this repertoire. Import your games, or check that the profile name is the one you play under.",
   "Coup %1 : vous avez joué %2, le répertoire prévoyait %3": "Move %1: you played %2, the repertoire prepared %3",
   "rien ici": "nothing here",
-  "Répertoire introuvable.": "Repertoire not found."
+  "Répertoire introuvable.": "Repertoire not found.",
+  "Classement des ouvertures impossible.": "Could not classify the openings."
 }

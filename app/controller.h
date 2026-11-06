@@ -325,7 +325,7 @@ class Controller : public QObject {
     Q_INVOKABLE void classifyLibraryOpenings();
     // Le même classement, sans message : il suit chaque import, et un import réussi ne
     // doit pas échouer parce que le classement a manqué.
-    int classifyQuietly();
+    void classifyQuietly(bool announce);
     QVariantMap openingPositions() const;
     Q_INVOKABLE void groupLibraryByOpening();
     Q_INVOKABLE void copyText(const QString &what);
@@ -523,6 +523,8 @@ class Controller : public QObject {
     QVariantList review_, players_;
     QVariantMap reviewAccuracy_, reviewQuality_;
     QVariantMap report_;
+    QFutureWatcher<int> classifier_;
+    bool classifyAnnounces_ = false;
     QFutureWatcher<QVariantMap> reportWorker_;
     std::shared_ptr<std::atomic_bool> cancelReport_;
     qint64 reportGeneration_ = 0;
