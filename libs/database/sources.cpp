@@ -2,6 +2,7 @@
 #include "database.h"
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QUuid>
 #include <stdexcept>
 
@@ -50,16 +51,38 @@ void Database::upgradeV4(int originalVersion) {
         throw;
     }
 }
+// Un recueil est une source comme une autre : un nom, des parties, et la recherche de
+// la bibliothèque qui sait déjà filtrer dessus. Seule manquait la marque qui le
+// distingue d'une base téléchargée, pour que l'onglet Études sache lesquelles montrer.
+void Database::upgradeV11(int originalVersion) {
+    if (originalVersion >= 11)
+        return;
+    if (originalVersion > 0)
+        backup(path_ + ".before-v11-" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ".sqlite");
+    sql("SAVEPOINT schema11");
+    try {
+        if (!db_.record("sources").contains("kind"))
+            sql("ALTER TABLE sources ADD COLUMN kind TEXT NOT NULL DEFAULT ''");
+        sql("PRAGMA user_version=11");
+        sql("RELEASE schema11");
+    } catch (...) {
+        sql("ROLLBACK TO schema11");
+        sql("RELEASE schema11");
+        throw;
+    }
+}
 qint64 Database::registerSource(const QVariantMap &source) {
     if (source.value("id").toString().isEmpty())
         return 0;
     QSqlQuery q(db_);
-    q.prepare("INSERT INTO sources(slug,title,url,license) VALUES(?,?,?,?) ON CONFLICT(slug) DO UPDATE SET "
-              "title=excluded.title,url=excluded.url,license=excluded.license");
+    q.prepare("INSERT INTO sources(slug,title,url,license,kind) VALUES(?,?,?,?,?) ON CONFLICT(slug) DO "
+              "UPDATE SET title=excluded.title,url=excluded.url,license=excluded.license,"
+              "kind=excluded.kind");
     q.addBindValue(source["id"].toString().left(200));
     q.addBindValue(source["title"].toString().left(300));
     q.addBindValue(source.value("source", QString("")).toString().left(2048));
     q.addBindValue(source.value("license", QString("")).toString().left(1000));
+    q.addBindValue(source.value("kind", QString("")).toString().left(40));
     run(q);
     q.prepare("SELECT id FROM sources WHERE slug=?");
     q.addBindValue(source["id"].toString().left(200));
@@ -90,12 +113,13 @@ void Database::recordImport(qint64 source, const QString &file, const QString &d
 }
 QVariantList Database::sources() const {
     QSqlQuery q(db_);
-    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games FROM sources s ORDER BY s.title");
+    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games,s.kind FROM sources s ORDER BY s.title");
     run(q);
     QVariantList rows;
     while (q.next())
         rows << QVariantMap{{"id", q.value(0)},     {"slug", q.value(1)},    {"title", q.value(2)},
-                            {"source", q.value(3)}, {"license", q.value(4)}, {"games", q.value(5)}};
+                            {"source", q.value(3)}, {"license", q.value(4)}, {"games", q.value(5)},
+                            {"kind", q.value(6)}};
     return rows;
 }
 QVariantList Database::importHistory() const {

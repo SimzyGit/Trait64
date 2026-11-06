@@ -591,8 +591,10 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 10,
-                      "Schema version 10");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 11,
+                      "Schema version 11");
+                // La marque qui distingue un recueil d'études d'une base téléchargée.
+                check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
                 check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
                           q.value(0).toString() == "integer",
                       "Positions are stored as integers");

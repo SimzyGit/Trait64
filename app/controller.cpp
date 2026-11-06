@@ -228,6 +228,9 @@ Controller::Controller(const QString &path, QObject *parent)
         if (r.error.isEmpty() && r.count > 0 && r.operation != "reindex")
             classifyQuietly(false);
         refreshLibrary();
+        // Un dossier de recueils s'importe fichier par fichier : c'est la fin de l'un
+        // qui lance le suivant, la base n'en supportant qu'un à la fois.
+        nextPendingStudy();
         refresh();
         if (!r.error.isEmpty())
             emit message(r.error, true);

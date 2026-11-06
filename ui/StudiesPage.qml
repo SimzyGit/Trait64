@@ -20,6 +20,24 @@ ColumnLayout {
     // demande son ouverture plutôt que d'aller chercher un identifiant qui ne lui
     // appartient pas.
     signal openDetails()
+    // Un recueil choisi : ses parties remplacent la fiche du répertoire à droite. Une
+    // étude n'est pas forcément un répertoire — un PGN tient souvent des parties
+    // commentées, qu'on veut lire l'une après l'autre.
+    property var collection: null
+    readonly property var studies: {
+        var rows = []
+        for (var i = 0; i < backend.repertoires.length; ++i) {
+            var r = backend.repertoires[i]
+            rows.push({kind: "repertoire", id: r.id, name: r.name, white: r.white,
+                       positions: r.positions, reviews: r.reviews, success: r.success, due: r.due})
+        }
+        var collections = backend.studyCollections
+        for (var j = 0; j < collections.length; ++j) {
+            var c = collections[j]
+            rows.push({kind: "collection", id: c.id, name: c.title, games: c.games})
+        }
+        return rows
+    }
     spacing: 10
 
     RowLayout {
@@ -84,7 +102,7 @@ ColumnLayout {
             Label {
                 anchors.centerIn: parent
                 width: parent.width - 32
-                visible: root.backend.repertoires.length === 0
+                visible: root.studies.length === 0
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 color: root.preferences.muted
@@ -97,13 +115,16 @@ ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 1
                 clip: true
-                model: root.backend.repertoires
+                model: root.studies
                 ScrollBar.vertical: ScrollBar {}
                 delegate: Rectangle {
                     id: studyRow
                     required property var modelData
                     required property int index
-                    readonly property bool current: Number(modelData.id) === Number(root.selectedId)
+                    readonly property bool isCollection: modelData.kind === "collection"
+                    readonly property bool current: isCollection
+                        ? (root.collection && Number(root.collection.id) === Number(modelData.id))
+                        : (!root.collection && Number(modelData.id) === Number(root.selectedId))
                     width: list.width
                     height: 46 * controller.preferences.fontScale * controller.preferences.uiScale
                     color: current ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
@@ -113,7 +134,16 @@ ColumnLayout {
                                                       root.preferences.accentColor.b, .09)
                          : "transparent"
                     HoverHandler { id: rowHover }
-                    TapHandler { onTapped: root.backend.selectRepertoire(modelData.id) }
+                    TapHandler {
+                        onTapped: {
+                            if (studyRow.isCollection)
+                                root.collection = modelData
+                            else {
+                                root.collection = null
+                                root.backend.selectRepertoire(modelData.id)
+                            }
+                        }
+                    }
                     Rectangle {
                         anchors.bottom: parent.bottom; width: parent.width; height: 1
                         color: root.preferences.line; opacity: .4
@@ -127,8 +157,12 @@ ColumnLayout {
                             Layout.preferredWidth: 11; Layout.preferredHeight: 11
                             Layout.alignment: Qt.AlignVCenter
                             radius: 3
-                            color: modelData.white ? "#f2f4f7" : "#1d2125"
-                            border.color: "#1d2125"
+                            // Un recueil n'a pas de camp : sa pastille porte la couleur
+                            // d'accent plutôt qu'un blanc ou un noir qui mentirait.
+                            color: studyRow.isCollection ? root.preferences.accentColor
+                                   : modelData.white ? "#f2f4f7" : "#1d2125"
+                            border.color: studyRow.isCollection ? root.preferences.accentColor
+                                          : "#1d2125"
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -145,11 +179,15 @@ ColumnLayout {
                                 color: root.preferences.muted
                                 font.pixelSize: Math.round(11 * controller.preferences.fontScale
                                                            * controller.preferences.uiScale)
-                                text: qsTr("%1 position(s)").arg(modelData.positions || 0)
-                                      + ((modelData.reviews || 0) > 0
-                                         ? qsTr(" · %1 % de réussite")
-                                           .arg(Math.round(100 * (modelData.successes || 0) / modelData.reviews))
-                                         : "")
+                                // Un recueil se compte en parties, un répertoire en positions :
+                                // ce ne sont pas les mêmes objets.
+                                text: studyRow.isCollection
+                                      ? qsTr("Recueil · %1 partie(s)").arg(modelData.games || 0)
+                                      : qsTr("%1 position(s)").arg(modelData.positions || 0)
+                                        + ((modelData.reviews || 0) > 0
+                                           ? qsTr(" · %1 % de réussite")
+                                             .arg(Math.round(100 * (modelData.successes || 0) / modelData.reviews))
+                                           : "")
                             }
                         }
                         // La marque de ce qui est dû : c'est elle qu'on cherche en arrivant.
@@ -182,15 +220,85 @@ ColumnLayout {
 
             Label {
                 Layout.fillWidth: true
-                visible: root.selectedId <= 0
+                visible: !root.collection && root.selectedId <= 0
                 wrapMode: Text.WordWrap
                 color: root.preferences.muted
                 text: qsTr("Choisissez une étude dans la liste.")
             }
 
+            // Un recueil : ses parties, l'une après l'autre. Un clic en ouvre une dans
+            // Analyse, avec ses variantes et ses commentaires.
             ColumnLayout {
                 Layout.fillWidth: true
-                visible: root.selectedId > 0
+                Layout.fillHeight: true
+                visible: !!root.collection
+                spacing: 8
+                readonly property var games: root.collection
+                                             ? root.backend.studyGames(root.collection.id) : []
+
+                Label {
+                    Layout.fillWidth: true
+                    text: root.collection ? root.collection.name : ""
+                    font.pixelSize: Math.round(18 * controller.preferences.fontScale
+                                               * controller.preferences.uiScale)
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
+                Label {
+                    Layout.fillWidth: true
+                    color: root.preferences.muted
+                    wrapMode: Text.WordWrap
+                    text: qsTr("%1 partie(s) · cliquez-en une pour l’ouvrir dans Analyse. "
+                               + "Ce recueil est aussi une base de la bibliothèque : "
+                               + "recherche, filtres et bilan s’y appliquent.")
+                            .arg(root.collection ? (root.collection.games || 0) : 0)
+                }
+                ListView {
+                    objectName: "studyGames"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: parent.games
+                    reuseItems: true
+                    ScrollBar.vertical: ScrollBar {}
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: ListView.view.width
+                        height: 34 * controller.preferences.fontScale * controller.preferences.uiScale
+                        color: gameHover.hovered
+                               ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
+                                         root.preferences.accentColor.b, .12)
+                               : "transparent"
+                        HoverHandler { id: gameHover; cursorShape: Qt.PointingHandCursor }
+                        TapHandler { onTapped: root.backend.loadGame(modelData.id) }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8; anchors.rightMargin: 8
+                            spacing: 10
+                            Label {
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                text: (modelData.white || "?") + " — " + (modelData.black || "?")
+                                      + (modelData.event ? "   " + modelData.event : "")
+                            }
+                            Label {
+                                text: modelData.result || "*"
+                                color: root.preferences.muted
+                            }
+                            Label {
+                                // Le PGN note une date inconnue « ????.??.?? » : un tiret se lit mieux.
+                                text: modelData.date && modelData.date.indexOf("?") < 0
+                                      ? modelData.date : "—"
+                                color: root.preferences.muted
+                            }
+                        }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: !root.collection && root.selectedId > 0
                 spacing: 8
 
                 Label {
@@ -371,12 +479,69 @@ ColumnLayout {
                                    : qsTr("PGN à importer comme nouvelle étude")
         nameFilters: [qsTr("Études (*.pgn *.PGN *.pgn.gz *.pgn.zst *.pgn.bz2 *.pgn.xz)"),
                       qsTr("Tous les fichiers (*)")]
-        onAccepted: root.backend.importRepertoire(root.selectedId, selectedFile.toString())
+        // Un PGN n'est pas forcément un répertoire : on demande ce qu'il est plutôt que
+        // de fondre ses parties dans un arbre de positions sans prévenir.
+        onAccepted: { kind.file = selectedFile.toString(); kind.folder = false; kind.open() }
     }
     Native.FolderDialog {
         id: importFolder
         title: qsTr("Dossier d’études à importer")
-        onAccepted: root.backend.importRepertoireFolder(selectedFolder.toString())
+        onAccepted: { kind.file = selectedFolder.toString(); kind.folder = true; kind.open() }
+    }
+    TDialog {
+        id: kind
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        title: qsTr("Qu’est-ce que ce fichier ?")
+        property string file: ""
+        property bool folder: false
+        width: Math.min(560, parent ? parent.width - 48 : 560)
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 14
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: root.preferences.muted
+                text: qsTr("Les deux se gardent dans cet onglet. Un recueil laisse chaque partie "
+                           + "entière et se lit comme un livre ; un répertoire fond toutes les "
+                           + "lignes en un seul arbre, pour les réviser.")
+            }
+            TButton {
+                objectName: "importAsCollection"
+                Layout.fillWidth: true
+                accent: true
+                text: qsTr("Recueil de parties — à parcourir")
+                onClicked: {
+                    if (kind.folder)
+                        root.backend.importStudyFolder(kind.file)
+                    else
+                        root.backend.importStudyCollection(kind.file)
+                    kind.close()
+                }
+            }
+            TButton {
+                objectName: "importAsRepertoire"
+                Layout.fillWidth: true
+                text: root.selectedId > 0 && !kind.folder
+                      ? qsTr("Ajouter à l’étude choisie — à réviser")
+                      : qsTr("Répertoire d’entraînement — à réviser")
+                onClicked: {
+                    if (kind.folder)
+                        root.backend.importRepertoireFolder(kind.file)
+                    else
+                        root.backend.importRepertoire(root.selectedId, kind.file)
+                    kind.close()
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                TButton { text: qsTr("Annuler"); onClicked: kind.close() }
+            }
+        }
     }
     Native.FileDialog {
         id: exportPgn

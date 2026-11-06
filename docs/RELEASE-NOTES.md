@@ -1,5 +1,14 @@
 ## Ouvertures, analyse et mise à jour — 6 novembre 2026
 
+**Vos fichiers PGN se parcourent enfin partie par partie.** Une étude n'est pas
+forcément un répertoire : un fichier tient souvent des parties commentées, qu'on
+veut lire l'une après l'autre. Jusqu'ici elles étaient toutes fondues dans un
+seul arbre de positions. À l'import, Trait64 demande désormais ce qu'est le
+fichier — un recueil à parcourir, ou un répertoire à réviser. Un recueil liste
+ses parties comme des chapitres, et un clic en ouvre une dans Analyse. Il est
+aussi une base de la bibliothèque, nommée d'après le fichier : recherche,
+filtres et bilan s'y appliquent comme au reste.
+
 **La mise à jour depuis une version précédente fonctionne enfin.** Le canal par
 défaut valait « stable » alors que toutes les versions publiées sont des
 préversions de développement : aucune mise à jour ne pouvait donc être proposée

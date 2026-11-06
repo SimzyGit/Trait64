@@ -114,6 +114,17 @@ class Controller : public QObject {
     Q_INVOKABLE void addStudyToRepertoire(qint64 id);
     // `id` à 0 : le fichier crée une étude nommée d'après lui, plutôt que d'exiger
     // d'en avoir choisi une au préalable.
+    // Un recueil : les parties du fichier restent séparées et parcourables, au lieu
+    // d'être fondues dans un arbre de positions comme un répertoire.
+    Q_INVOKABLE void importStudyCollection(const QString &url);
+    Q_INVOKABLE void importStudyFolder(const QString &url);
+    void nextPendingStudy();
+    static QString studyCollectionName(const QString &path);
+    // Les recueils, et les parties de l'un d'eux. L'onglet Études les montre comme des
+    // chapitres : un clic en ouvre une dans Analyse.
+    Q_PROPERTY(QVariantList studyCollections READ studyCollections NOTIFY sourcesChanged)
+    QVariantList studyCollections() const;
+    Q_INVOKABLE QVariantList studyGames(qint64 sourceId) const;
     Q_INVOKABLE void importRepertoire(qint64 id, const QString &url, bool white = true);
     // Un dossier d'études, tel que l'exportent En Croissant et Pawn Appétit : un
     // répertoire par fichier PGN, sous-dossiers compris, nommés d'après leur chemin.
@@ -523,6 +534,8 @@ class Controller : public QObject {
     QVariantList review_, players_;
     QVariantMap reviewAccuracy_, reviewQuality_;
     QVariantMap report_;
+    std::shared_ptr<QTemporaryFile> unpackedStudy_;
+    QStringList pendingStudies_;
     QFutureWatcher<int> classifier_;
     bool classifyAnnounces_ = false;
     QFutureWatcher<QVariantMap> reportWorker_;

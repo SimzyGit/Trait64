@@ -159,6 +159,7 @@ class Database {
     void upgradeV7(int originalVersion);
     void upgradeV9(int originalVersion);
     void upgradeV10(int originalVersion);
+    void upgradeV11(int originalVersion);
     // Calcule et enregistre le bilan chiffré d'une analyse menée à son terme.
     void recordGameReview(qint64 job, qint64 game, int depth);
     qint64 registerSource(const QVariantMap &source);

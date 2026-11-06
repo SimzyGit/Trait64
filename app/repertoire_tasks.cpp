@@ -347,3 +347,93 @@ void Controller::analyseRepertoire(qint64 id, int milliseconds, int profile) {
         fail(e);
     }
 }
+
+QString Controller::studyCollectionName(const QString &path) {
+    auto name = QFileInfo(path).fileName();
+    for (const auto &suffix : readableStudySuffixes())
+        if (name.endsWith(suffix, Qt::CaseInsensitive)) {
+            name.chop(suffix.size());
+            break;
+        }
+    return name.isEmpty() ? QStringLiteral("Recueil") : name;
+}
+void Controller::importStudyCollection(const QString &url) {
+    try {
+        const auto path = localPath(url);
+        require(QFileInfo(path).isFile(), "Fichier introuvable.");
+        const auto name = studyCollectionName(path);
+        // Un recueil est une base de la bibliothèque, marquée pour que l'onglet Études
+        // la montre : les parties restent séparées, parcourables et analysables, au lieu
+        // d'être fondues dans un seul arbre de positions comme un répertoire.
+        const QVariantMap source{{"id", "study:" + name.toLower()}, {"title", name}, {"kind", "study"}};
+        if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
+            importSourceFile(url, source);
+            return;
+        }
+        // Compressé : on le déplie dans un fichier temporaire, que l'import lit comme un
+        // PGN ordinaire. Le fichier d'origine n'est pas touché.
+        const auto bytes = t64::unpackIfCompressed(path, 64 * 1024 * 1024);
+        auto unpacked = std::make_shared<QTemporaryFile>(QDir::tempPath() + "/trait64-XXXXXX.pgn");
+        require(unpacked->open(), unpacked->errorString());
+        require(unpacked->write(bytes) == bytes.size(), unpacked->errorString());
+        unpacked->flush();
+        unpackedStudy_ = unpacked; // tenu le temps de l'import, que le lecteur fait à part
+        importSourceFile(QUrl::fromLocalFile(unpacked->fileName()).toString(), source);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+QVariantList Controller::studyCollections() const {
+    QVariantList recueils;
+    for (const auto &row : db_->sources()) {
+        const auto source = row.toMap();
+        if (source["kind"].toString() == "study")
+            recueils.append(source);
+    }
+    return recueils;
+}
+QVariantList Controller::studyGames(qint64 sourceId) const {
+    try {
+        // Les parties du recueil, les plus récentes d'abord, comme la bibliothèque. Le
+        // plafond évite qu'un fichier de dix mille parties remplisse le panneau.
+        return db_->search({}, {}, false, {}, false, {{"sourceId", sourceId}, {"limit", 500}});
+    } catch (const std::exception &) {
+        return {};
+    }
+}
+
+void Controller::importStudyFolder(const QString &url) {
+    try {
+        const auto root = localPath(url);
+        require(QFileInfo(root).isDir(), "Dossier introuvable.");
+        // Un recueil par fichier, comme pour les répertoires : c'est l'arborescence du
+        // joueur, et elle veut dire quelque chose pour lui.
+        pendingStudies_.clear();
+        const auto &readable = readableStudySuffixes();
+        int visited = 0;
+        QDirIterator walk(root, QDir::Files, QDirIterator::Subdirectories);
+        while (walk.hasNext() && pendingStudies_.size() < 200 && ++visited <= 20000) {
+            const auto path = walk.next();
+            const auto name = QFileInfo(path).fileName().toLower();
+            if (std::any_of(readable.cbegin(), readable.cend(),
+                            [&name](const QString &s) { return name.endsWith(s); }))
+                pendingStudies_ << path;
+        }
+        require(!pendingStudies_.isEmpty(), "Aucun fichier de parties dans ce dossier, ni dans ses "
+                                            "sous-dossiers (PGN, au besoin compressé).");
+        pendingStudies_.sort();
+        emit message(tr("%1 recueil(s) à lire…").arg(pendingStudies_.size()));
+        nextPendingStudy();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::nextPendingStudy() {
+    // Les imports se font l'un après l'autre : un seul peut tenir la base à la fois, et
+    // c'est la fin du précédent qui appelle le suivant.
+    if (pendingStudies_.isEmpty())
+        return;
+    const auto path = pendingStudies_.takeFirst();
+    importStudyCollection(QUrl::fromLocalFile(path).toString());
+}

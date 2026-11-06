@@ -1584,6 +1584,63 @@ int main(int argc, char **argv) {
                   "The collection carries the family name, not the ECO code");
         }
         {
+            // Un fichier PGN d'études n'est pas forcément un répertoire : ses parties
+            // doivent rester séparées et parcourables, au lieu d'être fondues dans un
+            // seul arbre de positions.
+            QTemporaryDir home, files;
+            Controller shelf(home.path());
+            QElapsedTimer settle;
+            auto idle = [&] {
+                settle.restart();
+                while ((shelf.busy() || shelf.librarySearching()) && settle.elapsed() < 15000)
+                    QTest::qWait(10);
+            };
+            const auto pgn = files.filePath("Mes parties commentées.pgn");
+            QFile out(pgn);
+            check(out.open(QIODevice::WriteOnly), "Write a PGN of several games");
+            out.write(
+                "[Event \"Une\"]\n[White \"A\"]\n[Black \"B\"]\n[Result \"1-0\"]\n\n1.e4 e5 1-0\n\n"
+                "[Event \"Deux\"]\n[White \"C\"]\n[Black \"D\"]\n[Result \"0-1\"]\n\n1.d4 d5 0-1\n\n"
+                "[Event \"Trois\"]\n[White \"E\"]\n[Black \"F\"]\n[Result \"1/2-1/2\"]\n\n1.c4 c5 1/2-1/2\n");
+            out.close();
+            shelf.importStudyCollection(QUrl::fromLocalFile(pgn).toString());
+            idle();
+            const auto recueils = shelf.studyCollections();
+            check(recueils.size() == 1, "The file becomes one collection, not one per game");
+            check(recueils.first().toMap()["title"] == "Mes parties commentées",
+                  "The collection is named after the file, without its extension");
+            const auto games = shelf.studyGames(recueils.first().toMap()["id"].toLongLong());
+            check(games.size() == 3, "Every game of the file stays a game of its own");
+            QStringList events;
+            for (const auto &row : games)
+                events << row.toMap()["event"].toString();
+            events.sort();
+            check(events == QStringList({"Deux", "Trois", "Une"}),
+                  "And each one keeps its own header rather than being merged into a tree");
+            // Le recueil est aussi une base de la bibliothèque : recherche et bilan
+            // marchent dessus comme sur le reste.
+            check(shelf.sources().size() == 1 && shelf.games().size() == 3,
+                  "The collection is a library database too, so search and review reach it");
+            // Un dossier : un recueil par fichier, importés l'un après l'autre.
+            const auto folder = files.filePath("recueils");
+            check(QDir().mkpath(folder + "/Tournois"), "Create a folder of collections");
+            for (const auto &leaf : {QString("Blitz.pgn"), QString("Tournois/Open.pgn")}) {
+                QFile each(folder + "/" + leaf);
+                check(each.open(QIODevice::WriteOnly), "Write a collection file");
+                each.write("[Event \"x\"]\n[White \"G\"]\n[Black \"H\"]\n\n1.e4 *\n");
+            }
+            shelf.importStudyFolder(QUrl::fromLocalFile(folder).toString());
+            settle.restart();
+            while (shelf.studyCollections().size() < 3 && settle.elapsed() < 20000)
+                QTest::qWait(20);
+            QStringList titles;
+            for (const auto &row : shelf.studyCollections())
+                titles << row.toMap()["title"].toString();
+            titles.sort();
+            check(titles == QStringList({"Blitz", "Mes parties commentées", "Open"}),
+                  "A folder yields one collection per file, subfolders included");
+        }
+        {
             // Fermer la fenêtre pendant que les tâches de fond tournent : sans attente à
             // la destruction, leur réponse toucherait des membres déjà détruits.
             QTemporaryDir home;

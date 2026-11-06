@@ -1,5 +1,12 @@
 # Changements
 
+## Recueils de parties — 6 novembre 2026
+
+- **Une étude n'est plus forcément un répertoire.** Un fichier PGN tient souvent des parties commentées, qu'on veut lire l'une après l'autre : jusqu'ici elles étaient toutes fondues dans un seul arbre de positions, et aucune ne se parcourait. À l'import, Trait64 demande maintenant ce qu'est le fichier — un **recueil de parties** à parcourir, ou un **répertoire** à réviser.
+- **Un recueil liste ses parties comme des chapitres** : joueurs, événement, résultat et date ; un clic en ouvre une dans Analyse, avec ses variantes et ses commentaires.
+- **Un recueil est aussi une base de la bibliothèque**, nommée d'après le fichier : recherche, filtres, classement par ouverture et bilan s'y appliquent comme au reste.
+- L'import d'un dossier propose le même choix, et crée un recueil par fichier, sous-dossiers compris.
+
 ## Ouvertures — 6 novembre 2026
 
 - **Les parties sans balise ECO sont classées** d'après les coups joués, à l'import comme sur une base déjà constituée. Sans cela, `eco` ne valait que ce que le PGN portait — et la plupart n'en portent rien : la recherche par ouverture les ignorait en silence.

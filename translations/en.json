@@ -1164,5 +1164,16 @@
   "Coup %1 : vous avez joué %2, le répertoire prévoyait %3": "Move %1: you played %2, the repertoire prepared %3",
   "rien ici": "nothing here",
   "Répertoire introuvable.": "Repertoire not found.",
-  "Classement des ouvertures impossible.": "Could not classify the openings."
+  "Classement des ouvertures impossible.": "Could not classify the openings.",
+  "Recueil · %1 partie(s)": "Collection · %1 game(s)",
+  "Qu’est-ce que ce fichier ?": "What is this file?",
+  "Les deux se gardent dans cet onglet. Un recueil laisse chaque partie entière et se lit comme un livre ; un répertoire fond toutes les lignes en un seul arbre, pour les réviser.": "Both are kept in this tab. A collection leaves every game whole and reads like a book; a repertoire melts all the lines into a single tree, to be revised.",
+  "Recueil de parties — à parcourir": "Collection of games — to browse",
+  "Ajouter à l’étude choisie — à réviser": "Add to the chosen study — to revise",
+  "Répertoire d’entraînement — à réviser": "Training repertoire — to revise",
+  "%1 partie(s) · cliquez-en une pour l’ouvrir dans Analyse. Ce recueil est aussi une base de la bibliothèque : recherche, filtres et bilan s’y appliquent.": "%1 game(s) · click one to open it in Analysis. This collection is also a library database: search, filters and review all apply to it.",
+  "%1 recueil(s) à lire…": "%1 collection(s) to read…",
+  "Dossier introuvable.": "Folder not found.",
+  "Fichier introuvable.": "File not found.",
+  "Recueil": "Collection"
 }
