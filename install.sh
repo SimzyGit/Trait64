@@ -22,8 +22,32 @@ for argument in "$@"; do
 done
 
 if [[ "${mode}" == "uninstall" ]]; then
-    rm -f "${bin_dir}/Trait64.AppImage" "${bin_dir}/trait64" "${app_dir}/trait64.desktop" "${icon_dir}/trait64.svg"
+    # L'AppImage, et la copie que le logiciel garde avant de se mettre à jour.
+    removed=""
+    for file in "${bin_dir}/Trait64.AppImage" "${bin_dir}/trait64" "${bin_dir}/trait64.previous" \
+                "${app_dir}/trait64.desktop" "${icon_dir}/trait64.svg"; do
+        [[ -e "${file}" ]] && removed="oui"
+        rm -f "${file}"
+    done
+    # Le paquet Debian ne se retire pas en effaçant des fichiers : sans ce passage, qui
+    # l'avait installé s'entendait dire « désinstallé » avec le logiciel toujours en place.
+    if command -v dpkg-query >/dev/null && dpkg-query -W -f='${Status}' trait64 2>/dev/null | grep -q "^install ok installed$"; then
+        echo "Paquet Debian trait64 détecté : retrait avec apt-get, votre mot de passe peut être demandé."
+        if command -v sudo >/dev/null; then
+            sudo apt-get remove --assume-yes trait64
+        else
+            echo "sudo est absent. Lancez en administrateur : apt-get remove trait64" >&2
+            exit 1
+        fi
+        removed="oui"
+    fi
+    if [[ -z "${removed}" ]]; then
+        echo "Aucune installation de Trait64 trouvée pour cet utilisateur."
+        exit 0
+    fi
+    command -v update-desktop-database >/dev/null && update-desktop-database "${app_dir}" 2>/dev/null || true
     echo "Trait64 est désinstallé. Votre bibliothèque reste dans ~/.local/share/Trait64."
+    echo "Pour l'effacer aussi : rm -rf ~/.local/share/Trait64"
     exit 0
 fi
 if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "x86_64" ]]; then

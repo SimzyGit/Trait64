@@ -2,6 +2,8 @@
 
 ## Analyse et études — 6 novembre 2026
 
+- **Désinstallation** : `--uninstall` ne retirait que l'AppImage et annonçait quand même « Trait64 est désinstallé » à qui avait posé le paquet Debian. Il retire maintenant le paquet par apt-get, dit quoi faire s'il ne trouve rien, et rappelle où est restée la bibliothèque.
+- **Le logo ne se répète plus dans la fenêtre** : il est celui du bureau et de la barre des tâches, le remettre sur l'accueil et dans la barre de bas n'ajoutait rien.
 - **La mise à jour depuis une version précédente fonctionne.** Le canal par défaut était « stable » alors que toutes les versions publiées sont des préversions de développement : aucune mise à jour ne pouvait donc jamais être proposée. Le canal suit désormais la version installée, et le réglage choisi garde la main.
 - **Windows et macOS voient enfin les nouvelles versions.** Aucun paquet ne leur était reconnu, et la vérification échouait avant même de chercher. Trait64 télécharge et vérifie maintenant le fichier ; son installation reste à faire à la main sur ces systèmes.
 - **Point de qualité de coup**, à la manière de ChessBase : vert pour un bon coup, blanc pour un coup correct, jaune pour une imprécision, orange pour une erreur, rouge pour une gaffe, violet quand un mat entre dans le compte. Il apparaît dans le carnet de coups dès qu'un bilan a été passé.

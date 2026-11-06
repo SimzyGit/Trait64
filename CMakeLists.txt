@@ -73,6 +73,10 @@ if(T64_BUILD_GUI)
       # à parler français par endroits, et cela ne se voit qu'à l'usage.
       add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_translations.py)
       set_tests_properties(translations PROPERTIES TIMEOUT 60)
+      # Le --uninstall du script ne retirait que l'AppImage : qui avait posé le paquet
+      # Debian s'entendait répondre « désinstallé » avec le logiciel toujours en place.
+      add_test(NAME uninstall COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_uninstall.py)
+      set_tests_properties(uninstall PROPERTIES TIMEOUT 120)
     endif()
   endif()
   add_library(t64engine libs/engine/uci.cpp libs/engine/comparison.cpp libs/engine/tournament.cpp)

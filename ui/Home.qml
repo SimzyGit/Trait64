@@ -17,18 +17,11 @@ ScrollView {
     contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
     ColumnLayout {
         width:root.availableWidth;spacing:16
-        // Le logiciel ne se nommait nulle part dans sa propre fenêtre, sinon en petit
-        // dans la barre d'état. L'accueil est l'endroit où le dire.
+        // Le logiciel ne se nommait nulle part dans sa propre fenêtre : l'accueil est
+        // l'endroit où le dire. Le logo, lui, est celui du bureau et de la barre des
+        // tâches ; le répéter dans la fenêtre n'ajoutait rien.
         RowLayout {
             Layout.fillWidth:true;spacing:12
-            Image {
-                source:"qrc:/assets/app/trait64-128.png"
-                Layout.preferredWidth:Math.round(38*root.p.uiScale)
-                Layout.preferredHeight:Layout.preferredWidth
-                sourceSize.width:128;sourceSize.height:128
-                fillMode:Image.PreserveAspectFit
-                smooth:true
-            }
             ColumnLayout {
                 Layout.fillWidth:true;spacing:0
                 Label {
