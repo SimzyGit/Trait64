@@ -1,3 +1,56 @@
+## Ouvertures, analyse et mise à jour — 6 novembre 2026
+
+**La mise à jour depuis une version précédente fonctionne enfin.** Le canal par
+défaut valait « stable » alors que toutes les versions publiées sont des
+préversions de développement : aucune mise à jour ne pouvait donc être proposée
+à personne, sur aucun système. Le canal suit désormais la version installée, et
+le réglage que vous avez choisi garde la main. Windows et macOS, à qui aucun
+paquet n'était reconnu, voient maintenant les nouvelles versions : Trait64 les
+télécharge et en vérifie l'empreinte ; l'installation reste à faire à la main
+sur ces deux systèmes.
+
+**Vos parties sont classées par ouverture, même sans balise ECO.** La plupart
+des fichiers PGN n'en portent aucune, et la recherche par ouverture les ignorait
+en silence. Trait64 lit désormais les coups joués et attribue le code
+correspondant, à l'import comme sur une base déjà constituée.
+
+**Dossier d'une position.** Sur n'importe quelle position : les coups qui s'y
+jouent, leur score, le même découpage selon la force des joueurs — un coup qui
+réussit au club et disparaît au-dessus de 2300 ne se voit pas autrement — et les
+parties les mieux classées qui y sont passées. Aucune partie n'y est passée ?
+C'est une nouveauté pour votre bibliothèque, et le dossier le dit ainsi.
+
+**Votre répertoire face à vos propres parties.** À quel coup vous quittez votre
+préparation, dans quelle proportion, avec quel coup, et ce qui était prévu à la
+place. Votre répertoire et vos parties sont au même endroit, sur votre machine :
+c'est ce qui rend la question calculable.
+
+**Un point coloré par coup** dans le carnet, à la manière de ChessBase : vert
+pour un bon coup, blanc pour un coup correct, jaune pour une imprécision, orange
+pour une erreur, rouge pour une gaffe, violet quand un mat entre dans le compte.
+Il apparaît dès qu'un bilan a été passé.
+
+**La barre d'évaluation ne retombe plus à zéro à chaque coup joué.** Le moteur
+vide ses lignes dès qu'il change de position ; la dernière évaluation est
+maintenant conservée le temps que la suivante arrive.
+
+**Import d'études réparé.** Les dossiers exportés par En Croissant ou Pawn
+Appétit contiennent souvent des PGN compressés : Trait64 les déplie, en
+reconnaissant le format aux premiers octets plutôt qu'à l'extension. Un dossier
+qui ne contient que des bases `.db3` le dit en les nommant, au lieu d'annoncer
+qu'il n'a rien trouvé. Et importer un PGN n'exige plus d'avoir créé une étude :
+le fichier en crée une, nommée d'après lui.
+
+**Désinstallation.** `install.sh --uninstall` ne retirait que l'AppImage et
+annonçait tout de même « Trait64 est désinstallé » à qui avait posé le paquet
+Debian. Il passe désormais par apt-get, dit quand il ne trouve rien, et rappelle
+où reste votre bibliothèque.
+
+Également : seize palettes d'échiquier au lieu de neuf, plusieurs jeux de pièces
+installables côte à côte, un portrait par profil, et l'interface anglaise qui ne
+laisse plus échapper de phrases françaises — un test refuse désormais toute
+phrase sans traduction.
+
 ## Précision, profils et trois systèmes — 5 novembre 2026
 
 Trait64 s'installe désormais sur **Linux, Windows et macOS**. Sous Linux, une
