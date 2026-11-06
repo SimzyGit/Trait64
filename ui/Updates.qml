@@ -4,6 +4,8 @@ import QtQuick.Layouts
 TDialog {
     id: root
     property var backend
+    // Le contrôleur, pour la traduction : `backend` est le module de mise à jour.
+    property var app
     property var info: backend.state
     title: qsTr("Versions et mises à jour")
     width: Math.min(740,parent ? parent.width-32 : 740)
@@ -30,7 +32,9 @@ TDialog {
                     }
                 }
             }
-            Label {text:root.info.message||qsTr("Les fonctions d’échecs restent utilisables hors ligne.");wrapMode:Text.WordWrap;Layout.fillWidth:true}
+            // Les messages du module de mise à jour sont écrits en français, comme ceux du
+            // contrôleur : on les traduit à l’affichage, seul endroit où ils passent tous.
+            Label {text:root.info.message?root.app.uiText(root.info.message):qsTr("Les fonctions d’échecs restent utilisables hors ligne.");wrapMode:Text.WordWrap;Layout.fillWidth:true}
             Label {visible:root.info.available;text:qsTr("Nouvelle version : ")+root.info.version;font.bold:true;font.pixelSize:Math.round(20*controller.preferences.fontScale*controller.preferences.uiScale)}
             TextArea {visible:root.info.available;Layout.fillWidth:true;Layout.preferredHeight:160;readOnly:true;wrapMode:TextEdit.Wrap;text:root.info.notes;textFormat:TextEdit.PlainText;selectByMouse:true}
             ProgressBar {visible:root.info.status==="downloading";Layout.fillWidth:true;value:root.info.progress}

@@ -53,6 +53,24 @@ int Version::compare(const Version &o) const {
     }
     return pre.size() == o.pre.size() ? 0 : (pre.size() > o.pre.size() ? 1 : -1);
 }
+Packaging packagingFor(const QString &os, const QString &arch, bool appImage, bool systemPath,
+                       const QString &debianRelease) {
+    // Windows et macOS reçoivent bien un paquet : Trait64 ne sait pas l'installer, mais
+    // il peut dire qu'une version est parue et la poser sur le disque. Les en écarter
+    // laissait croire qu'aucune mise à jour n'existait pour eux.
+    if (os == "windows")
+        return {"manual", arch == "x86_64" ? "-windows-x86_64.zip" : QString()};
+    if (os == "macos")
+        return {"manual", arch == "arm64" ? "-macos-arm64.dmg" : QString()};
+    if (arch != "x86_64")
+        return {appImage || !systemPath ? "AppImage" : "deb", {}};
+    if (appImage || !systemPath)
+        return {"AppImage", "-linux-x86_64.AppImage"};
+    // Les .deb publiés visent Debian 12 et 13 nommément : ailleurs, mieux vaut ne rien
+    // proposer que d'installer un paquet bâti pour une autre bibliothèque C.
+    const auto major = debianRelease.trimmed().section('.', 0, 0);
+    return {"deb", major == "12" || major == "13" ? "_debian" + major + "_amd64.deb" : QString()};
+}
 Release selectRelease(const QJsonArray &rows, const QString &current, const QString &channel,
                       const QString &suffix, const QStringList &ignored) {
     auto best = Version::parse(current);

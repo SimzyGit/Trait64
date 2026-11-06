@@ -17,6 +17,16 @@ struct Release {
     qint64 assetId = 0, size = 0;
     bool valid() const { return assetId > 0; }
 };
+// Ce que cette machine peut recevoir. `kind` vaut « AppImage », « deb » ou « manual » —
+// ce dernier là où Trait64 sait télécharger et vérifier le fichier mais pas le déployer,
+// le système s'en chargeant. `suffix` vide signifie qu'aucun paquet n'est publié pour
+// cette machine. `os` vaut « windows », « macos » ou « linux » ; `debianRelease` est le
+// contenu de /etc/debian_version, vide ailleurs.
+struct Packaging {
+    QString kind, suffix;
+};
+Packaging packagingFor(const QString &os, const QString &arch, bool appImage, bool systemPath,
+                       const QString &debianRelease);
 Release selectRelease(const QJsonArray &releases, const QString &current, const QString &channel,
                       const QString &suffix, const QStringList &ignored = {});
 bool trustedUpdateUrl(const QUrl &url);

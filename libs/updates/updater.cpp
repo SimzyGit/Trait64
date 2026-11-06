@@ -17,28 +17,27 @@ Updater::Updater(const QString &path, QObject *parent, QNetworkAccessManager *ne
     token_ = qEnvironmentVariable("T64_GITHUB_TOKEN");
     const auto appImage = qEnvironmentVariable("APPIMAGE");
     const auto executable = QCoreApplication::applicationFilePath();
-    if (!appImage.isEmpty()) {
-        kind_ = "AppImage";
-        target_ = QFileInfo(appImage).absoluteFilePath();
-    } else if (executable == "/usr/bin/trait64") {
-        kind_ = "deb";
-        target_ = executable;
-    } else {
-        kind_ = "AppImage";
-        target_ = QDir::homePath() + "/.local/bin/trait64";
-    }
-    if (QSysInfo::currentCpuArchitecture() == "x86_64") {
-        if (kind_ == "AppImage")
-            suffix_ = "-linux-x86_64.AppImage";
-        else {
-            QFile file("/etc/debian_version");
-            if (file.open(QIODevice::ReadOnly)) {
-                auto v = file.readAll().trimmed().split('.')[0];
-                if (v == "12" || v == "13")
-                    suffix_ = "_debian" + QString::fromLatin1(v) + "_amd64.deb";
-            }
-        }
-    }
+    target_ = !appImage.isEmpty()                ? QFileInfo(appImage).absoluteFilePath()
+              : executable == "/usr/bin/trait64" ? executable
+                                                 : QDir::homePath() + "/.local/bin/trait64";
+    QString debianRelease;
+    QFile debian("/etc/debian_version");
+    if (debian.open(QIODevice::ReadOnly))
+        debianRelease = QString::fromLatin1(debian.readAll());
+    const QString os =
+#if defined(Q_OS_WIN)
+        "windows";
+#elif defined(Q_OS_MACOS)
+        "macos";
+#else
+        "linux";
+#endif
+    const auto packaging = packagingFor(os, QSysInfo::currentCpuArchitecture(), !appImage.isEmpty(),
+                                        executable == "/usr/bin/trait64", debianRelease);
+    kind_ = packaging.kind;
+    suffix_ = packaging.suffix;
+    if (kind_ == "manual")
+        target_.clear();
     connect(&auth_, &QProcess::finished, this, [this](int code, QProcess::ExitStatus) {
         if (status_ != "authenticating")
             return;
@@ -93,7 +92,16 @@ Updater::~Updater() {
     }
 }
 QString Updater::channel() const {
-    return settings_.value("updates/channel", "stable").toString();
+    // Par défaut, le canal de la version installée. « stable » pour tout le monde ne
+    // proposait jamais rien : toutes les versions publiées sont des préversions, et
+    // selectRelease les écarte hors du canal correspondant. Qui a installé une
+    // préversion en attend les suites ; qui tourne sur une version stable n'y est pas
+    // ramené, puisque le réglage choisi par l'utilisateur garde la main.
+    const auto installed = Version::parse(QCoreApplication::applicationVersion());
+    const QString natural = !installed || installed->pre.isEmpty() ? QStringLiteral("stable")
+                            : installed->pre.first() == "dev"      ? QStringLiteral("development")
+                                                                   : QStringLiteral("beta");
+    return settings_.value("updates/channel", natural).toString();
 }
 bool Updater::busy() const {
     return QStringList{"checking", "authenticating", "downloading", "installing"}.contains(status_);
@@ -113,8 +121,8 @@ QVariantMap Updater::state() const {
             {"authenticated", !token_.isEmpty()},
             {"lastChecked", settings_.value("updates/lastChecked")},
             {"kind", kind_},
-            // Vide là où aucun paquet n'est publié pour la machine : la mise à jour
-            // automatique ne vise aujourd'hui que Linux x86_64, en AppImage ou en .deb.
+            // Vide là où aucun paquet n'est publié pour la machine. Trait64 n'installe
+            // lui-même que sous Linux x86_64 ; ailleurs il télécharge et vérifie.
             {"packageSuffix", suffix_},
             {"target", target_},
             {"backup", backup_}};
@@ -368,6 +376,15 @@ void Updater::downloadAndInstall() {
 }
 void Updater::install() {
     try {
+        if (kind_ == "manual") {
+            // Le fichier est téléchargé et vérifié ; le déployer relève du système, pas
+            // de nous. On dit où il est plutôt que de laisser l'utilisateur le chercher.
+            status_ = "installed";
+            message_ = "Fichier téléchargé et vérifié : " + QDir::toNativeSeparators(downloadPath_) +
+                       ". Installez-le vous-même, Trait64 ne le fait pas sur ce système.";
+            emit changed();
+            return;
+        }
         if (!beforeInstall)
             throw std::runtime_error("La sauvegarde avant installation n’est pas configurée.");
         backup_ = beforeInstall();

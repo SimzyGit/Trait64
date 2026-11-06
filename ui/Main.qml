@@ -27,7 +27,7 @@ ApplicationWindow {
             Label { anchors.centerIn: parent; text: qsTr("Déposer pour importer"); color: "white"; font.pixelSize: 22; font.bold: true }
         }
     }
-    Updates {id:updatesDialog;objectName:"updatesDialog";parent:Overlay.overlay;backend:controller.updater}
+    Updates {id:updatesDialog;objectName:"updatesDialog";parent:Overlay.overlay;backend:controller.updater;app:controller}
     property int page: 0
     property bool light: controller.preferences.lightTheme
     property color bg: controller.preferences.background

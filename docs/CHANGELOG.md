@@ -2,6 +2,8 @@
 
 ## Analyse et études — 6 novembre 2026
 
+- **La mise à jour depuis une version précédente fonctionne.** Le canal par défaut était « stable » alors que toutes les versions publiées sont des préversions de développement : aucune mise à jour ne pouvait donc jamais être proposée. Le canal suit désormais la version installée, et le réglage choisi garde la main.
+- **Windows et macOS voient enfin les nouvelles versions.** Aucun paquet ne leur était reconnu, et la vérification échouait avant même de chercher. Trait64 télécharge et vérifie maintenant le fichier ; son installation reste à faire à la main sur ces systèmes.
 - **Point de qualité de coup**, à la manière de ChessBase : vert pour un bon coup, blanc pour un coup correct, jaune pour une imprécision, orange pour une erreur, rouge pour une gaffe, violet quand un mat entre dans le compte. Il apparaît dans le carnet de coups dès qu'un bilan a été passé.
 - **La barre d'évaluation ne retombe plus à zéro à chaque coup.** Le moteur vide ses lignes dès qu'il change de position ; la dernière évaluation est maintenant gardée le temps que la suivante arrive, et la barre glisse de l'une à l'autre.
 - **Import d'un dossier d'études réparé.** Les études exportées par En Croissant ou Pawn Appétit arrivent souvent compressées : Trait64 les déplie désormais, en reconnaissant le format aux premiers octets et non à l'extension. Un dossier qui ne contient que des bases `.db3` le dit, au lieu d'annoncer qu'il n'a rien trouvé.

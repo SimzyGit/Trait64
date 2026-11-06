@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkReply>
+#include <QSettings>
 #include <QSignalSpy>
 #include <QSysInfo>
 #include <QTemporaryDir>
@@ -170,6 +171,57 @@ int main(int argc, char **argv) {
         QFile previous(old.fileName() + ".previous");
         check(previous.open(QIODevice::ReadOnly) && previous.readAll() == "old executable",
               "Previous executable preserved");
+        {
+            // Quel paquet pour quelle machine. Aucune de ces combinaisons n'est joignable
+            // depuis une seule plateforme : c'est pourquoi la décision est une fonction.
+            auto p = [](const char *os, const char *arch, bool appImage, bool systemPath,
+                        const char *debian = "") {
+                return t64::packagingFor(os, arch, appImage, systemPath, debian);
+            };
+            check(p("windows", "x86_64", false, false).suffix == "-windows-x86_64.zip" &&
+                      p("windows", "x86_64", false, false).kind == "manual",
+                  "Windows is offered its archive, to install by hand");
+            check(p("macos", "arm64", false, false).suffix == "-macos-arm64.dmg",
+                  "An Apple Silicon Mac is offered its disk image");
+            check(p("macos", "x86_64", false, false).suffix.isEmpty(),
+                  "No package is published for an Intel Mac, and none is claimed");
+            check(p("linux", "x86_64", true, false).suffix == "-linux-x86_64.AppImage" &&
+                      p("linux", "x86_64", true, false).kind == "AppImage",
+                  "A running AppImage updates itself");
+            check(p("linux", "x86_64", false, true, "12.9").suffix == "_debian12_amd64.deb",
+                  "A system install on Debian 12 takes the Debian 12 package");
+            check(p("linux", "x86_64", false, true, "13.1\n").suffix == "_debian13_amd64.deb",
+                  "The release file is read past its minor number and its newline");
+            check(p("linux", "x86_64", false, true, "trixie/sid").suffix.isEmpty(),
+                  "A system install on another distribution is offered nothing rather than a foreign deb");
+            check(p("linux", "aarch64", true, false).suffix.isEmpty(),
+                  "No Linux package is published for arm64");
+            check(p("linux", "x86_64", false, false).kind == "AppImage",
+                  "An executable outside /usr/bin is treated as an AppImage install");
+        }
+        {
+            // Toutes les versions publiées sont des préversions : avec « stable » par
+            // défaut, aucune mise à jour n'était jamais proposée à personne.
+            QSettings settings;
+            settings.remove("updates/channel");
+            const auto restore = QCoreApplication::applicationVersion();
+            Network quiet;
+            QCoreApplication::setApplicationVersion("0.3.0-dev.139");
+            check(t64::Updater(dir.path(), nullptr, &quiet).state()["channel"] == "development",
+                  "A development build looks for development updates by default");
+            QCoreApplication::setApplicationVersion("1.2.0-beta.1");
+            check(t64::Updater(dir.path(), nullptr, &quiet).state()["channel"] == "beta",
+                  "A beta build looks for beta updates by default");
+            QCoreApplication::setApplicationVersion("1.2.0");
+            check(t64::Updater(dir.path(), nullptr, &quiet).state()["channel"] == "stable",
+                  "A stable build stays on stable");
+            // Le réglage choisi garde la main : on ne ramène personne sur un canal.
+            settings.setValue("updates/channel", "development");
+            check(t64::Updater(dir.path(), nullptr, &quiet).state()["channel"] == "development",
+                  "A chosen channel outranks the default");
+            settings.remove("updates/channel");
+            QCoreApplication::setApplicationVersion(restore);
+        }
         Network network;
         t64::Updater updater(dir.path(), nullptr, &network);
         updater.setSessionToken("test-only-token");
@@ -187,49 +239,49 @@ int main(int argc, char **argv) {
             std::cout << "Skipping update-delivery checks: no published package for "
                       << QSysInfo::currentCpuArchitecture().toStdString() << '\n';
         } else {
-        network.responses << Response{
-            200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash)}).toJson(), {}};
-        updater.check();
-        wait(updater);
-        check(offers.size() == 1 && updater.state()["available"].toBool(),
-              "Real asynchronous check offers release");
-        check(network.requests[0].rawHeader("Authorization") == "Bearer test-only-token",
-              "Private metadata authenticated");
-        bool backed = false;
-        updater.beforeInstall = [&]() -> QString {
-            backed = true;
-            throw std::runtime_error("Backup intentionally unavailable");
-        };
-        network.responses << Response{302, {}, QUrl("https://release-assets.githubusercontent.com/test")}
-                          << Response{200, binary, {}};
-        updater.downloadAndInstall();
-        wait(updater);
-        check(backed && updater.state()["status"] == "error", "Backup failure blocks installation");
-        check(network.requests.last().rawHeader("Authorization").isEmpty(),
-              "Token never forwarded to asset host");
-        backed = false;
-        network.responses << Response{200, QByteArray(100, 'z'), {}};
-        updater.downloadAndInstall();
-        wait(updater);
-        check(!backed && updater.state()["message"].toString().contains("SHA-256"),
-              "Tampering blocked before backup/installation");
-        network.responses << Response{302, {}, QUrl("https://evil.test/file")};
-        updater.downloadAndInstall();
-        wait(updater);
-        check(!backed && updater.state()["status"] == "error", "Untrusted redirect blocked");
-        network.responses << Response{404, "{}", {}};
-        updater.check();
-        wait(updater);
-        check(updater.state()["status"] == "error", "Private 404 is not reported as up to date");
-        network.responses << Response{200, "not json", {}};
-        updater.check();
-        wait(updater);
-        check(updater.state()["status"] == "error", "Malformed metadata rejected");
-        network.responses << Response{200, "[]", {}};
-        updater.check();
-        updater.cancel();
-        QTest::qWait(20);
-        check(updater.state()["status"] == "idle", "Cancellation ignores stale callbacks");
+            network.responses << Response{
+                200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash)}).toJson(), {}};
+            updater.check();
+            wait(updater);
+            check(offers.size() == 1 && updater.state()["available"].toBool(),
+                  "Real asynchronous check offers release");
+            check(network.requests[0].rawHeader("Authorization") == "Bearer test-only-token",
+                  "Private metadata authenticated");
+            bool backed = false;
+            updater.beforeInstall = [&]() -> QString {
+                backed = true;
+                throw std::runtime_error("Backup intentionally unavailable");
+            };
+            network.responses << Response{302, {}, QUrl("https://release-assets.githubusercontent.com/test")}
+                              << Response{200, binary, {}};
+            updater.downloadAndInstall();
+            wait(updater);
+            check(backed && updater.state()["status"] == "error", "Backup failure blocks installation");
+            check(network.requests.last().rawHeader("Authorization").isEmpty(),
+                  "Token never forwarded to asset host");
+            backed = false;
+            network.responses << Response{200, QByteArray(100, 'z'), {}};
+            updater.downloadAndInstall();
+            wait(updater);
+            check(!backed && updater.state()["message"].toString().contains("SHA-256"),
+                  "Tampering blocked before backup/installation");
+            network.responses << Response{302, {}, QUrl("https://evil.test/file")};
+            updater.downloadAndInstall();
+            wait(updater);
+            check(!backed && updater.state()["status"] == "error", "Untrusted redirect blocked");
+            network.responses << Response{404, "{}", {}};
+            updater.check();
+            wait(updater);
+            check(updater.state()["status"] == "error", "Private 404 is not reported as up to date");
+            network.responses << Response{200, "not json", {}};
+            updater.check();
+            wait(updater);
+            check(updater.state()["status"] == "error", "Malformed metadata rejected");
+            network.responses << Response{200, "[]", {}};
+            updater.check();
+            updater.cancel();
+            QTest::qWait(20);
+            check(updater.state()["status"] == "idle", "Cancellation ignores stale callbacks");
         }
         QSettings persisted;
         check(!persisted.allKeys().join(' ').contains("token", Qt::CaseInsensitive),
