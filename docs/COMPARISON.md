@@ -7,7 +7,7 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Logiciel libre / code source ouvert | ✅ AGPL-3.0+ | ❌ Propriétaire | ✅ GPLv2 | ✅ Open source |
 | Gratuit | ✅ | ❌ | ✅ | ✅ |
 | Linux | ✅ Cible principale | ❌ Natif Windows | ✅ | ✅ |
-| Windows / macOS | 🧪 CI de compilation, pas encore publié | ✅ Windows | ✅ | ✅ |
+| Windows / macOS | ✅ Publiés à chaque version (`.zip`, `.dmg`) ; mise à jour automatique sous Linux seulement | ✅ Windows | ✅ | ✅ |
 | Fonctionnement local hors ligne | ✅ | ✅ | ✅ | ✅ |
 | Compte obligatoire pour les fonctions locales | ❌ | ❌ | ❌ | ❌ |
 | Gestion de bases de parties | ✅ SQLite | ✅ Très avancée | ✅ Très avancée | ✅ |
@@ -16,6 +16,10 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Recherche joueurs / événements / ECO / Elo / dates | ✅ | ✅ | ✅ | ✅ |
 | Recherche de positions | ✅ | ✅ | ✅ | ✅ |
 | Arbre / explorateur d’ouvertures | ✅ | ✅ | ✅ | ✅ |
+| Classement ECO automatique des parties sans balise | ✅ | ✅ | ✅ | ❌ |
+| Dossier d’une position (score et tranches de force des joueurs) | ✅ | ✅ Rapport d’ouverture | ◐ Statistiques simples | ◐ Statistiques simples |
+| Écart entre votre répertoire et vos propres parties | ✅ | ❌ | ❌ | ❌ |
+| Import d’un dossier d’études (En Croissant, Pawn Appétit), PGN compressés compris | ✅ | ❌ | ❌ | ◐ Son propre format |
 | Livres d’ouvertures | ✅ Polyglot `.bin`, lecture et écriture | ✅ CTG et livres maison | ✅ Polyglot | ❌ Non documenté |
 | Analyse avec moteurs UCI locaux | ✅ | ✅ | ✅ | ✅ |
 | MultiPV | ✅ | ✅ | ✅ | ✅ |

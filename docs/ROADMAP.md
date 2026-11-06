@@ -30,7 +30,7 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
 | Bibliothèque | Schéma 7, import PGN parallèle (1–8 lecteurs) par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
 | Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur, Syzygy via UCI, file persistante avec variantes/pause/reprise, cache avec provenance et export annoté | Budgets adaptatifs, interface de tablebases dédiée |
-| Ouvertures | ECO CC0, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, création/fusion/import/export PGN annulables en arrière-plan, parties modèles, couverture locale asynchrone, analyse moteur de toutes les variantes via copie persistante | Couverture probabiliste globale, comparaison de répertoires, nouveautés théoriques, Polyglot |
+| Ouvertures | ECO CC0, classement automatique des parties sans balise, dossier d'une position (coups, score, tranches de force, parties modèles), écart entre un répertoire et les parties jouées, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, création/fusion/import PGN (compressés compris) et export annulables en arrière-plan, parties modèles, couverture locale asynchrone, analyse moteur de toutes les variantes via copie persistante | Couverture probabiliste globale, comparaison de deux répertoires entre eux, nouveautés théoriques, Polyglot |
 | Entraînement | Cartes depuis erreurs, activité quotidienne/hebdomadaire, rappels espacés par position de répertoire, réponses préparées multiples et suivi des rappels manqués | Équivalences validées par moteur, cours de finales, calcul/visualisation, agenda adaptatif, certification tactique |
 | Jeu local | Deux humains ou moteur, pendule avec incrément, abandon/réclamation de nulle | Moteur-moteur, périodes multiples, handicap et arbitrage complet |
 | Préparation | Fiches joueurs ; statistiques par position, source, nom exact/couleur, période et Elo ; requête annulable, parties exemples et export CSV | Styles d’adversaires, tendances par période, préparation et gestion de tournois |
@@ -288,6 +288,14 @@ Ajouter :
 - [ ] Historique des modifications.
 - [ ] Instantanés récupérables.
 - [ ] Importation d'études Lichess.
+
+## Pistes retenues pour se distinguer (6 novembre 2026)
+
+Trois ajouts qui n'existent chez aucun concurrent libre, et que l'architecture locale de Trait64 rend possibles.
+
+- [ ] **Suivre les tournois en direct.** Lichess diffuse ses retransmissions en PGN par une API publique et gratuite. Suivre une partie coup par coup avec son propre moteur, et voir en direct quand elle entre dans son répertoire et où elle en sort. ChessBase fait payer cet usage.
+- [ ] **Partager sans serveur.** Exporter une étude ou un bilan en un fichier HTML autonome, échiquier et variantes compris. Cela règle la faiblesse du « tout local » sans renier la promesse : un fichier n'est pas un compte.
+- [ ] **Saisir une partie depuis une feuille de notation.** Photographier la feuille et en tirer le PGN. C'est le point de douleur du joueur de club, et personne ne le fait bien. Le plus coûteux des trois.
 - [ ] Rapports PDF avancés.
 - [ ] Exportation de diagrammes SVG.
 - [ ] Modèles personnalisables de rapports.

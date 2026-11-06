@@ -117,7 +117,10 @@ jobs:
 
   macos:
     needs: version
-    runs-on: macos-14
+    # Image épinglée, comme ubuntu-24.04 et windows-2022 : « macos-latest » change sous
+    # nos pieds. macos-14 a été retirée le 2 novembre 2026, et ses jobs n'obtenaient plus
+    # d'exécutant — annulés en une seconde, ils annulaient la publication avec eux.
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

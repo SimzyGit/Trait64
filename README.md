@@ -51,6 +51,8 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 
 **L’analyse de Stockfish, expliquée.** Le bilan d’une partie passe le moteur dans un sens puis dans l’autre, puis vous donne un pourcentage de précision — pour la partie entière, et séparément pour l’ouverture, le milieu de jeu et la finale. Chaque faute est située, classée et expliquée.
 
+**Ce que personne d’autre ne peut vous dire.** Votre répertoire et vos parties sont au même endroit, sur votre machine : Trait64 croise les deux et vous montre à quel coup vous quittez votre propre préparation, dans quelle proportion, et avec quel résultat.
+
 **Vos progrès, mesurés sur vos parties.** Reliez vos comptes Lichess et Chess.com à un profil, lancez un bilan sur vos dernières parties, et le tableau de bord vous dit où vous en êtes : précision par phase, gaffes pour cent coups, réussite tactique, et l’évolution mois par mois. La comparaison se fait avec vous-même, pas avec une moyenne inventée.
 
 ## Ce que fait Trait64
@@ -59,10 +61,11 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 - **Comptes en ligne** — Lichess et Chess.com, sans mot de passe ; chaque synchronisation ne récupère que les parties nouvelles.
 - **Profils de joueur** — un seul profil rassemble vos comptes et votre fiche FIDE, dont les classements se lisent dans les listes officielles de la fédération.
 - **Analyse** — Stockfish ou tout moteur UCI, plusieurs variantes, comparaison de moteurs côte à côte, file d’analyse en arrière-plan reprenable.
-- **Bilan de partie** — graphe d’évaluation, précision par phase, gaffes et imprécisions expliquées, motifs tactiques reconnus, annotation du PGN.
+- **Bilan de partie** — graphe d’évaluation, précision par phase, gaffes et imprécisions expliquées, motifs tactiques reconnus, annotation du PGN, et un point coloré par coup dans le carnet : vert pour un bon coup, rouge pour une gaffe, violet quand un mat entre dans le compte.
 - **Bilan de toute une base** — après une synchronisation ou un import, un bouton passe en revue le lot entier à la profondeur de votre choix, sans refaire ce qui a déjà été vu.
 - **Tableau de bord** — précision, fautes pour cent coups, tactique, progression mois par mois.
-- **Ouvertures** — arbre statistique de votre base, livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire donné.
+- **Ouvertures** — arbre statistique de votre base, classement ECO automatique des parties qui n’en portent pas, dossier d’une position (coups joués, score, découpage par force des joueurs, parties modèles), livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire donné.
+- **Répertoires** — import d’un dossier entier venu d’En Croissant ou de Pawn Appétit, PGN compressés compris, et une comparaison avec vos propres parties : à quel coup vous quittez votre préparation, et ce qui était prévu à la place.
 - **Entraînement** — puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
 - **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs.
 - **Confort** — thème clair ou sombre, taille d’interface réglable, français et anglais, **Ctrl K** pour la palette de commandes.
