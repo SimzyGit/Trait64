@@ -72,6 +72,9 @@ class Database {
     void addToRepertoire(qint64 id, const Game &game, qint64 model = 0,
                          const RepertoireProgress &progress = {});
     int importRepertoireFile(qint64 id, const QString &path, const RepertoireProgress &progress = {});
+    // Le même import, depuis du PGN déjà en mémoire : la couche application déplie
+    // elle-même les études compressées, la décompression ne vit pas dans cette couche.
+    int importRepertoirePgn(qint64 id, const QByteArray &pgn, const RepertoireProgress &progress = {});
     QVariantMap repertoireOverview(qint64 id, const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void importRepertoire(qint64 id, const std::vector<Game> &games);
     QVariantList repertoireMoves(qint64 id, const QString &fen) const;
@@ -106,7 +109,8 @@ class Database {
     // Puzzle bank: insert ignores references already present; returns the number added.
     int addPuzzles(const std::vector<Puzzle> &puzzles);
     // An unsolved puzzle near `rating` (± spread), optionally of a theme and a source.
-    QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {}, const QString &source = {}) const;
+    QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {},
+                           const QString &source = {}) const;
     void recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter);
     QVariantMap puzzleStats() const;
     // First main-line move no other game of the library played from that position.

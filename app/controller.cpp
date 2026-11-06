@@ -2,11 +2,10 @@
 #include "controller.h"
 #include "archive.h"
 #include "move_notation.h"
-#include <QLocale>
 #include <QClipboard>
 #include <QDate>
-#include <QDesktopServices>
 #include <QDateTime>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -14,6 +13,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QUrl>
@@ -53,7 +53,8 @@ Controller::Controller(const QString &path, QObject *parent)
     openBook();
     connect(&engine_, &t64::Uci::initialized, this, [this] {
         const int elo = settings_.value("playElo", 0).toInt();
-        if (!playing_ || elo <= 0) return;
+        if (!playing_ || elo <= 0)
+            return;
         if (engine_.appliedElo() > 0)
             emit message(tr("Force du moteur limitée à %1 Elo.").arg(engine_.appliedElo()));
         else
@@ -65,16 +66,19 @@ Controller::Controller(const QString &path, QObject *parent)
             emit message(tr("Écriture impossible : ") + tournamentFile_, true);
     });
     connect(&tournament_, &t64::Tournament::finished, this, [this](int games) {
-        if (games <= 0 || !QFileInfo::exists(tournamentFile_)) return;
+        if (games <= 0 || !QFileInfo::exists(tournamentFile_))
+            return;
         // The PGN file stays in the data folder as a record of the tournament.
-        importSourceFile(tournamentFile_, {{"id", "tournament:" + QFileInfo(tournamentFile_).completeBaseName()},
-                                           {"title", tournamentTitle_}});
+        importSourceFile(tournamentFile_,
+                         {{"id", "tournament:" + QFileInfo(tournamentFile_).completeBaseName()},
+                          {"title", tournamentTitle_}});
     });
     online_ = new t64::OnlineGames(this);
     connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
         emit busyChanged();
         emit message(text, true);
-        if (syncingAccount_ >= 0) accountSynced(0);
+        if (syncingAccount_ >= 0)
+            accountSynced(0);
     });
     connect(online_, &t64::OnlineGames::upToDate, this, [this] {
         settings_.setValue(onlineSyncKey_, onlineSyncTime_);
@@ -87,16 +91,17 @@ Controller::Controller(const QString &path, QObject *parent)
         const auto site = key.section('/', 0, 0), user = key.section('/', 1);
         const bool lichess = site == "lichess";
         importSourceFile(downloaded, {{"id", site + ":" + user},
-                                {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
-                                {"source", lichess ? "https://lichess.org/@/" + user
-                                                   : "https://www.chess.com/member/" + user},
-                                {"online", true}});
+                                      {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
+                                      {"source", lichess ? "https://lichess.org/@/" + user
+                                                         : "https://www.chess.com/member/" + user},
+                                      {"online", true}});
         emit busyChanged();
     });
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     refreshPuzzleStats();
-    if (settings_.value("syncAtStartup", false).toBool() && !settings_.value("onlineAccounts").toList().isEmpty())
+    if (settings_.value("syncAtStartup", false).toBool() &&
+        !settings_.value("onlineAccounts").toList().isEmpty())
         QTimer::singleShot(2500, this, &Controller::syncAllAccounts);
     flipped_ = settings_.value("flipped", false).toBool();
     if (!settings_.contains("enginePath")) {
@@ -124,6 +129,11 @@ Controller::Controller(const QString &path, QObject *parent)
     });
     connect(&engine_, &t64::Uci::lines, this, [this](const QVariantList &lines) {
         engineLines_ = lines;
+        // Une liste vide annonce un changement de position, pas une position sans
+        // évaluation : on garde la dernière reçue pour que la barre glisse vers la
+        // suivante au lieu de clignoter par l'équilibre.
+        if (!lines.isEmpty())
+            heldEval_ = lines.first().toMap();
         emit engineChanged();
     });
     connect(&engine_, &t64::Uci::bestMove, this, [this](const QString &move, const QString &fen) {
@@ -141,6 +151,7 @@ Controller::Controller(const QString &path, QObject *parent)
                 game_ = std::move(candidate);
                 node_ = target;
                 review_.clear();
+                reviewQuality_.clear();
                 emit reviewChanged();
                 afterClockMove(white);
                 refresh(true);
@@ -172,14 +183,20 @@ Controller::Controller(const QString &path, QObject *parent)
         if (r.operation == "puzzles") {
             refreshPuzzleStats();
             emit changed();
-            emit message(r.error.isEmpty() ? tr("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
-                                           : r.error, !r.error.isEmpty());
+            emit message(
+                r.error.isEmpty()
+                    ? tr("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
+                    : r.error,
+                !r.error.isEmpty());
             return;
         }
         if (r.operation == "online") {
             QFile::remove(onlineFile_);
-            if (r.error.isEmpty() && !r.canceled) settings_.setValue(onlineSyncKey_, onlineSyncTime_);
-            if (syncingAccount_ >= 0) QTimer::singleShot(0, this, [this, added = r.error.isEmpty() ? r.count : 0] { accountSynced(added); });
+            if (r.error.isEmpty() && !r.canceled)
+                settings_.setValue(onlineSyncKey_, onlineSyncTime_);
+            if (syncingAccount_ >= 0)
+                QTimer::singleShot(0, this,
+                                   [this, added = r.error.isEmpty() ? r.count : 0] { accountSynced(added); });
         }
         if (r.operation == "source" && content_)
             content_->reportImport(r.error.isEmpty()
@@ -464,12 +481,14 @@ void Controller::refresh(bool content) {
     if (book_.isOpen()) {
         const auto moves = book_.moves(board);
         double total = 0;
-        for (const auto &entry : moves) total += entry.weight;
         for (const auto &entry : moves)
-            bookMoves_ << QVariantMap{{"uci", s(chess::uci::moveToUci(entry.move, game_.chess960))},
-                                      {"san", t64::displaySan(chess::uci::moveToSan(board, entry.move), frenchNotation())},
-                                      {"weight", entry.weight},
-                                      {"percent", total > 0 ? qRound(100 * entry.weight / total) : 0}};
+            total += entry.weight;
+        for (const auto &entry : moves)
+            bookMoves_ << QVariantMap{
+                {"uci", s(chess::uci::moveToUci(entry.move, game_.chess960))},
+                {"san", t64::displaySan(chess::uci::moveToSan(board, entry.move), frenchNotation())},
+                {"weight", entry.weight},
+                {"percent", total > 0 ? qRound(100 * entry.weight / total) : 0}};
     }
     detectOpening();
     try {
@@ -488,21 +507,27 @@ void Controller::refresh(bool content) {
 }
 void Controller::openBook() {
     const auto path = settings_.value("bookPath").toString();
-    if (path.isEmpty()) book_ = {};
+    if (path.isEmpty())
+        book_ = {};
     else if (!book_.open(path.toStdString())) {
         book_ = {};
         emit message(tr("Livre d'ouvertures illisible : ") + path, true);
     }
 }
 int Controller::frenchNotation() const {
-    if (settings_.value("figurines", false).toBool()) return t64::Figurines;
+    if (settings_.value("figurines", false).toBool())
+        return t64::Figurines;
     const auto language = settings_.value("language", "fr").toString();
     return language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French)
                ? t64::FrenchLetters
                : t64::EnglishLetters;
 }
-QVariantList Controller::moveRows() const { return t64::moveRows(game_, node_, frenchNotation()); }
-QVariantList Controller::moveFlow() const { return t64::moveFlow(game_, node_, frenchNotation()); }
+QVariantList Controller::moveRows() const {
+    return t64::moveRows(game_, node_, frenchNotation());
+}
+QVariantList Controller::moveFlow() const {
+    return t64::moveFlow(game_, node_, frenchNotation());
+}
 void Controller::writeSession() {
     if (trainingActive())
         return;
@@ -554,6 +579,7 @@ void Controller::replaceGame(t64::Game game, qint64 id) {
     undo_.clear();
     redo_.clear();
     review_.clear();
+    reviewQuality_.clear();
     commentNode_ = -1;
     clockResult_.clear();
     emit reviewChanged();
@@ -562,7 +588,7 @@ void Controller::replaceGame(t64::Game game, qint64 id) {
     node_ = 0;
     selected_ = -1;
     dirty_ = false;
-    engineLines_.clear();
+    forgetEngineLines();
     emit engineChanged();
     refresh();
     writeSession();
@@ -620,7 +646,8 @@ void Controller::importText(const QString &text) {
 void Controller::importOnline(const QString &site, const QString &user, int max) {
     try {
         require(!busy_ && !online_->busy(), "Un traitement est déjà en cours.");
-        require(t64::OnlineGames::validUser(user.trimmed()), "Pseudo invalide : lettres, chiffres, - et _ uniquement.");
+        require(t64::OnlineGames::validUser(user.trimmed()),
+                "Pseudo invalide : lettres, chiffres, - et _ uniquement.");
         const auto name = user.trimmed().toLower();
         onlineSyncKey_ = "onlineSync/" + site + "/" + name;
         onlineSyncTime_ = QDateTime::currentMSecsSinceEpoch();
@@ -633,7 +660,9 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         fail(e);
     }
 }
-void Controller::cancelOnline() { online_->cancel(); }
+void Controller::cancelOnline() {
+    online_->cancel();
+}
 void Controller::importFile(const QString &url) {
     importSourceFile(url, {});
 }
@@ -655,7 +684,9 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             const auto progress = taskProgress_;
             importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress, source] {
                 ImportResult r;
-                r.operation = source.isEmpty() ? "import" : source.value("online").toBool() ? "online" : "source";
+                r.operation = source.isEmpty()                  ? "import"
+                              : source.value("online").toBool() ? "online"
+                                                                : "source";
                 try {
                     t64::Database db(databasePath);
                     r.count = db.importPgnFile(
@@ -869,7 +900,8 @@ void Controller::move(const QString &uci) {
             const bool mate = acceptPuzzleMate(uci);
             if (!mate && (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_])) {
                 trainingFailed_ = true;
-                emit message(puzzleId_ ? tr("Pas le bon coup. Essaie encore.") : tr("Ce n’est pas le coup du répertoire. Essaie encore."));
+                emit message(puzzleId_ ? tr("Pas le bon coup. Essaie encore.")
+                                       : tr("Ce n’est pas le coup du répertoire. Essaie encore."));
                 return;
             }
             node_ = game_.play(node_, uci.toStdString());
@@ -904,6 +936,7 @@ void Controller::move(const QString &uci) {
         game_ = std::move(candidate);
         node_ = target;
         review_.clear();
+        reviewQuality_.clear();
         emit reviewChanged();
         afterClockMove(white);
         selected_ = -1;
@@ -931,7 +964,7 @@ void Controller::navigate(int node) {
     engine_.stop();
     node_ = node;
     selected_ = -1;
-    engineLines_.clear();
+    forgetEngineLines();
     emit engineChanged();
     refresh();
     autosave_.start();
@@ -999,6 +1032,7 @@ void Controller::promote() {
         remember();
         game_.promote(node_);
         review_.clear();
+        reviewQuality_.clear();
         emit reviewChanged();
         refresh(true);
     } catch (const std::exception &e) {
@@ -1012,6 +1046,7 @@ void Controller::deleteVariation() {
         require(node_ > 0, "La position initiale ne peut pas être supprimée.");
         remember();
         review_.clear();
+        reviewQuality_.clear();
         emit reviewChanged();
         int parent = game_.nodes[node_].parent;
         game_.removeVariation(node_);
@@ -1126,6 +1161,10 @@ QString Controller::positionCommand() const {
     return "position fen " + s(game_.nodes[0].fen) +
            (moves.empty() ? QString() : " moves " + moves.join(' '));
 }
+void Controller::forgetEngineLines() {
+    engineLines_.clear();
+    heldEval_.clear();
+}
 void Controller::requestEngine() {
     if (trainingActive())
         return;
@@ -1153,8 +1192,10 @@ void Controller::toggleAnalysis() {
         // Restart to restore full strength after a reduced-skill playing session.
         startEngine();
         requestEngine();
-    } else
+    } else {
         engine_.stop();
+        forgetEngineLines();
+    }
     refresh();
 }
 void Controller::addEngineLine(int index) {
@@ -1197,6 +1238,7 @@ void Controller::stopPlaying() {
     analysis_ = false;
     analysisTimer_.stop();
     engine_.stop();
+    forgetEngineLines();
     refresh();
 }
 void Controller::createCard(const QString &title) {
@@ -1247,7 +1289,7 @@ void Controller::startCard(qint64 id) {
         flipped_ = game_.boardAt(0).sideToMove() == chess::Color::BLACK;
         game_.tags["White"] = card["title"].toString().toStdString();
         game_.tags["Black"] = "Entraînement";
-        engineLines_.clear();
+        forgetEngineLines();
         emit engineChanged();
         refresh();
         emit showAnalysis();

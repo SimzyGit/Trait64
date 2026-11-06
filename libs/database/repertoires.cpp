@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QUuid>
 #include <deque>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -219,14 +220,21 @@ void Database::addToRepertoire(qint64 id, const Game &game, qint64 model,
 int Database::importRepertoireFile(qint64 id, const QString &path, const RepertoireProgress &progress) {
     checkpoint(progress, 0);
     require(QFileInfo(path).isFile(), "Choisissez un fichier PGN régulier.");
+    constexpr qint64 limit = 16 * 1024 * 1024;
     QFile file(path);
     require(file.open(QIODevice::ReadOnly), file.errorString());
-    constexpr qint64 limit = 16 * 1024 * 1024;
     require(file.size() <= limit, "Import de répertoire limité à 16 Mio par fichier.");
     const auto bytes = file.read(limit + 1);
     require(file.error() == QFileDevice::NoError, file.errorString());
     require(bytes.size() <= limit, "Import de répertoire limité à 16 Mio par fichier.");
-    std::istringstream input(bytes.toStdString());
+    return importRepertoirePgn(id, bytes, progress);
+}
+// Le PGN déjà en mémoire : la couche application s'en sert pour les fichiers compressés,
+// qu'elle déplie elle-même — la décompression vit dans t64content, pas ici.
+int Database::importRepertoirePgn(qint64 id, const QByteArray &pgn, const RepertoireProgress &progress) {
+    checkpoint(progress, 0);
+    constexpr int cap = 200;
+    std::istringstream input(pgn.toStdString());
     qint64 done = 0;
     int count = 0;
     sql("SAVEPOINT repertoire_file");
@@ -237,7 +245,7 @@ int Database::importRepertoireFile(qint64 id, const QString &path, const Reperto
                 auto games = parsePgn(record, 1, [&] { checkpoint(progress, done); });
                 if (games.empty())
                     return;
-                require(++count <= 200, "Import de répertoire limité à 200 parties par fichier.");
+                require(++count <= cap, "Import de répertoire limité à 200 parties par fichier.");
                 qint64 processed = 0;
                 addToRepertoire(id, games.front(), 0, [&](qint64 positions) {
                     processed = positions;
@@ -497,13 +505,15 @@ QVariantList Database::repertoireGaps(qint64 id) const {
     // Only opponent turns. Statistics describe the local reference corpus, not theoretical truth.
     // Repertoires keep their text key; the opening statistics are keyed by position hash.
     QSqlQuery positions(db_), stats(db_);
-    positions.prepare("SELECT p.key,p.fen FROM repertoire_positions p JOIN repertoires r ON r.id=p.repertoire "
-                      "WHERE p.repertoire=? AND p.white<>r.white");
+    positions.prepare(
+        "SELECT p.key,p.fen FROM repertoire_positions p JOIN repertoires r ON r.id=p.repertoire "
+        "WHERE p.repertoire=? AND p.white<>r.white");
     positions.addBindValue(id);
     run(positions);
-    stats.prepare("SELECT o.uci,o.san,o.count,o.white,o.draw,o.black FROM opening_stats o WHERE o.key=? AND "
-                  "o.count>0 AND NOT EXISTS(SELECT 1 FROM repertoire_moves m WHERE m.repertoire=? AND m.key=? "
-                  "AND m.uci=o.uci)");
+    stats.prepare(
+        "SELECT o.uci,o.san,o.count,o.white,o.draw,o.black FROM opening_stats o WHERE o.key=? AND "
+        "o.count>0 AND NOT EXISTS(SELECT 1 FROM repertoire_moves m WHERE m.repertoire=? AND m.key=? "
+        "AND m.uci=o.uci)");
     struct Gap {
         QString key, fen, uci, san;
         qint64 count, white, draw, black;
@@ -517,8 +527,8 @@ QVariantList Database::repertoireGaps(qint64 id) const {
         run(stats);
         while (stats.next())
             gaps.push_back({key, fen, stats.value(0).toString(), stats.value(1).toString(),
-                            stats.value(2).toLongLong(), stats.value(3).toLongLong(), stats.value(4).toLongLong(),
-                            stats.value(5).toLongLong()});
+                            stats.value(2).toLongLong(), stats.value(3).toLongLong(),
+                            stats.value(4).toLongLong(), stats.value(5).toLongLong()});
     }
     std::sort(gaps.begin(), gaps.end(), [](const Gap &a, const Gap &b) {
         return std::tie(b.count, a.key, a.uci) < std::tie(a.count, b.key, b.uci);

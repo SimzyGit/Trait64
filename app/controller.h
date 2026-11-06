@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "comparison.h"
-#include "tournament.h"
 #include "content.h"
-#include "fide.h"
 #include "database.h"
+#include "fide.h"
 #include "online.h"
 #include "polyglot.h"
 #include "queue.h"
+#include "tournament.h"
 #include "uci.h"
-#include "updater.h"
 #include "ui_translator.h"
+#include "updater.h"
 #include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QObject>
@@ -57,6 +57,10 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
+    // La dernière évaluation reçue, gardée pendant que le moteur change de position : il
+    // vide ses lignes à chaque nouvelle recherche, et la barre retombait à l'équilibre le
+    // temps que la première évaluation du coup joué revienne.
+    Q_PROPERTY(QVariantMap heldEvaluation READ heldEvaluation NOTIFY engineChanged)
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
@@ -72,6 +76,10 @@ class Controller : public QObject {
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
     Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
     Q_PROPERTY(QVariantList review READ review NOTIFY reviewChanged)
+    // Le point coloré par coup, rangé par numéro de nœud : le carnet de coups a des
+    // centaines de lignes, et chacune parcourant la liste du bilan, l'affichage
+    // deviendrait quadratique.
+    Q_PROPERTY(QVariantMap reviewQuality READ reviewQuality NOTIFY reviewChanged)
     Q_PROPERTY(QVariantMap reviewState READ reviewState NOTIFY reviewChanged)
     // Précision par camp et par phase, à la manière de Lichess. Chaque valeur vaut -1
     // quand elle n'est pas mesurable, faute de coups évalués des deux côtés.
@@ -101,7 +109,9 @@ class Controller : public QObject {
     Q_INVOKABLE void renameRepertoire(qint64 id, const QString &name);
     Q_INVOKABLE void deleteRepertoire(qint64 id);
     Q_INVOKABLE void addStudyToRepertoire(qint64 id);
-    Q_INVOKABLE void importRepertoire(qint64 id, const QString &url);
+    // `id` à 0 : le fichier crée une étude nommée d'après lui, plutôt que d'exiger
+    // d'en avoir choisi une au préalable.
+    Q_INVOKABLE void importRepertoire(qint64 id, const QString &url, bool white = true);
     // Un dossier d'études, tel que l'exportent En Croissant et Pawn Appétit : un
     // répertoire par fichier PGN, sous-dossiers compris, nommés d'après leur chemin.
     Q_INVOKABLE void importRepertoireFolder(const QString &url, bool white = true);
@@ -151,6 +161,10 @@ class Controller : public QObject {
     Q_INVOKABLE void setEngineOption(const QString &name, const QVariant &value);
     Q_INVOKABLE void pressEngineOption(const QString &name);
     QVariantList engineLines() const { return engineLines_; }
+    QVariantMap heldEvaluation() const { return heldEval_; }
+    // Les lignes du moteur et la dernière évaluation gardée vont ensemble : les oublier
+    // séparément laisserait la barre afficher une valeur d'une autre position.
+    void forgetEngineLines();
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;
     bool busy() const { return busy_ || (online_ && online_->busy()); }
@@ -164,8 +178,8 @@ class Controller : public QObject {
     t64::Comparison *comparison() { return &comparison_; }
     t64::Tournament *tournament() { return &tournament_; }
     // Round-robin between saved engine profiles; finished games go to the library.
-    Q_INVOKABLE void startTournament(const QVariantList &indices, int gamesPerPairing, int moveTime, int maxPlies,
-                                     bool bookOpenings);
+    Q_INVOKABLE void startTournament(const QVariantList &indices, int gamesPerPairing, int moveTime,
+                                     int maxPlies, bool bookOpenings);
     t64::AnalysisQueue *analysisQueue() { return &analysisQueue_; }
     Q_INVOKABLE void enqueueAnalysis(bool variations = true, int milliseconds = 500, int profile = -1);
     // Every game matching the current library filters (main lines), up to `maxGames`.
@@ -193,8 +207,8 @@ class Controller : public QObject {
     // Range une copie réduite de l'image dans le dossier de données : le profil ne
     // dépend pas d'un fichier que l'on peut déplacer ou effacer. Une URL vide efface.
     Q_INVOKABLE void setProfilePhoto(int index, const QString &url);
-    Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName,
-                                    int standard, int rapid, int blitz, const QString &title = {},
+    Q_INVOKABLE void setFideDetails(int index, const QString &fideId, const QString &fideName, int standard,
+                                    int rapid, int blitz, const QString &title = {},
                                     const QString &federation = {});
     // Télécharge les listes publiées et reporte les classements sur le profil. `speeds`
     // ne contient que les cadences voulues : chacune est un téléchargement séparé.
@@ -214,10 +228,10 @@ class Controller : public QObject {
     // Reporte sur un profil ce qu'une recherche a rapporté. `requested` nomme les
     // cadences effectivement cherchées : celles-là seules peuvent devenir douteuses.
     // Tout passe par les arguments, ce qui la rend vérifiable sans réseau.
-    Q_INVOKABLE void applyFideRatings(int index, const QStringList &requested,
-                                      const QVariantMap &player);
+    Q_INVOKABLE void applyFideRatings(int index, const QStringList &requested, const QVariantMap &player);
     QVariantMap reviewState() const;
     QVariantMap reviewAccuracy() const { return reviewAccuracy_; }
+    QVariantMap reviewQuality() const { return reviewQuality_; }
     QVariantList players() const { return players_; }
     QVariantMap playerProfile() const { return playerProfile_; }
     Q_INVOKABLE void switchTab(int index);
@@ -439,6 +453,7 @@ class Controller : public QObject {
     bool favoritesOnly_ = false, positionFilter_ = false, trashFilter_ = false;
     QVariantMap state_, stats_;
     QVariantList squares_, notation_, games_, openings_, bookMoves_, cards_, engineLines_;
+    QVariantMap heldEval_;
     t64::PolyglotBook book_;
     qint64 puzzleId_ = 0, puzzleStarted_ = 0;
     QVariantMap puzzle_, puzzleStats_;
@@ -490,7 +505,7 @@ class Controller : public QObject {
     int activeTab_ = 0;
     std::deque<Snapshot> undo_, redo_;
     QVariantList review_, players_;
-    QVariantMap reviewAccuracy_;
+    QVariantMap reviewAccuracy_, reviewQuality_;
     QVariantMap advancedFilters_, playerProfile_;
     t64::Uci reviewer_;
     t64::Game reviewGame_;

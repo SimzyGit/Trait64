@@ -122,7 +122,7 @@ void Controller::startRepertoireTraining(qint64 id, bool includeFuture) {
         node_ = 0;
         selected_ = -1;
         flipped_ = game_.boardAt(0).sideToMove() == chess::Color::BLACK;
-        engineLines_.clear();
+        forgetEngineLines();
         emit engineChanged();
         refreshRepertoires();
         refresh();

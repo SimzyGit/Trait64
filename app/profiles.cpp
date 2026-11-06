@@ -69,7 +69,8 @@ void Controller::renameProfile(int index, const QString &name) {
         if (previous == wanted)
             return;
         for (int i = 0; i < list.size(); ++i)
-            require(i == index || list[i].toMap()["name"].toString().compare(wanted, Qt::CaseInsensitive) != 0,
+            require(i == index ||
+                        list[i].toMap()["name"].toString().compare(wanted, Qt::CaseInsensitive) != 0,
                     "Ce profil existe déjà.");
         auto profile = list[index].toMap();
         profile["name"] = wanted;
@@ -199,9 +200,9 @@ void Controller::setFideDetails(int index, const QString &fideId, const QString 
         const auto id = fideId.trimmed();
         // Un identifiant FIDE est un nombre ; on le refuse plutôt que d'enregistrer une
         // saisie qui ne désignera jamais personne.
-        require(id.isEmpty() || (id.size() <= 12 && std::all_of(id.cbegin(), id.cend(), [](QChar c) {
-                    return c.isDigit();
-                })), "L’identifiant FIDE ne contient que des chiffres.");
+        require(id.isEmpty() || (id.size() <= 12 &&
+                                 std::all_of(id.cbegin(), id.cend(), [](QChar c) { return c.isDigit(); })),
+                "L’identifiant FIDE ne contient que des chiffres.");
         auto rating = [](int value) {
             // 0 se lit « pas de classement dans cette cadence », ce qui est courant.
             return value <= 0 ? QVariant() : QVariant(std::clamp(value, 1000, 3000));
@@ -240,8 +241,8 @@ void Controller::fetchFideRatings(int index, const QStringList &speeds) {
             fide_ = new t64::FideSync(this);
             connect(fide_, &t64::FideSync::progress, this,
                     [this](const QString &speed, int position, int count, qint64 received, qint64 total) {
-                        fideSync_ = {{"busy", true},         {"speed", speed},    {"index", position},
-                                     {"count", count},       {"received", received}, {"total", total},
+                        fideSync_ = {{"busy", true},       {"speed", speed},       {"index", position},
+                                     {"count", count},     {"received", received}, {"total", total},
                                      {"status", QString()}};
                         emit fideSyncChanged();
                     });
@@ -336,15 +337,10 @@ QVariantMap Controller::skillDashboard(int profileIndex) const {
         const auto profile = all[profileIndex].toMap();
         const auto names = profileAccountNames(profileIndex);
         if (names.isEmpty())
-            return {{"ready", false},
-                    {"reason", "noAccount"},
-                    {"name", profile["name"]}};
+            return {{"ready", false}, {"reason", "noAccount"}, {"name", profile["name"]}};
         const auto summary = db_->reviewSummary(names);
         if (summary["games"].toInt() == 0)
-            return {{"ready", false},
-                    {"reason", "noReview"},
-                    {"name", profile["name"]},
-                    {"accounts", names}};
+            return {{"ready", false}, {"reason", "noReview"}, {"name", profile["name"]}, {"accounts", names}};
         auto history = db_->reviewHistory(names, 13);
         // Comparaison à soi-même : le mois le plus récent contre la moyenne, pondérée par
         // les coups, des mois antérieurs. Sans passé, il n'y a rien à comparer, et un

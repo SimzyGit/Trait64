@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
-#include <limits>
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -8,25 +7,27 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QImage>
+#include <QImageReader>
+#include <QNetworkProxy>
+#include <QProcess>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickItemGrabResult>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QScopeGuard>
 #include <QSettings>
 #include <QSignalSpy>
 #include <QTemporaryDir>
-#include <QXmlStreamReader>
-#include <QImageReader>
-#include <QNetworkProxy>
-#include <QScopeGuard>
 #include <QTest>
 #include <QThreadPool>
+#include <QXmlStreamReader>
 #include <QtConcurrent>
 #include <functional>
 #include <future>
 #include <iostream>
+#include <limits>
 
 int checks = 0;
 void check(bool ok, const char *message) {
@@ -53,9 +54,9 @@ QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
     return nullptr;
 }
 #include "import_gui_probe.h"
-#include "ui_layout_probe.h"
 #include "move_notebook_probe.h"
 #include "showcase_probe.h"
+#include "ui_layout_probe.h"
 // Hold the global pool so the queued verification cannot finish before we
 // exercise the UI and request cancellation. Release safely on assertion failure.
 class PoolGate {
@@ -98,13 +99,43 @@ int main(int argc, char **argv) {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, dir.path());
     QQuickStyle::setStyle("Basic");
     try {
-        if (app.arguments().contains("--move-notebook")) return moveNotebookProbe(dir.path());
-        if (app.arguments().contains("--ui-layout")) return uiLayoutProbe(dir.path());
+        if (app.arguments().contains("--move-notebook"))
+            return moveNotebookProbe(dir.path());
+        if (app.arguments().contains("--ui-layout"))
+            return uiLayoutProbe(dir.path());
         if (const int i = int(app.arguments().indexOf("--showcase")); i > 0 && i + 1 < app.arguments().size())
             return showcaseProbe(dir.path(), app.arguments()[i + 1]);
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
         if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
+            // La barre d'évaluation retombait à l'équilibre à chaque coup : le moteur vide
+            // ses lignes dès qu'il change de position, et rien ne gardait la dernière
+            // évaluation reçue le temps que la suivante arrive.
+            Controller bar(dir.path() + "/evalbar");
+            bar.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+            bar.setPreference("hash", 16);
+            bar.toggleAnalysis();
+            QElapsedTimer engineWait;
+            engineWait.start();
+            while (bar.engineLines().isEmpty() && engineWait.elapsed() < 20000)
+                QTest::qWait(20);
+            check(!bar.engineLines().isEmpty(), "The engine reports a line on the starting position");
+            const auto first = bar.heldEvaluation();
+            check(first.contains("eval"), "The held evaluation carries what the bar displays");
+            bar.move("e2e4");
+            // Le moteur vide ses lignes en repartant. L'invariant qui tient la barre :
+            // tant que l'analyse tourne, il reste toujours une évaluation à montrer.
+            bool everEmpty = false;
+            engineWait.restart();
+            while (engineWait.elapsed() < 2500) {
+                everEmpty = everEmpty || bar.heldEvaluation().isEmpty();
+                QTest::qWait(5);
+            }
+            check(!everEmpty, "A played move never leaves the bar without an evaluation to show");
+            check(bar.heldEvaluation() != first, "The evaluation of the new position replaces it");
+            bar.toggleAnalysis();
+            check(bar.heldEvaluation().isEmpty(),
+                  "Stopping the analysis forgets the evaluation rather than showing a stale one");
             Controller c(dir.path() + "/tournament");
             c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
             c.setPreference("hash", 16);
@@ -117,12 +148,13 @@ int main(int argc, char **argv) {
             d4.makeMove(chess::uci::uciToMove(d4, "d2d4"));
             QFile book(dir.path() + "/tournament-book.bin");
             check(book.open(QIODevice::WriteOnly), "Tournament book written");
-            std::vector<std::tuple<quint64, int, int>> rows{{start.hash(), 12, 28}, {start.hash(), 11, 27},
-                                                            {e4.hash(), 52, 36}, {d4.hash(), 51, 35}};
+            std::vector<std::tuple<quint64, int, int>> rows{
+                {start.hash(), 12, 28}, {start.hash(), 11, 27}, {e4.hash(), 52, 36}, {d4.hash(), 51, 35}};
             std::sort(rows.begin(), rows.end());
             for (auto [key, from, to] : rows)
                 for (quint64 part : {key, quint64(to | from << 6) << 48 | quint64(1) << 32})
-                    for (int shift = 56; shift >= 0; shift -= 8) book.putChar(char(part >> shift & 0xff));
+                    for (int shift = 56; shift >= 0; shift -= 8)
+                        book.putChar(char(part >> shift & 0xff));
             book.close();
             c.setPreference("bookPath", book.fileName());
             QSignalSpy messages(&c, &Controller::message);
@@ -132,11 +164,13 @@ int main(int argc, char **argv) {
             check(c.tournament()->running(), "Tournament starts from saved profiles");
             QElapsedTimer wait;
             wait.start();
-            while ((c.tournament()->running() || c.busy() || c.librarySearching()) && wait.elapsed() < 60000) QTest::qWait(20);
+            while ((c.tournament()->running() || c.busy() || c.librarySearching()) && wait.elapsed() < 60000)
+                QTest::qWait(20);
             const auto games = c.games();
             check(games.size() == 2, "Both tournament games reach the library");
             bool tagged = false;
-            for (const auto &value : c.sources()) tagged |= value.toMap()["title"].toString().startsWith("Tournoi de moteurs");
+            for (const auto &value : c.sources())
+                tagged |= value.toMap()["title"].toString().startsWith("Tournoi de moteurs");
             check(tagged, "Tournament games are filed under their own source");
             for (const auto &value : games) {
                 c.loadGame(value.toMap()["id"].toLongLong());
@@ -144,7 +178,8 @@ int main(int argc, char **argv) {
                 const auto moves = c.moveRows();
                 check(moves.size() > 2, "Tournament game has moves");
                 const auto first = moves[1].toMap();
-                const auto line = first["white"].toMap()["text"].toString() + " " + first["black"].toMap()["text"].toString();
+                const auto line = first["white"].toMap()["text"].toString() + " " +
+                                  first["black"].toMap()["text"].toString();
                 check(line == "e4 e5" || line == "d4 d5", "Tournament openings come from the Polyglot book");
             }
             // Settings are shared by every controller in this process: leave them as found.
@@ -153,26 +188,32 @@ int main(int argc, char **argv) {
             c.removeEngineProfile(0);
             c.setPreference("hash", 128);
             c.setPreference("enginePath", "");
-            check(c.preferences()["engineProfiles"].toList().isEmpty(), "Tournament test leaves no profile behind");
+            check(c.preferences()["engineProfiles"].toList().isEmpty(),
+                  "Tournament test leaves no profile behind");
         }
         {
             Controller c(dir.path() + "/puzzles");
             QFile csv(dir.path() + "/puzzles.csv");
             check(csv.open(QIODevice::WriteOnly), "Puzzle file written");
             // Two rooks: the stored solution is d1d8, but e1e8 mates as well.
-            csv.write("PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags\n"
-                      "p1,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 d1d8,1500,75,95,1000,backRankMate mateIn1,u,\n"
-                      "p2,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1520,75,95,1000,backRankMate mateIn1,u,\n");
+            csv.write(
+                "PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags\n"
+                "p1,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 d1d8,1500,75,95,1000,backRankMate "
+                "mateIn1,u,\n"
+                "p2,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1520,75,95,1000,backRankMate "
+                "mateIn1,u,\n");
             csv.close();
             c.importPuzzles(csv.fileName(), 100, 0, 0);
             QElapsedTimer wait;
             wait.start();
-            while (c.busy() && wait.elapsed() < 10000) QTest::qWait(10);
+            while (c.busy() && wait.elapsed() < 10000)
+                QTest::qWait(10);
             check(c.puzzles()["total"].toInt() == 2, "Puzzle bank imported");
             const auto study = c.state()["fen"];
             const int before = c.puzzles()["rating"].toInt();
             c.startPuzzle("mateIn1", "lichess");
-            check(c.puzzles()["active"].toBool() && c.state()["training"].toBool(), "Puzzle starts in training mode");
+            check(c.puzzles()["active"].toBool() && c.state()["training"].toBool(),
+                  "Puzzle starts in training mode");
             const auto first = c.puzzles()["current"].toMap()["id"];
             const bool twoRooks = c.state()["fen"].toString().startsWith("6k1/r4ppp/8/8/8/8/5PPP/3RR1K1");
             c.move("d1d2");
@@ -198,23 +239,29 @@ int main(int argc, char **argv) {
             c.nextPuzzle();
             check(c.puzzles()["active"].toBool(), "Unsolved puzzles stay available");
             c.finishTraining();
-            c.importText("[Event \"x\"]\n\n1. e4 e5 *\n\n[Event \"y\"]\n\n1. d4 d5 *\n\n[Event \"z\"]\n\n1. c4 e5 *");
+            c.importText(
+                "[Event \"x\"]\n\n1. e4 e5 *\n\n[Event \"y\"]\n\n1. d4 d5 *\n\n[Event \"z\"]\n\n1. c4 e5 *");
             wait.restart();
-            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000) QTest::qWait(10);
+            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000)
+                QTest::qWait(10);
             const int jobs = c.analysisQueue()->jobs().size();
             c.searchLibrary("", "", false, false, false, {});
             wait.restart();
-            while (c.librarySearching() && wait.elapsed() < 5000) QTest::qWait(10);
+            while (c.librarySearching() && wait.elapsed() < 5000)
+                QTest::qWait(10);
             QSignalSpy refused(&c, &Controller::message);
             c.enqueueLibrary(100, -1, 2);
-            check(refused.size() == 1 && refused.first().at(1).toBool() && c.analysisQueue()->jobs().size() == jobs,
+            check(refused.size() == 1 && refused.first().at(1).toBool() &&
+                      c.analysisQueue()->jobs().size() == jobs,
                   "Batch analysis without an engine fails once, clearly");
             if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
                 c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
                 c.enqueueLibrary(100, -1, 2);
                 wait.restart();
-                while (c.analysisQueue()->jobs().size() < jobs + 2 && wait.elapsed() < 5000) QTest::qWait(10);
-                check(c.analysisQueue()->jobs().size() == jobs + 2, "Library games are queued for analysis up to the limit");
+                while (c.analysisQueue()->jobs().size() < jobs + 2 && wait.elapsed() < 5000)
+                    QTest::qWait(10);
+                check(c.analysisQueue()->jobs().size() == jobs + 2,
+                      "Library games are queued for analysis up to the limit");
                 c.analysisQueue()->pauseAll();
                 c.setPreference("enginePath", "");
             }
@@ -234,9 +281,12 @@ int main(int argc, char **argv) {
                 check(svg.open(QIODevice::ReadOnly), "SVG diagram written");
                 const auto bytes = svg.readAll();
                 QXmlStreamReader xml(bytes);
-                while (!xml.atEnd()) xml.readNext();
+                while (!xml.atEnd())
+                    xml.readNext();
                 check(!xml.hasError(), "SVG diagram is well-formed XML");
-                check(style == "unicode" ? bytes.count("<text") >= 32 : bytes.count("<svg") == 1 && bytes.count("<g transform") == 32, "Every piece is in the SVG");
+                check(style == "unicode" ? bytes.count("<text") >= 32
+                                         : bytes.count("<svg") == 1 && bytes.count("<g transform") == 32,
+                      "Every piece is in the SVG");
                 check(bytes.contains("<polygon") && bytes.contains("<circle"), "Arrows and circles are kept");
                 QImageReader reader(svgPath);
                 const auto image = reader.read();
@@ -257,42 +307,51 @@ int main(int argc, char **argv) {
             // request to a dead local port so each fetch fails at once and the only outcomes
             // are the ones the test emits itself.
             const auto realProxy = QNetworkProxy::applicationProxy();
-            QNetworkProxy::setApplicationProxy(QNetworkProxy(QNetworkProxy::HttpProxy, QStringLiteral("127.0.0.1"), 1));
+            QNetworkProxy::setApplicationProxy(
+                QNetworkProxy(QNetworkProxy::HttpProxy, QStringLiteral("127.0.0.1"), 1));
             const auto restoreProxy = qScopeGuard([&] { QNetworkProxy::setApplicationProxy(realProxy); });
             Controller c(dir.path() + "/online-import");
             auto *online = c.findChild<t64::OnlineGames *>();
             QSignalSpy messages(&c, &Controller::message);
             c.importOnline("lichess", "a/../b", 10);
-            check(messages.size() == 1 && !online->busy(), "Invalid online username is refused before any request");
+            check(messages.size() == 1 && !online->busy(),
+                  "Invalid online username is refused before any request");
             c.importOnline("lichess", "Simzy", 10);
             check(c.busy() && c.onlineFetching(), "Online fetch marks the application busy");
             online->cancel();
             QElapsedTimer wait;
             wait.start();
-            while (c.onlineFetching() && wait.elapsed() < 5000) QTest::qWait(10);
+            while (c.onlineFetching() && wait.elapsed() < 5000)
+                QTest::qWait(10);
             check(!c.busy(), "Canceled fetch releases the application");
             const auto file = dir.path() + "/online-import/downloads/online-lichess-simzy.pgn";
             QFile pgn(file);
             check(pgn.open(QIODevice::WriteOnly) &&
-                      pgn.write("[Event \"Rated blitz\"]\n[White \"Simzy\"]\n[Black \"X\"]\n[Result \"1-0\"]\n\n1. e4 e5 1-0\n\n"
-                                "[Event \"Rated blitz\"]\n[White \"Y\"]\n[Black \"Simzy\"]\n[Result \"0-1\"]\n\n1. d4 d5 0-1\n") > 0,
+                      pgn.write("[Event \"Rated blitz\"]\n[White \"Simzy\"]\n[Black \"X\"]\n[Result "
+                                "\"1-0\"]\n\n1. e4 e5 1-0\n\n"
+                                "[Event \"Rated blitz\"]\n[White \"Y\"]\n[Black \"Simzy\"]\n[Result "
+                                "\"0-1\"]\n\n1. d4 d5 0-1\n") > 0,
                   "Downloaded PGN fixture written");
             pgn.close();
             emit online->finished(file, 2);
             wait.restart();
-            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000) QTest::qWait(10);
+            while ((c.busy() || c.librarySearching()) && wait.elapsed() < 10000)
+                QTest::qWait(10);
             QSettings settings;
             check(c.games().size() == 2 && !QFile::exists(file) &&
                       settings.value("onlineSync/lichess/simzy").toLongLong() > 0,
-                  "Online games reach the library, the temporary file is removed and the next sync is incremental");
+                  "Online games reach the library, the temporary file is removed and the next sync is "
+                  "incremental");
             bool tagged = false;
-            for (const auto &value : c.sources()) tagged |= value.toMap()["title"].toString() == "Lichess — simzy";
+            for (const auto &value : c.sources())
+                tagged |= value.toMap()["title"].toString() == "Lichess — simzy";
             check(tagged, "Online games are filed under their player source");
             // Saved accounts: sync queue, up-to-date bookkeeping, failures that do not block the queue.
             auto settle = [&] {
                 QElapsedTimer w;
                 w.start();
-                while ((c.busy() || c.librarySearching()) && w.elapsed() < 10000) QTest::qWait(10);
+                while ((c.busy() || c.librarySearching()) && w.elapsed() < 10000)
+                    QTest::qWait(10);
                 QTest::qWait(20);
             };
             messages.clear();
@@ -306,13 +365,15 @@ int main(int argc, char **argv) {
             online->cancel();
             settle();
             const auto kim = c.onlineAccounts()[0].toMap();
-            check(kim["lastSync"].toLongLong() > 0 && !kim["syncing"].toBool(), "An up-to-date account records its sync");
+            check(kim["lastSync"].toLongLong() > 0 && !kim["syncing"].toBool(),
+                  "An up-to-date account records its sync");
             c.addOnlineAccount("lichess", "kim");
             check(c.onlineAccounts().size() == 1, "The same account is not added twice");
             c.addOnlineAccount("chesscom", "Kim");
             online->cancel();
             settle();
-            check(c.onlineAccounts().size() == 2 && c.onlineAccounts()[1].toMap()["lastSync"].toLongLong() == 0,
+            check(c.onlineAccounts().size() == 2 &&
+                      c.onlineAccounts()[1].toMap()["lastSync"].toLongLong() == 0,
                   "A failed sync does not pretend to be up to date");
             c.syncAllAccounts();
             for (int i = 0; i < 2; ++i) {
@@ -325,7 +386,8 @@ int main(int argc, char **argv) {
                   "Sync all goes through every account even when one fails");
             c.removeOnlineAccount(1);
             c.removeOnlineAccount(0);
-            check(c.onlineAccounts().isEmpty() && c.games().size() == 2, "Removing accounts keeps their games");
+            check(c.onlineAccounts().isEmpty() && c.games().size() == 2,
+                  "Removing accounts keeps their games");
             // Profils : un utilisateur rassemble ses comptes sous un seul nom. Le
             // rattachement se fait par nom, donc renommer et retirer doivent suivre.
             messages.clear();
@@ -713,13 +775,15 @@ int main(int argc, char **argv) {
                           c.reviewState()["total"].toInt() == 2 * (c.review().size() + 1),
                       "Review runs a forward pass, then a backward pass");
                 bool backward = true;
-                for (const auto &row : c.review()) backward &= row.toMap()["pass"] == 2;
+                for (const auto &row : c.review())
+                    backward &= row.toMap()["pass"] == 2;
                 check(backward, "Final evaluations come from the end-to-start pass");
                 c.analyseGame(100, false);
                 timer.restart();
                 while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)
                     QTest::qWait(20);
-                check(c.reviewState()["passes"] == 1 && c.review().size() == 2 && c.review()[0].toMap()["pass"] == 1,
+                check(c.reviewState()["passes"] == 1 && c.review().size() == 2 &&
+                          c.review()[0].toMap()["pass"] == 1,
                       "A single forward pass stays available");
                 const auto reviewBeforeExplanation = c.review();
                 const auto beforeExplanation = c.state();
@@ -729,7 +793,8 @@ int main(int argc, char **argv) {
                           !actual["steps"].toList().empty() && !alternative["steps"].toList().empty() &&
                           actual["steps"].toList().first().toMap()["uci"] == c.review()[0].toMap()["played"],
                       "Real Stockfish review explains played move and pre-move alternative legally");
-                check(!c.explainReview(-1)["available"].toBool() && !c.explainReview(999)["available"].toBool(),
+                check(!c.explainReview(-1)["available"].toBool() &&
+                          !c.explainReview(999)["available"].toBool(),
                       "Unavailable review rows cannot fabricate explanations");
                 auto *reviewDialog = window->findChild<QObject *>("reviewDialog");
                 QMetaObject::invokeMethod(reviewDialog, "open");
@@ -754,13 +819,15 @@ int main(int argc, char **argv) {
                 QTest::qWait(30);
                 int originalTab = 0;
                 for (int i = 0; i < c.tabs().size(); ++i)
-                    if (c.tabs()[i].toMap()["active"].toBool()) originalTab = i;
+                    if (c.tabs()[i].toMap()["active"].toBool())
+                        originalTab = i;
                 const auto originalTabs = c.tabs().size();
                 auto *openLine = window->findChild<QQuickItem *>("openReviewLineButton");
                 check(openLine && openLine->isVisible() && openLine->isEnabled(),
                       "Review line button is accessible");
-                QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-                                  openLine->mapToScene(QPointF(openLine->width()/2, openLine->height()/2)).toPoint());
+                QTest::mouseClick(
+                    window, Qt::LeftButton, Qt::NoModifier,
+                    openLine->mapToScene(QPointF(openLine->width() / 2, openLine->height() / 2)).toPoint());
                 QTest::qWait(60);
                 check(c.tabs().size() == originalTabs + 1 && !explanationDialog->property("visible").toBool(),
                       "Clicking the review line button opens an independent study and closes the dialog");
@@ -772,9 +839,8 @@ int main(int argc, char **argv) {
                       "Returning to original study preserves position and review results");
                 c.closeTab(originalTabs);
                 // The first played move is known, independent of Stockfish's chosen reply.
-                const QStringList motifFens{
-                    "4k3/5q2/8/8/2N5/8/8/4K3 w - - 0 1",
-                    "4k3/4n3/8/8/8/8/8/K1R5 w - - 0 1"};
+                const QStringList motifFens{"4k3/5q2/8/8/2N5/8/8/4K3 w - - 0 1",
+                                            "4k3/4n3/8/8/8/8/8/K1R5 w - - 0 1"};
                 const QStringList motifMoves{"c4d6", "c1e1"};
                 const QStringList motifLabels{"Fourchette", "Clouage au roi"};
                 const QStringList motifMarks{"[%cal Gd6e8,Gd6f7]", "[%csl Ye1,Ye7,Ye8]"};
@@ -806,10 +872,13 @@ int main(int argc, char **argv) {
                     if (fixture == 0 && qEnvironmentVariableIsSet("T64_TACTICS_SCREENSHOT"))
                         check(window->grabWindow().save(qEnvironmentVariable("T64_TACTICS_SCREENSHOT")),
                               "Small-screen tactical explanation screenshot saved");
-                    check(openLine->isVisible() && openLine->isEnabled(), "Tactical copy button accessible at 960x640");
+                    check(openLine->isVisible() && openLine->isEnabled(),
+                          "Tactical copy button accessible at 960x640");
                     const int copyTab = c.tabs().size();
-                    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-                                      openLine->mapToScene(QPointF(openLine->width()/2, openLine->height()/2)).toPoint());
+                    QTest::mouseClick(
+                        window, Qt::LeftButton, Qt::NoModifier,
+                        openLine->mapToScene(QPointF(openLine->width() / 2, openLine->height() / 2))
+                            .toPoint());
                     QTest::qWait(80);
                     check(c.tabs().size() == copyTab + 1 && !explanationDialog->property("visible").toBool(),
                           "Real click creates tactical copy");
@@ -822,7 +891,7 @@ int main(int argc, char **argv) {
                     for (const auto &mark : marks) {
                         const auto m = mark.toMap();
                         check(fixture == 0 ? m["color"] == "G" && m["from"] == "d6" &&
-                                                (m["to"] == "e8" || m["to"] == "f7")
+                                                 (m["to"] == "e8" || m["to"] == "f7")
                                            : m["color"] == "Y" && m["from"] == m["to"],
                               "Attacks are arrows and pin alignments are square marks");
                     }
@@ -835,11 +904,13 @@ int main(int argc, char **argv) {
                     QFile exported(exportPath);
                     check(exported.open(QIODevice::ReadOnly), "Tactical copy exported");
                     const auto restored = t64::parsePgn(exported.readAll().toStdString());
-                    check(restored.size() == 1 && restored[0].nodes[1].comment.find(motifMarks[fixture].toStdString()) != std::string::npos,
+                    check(restored.size() == 1 && restored[0].nodes[1].comment.find(
+                                                      motifMarks[fixture].toStdString()) != std::string::npos,
                           "Exported tactical copy retains graphical annotations");
                     c.switchTab(fixtureTab);
                     check(c.state()["fen"] == fixtureFen && c.review() == fixtureReview &&
-                              c.state()["comment"] == "Original tactical study" && c.state()["arrows"].toList().empty(),
+                              c.state()["comment"] == "Original tactical study" &&
+                              c.state()["arrows"].toList().empty(),
                           "Original tactical study and its review remain untouched");
                     c.closeTab(copyTab);
                     c.switchTab(originalTab);
@@ -1240,11 +1311,23 @@ int main(int argc, char **argv) {
                 check(QDir().mkpath(folder + "/Noirs"), "Create a nested study folder");
                 auto write = [&](const QString &path, const QByteArray &pgn) {
                     QFile file(path);
-                    check(file.open(QIODevice::WriteOnly) && file.write(pgn) == pgn.size(), "Write study file");
+                    check(file.open(QIODevice::WriteOnly) && file.write(pgn) == pgn.size(),
+                          "Write study file");
                 };
                 write(folder + "/Italienne.pgn", "1.e4 e5 2.Nf3 Nc6 3.Bc4 (3.Bb5 a6) Bc5 *\n");
                 write(folder + "/Noirs/Caro-Kann.pgn", "1.e4 c6 2.d4 d5 *\n");
                 write(folder + "/casse.pgn", "1.e4 coup-invalide *\n");
+                // En Croissant écrit aussi des PGN compressés et garde ses bases en .db3 :
+                // le premier doit s'ouvrir, le second être ignoré sans faire échouer le tout.
+                write(folder + "/notes.txt", "rien a voir\n");
+                write(folder + "/bases.db3", "SQLite format 3\0");
+                QProcess gzip;
+                gzip.setStandardOutputFile(folder + "/Noirs/Francaise.pgn.gz");
+                gzip.start("gzip", {"-c"});
+                check(gzip.waitForStarted(5000), "gzip is available to build the fixture");
+                gzip.write("1.e4 e6 2.d4 d5 *\n");
+                gzip.closeWriteChannel();
+                check(gzip.waitForFinished(5000) && gzip.exitCode() == 0, "Write a compressed study");
                 QList<qint64> established;
                 for (const auto &row : c.repertoires())
                     established << row.toMap()["id"].toLongLong();
@@ -1253,8 +1336,10 @@ int main(int argc, char **argv) {
                 QStringList names;
                 for (const auto &row : c.repertoires())
                     names << row.toMap()["name"].toString();
-                check(c.repertoires().size() == established.size() + 2,
+                check(c.repertoires().size() == established.size() + 3,
                       "A folder yields one repertoire per readable PGN, subfolders included");
+                check(names.contains("Noirs/Francaise"),
+                      "A compressed study is unpacked rather than refused");
                 check(names.contains("Italienne"), "A study keeps the name of its file");
                 check(names.contains("Noirs/Caro-Kann"), "A study in a subfolder keeps its relative path");
                 check(!names.contains("casse"), "An unreadable file is set aside, not created empty");
@@ -1267,6 +1352,18 @@ int main(int argc, char **argv) {
                         waitRepertoire();
                     }
                 }
+                // Un dossier d'En Croissant ne contient parfois que ses bases .db3 : il
+                // faut dire ce qu'il y a, et non « aucun fichier trouvé ».
+                const auto bases = dir.path() + "/encroissant";
+                check(QDir().mkpath(bases), "Create a folder of foreign databases");
+                write(bases + "/parties.db3", "SQLite format 3");
+                write(bases + "/index.idx", "x");
+                QSignalSpy refused(&c, &Controller::message);
+                c.importRepertoireFolder(QUrl::fromLocalFile(bases).toString());
+                waitRepertoire();
+                check(refused.count() == 1 && refused.first().at(1).toBool() &&
+                          refused.first().at(0).toString().contains("db3"),
+                      "A folder of foreign databases names them instead of claiming it found nothing");
                 c.selectRepertoire(id);
                 waitRepertoire();
             }
@@ -1432,9 +1529,7 @@ int main(int argc, char **argv) {
             check(bad.open(QIODevice::WriteOnly), "Create truncated session fixture");
             bad.write("{\"tabs\":[");
             bad.close();
-            {
-                Controller recovered(recovery);
-            }
+            { Controller recovered(recovery); }
             auto originals = QDir(recovery).entryList({"session.json.unreadable-*"}, QDir::Files);
             check(originals.size() == 1, "Corrupt session preserved before fresh session is written");
             QFile original(recovery + "/" + originals.first());
@@ -1442,17 +1537,16 @@ int main(int argc, char **argv) {
                   "Recovery preserves exact unreadable bytes");
         }
         for (const auto &bytes : QList<QByteArray>{
-                 "{}", "{\"tabs\":{}}", "{\"tabs\":[]}",
-                 R"({"tabs":[{"pgn":"1.e4 *","path":["d2d4"]}]})",
-                 R"({"tabs":[{"pgn":"1.e4 *","path":"invalid"}]})",
-                 R"({"tabs":[{"pgn":"1.e4 *"}]})"}) {
+                 "{}", "{\"tabs\":{}}", "{\"tabs\":[]}", R"({"tabs":[{"pgn":"1.e4 *","path":["d2d4"]}]})",
+                 R"({"tabs":[{"pgn":"1.e4 *","path":"invalid"}]})", R"({"tabs":[{"pgn":"1.e4 *"}]})"}) {
             QTemporaryDir recovery;
             QFile session(recovery.path() + "/session.json");
             check(session.open(QIODevice::WriteOnly) && session.write(bytes) == bytes.size(),
                   "Create structurally invalid session fixture");
             session.close();
             { Controller recovered(recovery.path()); }
-            const auto originals = QDir(recovery.path()).entryList({"session.json.unreadable-*"}, QDir::Files);
+            const auto originals =
+                QDir(recovery.path()).entryList({"session.json.unreadable-*"}, QDir::Files);
             check(originals.size() == 1, "Invalid session structure is preserved before replacement");
             QFile original(recovery.path() + '/' + originals.first());
             check(original.open(QIODevice::ReadOnly) && original.readAll() == bytes,

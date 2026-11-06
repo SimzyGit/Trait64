@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#include "controller.h"
 #include "accuracy.h"
+#include "controller.h"
 #include "explanation.h"
 #include <QDate>
 #include <QDateTime>
 #include <QDir>
-#include <QRandomGenerator>
 #include <QFile>
 #include <QImageReader>
 #include <QJsonArray>
@@ -14,6 +13,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPdfWriter>
+#include <QRandomGenerator>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QTextDocument>
@@ -56,7 +56,7 @@ void Controller::restore(const Snapshot &v) {
     selected_ = -1;
     commentNode_ = -1;
     clockResult_.clear();
-    engineLines_.clear();
+    forgetEngineLines();
     emit engineChanged();
     refresh();
     autosave_.start();
@@ -89,6 +89,7 @@ void Controller::undo() {
     stopPlaying();
     cancelReview();
     review_.clear();
+    reviewQuality_.clear();
     emit reviewChanged();
     auto id = gameId_;
     redo_.push_back(snapshot());
@@ -104,6 +105,7 @@ void Controller::redo() {
     stopPlaying();
     cancelReview();
     review_.clear();
+    reviewQuality_.clear();
     emit reviewChanged();
     auto id = gameId_;
     undo_.push_back(snapshot());
@@ -182,6 +184,7 @@ void Controller::closeTab(int index) {
             undo_.clear();
             redo_.clear();
             review_.clear();
+            reviewQuality_.clear();
             storeTab();
             refresh();
             writeSession();
@@ -229,7 +232,8 @@ void Controller::initFeatures() {
             const auto document = QJsonDocument::fromJson(f.readAll(), &error);
             // The constructor already preserved malformed JSON; do not create a second recovery copy.
             const auto json = error.error == QJsonParseError::NoError && document.isObject()
-                                  ? document.object() : QJsonObject();
+                                  ? document.object()
+                                  : QJsonObject();
             auto tabs = json["tabs"].toArray();
             if (json.contains("tabs")) {
                 need(json["tabs"].isArray() && !tabs.empty() && tabs.size() <= 16,
@@ -383,6 +387,7 @@ void Controller::mergeGame(qint64 id) {
         remember();
         game_ = std::move(copy);
         review_.clear();
+        reviewQuality_.clear();
         refresh(true);
         emit reviewChanged();
         emit message(tr("Variantes et commentaires fusionnés dans l’étude courante."));
@@ -457,8 +462,8 @@ void Controller::saveEngineProfile(const QString &name) {
         return;
     auto list = settings_.value("engineProfiles").toList();
     QVariantMap p{{"name", name.trimmed().left(80)}};
-    for (const auto &k : QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "playElo", "moveTime",
-                                     "analysisDepth", "syzygyPath", "uciOptions"})
+    for (const auto &k : QStringList{"enginePath", "threads", "hash", "multiPV", "skill", "playElo",
+                                     "moveTime", "analysisDepth", "syzygyPath", "uciOptions"})
         p[k] = preferences()[k];
     for (int i = 0; i < list.size(); ++i)
         if (list[i].toMap()["name"] == p["name"]) {
@@ -504,8 +509,10 @@ QStringList Controller::bookOpenings(int count, int plies) {
         for (int ply = 0; ply < plies; ++ply) {
             const auto moves = book_.moves(board);
             int total = 0;
-            for (const auto &entry : moves) total += entry.weight;
-            if (total == 0) break;
+            for (const auto &entry : moves)
+                total += entry.weight;
+            if (total == 0)
+                break;
             int pick = random->bounded(total);
             for (const auto &entry : moves)
                 if ((pick -= entry.weight) < 0) {
@@ -514,7 +521,8 @@ QStringList Controller::bookOpenings(int count, int plies) {
                     break;
                 }
         }
-        if (line.size() >= 2 && !lines.contains(line.join(' '))) lines << line.join(' ');
+        if (line.size() >= 2 && !lines.contains(line.join(' ')))
+            lines << line.join(' ');
     }
     return lines;
 }
@@ -609,6 +617,7 @@ void Controller::analyseGame(int milliseconds, bool twoPasses) {
     cancelReview();
     stopPlaying();
     review_.clear();
+    reviewQuality_.clear();
     reviewError_.clear();
     ++reviewEpoch_;
     reviewGame_ = game_;
@@ -660,8 +669,7 @@ void Controller::requestReviewPosition() {
     const int node = reviewNodes_[reviewIndex_];
     auto board = reviewGame_.boardAt(node);
     auto end = t64::gameResult(board);
-    if (end.first == chess::GameResultReason::CHECKMATE ||
-        end.first == chess::GameResultReason::STALEMATE ||
+    if (end.first == chess::GameResultReason::CHECKMATE || end.first == chess::GameResultReason::STALEMATE ||
         end.first == chess::GameResultReason::INSUFFICIENT_MATERIAL) {
         double score = end.first == chess::GameResultReason::CHECKMATE
                            ? (board.sideToMove() == chess::Color::WHITE ? -100. : 100.)
@@ -685,13 +693,15 @@ void Controller::requestReviewPosition() {
         return;
     }
     // The first of two passes is a quick sketch (a third of the budget); the second is the full search.
-    const int budget = reviewTwoPasses_ && reviewPass_ == 0 ? std::max(100, reviewMilliseconds_ / 3) : reviewMilliseconds_;
+    const int budget =
+        reviewTwoPasses_ && reviewPass_ == 0 ? std::max(100, reviewMilliseconds_ / 3) : reviewMilliseconds_;
     reviewer_.analyse(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), true, budget, 24,
                       reviewGame_.chess960);
 }
 void Controller::rebuildReview() {
     // One row per move whose position before and after are both evaluated.
     review_.clear();
+    reviewQuality_.clear();
     // Évaluations de la ligne principale, remises dans la forme que le module de calcul
     // attend. Les séquences de mat n'y entrent pas : une évaluation en nombre de coups
     // avant mat ne se convertit pas en chances de gain.
@@ -717,6 +727,11 @@ void Controller::rebuildReview() {
                         : loss >= 100 ? "Erreur"
                         : loss >= 50  ? "Imprécision"
                                       : "Correct";
+        // Le point coloré de l'analyse, à la manière de ChessBase. Les seuils vivent
+        // dans accuracy.cpp, avec la précision : une seule table pour les deux.
+        const bool playedBest = !previous["uci"].toString().isEmpty() &&
+                                previous["uci"].toString() == qs(reviewGame_.nodes[node].uci);
+        const char *quality = t64::moveQuality(loss, lossKnown, playedBest);
         QVariant mark;
         if (lossKnown) {
             // Les évaluations sont comptées du point de vue des Blancs : on les retourne
@@ -736,6 +751,7 @@ void Controller::rebuildReview() {
                                {"lossKnown", lossKnown},
                                {"scoreType", score["scoreType"]},
                                {"label", label},
+                               {"quality", QString::fromLatin1(quality)},
                                {"accuracy", mark},
                                {"best", previous["uci"]},
                                {"played", qs(reviewGame_.nodes[node].uci)},
@@ -748,6 +764,11 @@ void Controller::rebuildReview() {
                                {"pass", score["pass"]},
                                {"fen", qs(reviewGame_.nodes[parent].fen)},
                                {"depth", score["depth"]}};
+    }
+    reviewQuality_.clear();
+    for (const auto &row : review_) {
+        const auto entry = row.toMap();
+        reviewQuality_[QString::number(entry["node"].toInt())] = entry["quality"];
     }
     const auto summary = t64::summarize(reviewGame_, reviewNodes_, scores);
     const char *keys[] = {"opening", "middlegame", "endgame", "all"};
@@ -782,7 +803,8 @@ void Controller::finishReviewPosition(const QString &fen, const QVariantList &li
             ++reviewDone_;
         } else {
             reviewing_ = false;
-            reviewError_ = "Le moteur n’a pas fourni une évaluation exacte ; relancez avec davantage de temps.";
+            reviewError_ =
+                "Le moteur n’a pas fourni une évaluation exacte ; relancez avec davantage de temps.";
             emit reviewChanged();
             return;
         }
@@ -806,17 +828,17 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
         need(index >= 0 && index < review_.size(), "Sélectionnez un coup analysé.");
         const auto row = review_[index].toMap();
         need(!row["played"].toString().isEmpty(), "Relancez le bilan pour obtenir les suites.");
-        QStringList line = (alternative ? row["best"].toString()
-                                       : row["played"].toString() + " " + row["reply"].toString())
-                               .split(' ', Qt::SkipEmptyParts);
+        QStringList line =
+            (alternative ? row["best"].toString() : row["played"].toString() + " " + row["reply"].toString())
+                .split(' ', Qt::SkipEmptyParts);
         need(!line.empty(), "Aucune suite moteur disponible pour cette position.");
         const bool truncated = line.size() > 128;
         line = line.mid(0, 128);
         std::vector<std::string> moves;
         for (const auto &move : line)
             moves.push_back(move.toStdString());
-        const auto facts = t64::explainLine(t64::checkedBoard(row["fen"].toString().toStdString(),
-                                                           row["variant960"].toBool()), moves);
+        const auto facts = t64::explainLine(
+            t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool()), moves);
         const QStringList names{"pion", "cavalier", "fou", "tour", "dame", "roi", ""};
         QVariantList steps;
         for (const auto &move : facts.moves) {
@@ -843,11 +865,21 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                     targets << names[int(piece.type)] + " " + qs(piece.square);
                 QString label;
                 switch (tactic.kind) {
-                case t64::TacticalKind::Fork: label = "Fourchette / attaque multiple"; break;
-                case t64::TacticalKind::AbsolutePin: label = "Clouage au roi (déplacement limité à cet alignement)"; break;
-                case t64::TacticalKind::KingSkewer: label = "Enfilade du roi"; break;
-                case t64::TacticalKind::DiscoveredCheck: label = "Échec à la découverte"; break;
-                case t64::TacticalKind::DoubleCheck: label = "Échec double"; break;
+                case t64::TacticalKind::Fork:
+                    label = "Fourchette / attaque multiple";
+                    break;
+                case t64::TacticalKind::AbsolutePin:
+                    label = "Clouage au roi (déplacement limité à cet alignement)";
+                    break;
+                case t64::TacticalKind::KingSkewer:
+                    label = "Enfilade du roi";
+                    break;
+                case t64::TacticalKind::DiscoveredCheck:
+                    label = "Échec à la découverte";
+                    break;
+                case t64::TacticalKind::DoubleCheck:
+                    label = "Échec double";
+                    break;
                 }
                 events << QString("%1 : %2 → %3.").arg(label, attackers.join(", "), targets.join(", "));
             }
@@ -855,19 +887,31 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 events << "Motifs observés ; aucun gain matériel forcé n’est démontré.";
             if (events.empty())
                 events << "Le matériel ne change pas.";
-            steps << QVariantMap{{"uci", qs(move.uci)}, {"san", qs(move.san)}, {"fen", qs(move.fen)},
-                                  {"side", move.white ? "Blancs" : "Noirs"},
-                                  {"facts", events.join(' ')}, {"material", move.material},
-                                  {"marks", qs(t64::tacticalAnnotations(move.tactics))},
-                                  {"motifCount", int(move.tactics.size())}};
+            steps << QVariantMap{{"uci", qs(move.uci)},
+                                 {"san", qs(move.san)},
+                                 {"fen", qs(move.fen)},
+                                 {"side", move.white ? "Blancs" : "Noirs"},
+                                 {"facts", events.join(' ')},
+                                 {"material", move.material},
+                                 {"marks", qs(t64::tacticalAnnotations(move.tactics))},
+                                 {"motifCount", int(move.tactics.size())}};
         }
-        return {{"available", true}, {"steps", steps}, {"uci", line.join(' ')},
-                {"fen", row["fen"]}, {"variant960", row["variant960"]},
-                {"move", row["move"]}, {"label", row["label"]}, {"beforeEval", row["beforeEval"]},
-                {"afterEval", row["eval"]}, {"lossKnown", row["lossKnown"]}, {"loss", row["loss"]},
-                {"engine", row["engine"]}, {"milliseconds", row["milliseconds"]},
+        return {{"available", true},
+                {"steps", steps},
+                {"uci", line.join(' ')},
+                {"fen", row["fen"]},
+                {"variant960", row["variant960"]},
+                {"move", row["move"]},
+                {"label", row["label"]},
+                {"beforeEval", row["beforeEval"]},
+                {"afterEval", row["eval"]},
+                {"lossKnown", row["lossKnown"]},
+                {"loss", row["loss"]},
+                {"engine", row["engine"]},
+                {"milliseconds", row["milliseconds"]},
                 {"depth", row[alternative ? "beforeDepth" : "depth"]},
-                {"initialMaterial", facts.initialMaterial}, {"finalMaterial", facts.moves.back().material},
+                {"initialMaterial", facts.initialMaterial},
+                {"finalMaterial", facts.moves.back().material},
                 {"truncated", truncated}};
     } catch (const std::exception &e) {
         return {{"available", false}, {"error", QString::fromUtf8(e.what())}};
@@ -882,14 +926,17 @@ bool Controller::openReviewLine(int index, bool alternative) {
         copy.tags["Event"] = alternative ? "Proposition moteur avant le coup" : "Coup joué et réponse moteur";
         copy.tags["Annotator"] = details["engine"].toString().toStdString();
         copy.nodes[0].comment = QString("Suite calculée par %1, %2 ms par position, profondeur %3. "
-                                       "Départ depuis un diagramme ; historique antérieur non reproduit.")
-                                   .arg(details["engine"].toString()).arg(details["milliseconds"].toInt())
-                                   .arg(details["depth"].toInt()).toStdString();
+                                        "Départ depuis un diagramme ; historique antérieur non reproduit.")
+                                    .arg(details["engine"].toString())
+                                    .arg(details["milliseconds"].toInt())
+                                    .arg(details["depth"].toInt())
+                                    .toStdString();
         int node = 0;
         for (const auto &value : details["steps"].toList()) {
             const auto step = value.toMap();
             node = copy.play(node, step["uci"].toString().toStdString());
-            copy.nodes[node].comment = (step["facts"].toString() + " " + step["marks"].toString()).trimmed().toStdString();
+            copy.nodes[node].comment =
+                (step["facts"].toString() + " " + step["marks"].toString()).trimmed().toStdString();
         }
         replaceGame(std::move(copy));
         return true;
@@ -952,6 +999,7 @@ void Controller::startLocalGame(int minutes, int increment, int opponent, bool h
     stopPlaying();
     remember();
     review_.clear();
+    reviewQuality_.clear();
     emit reviewChanged();
     game_.tags["Result"] = "*";
     clockResult_.clear();
@@ -1131,10 +1179,15 @@ QByteArray Controller::diagramSvg() const {
     // Same geometry, colours, pieces and annotations as the PNG export, as scalable vectors.
     const auto pref = preferences();
     const int margin = 32, cell = 96, size = 8 * cell + 2 * margin;
-    auto esc = [](QString text) { return text.replace('&', "&amp;").replace('<', "&lt;").replace('"', "&quot;"); };
-    QString svg = QString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%1\" height=\"%1\" viewBox=\"0 0 %1 %1\">\n"
-                          "<rect width=\"%1\" height=\"%1\" fill=\"%2\"/>\n")
-                      .arg(size).arg(esc(pref["background"].toString()));
+    auto esc = [](QString text) {
+        return text.replace('&', "&amp;").replace('<', "&lt;").replace('"', "&quot;");
+    };
+    QString svg =
+        QString(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%1\" height=\"%1\" viewBox=\"0 0 %1 %1\">\n"
+            "<rect width=\"%1\" height=\"%1\" fill=\"%2\"/>\n")
+            .arg(size)
+            .arg(esc(pref["background"].toString()));
     const auto board = game_.boardAt(node_);
     const auto style = pref["pieceStyle"].toString();
     int pieceIndex = 0;
@@ -1143,14 +1196,21 @@ QByteArray Controller::diagramSvg() const {
             const int sq = flipped_ ? row * 8 + 7 - col : (7 - row) * 8 + col;
             const int x = margin + col * cell, y = margin + row * cell;
             svg += QString("<rect x=\"%1\" y=\"%2\" width=\"%3\" height=\"%3\" fill=\"%4\"/>\n")
-                       .arg(x).arg(y).arg(cell).arg(esc(pref[(row + col) % 2 ? "boardDark" : "boardLight"].toString()));
+                       .arg(x)
+                       .arg(y)
+                       .arg(cell)
+                       .arg(esc(pref[(row + col) % 2 ? "boardDark" : "boardLight"].toString()));
             const auto piece = board.at(chess::Square(sq));
-            if (piece == chess::Piece::NONE) continue;
+            if (piece == chess::Piece::NONE)
+                continue;
             const bool white = piece.color() == chess::Color::WHITE;
             if (style == "unicode") {
-                svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"66\" fill=\"%3\" "
-                               "stroke=\"#26372e\" stroke-width=\"1.5\">%4</text>\n")
-                           .arg(x + 10).arg(y + cell - 18).arg(white ? "#fffaf0" : "#23302e")
+                svg += QString(
+                           "<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"66\" fill=\"%3\" "
+                           "stroke=\"#26372e\" stroke-width=\"1.5\">%4</text>\n")
+                           .arg(x + 10)
+                           .arg(y + cell - 18)
+                           .arg(white ? "#fffaf0" : "#23302e")
                            .arg(QString("♟♞♝♜♛♚")[int(piece.type())]);
                 continue;
             }
@@ -1169,16 +1229,22 @@ QByteArray Controller::diagramSvg() const {
             const auto view = QRegularExpression("viewBox=\"([^\"]+)\"").match(tag);
             if (view.hasMatch()) {
                 const auto parts = view.captured(1).split(QRegularExpression("[\\s,]+"), Qt::SkipEmptyParts);
-                for (int k = 0; k < 4 && k < parts.size(); ++k) box[k] = parts[k].toDouble();
+                for (int k = 0; k < 4 && k < parts.size(); ++k)
+                    box[k] = parts[k].toDouble();
             } else {
                 for (const auto &[name, slot] : {std::pair{"width", 2}, std::pair{"height", 3}}) {
                     const auto m = QRegularExpression(QString("\\b%1=\"([0-9.]+)").arg(name)).match(tag);
-                    if (m.hasMatch()) box[slot] = m.captured(1).toDouble();
+                    if (m.hasMatch())
+                        box[slot] = m.captured(1).toDouble();
                 }
             }
             const double scale = (cell - 8) / std::max(1.0, std::max(box[2], box[3]));
             piece_svg = QString("<g transform=\"translate(%1 %2) scale(%3) translate(%4 %5)\">")
-                            .arg(x + 4).arg(y + 4).arg(scale).arg(-box[0]).arg(-box[1]) +
+                            .arg(x + 4)
+                            .arg(y + 4)
+                            .arg(scale)
+                            .arg(-box[0])
+                            .arg(-box[1]) +
                         piece_svg.mid(root.capturedEnd(0), end - root.capturedEnd(0)) + "</g>";
             // Pieces may define gradients or clip paths: keep their ids unique in the diagram.
             const auto prefix = QString("p%1-").arg(pieceIndex++);
@@ -1192,34 +1258,55 @@ QByteArray Controller::diagramSvg() const {
         const int row = flipped_ ? n / 8 : 7 - n / 8, col = flipped_ ? 7 - n % 8 : n % 8;
         return QPointF(margin + (col + .5) * cell, margin + (row + .5) * cell);
     };
-    const QMap<QString, QString> colours{{"G", "#599c46"}, {"R", "#d75050"}, {"B", "#4289cc"}, {"Y", "#dcac35"}};
+    const QMap<QString, QString> colours{
+        {"G", "#599c46"}, {"R", "#d75050"}, {"B", "#4289cc"}, {"Y", "#dcac35"}};
     for (const auto &v : annotations()) {
         const auto a = v.toMap();
         const auto colour = colours.value(a["color"].toString(), "#599c46");
         const auto from = center(a["from"].toString()), to = center(a["to"].toString());
         if (from == to) {
-            svg += QString("<circle cx=\"%1\" cy=\"%2\" r=\"38\" fill=\"none\" stroke=\"%3\" stroke-width=\"10\" "
-                           "stroke-opacity=\".8\"/>\n").arg(from.x()).arg(from.y()).arg(colour);
+            svg += QString(
+                       "<circle cx=\"%1\" cy=\"%2\" r=\"38\" fill=\"none\" stroke=\"%3\" stroke-width=\"10\" "
+                       "stroke-opacity=\".8\"/>\n")
+                       .arg(from.x())
+                       .arg(from.y())
+                       .arg(colour);
             continue;
         }
         const double angle = std::atan2(to.y() - from.y(), to.x() - from.x());
         const QPointF base = to - QPointF(18 * std::cos(angle), 18 * std::sin(angle));
         const QPointF left = to - QPointF(30 * std::cos(angle - .5), 30 * std::sin(angle - .5));
         const QPointF right = to - QPointF(30 * std::cos(angle + .5), 30 * std::sin(angle + .5));
-        svg += QString("<g fill=\"%1\" stroke=\"%1\" opacity=\".8\"><line x1=\"%2\" y1=\"%3\" x2=\"%4\" y2=\"%5\" "
-                       "stroke-width=\"10\" stroke-linecap=\"round\"/><polygon stroke=\"none\" points=\"%6,%7 %8,%9 %10,%11\"/></g>\n")
-                   .arg(colour).arg(from.x()).arg(from.y()).arg(base.x()).arg(base.y())
-                   .arg(to.x()).arg(to.y()).arg(left.x()).arg(left.y()).arg(right.x()).arg(right.y());
+        svg +=
+            QString(
+                "<g fill=\"%1\" stroke=\"%1\" opacity=\".8\"><line x1=\"%2\" y1=\"%3\" x2=\"%4\" y2=\"%5\" "
+                "stroke-width=\"10\" stroke-linecap=\"round\"/><polygon stroke=\"none\" points=\"%6,%7 %8,%9 "
+                "%10,%11\"/></g>\n")
+                .arg(colour)
+                .arg(from.x())
+                .arg(from.y())
+                .arg(base.x())
+                .arg(base.y())
+                .arg(to.x())
+                .arg(to.y())
+                .arg(left.x())
+                .arg(left.y())
+                .arg(right.x())
+                .arg(right.y());
     }
     if (pref["coordinates"].toBool())
         for (int i = 0; i < 8; ++i) {
             svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"17\" fill=\"%3\" "
                            "text-anchor=\"middle\">%4</text>\n")
-                       .arg(margin + i * cell + cell / 2).arg(size - margin / 2 + 6).arg(esc(pref["foreground"].toString()))
+                       .arg(margin + i * cell + cell / 2)
+                       .arg(size - margin / 2 + 6)
+                       .arg(esc(pref["foreground"].toString()))
                        .arg(QChar('a' + (flipped_ ? 7 - i : i)));
             svg += QString("<text x=\"%1\" y=\"%2\" font-family=\"DejaVu Sans\" font-size=\"17\" fill=\"%3\" "
                            "text-anchor=\"middle\">%4</text>\n")
-                       .arg(margin / 2).arg(margin + i * cell + cell / 2 + 6).arg(esc(pref["foreground"].toString()))
+                       .arg(margin / 2)
+                       .arg(margin + i * cell + cell / 2 + 6)
+                       .arg(esc(pref["foreground"].toString()))
                        .arg(flipped_ ? i + 1 : 8 - i);
         }
     return (svg + "</svg>\n").toUtf8();

@@ -309,15 +309,28 @@ Item {
                         padding: 6
                         Accessible.name: (row.modelData.number || "") + (parent === whiteCell ? ". " : "… ") + (move.text || "")
                         Accessible.description: move.comment || ""
-                        contentItem: Label {
-                            text: (cell.move.text || "") + ([cell.move.eval, cell.move.clock].filter(v => !!v).length
-                                                             ? "   " + [cell.move.eval, cell.move.clock].filter(v => !!v).join(" · ") : "")
-                            textFormat: Text.PlainText
-                            wrapMode: Text.WrapAnywhere
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12 * root.textScale
-                            font.bold: !!cell.move.active
-                            color: root.foreground
+                        contentItem: Row {
+                            spacing: 5
+                            // Le point de qualité vient du bilan : il n'apparaît que sur
+                            // les coups passés en revue, et reste muet ailleurs.
+                            MoveQuality {
+                                id: dot
+                                anchors.verticalCenter: parent.verticalCenter
+                                preferences: root.backend.preferences
+                                quality: cell.move.id ? (root.backend.reviewQuality[cell.move.id] || "") : ""
+                                side: Math.round(8 * root.textScale)
+                            }
+                            Label {
+                                width: parent.width - (dot.visible ? dot.width + parent.spacing : 0)
+                                text: (cell.move.text || "") + ([cell.move.eval, cell.move.clock].filter(v => !!v).length
+                                                                 ? "   " + [cell.move.eval, cell.move.clock].filter(v => !!v).join(" · ") : "")
+                                textFormat: Text.PlainText
+                                wrapMode: Text.WrapAnywhere
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 12 * root.textScale
+                                font.bold: !!cell.move.active
+                                color: root.foreground
+                            }
                         }
                         background: Rectangle {
                             radius: 3

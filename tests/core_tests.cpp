@@ -372,6 +372,28 @@ int main() {
             // arithmétique, qui vaudrait 92,5 ici.
             const double blundered = t64::aggregateAccuracy({100, 100, 100, 70});
             check(blundered < 92 && blundered > 60, "One blunder weighs on an otherwise clean set");
+            // Le point coloré de l'analyse : six catégories, et « bon » qui se mérite.
+            check(std::string(t64::moveQuality(0, false, false)) == "mate",
+                  "A mate in the count is its own category, not a centipawn loss");
+            check(std::string(t64::moveQuality(400, true, false)) == "blunder" &&
+                      std::string(t64::moveQuality(250, true, false)) == "blunder",
+                  "Two hundred and fifty centipawns lost is a blunder");
+            check(std::string(t64::moveQuality(249, true, false)) == "mistake" &&
+                      std::string(t64::moveQuality(100, true, false)) == "mistake",
+                  "A hundred lost is a mistake, up to the blunder threshold");
+            check(std::string(t64::moveQuality(99, true, false)) == "inaccuracy" &&
+                      std::string(t64::moveQuality(50, true, false)) == "inaccuracy",
+                  "Fifty lost is an inaccuracy");
+            check(std::string(t64::moveQuality(30, true, false)) == "ok",
+                  "A small loss on a move the engine would not play is merely sound");
+            check(std::string(t64::moveQuality(30, true, true)) == "good",
+                  "The engine's own move stays good even at a small loss");
+            check(std::string(t64::moveQuality(9, true, false)) == "good",
+                  "A loss too small to decide anything is good");
+            // Une gaffe reste une gaffe même si le moteur la jouait : la couleur dit ce
+            // que le coup coûte, pas s'il était attendu.
+            check(std::string(t64::moveQuality(400, true, true)) == "blunder",
+                  "Being the engine's move does not excuse a blunder");
             // Phases : position de départ, milieu de jeu après échanges, finale réduite.
             check(t64::phaseOf(chess::Board(std::string(chess::constants::STARTPOS)), 0) ==
                       t64::Phase::Opening,

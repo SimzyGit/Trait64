@@ -24,6 +24,14 @@ double moveAccuracy(double winPercentBefore, double winPercentAfter);
 // se lit « pas mesurable » et jamais « nul ».
 double aggregateAccuracy(const std::vector<double> &moveAccuracies);
 
+// Catégorie d'un coup, pour le point coloré de l'analyse : « good », « ok »,
+// « inaccuracy », « mistake », « blunder », ou « mate » quand un mat entre dans le
+// compte et qu'une perte en centipions ne veut plus rien dire. `loss` est la perte en
+// centipions du point de vue de celui qui joue, jamais négative. « good » se mérite :
+// c'est le coup que le moteur jouait, ou un écart si petit qu'il ne départage rien —
+// sans quoi un coup correct mais tiède passerait pour une trouvaille.
+const char *moveQuality(double loss, bool lossKnown, bool playedBest);
+
 enum class Phase { Opening = 0, Middlegame = 1, Endgame = 2 };
 
 // Phase d'une position. Fondée sur le nombre de pièces lourdes et légères encore en jeu,

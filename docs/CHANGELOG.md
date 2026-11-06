@@ -1,5 +1,12 @@
 # Changements
 
+## Analyse et études — 6 novembre 2026
+
+- **Point de qualité de coup**, à la manière de ChessBase : vert pour un bon coup, blanc pour un coup correct, jaune pour une imprécision, orange pour une erreur, rouge pour une gaffe, violet quand un mat entre dans le compte. Il apparaît dans le carnet de coups dès qu'un bilan a été passé.
+- **La barre d'évaluation ne retombe plus à zéro à chaque coup.** Le moteur vide ses lignes dès qu'il change de position ; la dernière évaluation est maintenant gardée le temps que la suivante arrive, et la barre glisse de l'une à l'autre.
+- **Import d'un dossier d'études réparé.** Les études exportées par En Croissant ou Pawn Appétit arrivent souvent compressées : Trait64 les déplie désormais, en reconnaissant le format aux premiers octets et non à l'extension. Un dossier qui ne contient que des bases `.db3` le dit, au lieu d'annoncer qu'il n'a rien trouvé.
+- **Importer un PGN n'exige plus d'avoir créé une étude** : le fichier en crée une, nommée d'après lui.
+
 ## Profils, études et confort — 5 novembre 2026
 
 - **Page Profils** : chaque joueur suivi a sa page, avec « Analyser le profil » qui passe en revue les parties synchronisées encore sans bilan et alimente le tableau de bord.

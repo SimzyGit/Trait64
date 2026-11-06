@@ -36,6 +36,17 @@ double moveAccuracy(double winPercentBefore, double winPercentAfter) {
     return std::clamp(raw + 1, 0., 100.);
 }
 
+const char *moveQuality(double loss, bool lossKnown, bool playedBest) {
+    if (!lossKnown)
+        return "mate";
+    if (loss >= 250)
+        return "blunder";
+    if (loss >= 100)
+        return "mistake";
+    if (loss >= 50)
+        return "inaccuracy";
+    return playedBest || loss < 10 ? "good" : "ok";
+}
 double aggregateAccuracy(const std::vector<double> &moveAccuracies) {
     if (moveAccuracies.empty())
         return -1;

@@ -69,7 +69,7 @@ void Controller::startPuzzle(const QString &theme, const QString &source) {
         flipped_ = game_.boardAt(0).sideToMove() == chess::Color::BLACK;
         game_.tags["White"] = QString("Puzzle %1").arg(next["rating"].toInt()).toStdString();
         game_.tags["Black"] = next["source"] == "mine" ? "Mes erreurs" : "Lichess";
-        engineLines_.clear();
+        forgetEngineLines();
         emit engineChanged();
         puzzleClock_.start();
         puzzleStarted_ = QDateTime::currentMSecsSinceEpoch();

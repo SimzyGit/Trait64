@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "unpack.h"
+
+namespace {
+// Les suffixes qu'une étude peut porter. Partagés par l'import d'un fichier et celui
+// d'un dossier : le nom de l'étude se déduit du même suffixe qui l'a fait retenir.
+const QStringList &readableStudySuffixes() {
+    static const QStringList suffixes{".pgn", ".pgn.gz", ".pgn.zst", ".pgn.bz2", ".pgn.xz", ".pgn.zstd"};
+    return suffixes;
+}
+} // namespace
 #include <QDirIterator>
 #include <QSaveFile>
 #include <QtConcurrent>
@@ -171,13 +181,39 @@ void Controller::addStudyToRepertoire(qint64 id) {
     }
 }
 
-void Controller::importRepertoire(qint64 id, const QString &url) {
+void Controller::importRepertoire(qint64 id, const QString &url, bool white) {
     try {
         const auto path = localPath(url);
-        startRepertoireTask("Import du répertoire…", [id, path](auto &db, const auto &progress) {
-            const auto count = db.importRepertoireFile(id, path, progress);
+        // Sans étude choisie, le fichier en crée une, nommée d'après lui : exiger d'en
+        // avoir créé une au préalable n'apportait rien qu'une étape de plus.
+        startRepertoireTask("Import du répertoire…", [id, path, white](auto &db, const auto &progress) {
+            auto target = id;
+            if (target <= 0) {
+                auto name = QFileInfo(path).fileName();
+                for (const auto &suffix : readableStudySuffixes())
+                    if (name.endsWith(suffix, Qt::CaseInsensitive)) {
+                        name.chop(suffix.size());
+                        break;
+                    }
+                target = db.createRepertoire(name.isEmpty() ? QStringLiteral("Étude") : name, white,
+                                             t64::Game{}, progress);
+            }
+            int count = 0;
+            try {
+                count =
+                    db.importRepertoirePgn(target, t64::unpackIfCompressed(path, 16 * 1024 * 1024), progress);
+            } catch (const std::exception &) {
+                // L'étude naît avant la lecture : un fichier illisible laisserait
+                // sinon une coquille vide derrière lui.
+                if (target != id)
+                    try {
+                        db.deleteRepertoire(target);
+                    } catch (const std::exception &) {
+                    }
+                throw;
+            }
             RepertoireResult result;
-            result.selected = id;
+            result.selected = target;
             result.message = tr("%1 partie(s) ajoutée(s), avec variantes et transpositions.").arg(count);
             return result;
         });
@@ -193,11 +229,38 @@ void Controller::importRepertoireFolder(const QString &url, bool white) {
             // En Croissant et Pawn Appétit rangent chaque répertoire dans son propre PGN,
             // souvent répartis en sous-dossiers. On reprend l'arborescence telle quelle :
             // un répertoire par fichier, nommé d'après son chemin relatif.
+            // On compare les suffixes soi-même : les filtres de QDirIterator ignorent la
+            // casse sous Windows et la respectent ailleurs, si bien qu'un « .PGN » passait
+            // d'un système à l'autre. Et on retient au passage les bases d'un autre
+            // logiciel, pour pouvoir dire ce qu'il y a plutôt que « rien trouvé ».
+            const auto &readable = readableStudySuffixes();
+            static const QStringList foreignBases{".db3", ".si4", ".si5",  ".sg4",
+                                                  ".cbh", ".cbv", ".scid", ".sqlite"};
             QStringList files;
-            QDirIterator walk(root, {"*.pgn", "*.PGN"}, QDir::Files, QDirIterator::Subdirectories);
-            while (walk.hasNext() && files.size() < 500)
-                files << walk.next();
-            require(!files.isEmpty(), "Aucun fichier PGN dans ce dossier.");
+            QSet<QString> foreign;
+            int visited = 0;
+            QDirIterator walk(root, QDir::Files, QDirIterator::Subdirectories);
+            while (walk.hasNext() && files.size() < 500 && ++visited <= 20000) {
+                const auto path = walk.next();
+                const auto name = QFileInfo(path).fileName().toLower();
+                const auto matches = [&name](const QStringList &suffixes) {
+                    return std::any_of(suffixes.cbegin(), suffixes.cend(),
+                                       [&name](const QString &s) { return name.endsWith(s); });
+                };
+                if (matches(readable))
+                    files << path;
+                else if (matches(foreignBases))
+                    foreign.insert(QFileInfo(name).suffix());
+            }
+            if (files.isEmpty() && !foreign.isEmpty()) {
+                auto kinds = QStringList(foreign.cbegin(), foreign.cend());
+                kinds.sort();
+                require(false, tr("Ce dossier ne contient que des bases %1, que Trait64 ne lit pas "
+                                  "encore. Exportez-les en PGN depuis votre logiciel.")
+                                   .arg(kinds.join(", ")));
+            }
+            require(!files.isEmpty(), "Aucun fichier de parties dans ce dossier, ni dans ses "
+                                      "sous-dossiers (PGN, au besoin compressé).");
             files.sort();
             const QDir base(root);
             RepertoireResult result;
@@ -205,14 +268,22 @@ void Controller::importRepertoireFolder(const QString &url, bool white) {
             QStringList refused;
             for (const auto &file : files) {
                 auto name = base.relativeFilePath(file);
-                name.chop(QFileInfo(file).suffix().size() + 1);
+                // On retire le suffixe reconnu en entier : ne couper que la dernière
+                // extension laissait « Française.pgn » comme nom d'une étude compressée.
+                for (const auto &suffix : readable)
+                    if (name.endsWith(suffix, Qt::CaseInsensitive)) {
+                        name.chop(suffix.size());
+                        break;
+                    }
                 // Un fichier illisible ne doit pas emporter la migration entière : on le met
                 // de côté et on le nomme à la fin. Le répertoire naît avant la lecture, donc
                 // un échec laisserait une coquille vide derrière lui : on la retire.
                 qint64 id = 0;
                 try {
                     id = db.createRepertoire(name, white, t64::Game{}, progress);
-                    games += db.importRepertoireFile(id, file, progress);
+                    // 16 Mio dépliés : la même limite que l'import d'un fichier seul.
+                    games +=
+                        db.importRepertoirePgn(id, t64::unpackIfCompressed(file, 16 * 1024 * 1024), progress);
                     result.selected = id;
                     ++created;
                 } catch (const std::exception &) {
@@ -227,7 +298,7 @@ void Controller::importRepertoireFolder(const QString &url, bool white) {
             require(created > 0, "Aucun fichier de ce dossier n’a pu être lu comme répertoire.");
             result.message = tr("%1 répertoire(s) créé(s), %2 partie(s) lue(s).").arg(created).arg(games);
             if (!refused.isEmpty())
-                result.message += QString(" Laissés de côté : %1.").arg(refused.join(", "));
+                result.message += tr(" Laissés de côté : %1.").arg(refused.join(", "));
             return result;
         });
     } catch (const std::exception &e) {

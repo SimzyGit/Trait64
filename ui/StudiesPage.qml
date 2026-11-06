@@ -36,10 +36,12 @@ ColumnLayout {
         TButton {
             objectName: "studiesImportFile"
             text: qsTr("Importer un PGN")
-            enabled: root.editable && root.selectedId > 0
+            enabled: root.editable
             onClicked: importPgn.open()
             ToolTip.visible: hovered || visualFocus
-            ToolTip.text: qsTr("Ajoute les lignes d’un fichier à l’étude choisie, variantes et transpositions comprises.")
+            ToolTip.text: root.selectedId > 0
+                ? qsTr("Ajoute les lignes du fichier à l’étude choisie, variantes et transpositions comprises.")
+                : qsTr("Crée une étude nommée d’après le fichier, avec toutes ses lignes. Les PGN compressés sont acceptés.")
         }
         TButton {
             objectName: "studiesImportFolder"
@@ -279,8 +281,10 @@ ColumnLayout {
 
     Native.FileDialog {
         id: importPgn
-        title: qsTr("Ajouter un PGN à cette étude")
-        nameFilters: ["PGN (*.pgn *.PGN)"]
+        title: root.selectedId > 0 ? qsTr("Ajouter un PGN à cette étude")
+                                   : qsTr("PGN à importer comme nouvelle étude")
+        nameFilters: [qsTr("Études (*.pgn *.PGN *.pgn.gz *.pgn.zst *.pgn.bz2 *.pgn.xz)"),
+                      qsTr("Tous les fichiers (*)")]
         onAccepted: root.backend.importRepertoire(root.selectedId, selectedFile.toString())
     }
     Native.FolderDialog {

@@ -5,9 +5,9 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QImageReader>
 #include <QFontDatabase>
 #include <QGuiApplication>
+#include <QImageReader>
 #include <QQmlEngine>
 #include <QUuid>
 #include <algorithm>
@@ -22,19 +22,28 @@ QVariantMap Controller::preferences() const {
                          {"threads", t64::recommendedThreads()},
                          {"hash", t64::recommendedHashMb()},
                          {"multiPV", 3},
-                         {"skill", 12}, {"playElo", 0},
+                         {"skill", 12},
+                         {"playElo", 0},
                          {"moveTime", 1000},
                          {"analysisDepth", 24},
                          {"importWorkers", t64::recommendedImportWorkers()},
-                         {"syzygyPath", ""}, {"bookPath", ""},
+                         {"syzygyPath", ""},
+                         {"bookPath", ""},
                          {"lightTheme", true},
                          {"fontFamily", QGuiApplication::font().family()},
-                         {"fontScale", 1.0}, {"uiScale", 1.0},
-                         {"sidebarCompact", false}, {"figurines", false}, {"syncAtStartup", false}, {"highContrast", false},
-                         {"reduceMotion", false}, {"language", "auto"},
-                         {"analysisPanelRatio", .58}, {"notebookLayout", "table"},
+                         {"fontScale", 1.0},
+                         {"uiScale", 1.0},
+                         {"sidebarCompact", false},
+                         {"figurines", false},
+                         {"syncAtStartup", false},
+                         {"highContrast", false},
+                         {"reduceMotion", false},
+                         {"language", "auto"},
+                         {"analysisPanelRatio", .58},
+                         {"notebookLayout", "table"},
                          {"coordinates", true},
-                         {"boardScale", 1.0}, {"evalBar", true},
+                         {"boardScale", 1.0},
+                         {"evalBar", true},
                          {"pieceStyle", "cburnett"},
                          // Le chemin reste celui du jeu qui sert : les échiquiers le
                          // lisent tel quel. La liste tient les jeux installés à côté.
@@ -62,13 +71,19 @@ QVariantMap Controller::preferences() const {
     for (const auto &key : {"fontScale", "uiScale", "analysisPanelRatio"}) {
         const double value = defaults[key].toDouble();
         const bool ratio = key == QString("analysisPanelRatio");
-        defaults[key] = std::isfinite(value) ? std::clamp(value, ratio ? .3 : .9, ratio ? .75 : key == QString("fontScale") ? 1.5 : 1.25) : ratio ? .58 : 1.0;
+        defaults[key] = std::isfinite(value) ? std::clamp(value, ratio ? .3 : .9,
+                                                          ratio                         ? .75
+                                                          : key == QString("fontScale") ? 1.5
+                                                                                        : 1.25)
+                        : ratio              ? .58
+                                             : 1.0;
     }
     // Part de la place disponible qu'occupe l'échiquier. En deçà de la moitié il devient
     // illisible, et au-delà de sa case il déborderait sur la notation.
     const double board = defaults["boardScale"].toDouble();
     defaults["boardScale"] = std::isfinite(board) ? std::clamp(board, .5, 1.0) : 1.0;
-    if (!fonts.contains(defaults["fontFamily"].toString())) defaults["fontFamily"] = QGuiApplication::font().family();
+    if (!fonts.contains(defaults["fontFamily"].toString()))
+        defaults["fontFamily"] = QGuiApplication::font().family();
     defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
@@ -88,8 +103,10 @@ QVariantMap Controller::preferences() const {
     defaults["background"] = bg.name();
     // Light theme: white panes on a grey window, like classic desktop chess software.
     const auto towardWhite = [&](double factor) {
-        return QColor::fromRgbF(bg.redF() + (1 - bg.redF()) * factor, bg.greenF() + (1 - bg.greenF()) * factor,
-                                bg.blueF() + (1 - bg.blueF()) * factor).name();
+        return QColor::fromRgbF(bg.redF() + (1 - bg.redF()) * factor,
+                                bg.greenF() + (1 - bg.greenF()) * factor,
+                                bg.blueF() + (1 - bg.blueF()) * factor)
+            .name();
     };
     defaults["panel"] = light ? towardWhite(.85) : blend(.045);
     defaults["raised"] = blend(.085);
@@ -107,10 +124,10 @@ QVariantMap Controller::preferences() const {
 }
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
-        const QMap<QString, QPair<int, int>> limits{{"threads", {1, 32}},       {"hash", {16, 4096}},
-                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}}, {"playElo", {0, 4000}},
-                                                    {"moveTime", {100, 10000}}, {"analysisDepth", {1, 99}},
-                                                    {"dailyGoal", {1, 1000}},   {"importWorkers", {1, 8}}};
+        const QMap<QString, QPair<int, int>> limits{
+            {"threads", {1, 32}},       {"hash", {16, 4096}},     {"multiPV", {1, 5}},
+            {"skill", {0, 20}},         {"playElo", {0, 4000}},   {"moveTime", {100, 10000}},
+            {"analysisDepth", {1, 99}}, {"dailyGoal", {1, 1000}}, {"importWorkers", {1, 8}}};
         QVariant clean = value;
         if (limits.contains(key)) {
             bool ok;
@@ -119,17 +136,24 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 throw std::runtime_error("Nombre invalide.");
             clean = std::clamp(n, limits[key].first, limits[key].second);
         } else if (key == "fontScale" || key == "uiScale" || key == "analysisPanelRatio") {
-            bool ok = false; const double number = value.toDouble(&ok);
-            if (!ok || !std::isfinite(number)) throw std::runtime_error("Échelle invalide.");
-            clean = key == "analysisPanelRatio" ? std::clamp(number,.3,.75) : std::clamp(number,.9,key == "fontScale" ? 1.5 : 1.25);
+            bool ok = false;
+            const double number = value.toDouble(&ok);
+            if (!ok || !std::isfinite(number))
+                throw std::runtime_error("Échelle invalide.");
+            clean = key == "analysisPanelRatio" ? std::clamp(number, .3, .75)
+                                                : std::clamp(number, .9, key == "fontScale" ? 1.5 : 1.25);
         } else if (key == "fontFamily") {
-            clean = QFontDatabase::families().contains(value.toString()) ? value.toString() : QGuiApplication::font().family();
+            clean = QFontDatabase::families().contains(value.toString()) ? value.toString()
+                                                                         : QGuiApplication::font().family();
         } else if (key == "notebookLayout") {
-            if (!QStringList{"table", "flow"}.contains(value.toString())) return;
+            if (!QStringList{"table", "flow"}.contains(value.toString()))
+                return;
         } else if (key == "language") {
-            if (!QStringList{"auto","fr","en"}.contains(value.toString())) return;
-        } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion", "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}.contains(
-                       key))
+            if (!QStringList{"auto", "fr", "en"}.contains(value.toString()))
+                return;
+        } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
+                               "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}
+                       .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
                      .contains(key)) {
@@ -183,10 +207,14 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
 // table associative : l'ordre est voulu — les claires d'abord, les sombres ensuite.
 static const std::vector<std::pair<QString, QStringList>> &boardPresetTable() {
     static const std::vector<std::pair<QString, QStringList>> presets{
-        {"Trait64", {"#e9dfcb", "#71838c", "#d6a166"}}, {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
-        {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},   {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},
-        {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}}, {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},
-        {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}}, {"Contraste", {"#ffffff", "#494949", "#e2ab31"}},
+        {"Trait64", {"#e9dfcb", "#71838c", "#d6a166"}},
+        {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
+        {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},
+        {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},
+        {"Lavande", {"#ece4f4", "#8b779e", "#d8bd70"}},
+        {"Rose", {"#f5e2dc", "#b77980", "#cbba63"}},
+        {"Ardoise", {"#e5e7e8", "#727b86", "#8dbac2"}},
+        {"Contraste", {"#ffffff", "#494949", "#e2ab31"}},
         {"Sable", {"#eee6cf", "#9e986f", "#bdad4b"}},
         // Les neuf premiers sont clairs : sur un thème sombre, l'échiquier éclairait
         // l'écran à lui seul. Ceux-ci tiennent dans la pénombre.
@@ -218,12 +246,14 @@ void Controller::applyBoardPreset(const QString &name) {
     emit preferencesChanged();
 }
 void Controller::retranslateUi(QObject *window) {
-    if (auto *engine = qmlEngine(window)) engine->retranslate();
+    if (auto *engine = qmlEngine(window))
+        engine->retranslate();
 }
 void Controller::resetAppearance() {
-    for (const auto &key :
-         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion", "analysisPanelRatio", "lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
-                     "backgroundColor", "accentColor", "coordinates", "legalMoves", "lastMove"})
+    for (const auto &key : QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast",
+                                       "reduceMotion", "analysisPanelRatio", "lightTheme", "pieceStyle",
+                                       "boardLight", "boardDark", "boardHighlight", "backgroundColor",
+                                       "accentColor", "coordinates", "legalMoves", "lastMove"})
         settings_.remove(key);
     emit preferencesChanged();
 }
@@ -297,8 +327,8 @@ void Controller::removeCustomPieceSet(int index) {
     // Le jeu retiré était peut-être celui qui servait : on reprend un jeu fourni
     // plutôt que de laisser l'échiquier chercher des fichiers qui n'existent plus.
     if (settings_.value("customPiecePath").toString() == path) {
-        settings_.setValue("customPiecePath", installed.isEmpty() ? QVariant("")
-                                                                  : installed[0].toMap()["path"]);
+        settings_.setValue("customPiecePath",
+                           installed.isEmpty() ? QVariant("") : installed[0].toMap()["path"]);
         if (installed.isEmpty())
             settings_.setValue("pieceStyle", "cburnett");
     }

@@ -14,7 +14,11 @@ Item {
     property color line: backend.preferences.line
     implicitWidth: 18
 
-    readonly property var best: (backend.engineLines && backend.engineLines.length) ? backend.engineLines[0] : null
+    // Le moteur vide ses lignes dès qu'il change de position ; le contrôleur garde la
+    // dernière évaluation reçue, et la barre glisse vers la suivante au lieu de
+    // clignoter par l'équilibre à chaque coup joué.
+    readonly property var best: backend.heldEvaluation && backend.heldEvaluation.eval !== undefined
+                                ? backend.heldEvaluation : null
     readonly property bool known: !!best && !!backend.state.analysis
     // Le moteur compte toujours du point de vue des Blancs, en pions, ±100 sur un mat.
     readonly property real pawns: known ? Number(best.score) : 0
