@@ -35,7 +35,7 @@ jobs:
       actions: write
     steps:
       # workflow_run must never execute code from an untrusted PR branch.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'push' && github.ref || github.event.repository.default_branch }}
       - name: Test cleanup safeguards
