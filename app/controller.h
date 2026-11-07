@@ -3,6 +3,7 @@
 #include "comparison.h"
 #include "content.h"
 #include "database.h"
+#include "explorer.h"
 #include "fide.h"
 #include "online.h"
 #include "polyglot.h"
@@ -55,6 +56,7 @@ class Controller : public QObject {
     // Dossier de la position courante : coups joués, scores, tranches de force et
     // parties modèles. Construit en arrière-plan, comme la préparation.
     Q_PROPERTY(QVariantMap openingReport READ openingReport NOTIFY reportChanged)
+    Q_PROPERTY(QVariantMap onlineReport READ onlineReport NOTIFY onlineReportChanged)
     Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
     Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY changed)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
@@ -347,6 +349,13 @@ class Controller : public QObject {
     // portent aucun, et la recherche par ouverture restait alors vide en silence.
     Q_INVOKABLE void buildOpeningReport();
     QVariantMap openingReport() const { return report_; }
+    // Le même dossier, demandé à Lichess : « lichess » pour les parties classées du site,
+    // « masters » pour celles jouées sur l'échiquier. Rien n'est téléchargé.
+    Q_INVOKABLE void buildOnlineReport(const QString &source, const QVariantMap &filters = {});
+    Q_INVOKABLE void cancelOnlineReport();
+    QVariantMap onlineReport() const { return onlineReport_; }
+    // Rapatrie une partie de Lichess dans la bibliothèque, par son identifiant.
+    Q_INVOKABLE void importOnlineGame(const QString &id);
     Q_INVOKABLE void classifyLibraryOpenings();
     // Le même classement, sans message : il suit chaque import, et un import réussi ne
     // doit pas échouer parce que le classement a manqué.
@@ -382,6 +391,7 @@ class Controller : public QObject {
     void showAnalysisQueue();
     void preparationChanged();
     void reportChanged();
+    void onlineReportChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -504,6 +514,9 @@ class Controller : public QObject {
     void finishPuzzle();
     bool acceptPuzzleMate(const QString &uci);
     t64::OnlineGames *online_ = nullptr;
+    t64::OpeningExplorer *explorer_ = nullptr;
+    QVariantMap onlineReport_;
+    QString onlineSource_;
     t64::FideSync *fide_ = nullptr;
     QVariantMap fideSync_;
     int fideProfile_ = -1;

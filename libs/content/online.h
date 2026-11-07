@@ -20,7 +20,11 @@ class OnlineGames : public QObject {
     bool busy() const { return !reply_.isNull(); }
     // site: "lichess" or "chesscom"; sinceMs > 0 asks only for newer games (Lichess exactly,
     // Chess.com from that month on: the library drops the games it already has).
-    void fetch(const QString &site, const QString &user, int max, const QString &destination, qint64 sinceMs = 0);
+    void fetch(const QString &site, const QString &user, int max, const QString &destination,
+               qint64 sinceMs = 0);
+    // Une seule partie, par son identifiant Lichess : ce que l'explorateur en ligne
+    // propose quand on veut garder une partie modèle.
+    void fetchGame(const QString &id, const QString &destination);
     void cancel();
     // Keeps the last `max` games of a PGN text (games start with an [Event tag).
     static QByteArray lastGames(const QByteArray &pgn, int max, int *count = nullptr);

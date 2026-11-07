@@ -1,26 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "explorer.h"
 #include "fide.h"
 #include "online.h"
 #include "puzzles.h"
-#include <QProcess>
-#include <memory>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QProcess>
 #include <QSignalSpy>
-#include <QTest>
 #include <QTemporaryDir>
+#include <QTest>
 #include <QTimer>
 #include <QUrlQuery>
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 int checks = 0;
 void check(bool ok, const char *message) {
     ++checks;
-    if (!ok) throw std::runtime_error(message);
+    if (!ok)
+        throw std::runtime_error(message);
 }
 struct Response {
     int status = 200;
@@ -37,13 +39,15 @@ class Reply : public QNetworkReply {
         open(QIODevice::ReadOnly | QIODevice::Unbuffered);
         setAttribute(QNetworkRequest::HttpStatusCodeAttribute, response.status);
         QTimer::singleShot(0, this, [this] {
-            if (isFinished()) return;
+            if (isFinished())
+                return;
             setFinished(true);
             emit finished();
         });
     }
     void abort() override {
-        if (isFinished()) return;
+        if (isFinished())
+            return;
         setError(OperationCanceledError, "Canceled");
         setFinished(true);
         emit finished();
@@ -53,7 +57,8 @@ class Reply : public QNetworkReply {
   protected:
     qint64 readData(char *data, qint64 max) override {
         const auto n = std::min(max, bytes.size() - offset);
-        if (!n) return -1;
+        if (!n)
+            return -1;
         memcpy(data, bytes.constData() + offset, n);
         offset += n;
         return n;
@@ -73,15 +78,20 @@ class Network : public QNetworkAccessManager {
 QByteArray games(const QString &prefix, int count) {
     QByteArray out;
     for (int i = 1; i <= count; ++i)
-        out += QString("[Event \"%1 %2\"]\n[Result \"*\"]\n\n1. e4 {[Event fake]} *\n\n").arg(prefix).arg(i).toUtf8();
+        out += QString("[Event \"%1 %2\"]\n[Result \"*\"]\n\n1. e4 {[Event fake]} *\n\n")
+                   .arg(prefix)
+                   .arg(i)
+                   .toUtf8();
     return out;
 }
 // Runs one fetch and returns (path or error, game count).
 std::pair<QString, int> run(t64::OnlineGames &online, const std::function<void()> &start) {
     QSignalSpy done(&online, &t64::OnlineGames::finished), failed(&online, &t64::OnlineGames::failed);
     start();
-    for (int i = 0; i < 200 && done.isEmpty() && failed.isEmpty(); ++i) QTest::qWait(5);
-    if (!failed.isEmpty()) return {failed.first().first().toString(), -1};
+    for (int i = 0; i < 200 && done.isEmpty() && failed.isEmpty(); ++i)
+        QTest::qWait(5);
+    if (!failed.isEmpty())
+        return {failed.first().first().toString(), -1};
     check(!done.isEmpty(), "Fetch completes");
     return {done.first().first().toString(), done.first().at(1).toInt()};
 }
@@ -92,7 +102,8 @@ int main(int argc, char **argv) {
         QTemporaryDir dir;
         const auto file = dir.filePath("online.pgn");
         int count = 0;
-        check(t64::OnlineGames::lastGames(games("A", 5), 2, &count).startsWith("[Event \"A 4\"]") && count == 2,
+        check(t64::OnlineGames::lastGames(games("A", 5), 2, &count).startsWith("[Event \"A 4\"]") &&
+                  count == 2,
               "Only the newest games are kept, comments are not split");
         check(t64::OnlineGames::validUser("Magnus_C-1") && !t64::OnlineGames::validUser("a/../b") &&
                   !t64::OnlineGames::validUser("x") && !t64::OnlineGames::validUser("a b"),
@@ -101,7 +112,8 @@ int main(int argc, char **argv) {
         Network network;
         t64::OnlineGames online(nullptr, &network);
         network.responses = {{200, games("L", 2)}};
-        auto [path, lichess] = run(online, [&] { online.fetch("lichess", "Simzy", 50, file, 1700000000000); });
+        auto [path, lichess] =
+            run(online, [&] { online.fetch("lichess", "Simzy", 50, file, 1700000000000); });
         const auto request = network.requests.last();
         const QUrlQuery query(request.url());
         check(path == file && lichess == 2, "Lichess games are saved");
@@ -113,8 +125,10 @@ int main(int argc, char **argv) {
 
         network.requests.clear();
         network.responses = {
-            {200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08","https://api.chess.com/pub/player/simzy/games/2026/09","https://api.chess.com/pub/player/simzy/games/2026/10"]})"},
-            {200, games("Oct", 2)}, {200, games("Sep", 2)}};
+            {200,
+             R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08","https://api.chess.com/pub/player/simzy/games/2026/09","https://api.chess.com/pub/player/simzy/games/2026/10"]})"},
+            {200, games("Oct", 2)},
+            {200, games("Sep", 2)}};
         auto [chesscom, total] = run(online, [&] { online.fetch("chesscom", "Simzy", 3, file, 0); });
         QFile saved(file);
         check(saved.open(QIODevice::ReadOnly), "Chess.com PGN saved");
@@ -142,10 +156,13 @@ int main(int argc, char **argv) {
             // Chess.com sync: only the months since the last sync are downloaded.
             network.requests.clear();
             network.responses = {
-                {200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08","https://api.chess.com/pub/player/simzy/games/2026/09","https://api.chess.com/pub/player/simzy/games/2026/10"]})"},
-                {200, games("Oct", 1)}, {200, games("Sep", 1)}};
+                {200,
+                 R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08","https://api.chess.com/pub/player/simzy/games/2026/09","https://api.chess.com/pub/player/simzy/games/2026/10"]})"},
+                {200, games("Oct", 1)},
+                {200, games("Sep", 1)}};
             const qint64 september15 = QDateTime(QDate(2026, 9, 15), QTime(12, 0)).toMSecsSinceEpoch();
-            auto [path, count] = run(online, [&] { online.fetch("chesscom", "simzy", 50, file, september15); });
+            auto [path, count] =
+                run(online, [&] { online.fetch("chesscom", "simzy", 50, file, september15); });
             // Trois affirmations distinctes : réunies sous un seul message, un échec ne
             // disait pas laquelle avait cédé, et les valeurs observées restaient muettes.
             if (count != 2 || network.requests.size() != 3)
@@ -157,7 +174,8 @@ int main(int argc, char **argv) {
             check(!network.requests.last().url().path().contains("/08/"),
                   "Chess.com sync skips months before the last sync");
             check(count == 2, "Chess.com sync keeps one game from each downloaded month");
-            network.responses = {{200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08"]})"}};
+            network.responses = {
+                {200, R"({"archives":["https://api.chess.com/pub/player/simzy/games/2026/08"]})"}};
             upToDate.clear();
             online.fetch("chesscom", "simzy", 50, file, september15);
             check(upToDate.wait(2000), "Chess.com account without newer months is up to date");
@@ -167,16 +185,25 @@ int main(int argc, char **argv) {
                   network.requests.size() == before,
               "Invalid username never reaches the network");
         network.responses = {{200, games("L", 1)}};
-        check(run(online, [&] { online.fetch("lichess", "simzy", 3, file); online.cancel(); }).first.contains("annulé"),
+        check(run(online,
+                  [&] {
+                      online.fetch("lichess", "simzy", 3, file);
+                      online.cancel();
+                  })
+                  .first.contains("annulé"),
               "A fetch can be canceled");
         {
             const QByteArray csv =
                 "PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags\n"
-                "00aaa,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1200,75,95,1000,backRankMate mate mateIn1 oneMove,https://lichess.org/x#1,\n"
-                "00bad,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d9,1200,75,95,1000,mate,https://lichess.org/y#1,\n"
-                "00hard,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 d1d8,2500,75,90,10,mateIn1,https://lichess.org/z#1,\n";
+                "00aaa,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 d1d8,1200,75,95,1000,backRankMate mate "
+                "mateIn1 oneMove,https://lichess.org/x#1,\n"
+                "00bad,r5k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1,a8a7 "
+                "d1d9,1200,75,95,1000,mate,https://lichess.org/y#1,\n"
+                "00hard,r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1,a8a7 "
+                "d1d8,2500,75,90,10,mateIn1,https://lichess.org/z#1,\n";
             t64::PuzzleRecord record;
-            check(t64::parseLichessPuzzle(QString::fromUtf8(csv.split('\n')[1]), record) && record.ref == "lichess:00aaa" &&
+            check(t64::parseLichessPuzzle(QString::fromUtf8(csv.split('\n')[1]), record) &&
+                      record.ref == "lichess:00aaa" &&
                       record.fen == "6k1/r4ppp/8/8/8/8/5PPP/3R2K1 w - - 1 2" && record.solution == "d1d8" &&
                       record.rating == 1200 && record.themes.contains("backRankMate"),
                   "Lichess row: opponent move applied, solver position and solution kept");
@@ -188,16 +215,19 @@ int main(int argc, char **argv) {
             plain.close();
             auto read = [&](const QString &path, int max, int minimum, int maximum) {
                 std::vector<t64::PuzzleRecord> all;
-                const int n = t64::readLichessPuzzles(path, max, minimum, maximum,
-                                                      [&](std::vector<t64::PuzzleRecord> &&b) { all.insert(all.end(), b.begin(), b.end()); });
+                const int n = t64::readLichessPuzzles(
+                    path, max, minimum, maximum,
+                    [&](std::vector<t64::PuzzleRecord> &&b) { all.insert(all.end(), b.begin(), b.end()); });
                 check(n == int(all.size()), "Reader reports what it delivered");
                 return all;
             };
-            check(read(plain.fileName(), 100, 0, 0).size() == 2 && read(plain.fileName(), 1, 0, 0).size() == 1 &&
+            check(read(plain.fileName(), 100, 0, 0).size() == 2 &&
+                      read(plain.fileName(), 1, 0, 0).size() == 1 &&
                       read(plain.fileName(), 100, 2000, 3000).front().ref == "lichess:00hard",
                   "Reader honours the maximum and the rating range");
             if (QProcess::execute("gzip", {"-k", plain.fileName()}) == 0)
-                check(read(plain.fileName() + ".gz", 100, 0, 0).size() == 2, "Compressed exports are read directly");
+                check(read(plain.fileName() + ".gz", 100, 0, 0).size() == 2,
+                      "Compressed exports are read directly");
             bool refused = false;
             try {
                 read(dir.filePath("missing.csv"), 10, 0, 0);
@@ -270,6 +300,67 @@ int main(int argc, char **argv) {
                 refusedXml = true;
             }
             check(refusedXml, "Malformed XML is an error, not a silent absence");
+        }
+        {
+            // L'explorateur en ligne : l'adresse construite et la réponse lue, sans réseau.
+            using t64::OpeningExplorer;
+            const auto start = QString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            const auto lichess =
+                OpeningExplorer::buildUrl("lichess", start,
+                                          {{"speeds", QStringList{"blitz", "rapid", "pigeon"}},
+                                           {"ratings", QStringList{"2000", "9999"}},
+                                           {"since", "2019-01"}});
+            check(lichess.host() == "explorer.lichess.ovh" && lichess.path() == "/lichess",
+                  "The explorer is asked on its own host");
+            const QUrlQuery asked(lichess.query());
+            check(asked.queryItemValue("speeds") == "blitz,rapid" &&
+                      asked.queryItemValue("ratings") == "2000" && asked.queryItemValue("since") == "2019-01",
+                  "Unknown speeds and rating bands are dropped rather than sent");
+            const QUrlQuery mastersAsked(
+                OpeningExplorer::buildUrl("masters", start, {{"since", "2019-01"}, {"until", "1952"}})
+                    .query());
+            // Les maîtres comptent en années : un mois y ferait une erreur 400.
+            check(!mastersAsked.hasQueryItem("since") && mastersAsked.queryItemValue("until") == "1952" &&
+                      !mastersAsked.hasQueryItem("speeds"),
+                  "The masters base takes years, and takes no speed filter");
+            check(OpeningExplorer::buildUrl("elsewhere", start, {}).isEmpty() &&
+                      OpeningExplorer::buildUrl("lichess", "", {}).isEmpty(),
+                  "An unknown base and an empty position ask nothing");
+            const auto body = QByteArray(R"({"white":10,"draws":4,"black":6,
+                "opening":{"eco":"B90","name":"Sicilian Defense: Najdorf"},
+                "moves":[{"uci":"e2e4","san":"e4","white":7,"draws":2,"black":3,"averageRating":2310}],
+                "topGames":[{"id":"abcd1234","winner":"black","year":1972,"month":7,
+                    "white":{"name":"Spassky","rating":2660},"black":{"name":"Fischer","rating":2785}}]})");
+            const auto read = OpeningExplorer::parse(body);
+            check(read["total"].toInt() == 20 && read["name"] == "B90 Sicilian Defense: Najdorf",
+                  "Totals and opening name are read as the library's own report");
+            const auto move = read["moves"].toList().first().toMap();
+            check(move["san"] == "e4" && move["count"].toInt() == 12 && move["rating"].toInt() == 2310,
+                  "A move carries its own total, not the position's");
+            const auto top = read["games"].toList().first().toMap();
+            check(top["result"] == "0-1" && top["date"] == "1972.07" && top["whiteElo"].toInt() == 2660 &&
+                      top["black"] == "Fischer",
+                  "A top game reads as players, result and date");
+            check(OpeningExplorer::parse("not json").contains("error") &&
+                      OpeningExplorer::parse("[]").contains("error"),
+                  "A malformed answer is an error, not an empty position");
+            Network network;
+            OpeningExplorer explorer(nullptr, &network);
+            QSignalSpy ready(&explorer, &OpeningExplorer::ready);
+            QSignalSpy failed(&explorer, &OpeningExplorer::failed);
+            network.responses << Response{200, body};
+            explorer.query("masters", start);
+            for (int i = 0; i < 200 && ready.isEmpty() && failed.isEmpty(); ++i)
+                QTest::qWait(5);
+            check(ready.size() == 1 && failed.isEmpty() &&
+                      ready.first().first().toMap()["total"].toInt() == 20,
+                  "A real asynchronous query hands back the report");
+            network.responses << Response{429, "slow down"};
+            explorer.query("lichess", start);
+            for (int i = 0; i < 200 && failed.isEmpty(); ++i)
+                QTest::qWait(5);
+            check(failed.size() == 1 && failed.first().first().toString().contains("ralentir"),
+                  "Being rate-limited is said plainly");
         }
         std::cout << checks << " online checks passed\n";
         return 0;

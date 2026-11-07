@@ -87,6 +87,17 @@ Controller::Controller(const QString &path, QObject *parent)
         accountSynced(0);
     });
     connect(online_, &t64::OnlineGames::finished, this, [this](const QString &downloaded, int) {
+        // Sans clé de synchronisation, ce n'est pas le suivi d'un compte mais une partie
+        // demandée à l'explorateur : elle entre dans la bibliothèque sans y créer de base.
+        if (onlineSyncKey_.isEmpty()) {
+            QFile file(downloaded);
+            const auto pgn = file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+            file.close();
+            QFile::remove(downloaded);
+            importBytes(pgn);
+            emit busyChanged();
+            return;
+        }
         const auto key = onlineSyncKey_.section('/', 1);
         const auto site = key.section('/', 0, 0), user = key.section('/', 1);
         const bool lichess = site == "lichess";
@@ -206,7 +217,7 @@ Controller::Controller(const QString &path, QObject *parent)
         }
         if (r.operation == "online") {
             QFile::remove(onlineFile_);
-            if (r.error.isEmpty() && !r.canceled)
+            if (r.error.isEmpty() && !r.canceled && !onlineSyncKey_.isEmpty())
                 settings_.setValue(onlineSyncKey_, onlineSyncTime_);
             if (syncingAccount_ >= 0)
                 QTimer::singleShot(0, this,
@@ -698,6 +709,20 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
         const qint64 since = settings_.value(onlineSyncKey_, 0).toLongLong();
         online_->fetch(site, user.trimmed(), max, onlineFile_, since);
+        emit busyChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::importOnlineGame(const QString &id) {
+    try {
+        require(!busy_ && !online_->busy(), "Un traitement est déjà en cours.");
+        QDir().mkpath(dataPath_ + "/downloads");
+        // Pas de clé de synchronisation : ce n'est pas un compte qu'on suit, c'est une
+        // partie qu'on garde, et la rapatrier deux fois ne doit rien décaler.
+        onlineSyncKey_.clear();
+        onlineFile_ = dataPath_ + "/downloads/lichess-" + id + ".pgn";
+        online_->fetchGame(id, onlineFile_);
         emit busyChanged();
     } catch (const std::exception &e) {
         fail(e);

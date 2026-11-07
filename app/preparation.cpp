@@ -130,6 +130,44 @@ void Controller::exportPreparation(const QString &url) {
     }
 }
 
+void Controller::buildOnlineReport(const QString &source, const QVariantMap &filters) {
+    if (!t64::OpeningExplorer::knownSource(source)) {
+        fail(std::runtime_error("Base en ligne inconnue."));
+        return;
+    }
+    if (!explorer_) {
+        explorer_ = new t64::OpeningExplorer(this);
+        connect(explorer_, &t64::OpeningExplorer::ready, this, [this](const QVariantMap &report) {
+            onlineReport_ = report;
+            onlineReport_["source"] = onlineSource_;
+            emit onlineReportChanged();
+        });
+        connect(explorer_, &t64::OpeningExplorer::failed, this, [this](const QString &message) {
+            onlineReport_ = {{"source", onlineSource_}, {"error", message}};
+            emit onlineReportChanged();
+        });
+    }
+    onlineSource_ = source;
+    // La position affichée, pas celle de la racine : on explore ce qu'on regarde.
+    const auto fen = QString::fromStdString(game_.nodes[node_].fen);
+    // Le nom de l'ouverture est déjà connu : le taire pendant l'attente ferait clignoter
+    // l'en-tête sur « position hors des ouvertures nommées ».
+    onlineReport_ = {
+        {"running", true}, {"source", source}, {"fen", fen}, {"name", state_["opening"]}};
+    emit onlineReportChanged();
+    explorer_->query(source, fen, filters);
+}
+
+void Controller::cancelOnlineReport() {
+    if (!explorer_)
+        return;
+    explorer_->cancel();
+    if (onlineReport_.value("running").toBool()) {
+        onlineReport_.remove("running");
+        emit onlineReportChanged();
+    }
+}
+
 void Controller::buildOpeningReport() {
     // Même schéma que la préparation : la requête peut parcourir toutes les parties
     // passées par la position, et l'interface ne doit pas se figer pendant ce temps.

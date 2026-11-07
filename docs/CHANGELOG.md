@@ -1,5 +1,12 @@
 # Changements
 
+## L'explorateur Lichess en ligne — 7 novembre 2026
+
+- **Le dossier d'une position se lit maintenant dans trois bases** : la vôtre, les parties classées de Lichess — elles se comptent en milliards — et celles des maîtres sur l'échiquier. Les deux dernières sont interrogées en direct sur l'explorateur d'ouvertures de Lichess : rien n'est téléchargé, rien n'est stocké, et la réponse arrive en une fraction de seconde quelle que soit la taille de la base.
+- **Les mêmes colonnes qu'avant**, plus le classement moyen des joueurs qui jouent ce coup. Pour Lichess, deux filtres : la cadence et le niveau.
+- **Les parties en vue se rapatrient d'un clic** dans votre bibliothèque, avec leurs pendules et leurs évaluations.
+- Les données viennent de l'explorateur d'ouvertures de Lichess, publiées en CC0.
+
 ## Explorateur d'études — 7 novembre 2026
 
 - **Vos fichiers d'études se parcourent sur place**, comme dans En Croissant : un onglet *Explorateur* montre le dossier du disque où ils vivent — sous-dossiers, taille, et la marque de ceux qui sont déjà dans la base avec leur nombre de parties. Jusqu'ici, un fichier existait pour Trait64 une fois importé, et pas avant.
