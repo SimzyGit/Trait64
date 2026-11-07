@@ -99,6 +99,29 @@ ColumnLayout {
             color: root.preferences.panel
             border.color: root.preferences.line
 
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 1
+                spacing: 0
+                // Deux façons de retrouver une étude : la liste de ce qui est dans la base,
+                // et le dossier du disque où vivent les fichiers. La seconde est celle
+                // d'En Croissant, et c'est celle qu'on a quand on arrive d'ailleurs.
+                TabBar {
+                    id: leftTabs
+                    Layout.fillWidth: true
+                    // Sans étude dans la base, il n'y a rien à montrer dans la liste :
+                    // on ouvre sur l'explorateur, qui est là où l'on commence.
+                    Component.onCompleted: currentIndex = root.studies.length === 0 ? 1 : 0
+                    TTabButton { objectName: "studiesTabList"; text: qsTr("Mes études") }
+                    TTabButton { objectName: "studiesTabFiles"; text: qsTr("Explorateur") }
+                }
+                StackLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    currentIndex: leftTabs.currentIndex
+
+                    Item {
+
             Label {
                 anchors.centerIn: parent
                 width: parent.width - 32
@@ -113,7 +136,6 @@ ColumnLayout {
                 id: list
                 objectName: "studiesList"
                 anchors.fill: parent
-                anchors.margins: 1
                 clip: true
                 model: root.studies
                 ScrollBar.vertical: ScrollBar {}
@@ -207,6 +229,25 @@ ColumnLayout {
                                                            * controller.preferences.uiScale)
                                 font.weight: Font.DemiBold
                             }
+                        }
+                    }
+                }
+            }
+                    }
+
+                    StudyExplorer {
+                        objectName: "studyExplorer"
+                        backend: root.backend
+                        // Un fichier ouvert montre son recueil à droite, comme un clic
+                        // dans la liste : l'explorateur n'est qu'une autre porte.
+                        onCollectionOpened: id => {
+                            var rows = root.backend.studyCollections
+                            for (var i = 0; i < rows.length; ++i)
+                                if (Number(rows[i].id) === Number(id)) {
+                                    root.collection = {kind: "collection", id: rows[i].id,
+                                                       name: rows[i].title, games: rows[i].games}
+                                    return
+                                }
                         }
                     }
                 }

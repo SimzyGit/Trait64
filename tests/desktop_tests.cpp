@@ -1674,6 +1674,74 @@ int main(int argc, char **argv) {
             titles.sort();
             check(titles == QStringList({"Blitz", "Mes parties commentées", "Open"}),
                   "A folder yields one collection per file, subfolders included");
+            // L'explorateur : le dossier du disque tel qu'il est, avec la marque de ce
+            // qui est déjà dans la base.
+            auto idleShelf = [&] {
+                settle.restart();
+                while ((shelf.busy() || shelf.librarySearching()) && settle.elapsed() < 20000)
+                    QTest::qWait(20);
+            };
+            idleShelf();
+            QFile foreign(folder + "/Archive.si4");
+            check(foreign.open(QIODevice::WriteOnly) && foreign.write("x") == 1, "Write a foreign base");
+            foreign.close();
+            const auto view = shelf.browseStudies(folder);
+            check(view["path"].toString() == folder && !view["parent"].toString().isEmpty(),
+                  "The explorer says where it is and where it can go up to");
+            const auto entries = view["entries"].toList();
+            check(entries.size() == 3 && entries.first().toMap()["folder"].toBool() &&
+                      entries.first().toMap()["name"] == "Tournois",
+                  "Folders come before files, as in any explorer");
+            QVariantMap blitz, archive;
+            for (const auto &row : entries) {
+                const auto each = row.toMap();
+                if (each["name"] == "Blitz.pgn")
+                    blitz = each;
+                if (each["name"] == "Archive.si4")
+                    archive = each;
+            }
+            check(blitz["readable"].toBool() && blitz["sourceId"].toLongLong() > 0 &&
+                      blitz["games"].toInt() == 1,
+                  "An imported file carries its collection and its game count");
+            check(!archive.isEmpty() && !archive["readable"].toBool(),
+                  "A foreign base is shown as unreadable rather than hidden");
+            {
+                QSignalSpy refused(&shelf, &Controller::message);
+                check(shelf.openStudyFile(folder + "/Archive.si4") == 0 && refused.size() == 1 &&
+                          refused.first().at(1).toBool(),
+                      "Opening a foreign base says what to do instead of failing silently");
+            }
+            const int before = shelf.studyCollections().size();
+            check(shelf.openStudyFile(folder + "/Blitz.pgn") == blitz["sourceId"].toLongLong() &&
+                      shelf.studyCollections().size() == before,
+                  "Reopening a known file shows its collection instead of reading it twice");
+            // Deux fichiers du même nom dans deux dossiers sont deux recueils : leurs
+            // parties se versaient dans le même tant que l'identifiant ignorait le dossier.
+            check(QDir().mkpath(folder + "/Rapides"), "Create a sibling folder");
+            QFile twin(folder + "/Rapides/Blitz.pgn");
+            check(twin.open(QIODevice::WriteOnly), "Write a file whose name is already taken");
+            twin.write("[Event \"Rapide\"]\n[White \"Ida\"]\n[Black \"Jo\"]\n[Date \"2021.03.04\"]\n"
+                       "\n1.d4 Nf6 2.c4 e6 *\n");
+            twin.close();
+            idleShelf();
+            shelf.openStudyFile(folder + "/Rapides/Blitz.pgn");
+            settle.restart();
+            while (shelf.studyCollections().size() <= before && settle.elapsed() < 20000)
+                QTest::qWait(20);
+            check(shelf.studyCollections().size() == before + 1,
+                  "Two files of the same name in two folders make two collections");
+            {
+                QSignalSpy refused(&shelf, &Controller::message);
+                shelf.createStudyFolder(folder, "../evade");
+                shelf.createStudyFolder(folder, "Tournois");
+                check(refused.size() == 2 && !QFileInfo::exists(files.path() + "/evade"),
+                      "A new folder refuses a path and an existing name");
+                shelf.createStudyFolder(folder, "Classiques");
+                check(QFileInfo(folder + "/Classiques").isDir(), "And creates the folder asked for");
+            }
+            check(shelf.browseStudies(folder + "/Classiques")["entries"].toList().isEmpty() &&
+                      shelf.browseStudies(files.filePath("nowhere"))["path"].toString().isEmpty(),
+                  "An empty folder reads empty, a missing one reads as nothing at all");
         }
         {
             // Fermer la fenêtre pendant que les tâches de fond tournent : sans attente à

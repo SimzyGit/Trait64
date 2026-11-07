@@ -1,5 +1,15 @@
 # Changements
 
+## Explorateur d'études — 7 novembre 2026
+
+- **Vos fichiers d'études se parcourent sur place**, comme dans En Croissant : un onglet *Explorateur* montre le dossier du disque où ils vivent — sous-dossiers, taille, et la marque de ceux qui sont déjà dans la base avec leur nombre de parties. Jusqu'ici, un fichier existait pour Trait64 une fois importé, et pas avant.
+- **Un clic lit le fichier, les suivants rouvrent son recueil.** Relire doublait les parties ; le chemin du fichier est maintenant retenu avec le recueil, et c'est lui qui les relie.
+- **Les bases des autres logiciels sont montrées et nommées** (`.si4`, `.cbh`, `.db3`…) au lieu d'être tues : on sait pourquoi le dossier paraissait vide, et quoi faire.
+- **Le dossier d'études est retenu d'une session à l'autre**, et l'explorateur s'ouvre dessus.
+- **Créer un dossier et y enregistrer l'étude ouverte en PGN**, sans quitter l'onglet : les fichiers restent la référence, lisibles par n'importe quel logiciel.
+- **Deux fichiers du même nom dans deux dossiers font deux recueils.** Le second se versait silencieusement dans le premier, parce que l'identifiant ne retenait que le nom du fichier.
+- Un chemin Windows `C:/Études` était refusé comme une adresse Internet : sa lettre de lecteur passait pour un schéma d'URL.
+
 ## Parcourir sans quitter des yeux — 6 novembre 2026
 
 - **Un échiquier d'aperçu dans la bibliothèque et dans les recueils.** Un clic sur une ligne montre la partie à côté de la liste : on fait défiler ses coups à la molette, aux flèches ou aux boutons, sans changer d'onglet. Jusqu'ici, regarder une partie coûtait l'étude ouverte dans Analyse.

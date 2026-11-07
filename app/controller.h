@@ -118,6 +118,13 @@ class Controller : public QObject {
     // d'être fondues dans un arbre de positions comme un répertoire.
     Q_INVOKABLE void importStudyCollection(const QString &url);
     Q_INVOKABLE void importStudyFolder(const QString &url);
+    // L'explorateur de l'onglet Études : un dossier du disque, ses sous-dossiers et ses
+    // fichiers de parties, avec la marque de ceux qui sont déjà dans la base.
+    Q_INVOKABLE QVariantMap browseStudies(const QString &path = {}) const;
+    // Le recueil du fichier, importé au premier clic. 0 si l'import vient de commencer
+    // ou si le fichier n'est pas lisible.
+    Q_INVOKABLE qint64 openStudyFile(const QString &url);
+    Q_INVOKABLE void createStudyFolder(const QString &parent, const QString &name);
     void nextPendingStudy();
     static QString studyCollectionName(const QString &path);
     // Les recueils, et les parties de l'un d'eux. L'onglet Études les montre comme des

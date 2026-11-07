@@ -28,6 +28,9 @@ QVariantMap Controller::preferences() const {
                          {"analysisDepth", 24},
                          {"importWorkers", t64::recommendedImportWorkers()},
                          {"syzygyPath", ""},
+                         // Le dossier d'études que l'explorateur rouvre : on travaille
+                         // toujours dans le même, et le retrouver à chaque fois est une corvée.
+                         {"studyFolder", ""},
                          {"bookPath", ""},
                          {"lightTheme", true},
                          {"fontFamily", QGuiApplication::font().family()},
@@ -172,7 +175,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 return;
             if (value == "custom" && settings_.value("customPiecePath").toString().isEmpty())
                 return;
-        } else if (key == "enginePath" || key == "syzygyPath" || key == "bookPath") {
+        } else if (key == "enginePath" || key == "syzygyPath" || key == "bookPath" || key == "studyFolder") {
             clean = localPath(value.toString());
             if (clean.toString().contains('\n') || clean.toString().contains('\r'))
                 throw std::runtime_error("Chemin invalide.");

@@ -9,6 +9,16 @@ const QStringList &readableStudySuffixes() {
     static const QStringList suffixes{".pgn", ".pgn.gz", ".pgn.zst", ".pgn.bz2", ".pgn.xz", ".pgn.zstd"};
     return suffixes;
 }
+// Les bases des autres logiciels : l'explorateur les montre pour dire pourquoi elles ne
+// s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide.
+const QStringList &foreignBaseSuffixes() {
+    static const QStringList suffixes{".db3", ".si4", ".si5", ".sg4", ".sn4", ".cbh", ".cbv", ".cbf", ".pdb"};
+    return suffixes;
+}
+bool endsWithAny(const QString &lowercaseName, const QStringList &suffixes) {
+    return std::any_of(suffixes.cbegin(), suffixes.cend(),
+                       [&lowercaseName](const QString &s) { return lowercaseName.endsWith(s); });
+}
 } // namespace
 #include <QDirIterator>
 #include <QSaveFile>
@@ -362,10 +372,20 @@ void Controller::importStudyCollection(const QString &url) {
         const auto path = localPath(url);
         require(QFileInfo(path).isFile(), "Fichier introuvable.");
         const auto name = studyCollectionName(path);
+        // Deux fichiers du même nom dans deux dossiers sont deux recueils : sans le
+        // dossier dans l'identifiant, le second se versait dans le premier.
+        auto slug = "study:" + name.toLower();
+        for (const auto &row : db_->sources()) {
+            const auto other = row.toMap();
+            if (other["slug"].toString() == slug && other["source"].toString() != path &&
+                !other["source"].toString().isEmpty())
+                slug += ":" + QFileInfo(path).dir().dirName().toLower();
+        }
         // Un recueil est une base de la bibliothèque, marquée pour que l'onglet Études
         // la montre : les parties restent séparées, parcourables et analysables, au lieu
-        // d'être fondues dans un seul arbre de positions comme un répertoire.
-        const QVariantMap source{{"id", "study:" + name.toLower()}, {"title", name}, {"kind", "study"}};
+        // d'être fondues dans un seul arbre de positions comme un répertoire. Le chemin
+        // du fichier est gardé : c'est lui que l'explorateur reconnaît.
+        const QVariantMap source{{"id", slug}, {"title", name}, {"kind", "study"}, {"source", path}};
         if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
             importSourceFile(url, source);
             return;
@@ -400,6 +420,101 @@ QVariantList Controller::studyGames(qint64 sourceId) const {
         return db_->search({}, {}, false, {}, false, {{"sourceId", sourceId}, {"limit", 500}});
     } catch (const std::exception &) {
         return {};
+    }
+}
+
+QVariantMap Controller::browseStudies(const QString &path) const {
+    // L'explorateur d'un seul dossier à la fois : la liste complète d'une arborescence
+    // d'études se compte en milliers de fichiers, et personne ne la lit d'un bloc.
+    QVariantMap view{{"path", QString()}, {"parent", QString()}, {"entries", QVariantList()}};
+    QString wanted;
+    try {
+        wanted = localPath(path.isEmpty() ? settings_.value("studyFolder").toString() : path);
+    } catch (const std::exception &) {
+        return view;
+    }
+    const QFileInfo info(wanted);
+    if (wanted.isEmpty() || !info.isDir() || !info.isReadable())
+        return view;
+    const QDir dir(info.absoluteFilePath());
+    view["path"] = dir.absolutePath();
+    if (!dir.isRoot())
+        view["parent"] = QFileInfo(dir.absolutePath()).absolutePath();
+    // Ce qui est déjà lu, repéré par le chemin : l'explorateur distingue le fichier
+    // importé du fichier qui attend.
+    QHash<QString, QVariantMap> known;
+    for (const auto &row : db_->sources()) {
+        const auto source = row.toMap();
+        if (source["kind"].toString() == "study" && !source["source"].toString().isEmpty())
+            known.insert(source["source"].toString(), source);
+    }
+    QVariantList entries;
+    // Un dossier de téléchargements en compte des milliers : au-delà, la liste ne se lit
+    // plus et sa construction fige la fenêtre. On s'arrête, et on le dit.
+    constexpr int shown = 2000;
+    // Les dossiers d'abord : c'est l'ordre de lecture d'un explorateur.
+    for (const auto &child : dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        if (entries.size() >= shown)
+            break;
+        entries << QVariantMap{
+            {"name", child.fileName()}, {"path", child.absoluteFilePath()}, {"folder", true}};
+    }
+    for (const auto &child : dir.entryInfoList(QDir::Files, QDir::Name)) {
+        if (entries.size() >= shown)
+            break;
+        const auto lowercase = child.fileName().toLower();
+        const bool readable = endsWithAny(lowercase, readableStudySuffixes());
+        if (!readable && !endsWithAny(lowercase, foreignBaseSuffixes()))
+            continue;
+        const auto collection = known.value(child.absoluteFilePath());
+        entries << QVariantMap{{"name", child.fileName()},
+                               {"path", child.absoluteFilePath()},
+                               {"folder", false},
+                               {"readable", readable},
+                               {"size", child.size()},
+                               {"sourceId", collection.value("id", 0)},
+                               {"games", collection.value("games", 0)}};
+    }
+    view["entries"] = entries;
+    view["truncated"] = entries.size() >= shown;
+    return view;
+}
+
+qint64 Controller::openStudyFile(const QString &url) {
+    try {
+        const auto path = localPath(url);
+        require(QFileInfo(path).isFile(), "Fichier introuvable.");
+        require(endsWithAny(path.toLower(), readableStudySuffixes()),
+                "Trait64 ne lit pas encore ce format : exportez le fichier en PGN depuis le "
+                "logiciel qui l’a produit.");
+        for (const auto &row : db_->sources()) {
+            const auto source = row.toMap();
+            // Déjà lu : on montre le recueil au lieu de relire le fichier et d'en
+            // doubler les parties.
+            if (source["kind"].toString() == "study" && source["source"].toString() == path)
+                return source["id"].toLongLong();
+        }
+        importStudyCollection(QUrl::fromLocalFile(path).toString());
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+    return 0;
+}
+
+void Controller::createStudyFolder(const QString &parent, const QString &name) {
+    try {
+        const auto path = localPath(parent);
+        require(QFileInfo(path).isDir(), "Dossier introuvable.");
+        const auto clean = name.trimmed();
+        require(!clean.isEmpty(), "Donnez un nom au dossier.");
+        // Un nom de dossier, pas un chemin : « ../ » irait écrire ailleurs.
+        require(clean == QFileInfo(clean).fileName() && clean != "." && clean != "..",
+                "Le nom ne peut pas contenir de chemin.");
+        require(!QFileInfo::exists(path + "/" + clean), "Ce dossier existe déjà.");
+        require(QDir(path).mkdir(clean), "Création impossible : droits insuffisants ?");
+        emit message(tr("Dossier créé : ") + clean);
+    } catch (const std::exception &e) {
+        fail(e);
     }
 }
 

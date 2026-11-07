@@ -677,7 +677,10 @@ void Controller::setFen(const QString &fen) {
 }
 QString Controller::localPath(const QString &input) const {
     const QUrl url(input);
-    require(url.isLocalFile() || url.scheme().isEmpty(), "Seuls les fichiers locaux sont acceptés.");
+    // « C:/Etudes » a une lettre pour schéma d'URL : c'est un chemin Windows, pas une
+    // adresse, et le refuser rendait l'explorateur inutilisable là-bas.
+    require(url.isLocalFile() || url.scheme().isEmpty() || url.scheme().size() == 1,
+            "Seuls les fichiers locaux sont acceptés.");
     return url.isLocalFile() ? url.toLocalFile() : input;
 }
 void Controller::importText(const QString &text) {
