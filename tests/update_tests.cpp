@@ -87,14 +87,17 @@ class Network : public QNetworkAccessManager {
         return new Reply(r, responses.takeFirst(), this);
     }
 };
-QJsonObject release(QString version, bool prerelease, QString hash = QString(64, 'a')) {
+// Le nom de la pièce jointe doit porter le suffixe de la machine qui joue le test :
+// l'AppImage en dur ne disait rien à Windows, qui ne trouvait donc aucune mise à jour.
+QJsonObject release(QString version, bool prerelease, QString hash = QString(64, 'a'),
+                    QString suffix = "-linux-x86_64.AppImage") {
     return {{"tag_name", version},
             {"prerelease", prerelease},
             {"draft", false},
             {"published_at", "2026-10-10T00:00:00Z"},
             {"body", "Release notes"},
             {"assets", QJsonArray{QJsonObject{{"id", 42},
-                                              {"name", "Trait64-" + version + "-linux-x86_64.AppImage"},
+                                              {"name", "Trait64-" + version + suffix},
                                               {"state", "uploaded"},
                                               {"size", 100},
                                               {"digest", "sha256:" + hash}}}}};
@@ -239,8 +242,13 @@ int main(int argc, char **argv) {
             std::cout << "Skipping update-delivery checks: no published package for "
                       << QSysInfo::currentCpuArchitecture().toStdString() << '\n';
         } else {
+            const auto suffix = updater.state()["packageSuffix"].toString();
+            // Windows et macOS téléchargent et vérifient, puis s'arrêtent : y déployer le
+            // fichier relève du système. Seul Linux installe lui-même, et lui seul passe
+            // par la sauvegarde.
+            const bool installs = updater.state()["kind"].toString() != "manual";
             network.responses << Response{
-                200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash)}).toJson(), {}};
+                200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash, suffix)}).toJson(), {}};
             updater.check();
             wait(updater);
             check(offers.size() == 1 && updater.state()["available"].toBool(),
@@ -252,14 +260,8 @@ int main(int argc, char **argv) {
                 backed = true;
                 throw std::runtime_error("Backup intentionally unavailable");
             };
-            network.responses << Response{302, {}, QUrl("https://release-assets.githubusercontent.com/test")}
-                              << Response{200, binary, {}};
-            updater.downloadAndInstall();
-            wait(updater);
-            check(backed && updater.state()["status"] == "error", "Backup failure blocks installation");
-            check(network.requests.last().rawHeader("Authorization").isEmpty(),
-                  "Token never forwarded to asset host");
-            backed = false;
+            // Les refus d'abord : une fois le fichier téléchargé et remis, l'installateur
+            // se tait, et plus rien ne s'éprouverait là où Trait64 n'installe pas lui-même.
             network.responses << Response{200, QByteArray(100, 'z'), {}};
             updater.downloadAndInstall();
             wait(updater);
@@ -282,6 +284,22 @@ int main(int argc, char **argv) {
             updater.cancel();
             QTest::qWait(20);
             check(updater.state()["status"] == "idle", "Cancellation ignores stale callbacks");
+            // La remise du fichier en dernier : là où Trait64 n'installe pas lui-même,
+            // elle laisse l'installateur en « installé », qui refuse tout ce qui suit.
+            network.responses << Response{
+                200, QJsonDocument(QJsonArray{release("v1.1.0", false, hash, suffix)}).toJson(), {}};
+            updater.check();
+            wait(updater);
+            network.responses << Response{302, {}, QUrl("https://release-assets.githubusercontent.com/test")}
+                              << Response{200, binary, {}};
+            updater.downloadAndInstall();
+            wait(updater);
+            check(installs ? (backed && updater.state()["status"] == "error")
+                           : (!backed && updater.state()["status"] == "installed"),
+                  installs ? "Backup failure blocks installation"
+                           : "Without self-installation the file is downloaded, verified and handed over");
+            check(network.requests.last().rawHeader("Authorization").isEmpty(),
+                  "Token never forwarded to asset host");
         }
         QSettings persisted;
         check(!persisted.allKeys().join(' ').contains("token", Qt::CaseInsensitive),

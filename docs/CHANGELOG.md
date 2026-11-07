@@ -9,6 +9,7 @@
 - **Créer un dossier et y enregistrer l'étude ouverte en PGN**, sans quitter l'onglet : les fichiers restent la référence, lisibles par n'importe quel logiciel.
 - **Deux fichiers du même nom dans deux dossiers font deux recueils.** Le second se versait silencieusement dans le premier, parce que l'identifiant ne retenait que le nom du fichier.
 - Un chemin Windows `C:/Études` était refusé comme une adresse Internet : sa lettre de lecteur passait pour un schéma d'URL.
+- **Le test de mise à jour ne cherchait qu'un fichier Linux** : depuis que Windows et macOS reçoivent eux aussi un paquet, il échouait chez eux faute de trouver la pièce jointe à son nom, et l'intégration continue restait rouge. Il éprouve maintenant la remise du fichier là où Trait64 n'installe pas lui-même.
 
 ## Parcourir sans quitter des yeux — 6 novembre 2026
 
