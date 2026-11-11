@@ -51,13 +51,17 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
+    // Un Flow, et une largeur souhaitée nulle : trois listes côte à côte imposaient leur
+    // largeur à tout le panneau, qui poussait alors la notation hors d'une fenêtre de
+    // 960 px avec un grand texte. Elles passent à la ligne quand la place manque.
+    Flow {
         Layout.fillWidth: true
+        Layout.preferredWidth: 1
         spacing: 6
         TComboBox {
             id: base
             objectName: "onlineBase"
-            Layout.preferredWidth: root.s(150)
+            width: root.s(150)
             model: [qsTr("Lichess"), qsTr("Maîtres"), qsTr("Finales (7 pièces)")]
             onActivated: root.ask()
         }
@@ -65,7 +69,7 @@ ColumnLayout {
             id: speed
             objectName: "onlineSpeeds"
             visible: base.currentIndex === 0
-            Layout.preferredWidth: root.s(150)
+            width: root.s(150)
             textRole: "label"
             translateOptions: false
             onActivated: root.ask()
@@ -78,7 +82,7 @@ ColumnLayout {
             id: floor
             objectName: "onlineRatings"
             visible: base.currentIndex === 0
-            Layout.preferredWidth: root.s(120)
+            width: root.s(120)
             textRole: "label"
             translateOptions: false
             onActivated: root.ask()
@@ -87,11 +91,11 @@ ColumnLayout {
                     {label: qsTr("2000 et plus"), values: ["2000", "2200", "2500"]},
                     {label: qsTr("2200 et plus"), values: ["2200", "2500"]}]
         }
-        Item { Layout.fillWidth: true }
     }
 
     Label {
         Layout.fillWidth: true
+        Layout.preferredWidth: 1
         visible: root.total > 0
         elide: Text.ElideRight
         color: root.p.muted
