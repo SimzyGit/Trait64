@@ -113,9 +113,12 @@ jobs:
               pacman -Syu --noconfirm libglvnd fontconfig libx11 libxcb wayland harfbuzz freetype2 \
                 libsm libice libgpg-error e2fsprogs ttf-dejavu ;;
             suse)
-              zypper --non-interactive install libOpenGL0 libglvnd fontconfig libX11-xcb1 libxcb1 libX11-6 \
-                libwayland-client0 libharfbuzz0 libfreetype6 libSM6 libICE6 libgpg-error0 libcom_err2 \
-                dejavu-fonts ;;
+              # Par bibliothèque fournie, pas par nom de paquet : libOpenGL0 existe sur
+              # Tumbleweed, pas sur Leap 15.6, où libglvnd la contient.
+              zypper --non-interactive install 'libOpenGL.so.0()(64bit)' 'libEGL.so.1()(64bit)' \
+                'libGLX.so.0()(64bit)' fontconfig 'libX11-xcb.so.1()(64bit)' 'libxcb.so.1()(64bit)' \
+                'libX11.so.6()(64bit)' 'libwayland-client.so.0()(64bit)' 'libharfbuzz.so.0()(64bit)' \
+                'libfreetype.so.6()(64bit)' 'libSM.so.6()(64bit)' 'libICE.so.6()(64bit)' dejavu-fonts ;;
           esac
       - name: The AppImage starts and passes its smoke test
         if: ${{ !matrix.too_old }}
