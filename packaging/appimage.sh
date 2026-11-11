@@ -42,7 +42,9 @@ export OUTPUT="${trait64_build}/Trait64-${trait64_version}-linux-x86_64.AppImage
 # Preserve distribution copyright notices and precise package/source versions for the bundled shared libraries.
 mkdir -p "${trait64_stage}/AppDir/usr/share/doc/trait64/runtime-licenses"
 cp "${trait64_root}/packaging/APPIMAGE-NOTICE.md" "${trait64_stage}/AppDir/usr/share/doc/trait64/"
-./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --desktop-file "${trait64_root}/assets/trait64.desktop" --icon-file "${trait64_root}/assets/trait64.svg" --plugin qt
+# Le lanceur vérifie la glibc et les bibliothèques du système avant de démarrer, et dit
+# en clair ce qui manque : voir packaging/AppRun.
+./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --desktop-file "${trait64_root}/assets/trait64.desktop" --icon-file "${trait64_root}/assets/trait64.svg" --custom-apprun "${trait64_root}/packaging/AppRun" --plugin qt
 python3 "${trait64_root}/packaging/runtime-sources.py" "${trait64_stage}/AppDir"
 ./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --output appimage
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software "${OUTPUT}" --smoke-test

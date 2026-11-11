@@ -140,10 +140,20 @@ void Controller::buildOnlineReport(const QString &source, const QVariantMap &fil
         connect(explorer_, &t64::OpeningExplorer::ready, this, [this](const QVariantMap &report) {
             onlineReport_ = report;
             onlineReport_["source"] = onlineSource_;
+            // La position de la réponse : le panneau de l'analyse s'en sert pour savoir
+            // s'il est à jour ou s'il doit redemander.
+            onlineReport_["fen"] = onlineKey_.section('|', 3);
+            // On repasse sans cesse par les mêmes positions en parcourant une partie :
+            // les redemander à chaque fois userait la limite d'appels de Lichess pour
+            // rien. Quelques centaines de réponses suffisent à une séance.
+            if (onlineCache_.size() >= 400)
+                onlineCache_.clear();
+            onlineCache_.insert(onlineKey_, onlineReport_);
             emit onlineReportChanged();
         });
         connect(explorer_, &t64::OpeningExplorer::failed, this, [this](const QString &message) {
-            onlineReport_ = {{"source", onlineSource_}, {"error", message}};
+            onlineReport_ = {
+                {"source", onlineSource_}, {"error", message}, {"fen", onlineKey_.section('|', 3)}};
             emit onlineReportChanged();
         });
     }
@@ -152,8 +162,15 @@ void Controller::buildOnlineReport(const QString &source, const QVariantMap &fil
     const auto fen = QString::fromStdString(game_.nodes[node_].fen);
     // Le nom de l'ouverture est déjà connu : le taire pendant l'attente ferait clignoter
     // l'en-tête sur « position hors des ouvertures nommées ».
-    onlineReport_ = {
-        {"running", true}, {"source", source}, {"fen", fen}, {"name", state_["opening"]}};
+    onlineKey_ = source + '|' + filters.value("speeds").toStringList().join(',') + '|' +
+                 filters.value("ratings").toStringList().join(',') + '|' + fen;
+    if (const auto cached = onlineCache_.constFind(onlineKey_); cached != onlineCache_.cend()) {
+        explorer_->cancel();
+        onlineReport_ = *cached;
+        emit onlineReportChanged();
+        return;
+    }
+    onlineReport_ = {{"running", true}, {"source", source}, {"fen", fen}, {"name", state_["opening"]}};
     emit onlineReportChanged();
     explorer_->query(source, fen, filters);
 }

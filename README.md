@@ -37,6 +37,14 @@ Ou bien, depuis la [page des versions](https://github.com/SimzyGit/Trait64/relea
 | Debian 12 · 13 | `trait64_…_debianXX_amd64.deb` | `sudo apt install ./fichier.deb` |
 | Autre Linux 64 bits | `Trait64-…-linux-x86_64.AppImage` | rendez exécutable, puis ouvrez |
 
+**Quelles distributions Linux ?** L'AppImage demande la glibc 2.36 : elle est mesurée, et relancée sur chacune des distributions ci-dessous à chaque version ([le test](.github/workflows/distributions.yml)).
+
+| Fonctionne | Trop ancien pour l'AppImage |
+| --- | --- |
+| Debian 12 et 13 · Ubuntu 24.04 et suivantes · Linux Mint 22 · Fedora · Arch · Manjaro · openSUSE Leap 15.6 et Tumbleweed | Ubuntu 22.04 · Linux Mint 21 · Debian 11 · RHEL, Rocky et Alma 9 |
+
+Sur un système trop ancien, ou s'il manque une bibliothèque graphique, l'AppImage le dit en clair et indique le paquet à installer au lieu d'échouer en silence. Il reste alors la [compilation depuis les sources](docs/BUILDING.md).
+
 Le paquet Debian s'installe depuis un terminal : le double-clic ne mène nulle part, Debian n'installant plus d'installateur graphique de `.deb` par défaut.
 
 Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et macOS (Gatekeeper) demandent une confirmation. Sur macOS, faites clic droit → **Ouvrir**.
@@ -45,7 +53,7 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 
 ## Pourquoi Trait64
 
-**Vos données restent vos données.** Une base SQLite dans votre dossier personnel, des sauvegardes automatiques, du PGN et du FEN en entrée comme en sortie. Pas de compte à créer, rien qui parte sur un serveur, aucune télémétrie. Le jour où Trait64 ne vous convient plus, vos parties sont toujours lisibles ailleurs.
+**Vos données restent vos données.** Une base SQLite dans votre dossier personnel, des sauvegardes automatiques, du PGN et du FEN en entrée comme en sortie. Pas de compte à créer, aucune télémétrie, et rien ne part sur un serveur sans que vous le demandiez : seuls l'onglet Lichess de l'analyse et le dossier en ligne envoient la position affichée à Lichess, et seulement quand vous les ouvrez. Le jour où Trait64 ne vous convient plus, vos parties sont toujours lisibles ailleurs.
 
 **Une vraie base, pas une liste.** L’import PGN avale des centaines de milliers de parties et reprend où il s’était arrêté si vous l’interrompez. Vous cherchez ensuite par joueur, ouverture, Elo, date, résultat, position exacte ou structure de pions.
 

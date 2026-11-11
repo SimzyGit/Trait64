@@ -344,6 +344,29 @@ int main(int argc, char **argv) {
             check(OpeningExplorer::parse("not json").contains("error") &&
                       OpeningExplorer::parse("[]").contains("error"),
                   "A malformed answer is an error, not an empty position");
+            // Les tables de finales : sept pièces au plus, et le verdict de chaque coup
+            // retourné pour se lire du camp au trait.
+            const auto ending = QString("8/8/8/8/8/4k3/4p3/4K3 w - - 0 1");
+            check(OpeningExplorer::pieces(ending) == 3 && OpeningExplorer::pieces(start) == 32 &&
+                      OpeningExplorer::buildUrl("tablebase", ending, {}).host() == "tablebase.lichess.ovh" &&
+                      OpeningExplorer::buildUrl("tablebase", start, {}).isEmpty(),
+                  "Tablebases are asked for seven pieces or fewer, and nothing beyond");
+            const auto won = OpeningExplorer::parseTablebase(R"({"category":"win","dtz":3,"dtm":17,
+                "moves":[{"uci":"h7h8q","san":"h8=Q+","category":"loss","dtz":-2,"dtm":-16},
+                         {"uci":"g7g8","san":"Kg8","category":"draw","dtz":0,"dtm":null},
+                         {"uci":"g7h8","san":"Kh8","category":"win","dtz":4,"dtm":12}]})");
+            const auto lines = won["moves"].toList();
+            check(won["verdict"] == "win" && won["dtm"].toInt() == 17 &&
+                      lines[0].toMap()["verdict"] == "win" && lines[0].toMap()["dtm"].toInt() == 16 &&
+                      lines[1].toMap()["verdict"] == "draw" && !lines[1].toMap()["dtm"].isValid() &&
+                      lines[2].toMap()["verdict"] == "loss",
+                  "A move that leaves the opponent lost reads as winning for the side to move");
+            const auto already = OpeningExplorer::parseTablebase(
+                R"({"category":"win","moves":[{"uci":"a1a2","san":"Ra2","category":"win"}]})");
+            check(already["moves"].toList()[0].toMap()["verdict"] == "win",
+                  "An answer already given from the mover's side is not turned over a second time");
+            check(OpeningExplorer::parseTablebase("oops").contains("error"),
+                  "A malformed tablebase answer is an error");
             Network network;
             OpeningExplorer explorer(nullptr, &network);
             QSignalSpy ready(&explorer, &OpeningExplorer::ready);

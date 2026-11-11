@@ -15,6 +15,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocale>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QScopeGuard>
 #include <QStandardPaths>
@@ -697,7 +698,23 @@ QString Controller::localPath(const QString &input) const {
             "Seuls les fichiers locaux sont acceptés.");
     return url.isLocalFile() ? url.toLocalFile() : input;
 }
+QString Controller::lichessGameId(const QString &text) {
+    // « https://lichess.org/AbCd1234 », avec ou sans /white, /black, #coup ou les quatre
+    // caractères de plus d'un lien de joueur. Rien d'autre n'est un lien de partie : les
+    // pages du site (« /training », « /analysis ») ont elles aussi huit lettres parfois,
+    // d'où la liste de celles qu'on écarte.
+    static const QRegularExpression link(
+        R"(^\s*(?:https?://)?(?:www\.)?lichess\.org/([A-Za-z0-9]{8})(?:[A-Za-z0-9]{4})?(?:/(?:white|black))?(?:[?#]\S*)?\s*$)");
+    const auto match = link.match(text);
+    static const QStringList pages{"training", "analysis", "practice", "streamer", "features", "patron"};
+    return match.hasMatch() && !pages.contains(match.captured(1)) ? match.captured(1) : QString();
+}
 void Controller::importText(const QString &text) {
+    // Un lien de partie Lichess collé là où l'on attend un PGN : on va la chercher.
+    if (const auto id = lichessGameId(text); !id.isEmpty()) {
+        importOnlineGame(id);
+        return;
+    }
     importBytes(text.toUtf8());
 }
 void Controller::importOnline(const QString &site, const QString &user, int max) {

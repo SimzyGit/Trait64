@@ -1,0 +1,104 @@
+#!/bin/sh
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Lanceur de l'AppImage. Avant de démarrer, il vérifie ce que le système doit fournir :
+# sans cela, une distribution trop ancienne ou une bibliothèque absente donnait une
+# ligne de l'éditeur de liens que personne ne lit, ou rien du tout quand on lance
+# depuis le menu.
+here="$(dirname "$(readlink -f "$0")")"
+binary="$here/usr/bin/trait64"
+needed_glibc="2.36"
+
+say() {
+    # Dans un terminal, le texte suffit. Lancé depuis le menu, il faut une fenêtre :
+    # on prend la première que le système propose.
+    printf '%s\n' "$1" >&2
+    [ -t 2 ] && return 0
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --error --title="Trait64" --width=520 --text="$1" 2>/dev/null
+    elif command -v kdialog >/dev/null 2>&1; then
+        kdialog --title "Trait64" --error "$1" 2>/dev/null
+    elif command -v xmessage >/dev/null 2>&1; then
+        xmessage -center "$1" 2>/dev/null
+    elif command -v notify-send >/dev/null 2>&1; then
+        notify-send "Trait64" "$1" 2>/dev/null
+    fi
+    return 0
+}
+
+# Vrai si la version $1 est au moins la version $2 (« 2.39 » contre « 2.36 »).
+at_least() {
+    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$2" ]
+}
+
+# Le paquet qui fournit une bibliothèque, selon la famille de la distribution.
+package_for() {
+    family="other"
+    if [ -r /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        like="$(. /etc/os-release; printf '%s %s' "${ID:-}" "${ID_LIKE:-}")"
+        case " $like " in
+            *" debian "*|*" ubuntu "*) family="debian" ;;
+            *" fedora "*|*" rhel "*|*" centos "*) family="fedora" ;;
+            *" arch "*) family="arch" ;;
+            *" suse "*|*" opensuse "*|*opensuse*) family="suse" ;;
+        esac
+    fi
+    case "$family:$1" in
+        debian:libOpenGL.so.0) echo "sudo apt install libopengl0" ;;
+        debian:libEGL.so.1) echo "sudo apt install libegl1" ;;
+        debian:libGLX.so.0) echo "sudo apt install libglx0" ;;
+        debian:libfontconfig.so.1) echo "sudo apt install libfontconfig1" ;;
+        debian:libxcb.so.1|debian:libX11-xcb.so.1|debian:libX11.so.6) echo "sudo apt install libx11-xcb1 libxcb1" ;;
+        debian:libwayland-client.so.0) echo "sudo apt install libwayland-client0" ;;
+        debian:libharfbuzz.so.0) echo "sudo apt install libharfbuzz0b" ;;
+        fedora:libOpenGL.so.0) echo "sudo dnf install libglvnd-opengl" ;;
+        fedora:libEGL.so.1) echo "sudo dnf install libglvnd-egl" ;;
+        fedora:libGLX.so.0) echo "sudo dnf install libglvnd-glx" ;;
+        fedora:libfontconfig.so.1) echo "sudo dnf install fontconfig" ;;
+        fedora:libxcb.so.1|fedora:libX11-xcb.so.1|fedora:libX11.so.6) echo "sudo dnf install libX11-xcb libxcb" ;;
+        fedora:libwayland-client.so.0) echo "sudo dnf install libwayland-client" ;;
+        fedora:libharfbuzz.so.0) echo "sudo dnf install harfbuzz" ;;
+        arch:libOpenGL.so.0|arch:libEGL.so.1|arch:libGLX.so.0) echo "sudo pacman -S libglvnd" ;;
+        arch:libfontconfig.so.1) echo "sudo pacman -S fontconfig" ;;
+        arch:libxcb.so.1|arch:libX11-xcb.so.1|arch:libX11.so.6) echo "sudo pacman -S libx11 libxcb" ;;
+        arch:libwayland-client.so.0) echo "sudo pacman -S wayland" ;;
+        arch:libharfbuzz.so.0) echo "sudo pacman -S harfbuzz" ;;
+        suse:libOpenGL.so.0) echo "sudo zypper install libOpenGL0" ;;
+        suse:libEGL.so.1) echo "sudo zypper install libglvnd" ;;
+        suse:libGLX.so.0) echo "sudo zypper install libglvnd" ;;
+        suse:libfontconfig.so.1) echo "sudo zypper install fontconfig" ;;
+        suse:libxcb.so.1|suse:libX11-xcb.so.1|suse:libX11.so.6) echo "sudo zypper install libX11-xcb1 libxcb1" ;;
+        suse:libwayland-client.so.0) echo "sudo zypper install libwayland-client0" ;;
+        suse:libharfbuzz.so.0) echo "sudo zypper install libharfbuzz0" ;;
+    esac
+}
+
+have_glibc="$(getconf GNU_LIBC_VERSION 2>/dev/null | awk '{print $2}')"
+if [ -n "$have_glibc" ] && ! at_least "$have_glibc" "$needed_glibc"; then
+    say "Trait64 demande la glibc $needed_glibc ou plus récente ; ce système fournit la $have_glibc.
+Trait64 needs glibc $needed_glibc or newer; this system provides $have_glibc.
+
+Distributions compatibles / supported: Debian 12+, Ubuntu 24.04+, Linux Mint 22+, Fedora 37+, openSUSE Leap 15.6+ et Tumbleweed, Arch, Manjaro.
+Sur un système plus ancien, compilez depuis les sources : scripts/install-from-source.sh"
+    exit 1
+fi
+
+# Ce que le système doit fournir et qu'il n'a pas. L'AppImage embarque Qt mais pas les
+# pilotes graphiques ni les polices : ils appartiennent à la machine.
+if command -v ldd >/dev/null 2>&1; then
+    missing="$(ldd "$binary" "$here"/usr/plugins/platforms/*.so 2>/dev/null | awk '/not found/{print $1}' | sort -u)"
+    if [ -n "$missing" ]; then
+        advice=""
+        for library in $missing; do
+            hint="$(package_for "$library")"
+            advice="$advice
+  $library${hint:+  →  $hint}"
+        done
+        say "Trait64 ne peut pas démarrer : des bibliothèques du système manquent.
+Trait64 cannot start: system libraries are missing.
+$advice"
+        exit 1
+    fi
+fi
+
+exec "$binary" "$@"

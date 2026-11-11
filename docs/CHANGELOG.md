@@ -1,5 +1,13 @@
 # Changements
 
+## Le livre de Lichess dans l'analyse, les finales en ligne — 11 novembre 2026
+
+- **Un onglet « Lichess » à côté de Notation, Arbre et Livre** : ce qui se joue dans la position affichée, lu en direct dans les parties classées de Lichess ou dans celles des maîtres. Il suit l'échiquier coup après coup, un clic sur une ligne joue le coup, et les parties en vue se rapatrient d'un clic. Les positions déjà demandées sont gardées en mémoire : parcourir une partie ne redemande pas les mêmes à chaque passage.
+- **Les tables de finales à sept pièces, sans rien télécharger** : dans le même onglet, le verdict exact de la position et de chaque coup — gagne, nulle, perd, avec la distance au mat. Les tables Syzygy locales pèsent des dizaines de gigaoctets à six pièces et ne vont pas à sept.
+- **Un lien de partie Lichess se colle là où l'on colle un PGN** : la partie est rapatriée avec ses pendules et ses évaluations.
+- **L'AppImage dit pourquoi elle ne démarre pas.** Sur un système trop ancien ou privé d'une bibliothèque graphique, elle nomme ce qui manque et le paquet à installer selon la distribution, dans une fenêtre si elle est lancée depuis le menu. Avant, c'était une ligne de l'éditeur de liens, ou rien.
+- **La compatibilité est mesurée, plus supposée** : l'AppImage demande la glibc 2.36, et chaque version publiée est relancée sur Debian, Ubuntu, Mint, Fedora, Arch, Manjaro et openSUSE. Ubuntu 22.04 et les RHEL 9 sont trop anciens, et la documentation le dit.
+
 ## Un vrai gestionnaire de fichiers d'études — 11 novembre 2026
 
 - **L'explorateur est devenu un arbre** : les dossiers se déplient sur place, avec leurs traits de niveau et leurs icônes, et ceux que vous avez ouverts le restent d'une session à l'autre. Avant, on entrait dans un dossier à la fois et on perdait de vue le reste.

@@ -436,6 +436,7 @@ objectName:"analysisSplit"
                                         TTabButton {text:qsTr("Notation");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                         TTabButton {text:qsTr("Arbre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                         TTabButton {objectName:"bookTab";text:qsTr("Livre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
+                                        TTabButton {objectName:"onlineTab";text:qsTr("Lichess");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                     }
                                     Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;z:-1}
                                 }
@@ -488,6 +489,9 @@ objectName:"analysisSplit"
                                             text:controller.preferences.bookPath?qsTr("Position absente du livre."):qsTr("Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.")
                                             color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     }
+                                    // Le livre de Lichess, en direct : il suit la position affichée.
+                                    OnlineExplorer {objectName:"onlineExplorer";backend:controller
+                                                    active:notationTabs.currentIndex===3&&win.page===2}
                                 }
                                 Rectangle {Layout.fillWidth:true;height:1;color:win.line}
                                 RowLayout {Layout.fillWidth:true;Layout.margins:4;spacing:4;visible:!controller.state.training
@@ -733,8 +737,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         }
         onAccepted:controller.setFen(fenField.text)
     }
-    TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un texte PGN");anchors.centerIn:parent;width:Math.min(700,win.width-32);height:Math.min(550,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *";wrapMode:TextEdit.Wrap;selectByMouse:true}}
+    TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un PGN ou un lien Lichess");anchors.centerIn:parent;width:Math.min(700,win.width-32);height:Math.min(550,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
+        ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *\n\nhttps://lichess.org/AbCd1234";wrapMode:TextEdit.Wrap;selectByMouse:true}}
         onAccepted:controller.importText(pgnField.text)
     }
     TDialog {id:promotionDialog;objectName:"promotionDialog";width:Math.min(650,win.width-32);title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true

@@ -1,0 +1,135 @@
+name: Linux distributions
+# L'AppImage publiée, lancée telle quelle sur les distributions qu'on annonce : la preuve
+# de compatibilité, refaite à chaque version. Rien ici ne construit ni ne publie.
+on:
+  workflow_run:
+    workflows: ['Build, test and release Trait64']
+    types: [completed]
+  schedule:
+    # Une fois par semaine : une distribution en mouvement peut casser sans qu'on ait
+    # rien changé.
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: trait64-distributions
+  cancel-in-progress: true
+jobs:
+  fetch:
+    name: Latest published AppImage
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/releases?per_page=1" --jq '.[0].tag_name' > tag.txt
+          id="$(gh api "repos/${{ github.repository }}/releases?per_page=1" \
+                --jq '.[0].assets[] | select(.name | endswith(".AppImage")) | .id')"
+          gh api -H "Accept: application/octet-stream" \
+             "repos/${{ github.repository }}/releases/assets/${id}" > Trait64.AppImage
+          chmod +x Trait64.AppImage
+          echo "Version testée : $(cat tag.txt)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: |
+            Trait64.AppImage
+            tag.txt
+          retention-days: 3
+  run:
+    name: ${{ matrix.image }}
+    needs: fetch
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: debian:12
+            family: debian
+          - image: debian:13
+            family: debian
+          - image: ubuntu:24.04
+            family: debian
+          - image: ubuntu:25.10
+            family: debian
+          - image: linuxmintd/mint22-amd64
+            family: debian
+          - image: fedora:latest
+            family: fedora
+          - image: archlinux:latest
+            family: arch
+          - image: manjarolinux/base:latest
+            family: arch
+          - image: opensuse/tumbleweed
+            family: suse
+          - image: opensuse/leap:15.6
+            family: suse
+          # Trop anciennes pour l'AppImage : on vérifie qu'elle le dit clairement au
+          # lieu d'échouer sur une ligne de l'éditeur de liens.
+          - image: ubuntu:22.04
+            family: debian
+            too_old: true
+          - image: rockylinux:9
+            family: fedora
+            too_old: true
+    env:
+      QT_QPA_PLATFORM: offscreen
+      QT_QUICK_BACKEND: software
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: appimage
+      - name: A bare system is told what is missing
+        if: ${{ !matrix.too_old }}
+        run: |
+          chmod +x Trait64.AppImage
+          # Sans les bibliothèques graphiques, le lanceur doit nommer ce qui manque — ou
+          # démarrer, si l'image les fournit déjà. Un plantage muet est le seul échec.
+          if ./Trait64.AppImage --smoke-test > bare.log 2>&1; then
+            echo "Démarre sans rien installer."
+          else
+            cat bare.log
+            grep -q "bibliothèques du système manquent" bare.log
+          fi
+      - name: Install what a desktop provides
+        if: ${{ !matrix.too_old }}
+        run: |
+          case "${{ matrix.family }}" in
+            debian)
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+                libopengl0 libegl1 libglx0 libfontconfig1 libx11-xcb1 libxcb1 libx11-6 \
+                libwayland-client0 libharfbuzz0b libfreetype6 libsm6 libice6 libgpg-error0 libcom-err2 \
+                fonts-dejavu-core ;;
+            fedora)
+              dnf install -y libglvnd-opengl libglvnd-egl libglvnd-glx fontconfig libX11-xcb libxcb libX11 \
+                libwayland-client harfbuzz freetype libSM libICE libgpg-error libcom_err dejavu-sans-fonts ;;
+            arch)
+              pacman -Syu --noconfirm libglvnd fontconfig libx11 libxcb wayland harfbuzz freetype2 \
+                libsm libice libgpg-error e2fsprogs ttf-dejavu ;;
+            suse)
+              zypper --non-interactive install libOpenGL0 libglvnd fontconfig libX11-xcb1 libxcb1 libX11-6 \
+                libwayland-client0 libharfbuzz0 libfreetype6 libSM6 libICE6 libgpg-error0 libcom_err2 \
+                dejavu-fonts ;;
+          esac
+      - name: The AppImage starts and passes its smoke test
+        if: ${{ !matrix.too_old }}
+        run: |
+          ./Trait64.AppImage --smoke-test 2>&1 | tee run.log
+          grep -q "Desktop smoke test completed" run.log
+      - name: A system that is too old is refused in plain words
+        if: ${{ matrix.too_old }}
+        run: |
+          chmod +x Trait64.AppImage
+          if ./Trait64.AppImage --smoke-test > old.log 2>&1; then
+            echo "L'AppImage démarre sur un système annoncé trop ancien : la documentation est à corriger."
+            cat old.log
+            exit 1
+          fi
+          cat old.log
+          grep -q "glibc 2.36" old.log

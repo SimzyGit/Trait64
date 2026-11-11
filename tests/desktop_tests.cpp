@@ -1158,6 +1158,14 @@ int main(int argc, char **argv) {
             check(whole["openingCodes"].toStringList().contains("B90") &&
                       !whole["openingCodes"].toStringList().contains("C00"),
                   "A family name matches the start of the name and nothing else");
+            check(Controller::lichessGameId("https://lichess.org/AbCd1234") == "AbCd1234" &&
+                      Controller::lichessGameId(" lichess.org/AbCd1234/black#42 ") == "AbCd1234" &&
+                      Controller::lichessGameId("https://lichess.org/AbCd1234wxyz") == "AbCd1234" &&
+                      Controller::lichessGameId("https://lichess.org/training").isEmpty() &&
+                      Controller::lichessGameId("https://lichess.org/@/someone").isEmpty() &&
+                      Controller::lichessGameId("1. e4 e5 https://lichess.org/AbCd1234").isEmpty() &&
+                      Controller::lichessGameId("https://evil.test/lichess.org/AbCd1234").isEmpty(),
+                  "A pasted Lichess game link is recognised, and nothing else is");
             // Parcourir la liste depuis l'analyse : l'aperçu lit la partie sans la
             // charger, et la navigation la remplace dans l'onglet courant.
             c.searchLibrary("Fixture 404", {}, false, false, false, {});

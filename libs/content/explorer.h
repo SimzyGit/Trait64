@@ -29,6 +29,10 @@ class OpeningExplorer : public QObject {
     // Rend le même plan que le dossier de la bibliothèque : l'interface n'a qu'une
     // lecture à connaître, quelle que soit la base interrogée.
     static QVariantMap parse(const QByteArray &body);
+    // Les tables de finales de Lichess (sept pièces au plus) : le verdict de la position
+    // et celui de chaque coup, vus du camp au trait.
+    static QVariantMap parseTablebase(const QByteArray &body);
+    static int pieces(const QString &fen);
 
   signals:
     void ready(const QVariantMap &report);

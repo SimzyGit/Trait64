@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "explorer.h"
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -53,12 +54,69 @@ OpeningExplorer::OpeningExplorer(QObject *parent, QNetworkAccessManager *network
     : QObject(parent), network_(network ? network : new QNetworkAccessManager(this)) {}
 
 bool OpeningExplorer::knownSource(const QString &source) {
-    return source == "lichess" || source == "masters";
+    return source == "lichess" || source == "masters" || source == "tablebase";
+}
+
+int OpeningExplorer::pieces(const QString &fen) {
+    int count = 0;
+    for (const auto c : fen.section(' ', 0, 0))
+        count += c.isLetter() ? 1 : 0;
+    return count;
+}
+
+QVariantMap OpeningExplorer::parseTablebase(const QByteArray &body) {
+    QJsonParseError error{};
+    const auto document = QJsonDocument::fromJson(body, &error);
+    if (error.error != QJsonParseError::NoError || !document.isObject())
+        return {{"error", "Réponse illisible des tables de finales Lichess."}};
+    const auto root = document.object();
+    const auto verdict = root["category"].toString();
+    // Le verdict d'un coup est donné pour le camp qui jouera ensuite : « loss » après
+    // mon coup veut dire que je gagne. On le retourne — sauf si la réponse elle-même
+    // dit le contraire : les coups arrivent du meilleur au pire, donc dans une position
+    // gagnante le premier doit être gagnant d'une façon ou de l'autre.
+    const auto moves = root["moves"].toArray();
+    const auto first = moves.isEmpty() ? QString() : moves.first().toObject()["category"].toString();
+    const bool flip = !(verdict == "win" && first == "win") && !(verdict == "loss" && first == "loss");
+    const auto mine = [flip](const QString &category) {
+        if (!flip)
+            return category;
+        static const QHash<QString, QString> mirror{{"win", "loss"},
+                                                    {"loss", "win"},
+                                                    {"cursed-win", "blessed-loss"},
+                                                    {"blessed-loss", "cursed-win"},
+                                                    {"maybe-win", "maybe-loss"},
+                                                    {"maybe-loss", "maybe-win"}};
+        return mirror.value(category, category);
+    };
+    const auto number = [](const QJsonValue &value) {
+        return value.isDouble() ? QVariant(qAbs(value.toInt())) : QVariant();
+    };
+    QVariantList rows;
+    for (const auto &value : moves) {
+        const auto move = value.toObject();
+        rows << QVariantMap{{"san", move["san"].toString()},
+                            {"uci", move["uci"].toString()},
+                            {"verdict", mine(move["category"].toString())},
+                            {"dtz", number(move["dtz"])},
+                            {"dtm", number(move["dtm"])}};
+    }
+    return {{"tablebase", true},          {"verdict", verdict}, {"dtz", number(root["dtz"])},
+            {"dtm", number(root["dtm"])}, {"moves", rows},      {"total", rows.size()}};
 }
 
 QUrl OpeningExplorer::buildUrl(const QString &source, const QString &fen, const QVariantMap &filters) {
     if (!knownSource(source) || fen.isEmpty())
         return {};
+    if (source == "tablebase") {
+        // Sept pièces au plus : au-delà, les tables n'existent pas et la question ne
+        // part pas.
+        if (pieces(fen) > 7)
+            return {};
+        QUrl tables("https://tablebase.lichess.ovh/standard");
+        tables.setQuery(QUrlQuery{{"fen", fen}});
+        return tables;
+    }
     QUrl url("https://explorer.lichess.ovh/" + source);
     QUrlQuery query;
     query.addQueryItem("fen", fen);
@@ -122,16 +180,19 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
     cancel();
     const auto url = buildUrl(source, fen, filters);
     if (url.isEmpty()) {
-        emit failed("Base en ligne inconnue.");
+        emit failed(source == "tablebase" && pieces(fen) > 7
+                        ? "Les tables de finales couvrent les positions de sept pièces au plus."
+                        : "Base en ligne inconnue.");
         return;
     }
+    const bool tables = source == "tablebase";
     QNetworkRequest request(url);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(20000);
     request.setRawHeader("Accept", "application/json");
     request.setRawHeader("User-Agent", "Trait64-explorer/1.0");
     reply_ = network_->get(request);
-    connect(reply_, &QNetworkReply::finished, this, [this] {
+    connect(reply_, &QNetworkReply::finished, this, [this, tables] {
         if (!reply_)
             return;
         std::unique_ptr<QNetworkReply> reply(reply_.data());
@@ -149,7 +210,7 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
             emit failed("Explorateur Lichess injoignable : " + reply->errorString());
             return;
         }
-        auto report = parse(reply->readAll());
+        auto report = tables ? parseTablebase(reply->readAll()) : parse(reply->readAll());
         if (report.contains("error")) {
             emit failed(report["error"].toString());
             return;

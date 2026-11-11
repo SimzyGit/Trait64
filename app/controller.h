@@ -368,6 +368,8 @@ class Controller : public QObject {
     QVariantMap onlineReport() const { return onlineReport_; }
     // Rapatrie une partie de Lichess dans la bibliothèque, par son identifiant.
     Q_INVOKABLE void importOnlineGame(const QString &id);
+    // L'identifiant d'une partie dans un lien Lichess, vide si le texte n'en est pas un.
+    static QString lichessGameId(const QString &text);
     Q_INVOKABLE void classifyLibraryOpenings();
     // Le même classement, sans message : il suit chaque import, et un import réussi ne
     // doit pas échouer parce que le classement a manqué.
@@ -528,7 +530,8 @@ class Controller : public QObject {
     t64::OnlineGames *online_ = nullptr;
     t64::OpeningExplorer *explorer_ = nullptr;
     QVariantMap onlineReport_;
-    QString onlineSource_;
+    QString onlineSource_, onlineKey_;
+    QHash<QString, QVariantMap> onlineCache_;
     t64::FideSync *fide_ = nullptr;
     QVariantMap fideSync_;
     int fideProfile_ = -1;
