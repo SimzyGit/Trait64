@@ -118,7 +118,8 @@ jobs:
               zypper --non-interactive install 'libOpenGL.so.0()(64bit)' 'libEGL.so.1()(64bit)' \
                 'libGLX.so.0()(64bit)' fontconfig 'libX11-xcb.so.1()(64bit)' 'libxcb.so.1()(64bit)' \
                 'libX11.so.6()(64bit)' 'libwayland-client.so.0()(64bit)' 'libharfbuzz.so.0()(64bit)' \
-                'libfreetype.so.6()(64bit)' 'libSM.so.6()(64bit)' 'libICE.so.6()(64bit)' dejavu-fonts ;;
+                'libfreetype.so.6()(64bit)' 'libSM.so.6()(64bit)' 'libICE.so.6()(64bit)' \
+                'libcom_err.so.2()(64bit)' 'libgpg-error.so.0()(64bit)' dejavu-fonts ;;
           esac
       - name: The AppImage starts and passes its smoke test
         if: ${{ !matrix.too_old }}
