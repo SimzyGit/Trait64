@@ -694,7 +694,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:controller.repertoireTask.running?controller.repertoireTask.status+" · "+controller.repertoireTask.positions+" positions":controller.busy?"●  "+controller.taskStatus:controller.state.dirty?qsTr("●  Modifications · récupération de session automatique"):qsTr("●  Prêt");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight}
             TButton {visible:controller.busy;text:controller.resumableImport?qsTr("Mettre en pause"):qsTr("Interrompre");implicitHeight:Math.max(24,24*win.textScale);onClicked:controller.cancelTask()}
             Label {text:controller.state.training?qsTr("Entraînement local"):qsTr("Ctrl S  Enregistrer   ·   F  Retourner   ·   ← →  Parcourir");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;visible:win.width>=1350*win.textScale}
-            TButton {text:"Trait64 / "+controller.updater.state.current;flat:true;implicitHeight:Math.max(26,26*win.textScale);font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);onClicked:updatesDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Versions et mises à jour")}
+            // Une version qui attend se voit ici, même après avoir fermé la proposition :
+            // « plus tard » ne doit pas vouloir dire « introuvable ».
+            TButton {objectName:"versionButton";accent:controller.updater.state.available&&controller.updater.state.status!=="installed"
+                     text:accent?qsTr("Mise à jour %1 disponible").arg(controller.updater.state.version):"Trait64 / "+controller.updater.state.current;flat:!accent;implicitHeight:Math.max(26,26*win.textScale);font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);onClicked:updatesDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Versions et mises à jour")}
         }
     }
 

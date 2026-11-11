@@ -1,5 +1,11 @@
 # Changements
 
+## Les mises à jour se proposent d'elles-mêmes, y compris en cours de route — 12 novembre 2026
+
+- **Une version publiée pendant que Trait64 tourne est proposée sans redémarrer.** La vérification n'avait lieu qu'au lancement : un logiciel laissé ouvert plusieurs jours ne l'apprenait qu'au suivant. Elle est refaite toutes les six heures.
+- **Une mise à jour en attente se voit dans la barre du bas** : le bouton de version passe en couleur et la nomme, même après avoir fermé la proposition par « Plus tard ».
+- Vérifié sur les versions réellement publiées : AppImage, paquets Debian 12 et 13, Windows et macOS reçoivent bien la dernière.
+
 ## Le livre de Lichess dans l'analyse, les finales en ligne — 11 novembre 2026
 
 - **Un onglet « Lichess » à côté de Notation, Arbre et Livre** : ce qui se joue dans la position affichée, lu en direct dans les parties classées de Lichess ou dans celles des maîtres. Il suit l'échiquier coup après coup, un clic sur une ligne joue le coup, et les parties en vue se rapatrient d'un clic. Les positions déjà demandées sont gardées en mémoire : parcourir une partie ne redemande pas les mêmes à chaque passage.

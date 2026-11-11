@@ -1302,5 +1302,6 @@
   "perd peut-être": "may lose",
   "perd, mais nulle aux 50 coups": "loses, but drawn by the 50-move rule",
   "Réponse illisible des tables de finales Lichess.": "Unreadable answer from the Lichess endgame tablebases.",
-  "Les tables de finales couvrent les positions de sept pièces au plus.": "Endgame tablebases cover positions of seven pieces or fewer."
+  "Les tables de finales couvrent les positions de sept pièces au plus.": "Endgame tablebases cover positions of seven pieces or fewer.",
+  "Mise à jour %1 disponible": "Update %1 available"
 }

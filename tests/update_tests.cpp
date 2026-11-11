@@ -301,6 +301,30 @@ int main(int argc, char **argv) {
             check(network.requests.last().rawHeader("Authorization").isEmpty(),
                   "Token never forwarded to asset host");
         }
+        if (packaged) {
+            // Le logiciel reste ouvert des jours : une version publiée entre-temps doit
+            // être proposée sans attendre le prochain lancement.
+            QTemporaryDir longRun;
+            Network quiet;
+            t64::Updater running(longRun.path(), nullptr, &quiet);
+            QSignalSpy proposed(&running, &t64::Updater::offered);
+            const auto suffix = running.state()["packageSuffix"].toString();
+            const auto nothing = QJsonDocument(QJsonArray{}).toJson();
+            const auto fresh =
+                QJsonDocument(QJsonArray{release("v9.0.0-dev.1", true, QString(64, 'b'), suffix)}).toJson();
+            // Au démarrage, rien de neuf ; à la vérification suivante, une version est là.
+            quiet.responses << Response{200, nothing, {}} << Response{200, fresh, {}};
+            running.setChannel("development");
+            running.startAutomaticCheck(10, 120);
+            for (int i = 0; i < 300 && proposed.isEmpty(); ++i)
+                QTest::qWait(10);
+            check(proposed.size() == 1 && running.state()["version"] == "v9.0.0-dev.1" &&
+                      quiet.requests.size() == 2,
+                  "A version published while the software runs is offered without a restart");
+            QTest::qWait(400);
+            check(quiet.requests.size() == 2 && proposed.size() == 1,
+                  "An offer already on the table is not asked for again, nor made twice");
+        }
         QSettings persisted;
         check(!persisted.allKeys().join(' ').contains("token", Qt::CaseInsensitive),
               "Session token never persisted");

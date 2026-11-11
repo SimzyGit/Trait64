@@ -14,12 +14,18 @@ class Updater : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
   public:
+    // L'écart entre deux vérifications automatiques pendant que le logiciel tourne.
+    // Six heures : assez pour apprendre une version le jour de sa sortie, assez peu
+    // pour ne rien peser sur le quota de l'API GitHub (soixante appels par heure).
+    static constexpr int recheckInterval = 6 * 60 * 60 * 1000;
     explicit Updater(const QString &dataPath, QObject *parent = nullptr,
                      QNetworkAccessManager *network = nullptr);
     ~Updater() override;
     QVariantMap state() const;
     std::function<QString()> beforeInstall;
-    void startAutomaticCheck();
+    // Vérifie peu après le démarrage, puis à intervalles tant que le logiciel tourne.
+    // Les délais ne sont des paramètres que pour s'éprouver sans attendre six heures.
+    void startAutomaticCheck(int firstDelay = 3500, int interval = recheckInterval);
     Q_INVOKABLE void check(bool manual = true);
     Q_INVOKABLE void setChannel(const QString &channel);
     Q_INVOKABLE void setAutomatic(bool enabled);

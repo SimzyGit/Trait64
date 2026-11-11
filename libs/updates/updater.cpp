@@ -156,9 +156,21 @@ void Updater::setChannel(const QString &c) {
     message_.clear();
     emit changed();
 }
-void Updater::startAutomaticCheck() {
+void Updater::startAutomaticCheck(int firstDelay, int interval) {
     if (settings_.value("updates/automatic", true).toBool())
-        QTimer::singleShot(3500, this, [this] { check(false); });
+        QTimer::singleShot(firstDelay, this, [this] { check(false); });
+    // Une fois au démarrage ne suffit pas : un logiciel d'échecs reste ouvert des jours,
+    // et une version publiée entre-temps n'était proposée qu'au lancement suivant. Le
+    // réglage est relu à chaque passage — le couper prend effet sans redémarrer.
+    auto *again = new QTimer(this);
+    again->setInterval(interval);
+    connect(again, &QTimer::timeout, this, [this] {
+        // Une version déjà proposée et laissée de côté n'est pas redemandée : le
+        // « plus tard » de l'utilisateur vaut jusqu'à son terme.
+        if (settings_.value("updates/automatic", true).toBool() && status_ != "available")
+            check(false);
+    });
+    again->start();
 }
 void Updater::fail(const QString &msg) {
     status_ = "error";
