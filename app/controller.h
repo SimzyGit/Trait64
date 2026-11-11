@@ -127,6 +127,18 @@ class Controller : public QObject {
     // ou si le fichier n'est pas lisible.
     Q_INVOKABLE qint64 openStudyFile(const QString &url);
     Q_INVOKABLE void createStudyFolder(const QString &parent, const QString &name);
+    // L'arborescence du dossier d'études, à plat : une ligne par entrée visible, avec sa
+    // profondeur. `expanded` liste les dossiers ouverts ; `search` filtre et ouvre tout.
+    Q_INVOKABLE QVariantList studyTree(const QString &root, const QStringList &expanded,
+                                       const QString &search = {}) const;
+    Q_INVOKABLE QStringList studyExpanded() const;
+    Q_INVOKABLE void rememberStudyExpanded(const QStringList &folders);
+    // Chacune rend le nouveau chemin, vide en cas de refus.
+    Q_INVOKABLE QString createStudyFile(const QString &folder, const QString &name, const QString &pgn = {});
+    Q_INVOKABLE QString renameStudyEntry(const QString &entry, const QString &name);
+    Q_INVOKABLE QString moveStudyEntry(const QString &entry, const QString &folder);
+    // À la corbeille du système, d'où l'on peut encore le reprendre.
+    Q_INVOKABLE bool trashStudyEntry(const QString &entry);
     void nextPendingStudy();
     static QString studyCollectionName(const QString &path);
     // Les recueils, et les parties de l'un d'eux. L'onglet Études les montre comme des

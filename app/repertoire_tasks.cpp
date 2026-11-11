@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "unpack.h"
+#include <QDate>
+#include <functional>
 
 namespace {
 // Les suffixes qu'une étude peut porter. Partagés par l'import d'un fichier et celui
@@ -522,6 +524,203 @@ void Controller::createStudyFolder(const QString &parent, const QString &name) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+
+namespace {
+// Un nom de fichier ou de dossier, pas un chemin : « ../ » irait écrire ailleurs.
+void requirePlainName(const QString &name) {
+    if (name.isEmpty())
+        throw std::runtime_error("Donnez un nom.");
+    if (name != QFileInfo(name).fileName() || name == "." || name == ".." || name.contains('\\'))
+        throw std::runtime_error("Le nom ne peut pas contenir de chemin.");
+}
+} // namespace
+
+QVariantList Controller::studyTree(const QString &root, const QStringList &expanded,
+                                   const QString &search) const {
+    // L'arbre à plat : une ligne par entrée visible, avec sa profondeur. La liste se
+    // déroule dossier par dossier — seuls ceux qu'on a ouverts sont lus — sauf pendant
+    // une recherche, qui descend partout et ne garde que ce qui correspond.
+    QVariantList rows;
+    QString top;
+    try {
+        top = localPath(root.isEmpty() ? settings_.value("studyFolder").toString() : root);
+    } catch (const std::exception &) {
+        return rows;
+    }
+    if (top.isEmpty() || !QFileInfo(top).isDir())
+        return rows;
+    QHash<QString, QVariantMap> known;
+    for (const auto &row : db_->sources()) {
+        const auto source = row.toMap();
+        if (source["kind"].toString() == "study" && !source["source"].toString().isEmpty())
+            known.insert(source["source"].toString(), source);
+    }
+    const QSet<QString> open(expanded.cbegin(), expanded.cend());
+    const auto needle = search.trimmed().toLower();
+    constexpr int shown = 3000;
+    int visited = 0;
+    // Rend vrai si le dossier contient de quoi s'afficher pendant une recherche.
+    const std::function<bool(const QString &, int)> walk = [&](const QString &folder, int depth) {
+        bool any = false;
+        const QDir dir(folder);
+        for (const auto &child : dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+            if (rows.size() >= shown || ++visited > 20000 || depth > 24)
+                break;
+            const auto path = child.absoluteFilePath();
+            const bool matches = !needle.isEmpty() && child.fileName().toLower().contains(needle);
+            const bool unfolded = needle.isEmpty() ? open.contains(path) : true;
+            const int at = rows.size();
+            rows << QVariantMap{
+                {"name", child.fileName()}, {"path", path},
+                {"folder", true},           {"depth", depth},
+                {"expanded", unfolded},     {"modified", child.lastModified().toString("yyyy-MM-dd HH:mm")}};
+            // Un lien symbolique vers un dossier parent tournerait sans fin.
+            const bool inside = unfolded && !child.isSymLink() ? walk(path, depth + 1) : false;
+            if (!needle.isEmpty() && !matches && !inside)
+                rows.resize(at); // rien dessous ne correspond : le dossier ne s'affiche pas
+            else
+                any = true;
+        }
+        for (const auto &child : dir.entryInfoList(QDir::Files, QDir::Name)) {
+            if (rows.size() >= shown || ++visited > 20000)
+                break;
+            const auto lowercase = child.fileName().toLower();
+            const bool readable = endsWithAny(lowercase, readableCollectionSuffixes());
+            if (!readable && !endsWithAny(lowercase, foreignBaseSuffixes()))
+                continue;
+            if (!needle.isEmpty() && !lowercase.contains(needle))
+                continue;
+            const auto collection = known.value(child.absoluteFilePath());
+            rows << QVariantMap{{"name", child.fileName()},
+                                {"path", child.absoluteFilePath()},
+                                {"folder", false},
+                                {"depth", depth},
+                                {"readable", readable},
+                                {"size", child.size()},
+                                {"modified", child.lastModified().toString("yyyy-MM-dd HH:mm")},
+                                {"sourceId", collection.value("id", 0)},
+                                {"games", collection.value("games", 0)}};
+            any = true;
+        }
+        return any;
+    };
+    walk(QDir(top).absolutePath(), 0);
+    return rows;
+}
+
+QStringList Controller::studyExpanded() const {
+    return settings_.value("studyExpanded").toStringList();
+}
+void Controller::rememberStudyExpanded(const QStringList &folders) {
+    // Les dossiers disparus n'ont pas à s'accumuler d'une session à l'autre.
+    QStringList kept;
+    for (const auto &folder : folders)
+        if (kept.size() < 500 && QFileInfo(folder).isDir())
+            kept << folder;
+    settings_.setValue("studyExpanded", kept);
+}
+
+QString Controller::createStudyFile(const QString &folder, const QString &name, const QString &pgn) {
+    try {
+        const auto parent = localPath(folder);
+        require(QFileInfo(parent).isDir(), "Dossier introuvable.");
+        auto clean = name.trimmed();
+        requirePlainName(clean);
+        if (!clean.endsWith(".pgn", Qt::CaseInsensitive))
+            clean += ".pgn";
+        const auto path = parent + "/" + clean;
+        require(!QFileInfo::exists(path), "Un fichier de ce nom existe déjà.");
+        // Un fichier vide n'est pas un PGN : sans texte collé, on y met une partie
+        // vierge, que n'importe quel logiciel sait ouvrir.
+        auto text = pgn.trimmed();
+        if (text.isEmpty())
+            text = QString("[Event \"%1\"]\n[Site \"?\"]\n[Date \"%2\"]\n[Round \"?\"]\n[White \"?\"]\n"
+                           "[Black \"?\"]\n[Result \"*\"]\n\n*")
+                       .arg(QFileInfo(clean).completeBaseName().replace('"', '\''),
+                            QDate::currentDate().toString("yyyy.MM.dd"));
+        QSaveFile file(path);
+        const auto bytes = (text + "\n").toUtf8();
+        require(file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() && file.commit(),
+                "Création impossible : droits insuffisants ?");
+        emit message(tr("Fichier créé : ") + clean);
+        return path;
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+    return {};
+}
+
+QString Controller::renameStudyEntry(const QString &entry, const QString &name) {
+    try {
+        const QFileInfo info(localPath(entry));
+        require(info.exists(), "Fichier introuvable.");
+        auto clean = name.trimmed();
+        requirePlainName(clean);
+        // L'extension dit le format : la perdre en renommant rendrait le fichier
+        // illisible, alors on la remet si elle a sauté.
+        if (info.isFile()) {
+            const auto old = info.fileName().toLower();
+            for (const auto &suffix : readableCollectionSuffixes() + foreignBaseSuffixes())
+                if (old.endsWith(suffix) && !clean.toLower().endsWith(suffix)) {
+                    clean += suffix;
+                    break;
+                }
+        }
+        const auto target = info.absolutePath() + "/" + clean;
+        if (target == info.absoluteFilePath())
+            return target;
+        require(!QFileInfo::exists(target), "Ce nom est déjà pris.");
+        require(QFile::rename(info.absoluteFilePath(), target),
+                "Renommage impossible : droits insuffisants ?");
+        db_->moveSourcePath(info.absoluteFilePath(), target);
+        emit sourcesChanged();
+        return target;
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+    return {};
+}
+
+QString Controller::moveStudyEntry(const QString &entry, const QString &folder) {
+    try {
+        const QFileInfo info(localPath(entry));
+        const QFileInfo into(localPath(folder));
+        require(info.exists(), "Fichier introuvable.");
+        require(into.isDir(), "Dossier introuvable.");
+        const auto from = info.absoluteFilePath(), parent = into.absoluteFilePath();
+        if (info.absolutePath() == parent)
+            return from; // déjà là
+        // Un dossier ne se range ni dans lui-même ni dans l'un des siens.
+        require(parent != from && !parent.startsWith(from + "/"),
+                "Un dossier ne peut pas être déplacé dans lui-même.");
+        const auto target = parent + "/" + info.fileName();
+        require(!QFileInfo::exists(target), "Le dossier d’arrivée contient déjà ce nom.");
+        require(QFile::rename(from, target), "Déplacement impossible : droits insuffisants ?");
+        db_->moveSourcePath(from, target);
+        emit sourcesChanged();
+        return target;
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+    return {};
+}
+
+bool Controller::trashStudyEntry(const QString &entry) {
+    try {
+        const QFileInfo info(localPath(entry));
+        require(info.exists(), "Fichier introuvable.");
+        // La corbeille, jamais la suppression sèche : un dossier d'études représente des
+        // années de travail, et un clic de trop doit rester rattrapable.
+        require(QFile::moveToTrash(info.absoluteFilePath()),
+                "La corbeille du système n’est pas disponible ici : rien n’a été supprimé.");
+        emit message(tr("Mis à la corbeille : ") + info.fileName());
+        emit sourcesChanged();
+        return true;
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+    return false;
 }
 
 void Controller::importStudyFolder(const QString &url) {

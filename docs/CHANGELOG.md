@@ -1,5 +1,15 @@
 # Changements
 
+## Un vrai gestionnaire de fichiers d'études — 11 novembre 2026
+
+- **L'explorateur est devenu un arbre** : les dossiers se déplient sur place, avec leurs traits de niveau et leurs icônes, et ceux que vous avez ouverts le restent d'une session à l'autre. Avant, on entrait dans un dossier à la fois et on perdait de vue le reste.
+- **Recherche dans toute l'arborescence** : elle descend partout, ne garde que ce qui correspond et montre les dossiers qui y mènent.
+- **Créer un fichier PGN** — vide, avec une partie vierge prête à étudier, ou à partir d'un PGN collé — et **créer un dossier**, là où l'on se trouve.
+- **Renommer, déplacer, mettre à la corbeille**, par les boutons qui apparaissent au survol d'une ligne ou depuis la fiche de l'entrée choisie. La corbeille est celle du système : un clic de trop se rattrape. Là où elle n'existe pas, rien n'est supprimé.
+- **Le recueil suit son fichier** : renommé ou déplacé — lui ou le dossier qui le contient —, le fichier rouvre son recueil au lieu d'être relu en double.
+- **Une fiche pour l'entrée choisie** : ce qu'elle est, sa taille, sa date, si elle est dans la base, et ce qu'on peut en faire. Un clic choisit, un double-clic ouvre.
+- **Les bases `.db3` d'En Croissant se lisent.** Elles notent chaque coup par son rang dans la liste des coups légaux de la bibliothèque Shakmaty ; cet ordre a été reconstruit et éprouvé contre Shakmaty lui-même sur 750 000 positions, sans un écart. Au-delà d'un million de parties l'import est refusé : chaque position étant indexée, il faudrait des heures et des dizaines de gigaoctets.
+
 ## L'explorateur Lichess en ligne — 7 novembre 2026
 
 - **Le dossier d'une position se lit maintenant dans trois bases** : la vôtre, les parties classées de Lichess — elles se comptent en milliards — et celles des maîtres sur l'échiquier. Les deux dernières sont interrogées en direct sur l'explorateur d'ouvertures de Lichess : rien n'est téléchargé, rien n'est stocké, et la réponse arrive en une fraction de seconde quelle que soit la taille de la base.

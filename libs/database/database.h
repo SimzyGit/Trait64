@@ -29,6 +29,8 @@ class Database {
     int importPgnFile(const QString &path, const std::function<bool(int)> &progress,
                       const QVariantMap &source = {});
     QVariantList sources() const;
+    // Le fichier d'un recueil a changé de nom ou de dossier : son chemin suit.
+    void moveSourcePath(const QString &from, const QString &to);
     QVariantList importHistory() const;
     qint64 createImportJob(const QString &path, const QVariantMap &source = {});
     QVariantMap runImportJob(qint64 id, const std::function<bool(const ImportProgress &)> &progress = {},

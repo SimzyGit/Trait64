@@ -1739,6 +1739,77 @@ int main(int argc, char **argv) {
                 shelf.createStudyFolder(folder, "Classiques");
                 check(QFileInfo(folder + "/Classiques").isDir(), "And creates the folder asked for");
             }
+            // L'arborescence : seuls les dossiers ouverts se déroulent, la recherche
+            // descend partout, et chaque ligne dit sa profondeur.
+            {
+                const auto names = [](const QVariantList &rows) {
+                    QStringList list;
+                    for (const auto &row : rows)
+                        list << QString::number(row.toMap()["depth"].toInt()) + ":" +
+                                    row.toMap()["name"].toString();
+                    return list;
+                };
+                const auto closed = names(shelf.studyTree(folder, {}));
+                check(closed.contains("0:Tournois") && !closed.contains("1:Open.pgn") &&
+                          closed.indexOf("0:Tournois") < closed.indexOf("0:Blitz.pgn"),
+                      "A closed folder hides its files, and folders come first");
+                const auto opened = names(shelf.studyTree(folder, {folder + "/Tournois"}));
+                check(opened.contains("1:Open.pgn"), "An open folder unrolls one level deeper");
+                const auto found = names(shelf.studyTree(folder, {}, "open"));
+                check(found == QStringList({"0:Tournois", "1:Open.pgn"}),
+                      "A search descends everywhere and keeps only what matches, with its folders");
+                check(shelf.studyTree(folder, {}, "introuvable").isEmpty(),
+                      "A search with no match shows nothing");
+                shelf.rememberStudyExpanded({folder + "/Tournois", folder + "/disparu"});
+                check(shelf.studyExpanded() == QStringList({folder + "/Tournois"}),
+                      "Remembered folders that no longer exist are dropped");
+            }
+            // Créer, renommer, déplacer, mettre à la corbeille — et le recueil suit son fichier.
+            {
+                QSignalSpy said(&shelf, &Controller::message);
+                const auto made = shelf.createStudyFile(folder + "/Classiques", "Nimzo", {});
+                check(made == folder + "/Classiques/Nimzo.pgn" && QFileInfo(made).size() > 40,
+                      "A new study file gets its extension and a blank game, not zero bytes");
+                check(shelf.createStudyFile(folder + "/Classiques", "Nimzo.pgn", {}).isEmpty() &&
+                          shelf.createStudyFile(folder + "/Classiques", "../evade", {}).isEmpty() &&
+                          !QFileInfo::exists(folder + "/evade.pgn"),
+                      "A taken name and a path are both refused");
+                const auto pasted = shelf.createStudyFile(folder + "/Classiques", "Collee",
+                                                          "[White \"K\"]\n[Black \"L\"]\n\n1.c4 *");
+                QFile check_(pasted);
+                check(check_.open(QIODevice::ReadOnly) && check_.readAll().contains("1.c4"),
+                      "A pasted PGN becomes the file's content");
+                qint64 blitzId = 0;
+                for (const auto &row : shelf.browseStudies(folder)["entries"].toList())
+                    if (row.toMap()["name"] == "Blitz.pgn")
+                        blitzId = row.toMap()["sourceId"].toLongLong();
+                const auto renamed = shelf.renameStudyEntry(folder + "/Blitz.pgn", "Parties rapides");
+                check(renamed == folder + "/Parties rapides.pgn" && QFileInfo::exists(renamed) && blitzId > 0,
+                      "Renaming keeps the extension even when the new name drops it");
+                check(shelf.openStudyFile(renamed) == blitzId,
+                      "A renamed file still opens its collection instead of being read again");
+                const auto moved = shelf.moveStudyEntry(renamed, folder + "/Classiques");
+                check(moved == folder + "/Classiques/Parties rapides.pgn" &&
+                          shelf.openStudyFile(moved) == blitzId,
+                      "A moved file keeps its collection too");
+                check(!shelf.renameStudyEntry(folder + "/Classiques", "Anciennes").isEmpty() &&
+                          shelf.openStudyFile(folder + "/Anciennes/Parties rapides.pgn") == blitzId,
+                      "Renaming a folder carries the collections of the files inside it");
+                check(shelf.moveStudyEntry(folder + "/Anciennes", folder + "/Anciennes").isEmpty() &&
+                          shelf.moveStudyEntry(folder + "/Tournois", folder + "/Tournois/../Tournois")
+                              .isEmpty(),
+                      "A folder cannot be moved into itself");
+                // La corbeille n'existe pas sur toutes les machines d'essai : on vérifie
+                // alors que rien n'est supprimé, ce qui est la promesse.
+                const auto doomed = folder + "/Anciennes/Collee.pgn";
+                const bool trashed = shelf.trashStudyEntry(doomed);
+                check(trashed != QFileInfo::exists(doomed),
+                      "A file goes to the trash, or stays exactly where it was");
+                check(QDir().rename(folder + "/Anciennes", folder + "/Classiques"), "Put the folder back");
+                QFile::remove(folder + "/Classiques/Nimzo.pgn");
+                QFile::remove(folder + "/Classiques/Collee.pgn");
+                QFile::remove(folder + "/Classiques/Parties rapides.pgn");
+            }
             // Une base d'En Croissant posée dans le dossier se lit comme un PGN.
             {
                 QFile packed(QString(T64_TEST_DATA) + "/croissant_legacy.db3.qz");

@@ -91,6 +91,20 @@ qint64 Database::registerSource(const QVariantMap &source) {
         throw std::runtime_error("Source introuvable.");
     return q.value(0).toLongLong();
 }
+void Database::moveSourcePath(const QString &from, const QString &to) {
+    // Un fichier, ou tout ce qui vit sous un dossier : renommer le dossier déplace ses
+    // fichiers, et leurs recueils doivent suivre. La comparaison par préfixe se fait à la
+    // main — LIKE prendrait « _ » et « % » des noms de fichiers pour des jokers.
+    QSqlQuery q(db_);
+    q.prepare("UPDATE sources SET url = ? || substr(url, length(?) + 1) "
+              "WHERE url = ? OR substr(url, 1, length(?) + 1) = ? || '/'");
+    q.addBindValue(to);
+    q.addBindValue(from);
+    q.addBindValue(from);
+    q.addBindValue(from);
+    q.addBindValue(from);
+    run(q);
+}
 void Database::linkSource(qint64 source, qint64 game) {
     if (!source)
         return;
