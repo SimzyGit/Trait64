@@ -9,10 +9,16 @@ const QStringList &readableStudySuffixes() {
     static const QStringList suffixes{".pgn", ".pgn.gz", ".pgn.zst", ".pgn.bz2", ".pgn.xz", ".pgn.zstd"};
     return suffixes;
 }
+// Un recueil accepte en plus les bases d'En Croissant. Un répertoire, non : neuf
+// millions de parties fondues dans un arbre de préparation n'en sont pas un.
+const QStringList &readableCollectionSuffixes() {
+    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3"};
+    return suffixes;
+}
 // Les bases des autres logiciels : l'explorateur les montre pour dire pourquoi elles ne
 // s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide.
 const QStringList &foreignBaseSuffixes() {
-    static const QStringList suffixes{".db3", ".si4", ".si5", ".sg4", ".sn4", ".cbh", ".cbv", ".cbf", ".pdb"};
+    static const QStringList suffixes{".si4", ".si5", ".sg4", ".sn4", ".cbh", ".cbv", ".cbf", ".pdb"};
     return suffixes;
 }
 bool endsWithAny(const QString &lowercaseName, const QStringList &suffixes) {
@@ -360,7 +366,7 @@ void Controller::analyseRepertoire(qint64 id, int milliseconds, int profile) {
 
 QString Controller::studyCollectionName(const QString &path) {
     auto name = QFileInfo(path).fileName();
-    for (const auto &suffix : readableStudySuffixes())
+    for (const auto &suffix : readableCollectionSuffixes())
         if (name.endsWith(suffix, Qt::CaseInsensitive)) {
             name.chop(suffix.size());
             break;
@@ -386,7 +392,7 @@ void Controller::importStudyCollection(const QString &url) {
         // d'être fondues dans un seul arbre de positions comme un répertoire. Le chemin
         // du fichier est gardé : c'est lui que l'explorateur reconnaît.
         const QVariantMap source{{"id", slug}, {"title", name}, {"kind", "study"}, {"source", path}};
-        if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
+        if (path.endsWith(".pgn", Qt::CaseInsensitive) || path.endsWith(".db3", Qt::CaseInsensitive)) {
             importSourceFile(url, source);
             return;
         }
@@ -463,7 +469,7 @@ QVariantMap Controller::browseStudies(const QString &path) const {
         if (entries.size() >= shown)
             break;
         const auto lowercase = child.fileName().toLower();
-        const bool readable = endsWithAny(lowercase, readableStudySuffixes());
+        const bool readable = endsWithAny(lowercase, readableCollectionSuffixes());
         if (!readable && !endsWithAny(lowercase, foreignBaseSuffixes()))
             continue;
         const auto collection = known.value(child.absoluteFilePath());
@@ -484,7 +490,7 @@ qint64 Controller::openStudyFile(const QString &url) {
     try {
         const auto path = localPath(url);
         require(QFileInfo(path).isFile(), "Fichier introuvable.");
-        require(endsWithAny(path.toLower(), readableStudySuffixes()),
+        require(endsWithAny(path.toLower(), readableCollectionSuffixes()),
                 "Trait64 ne lit pas encore ce format : exportez le fichier en PGN depuis le "
                 "logiciel qui l’a produit.");
         for (const auto &row : db_->sources()) {
@@ -525,7 +531,7 @@ void Controller::importStudyFolder(const QString &url) {
         // Un recueil par fichier, comme pour les répertoires : c'est l'arborescence du
         // joueur, et elle veut dire quelque chose pour lui.
         pendingStudies_.clear();
-        const auto &readable = readableStudySuffixes();
+        const auto &readable = readableCollectionSuffixes();
         int visited = 0;
         QDirIterator walk(root, QDir::Files, QDirIterator::Subdirectories);
         while (walk.hasNext() && pendingStudies_.size() < 200 && ++visited <= 20000) {

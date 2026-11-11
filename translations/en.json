@@ -1238,5 +1238,11 @@
   "L’explorateur Lichess demande de ralentir. Réessayez dans un instant.": "The Lichess explorer asks you to slow down. Try again in a moment.",
   "Explorateur Lichess injoignable : ": "Lichess explorer unreachable: ",
   "Réponse illisible de l’explorateur Lichess.": "Unreadable answer from the Lichess explorer.",
-  "Identifiant de partie Lichess invalide.": "Invalid Lichess game id."
+  "Identifiant de partie Lichess invalide.": "Invalid Lichess game id.",
+  "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.": "This .db3 file is not an En Croissant database in the SQLite format.",
+  "Cette base dépasse un million de parties : l’importer prendrait des heures et des dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne depuis le dossier de la position.": "This database holds more than a million games: importing it would take hours and tens of gigabytes, since every position is indexed. Query it online from the position report instead.",
+  "Import annulé.": "Import cancelled.",
+  "Schéma En Croissant inattendu.": "Unexpected En Croissant schema.",
+  "Écriture du PGN interrompue.": "Writing the PGN was interrupted.",
+  "Base En Croissant illisible : ": "Unreadable En Croissant database: "
 }

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "archive.h"
 #include "cancellation.h"
+#include "croissant.h"
 #include "database.h"
 #include "legacy_positions.h"
+#include "moveorder.h"
 #include "polyglot.h"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -1005,6 +1007,96 @@ int main(int argc, char **argv) {
             rejects([&] { prep.positionStatistics(start, {}, stop); });
             check(prep.positionStatistics(start).size() == 3,
                   "Canceled statistics do not leave a progress handler behind");
+        }
+        {
+            // L'ordre des coups légaux de Shakmaty, sur lequel repose la lecture des
+            // bases d'En Croissant. Le témoin vient de Shakmaty lui-même : 3 637
+            // positions tirées de 750 000, toutes celles où l'ordre est délicat — prise
+            // en passant, roque, promotion, échec. Un rang de travers ne ferait pas une
+            // erreur mais un autre coup légal : seule la comparaison le voit.
+            const auto fixture = [](const char *name) {
+                QFile file(QString(T64_TEST_DATA) + "/" + name);
+                check(file.open(QIODevice::ReadOnly), "Open a test fixture");
+                return qUncompress(file.readAll());
+            };
+            int positions = 0;
+            for (const auto &line : fixture("shakmaty_order.tsv.qz").split('\n')) {
+                if (line.isEmpty())
+                    continue;
+                const auto parts = line.split('\t');
+                const chess::Board board(parts[0].toStdString() + " 0 1");
+                QByteArray order;
+                for (const auto move : t64::movesInShakmatyOrder(board)) {
+                    if (!order.isEmpty())
+                        order += ' ';
+                    order += QByteArray::fromStdString(chess::uci::moveToUci(move));
+                }
+                if (order != parts[1])
+                    throw std::runtime_error("Move order differs from Shakmaty on " + parts[0].toStdString());
+                ++positions;
+            }
+            check(positions == 3637, "Every reference position keeps Shakmaty's legal-move order");
+            // Une base entière au format d'En Croissant, écrite avec Shakmaty : 300
+            // parties avec variantes, commentaires et annotations.
+            const auto base = dir.filePath("essai.db3");
+            {
+                QFile out(base);
+                check(out.open(QIODevice::WriteOnly) && out.write(fixture("croissant_legacy.db3.qz")) > 0,
+                      "Write the En Croissant fixture");
+            }
+            check(t64::croissant::isCroissantBase(base) && t64::croissant::games(base) == 300 &&
+                      t64::croissant::title(base) == "Base d'essai",
+                  "An En Croissant base is recognised, counted and named");
+            check(!t64::croissant::isCroissantBase(dir.filePath("dedup.sqlite")) &&
+                      !t64::croissant::isCroissantBase(dir.filePath("absent.db3")),
+                  "Another SQLite file, or none, is not an En Croissant base");
+            QBuffer pgn;
+            pgn.open(QIODevice::WriteOnly);
+            int reported = 0;
+            const auto outcome =
+                t64::croissant::exportPgn(base, pgn, [&](int done, int) { reported = done; });
+            check(outcome.written == 300 && outcome.skipped == 0 && reported == 300,
+                  "Every game of the base is read and reported");
+            // La ligne principale de chaque partie, comparée à ce que Shakmaty a joué.
+            QHash<int, QByteArray> expected;
+            for (const auto &line : fixture("croissant_legacy.txt.qz").split('\n'))
+                if (line.startsWith("GAME ")) {
+                    const auto rest = line.mid(5);
+                    const int space = rest.indexOf(' ');
+                    expected.insert(rest.left(space).toInt(), rest.mid(space + 1));
+                }
+            static const QRegularExpression comment(R"x(\{[^}]*\})x"), variation(R"x(\([^()]*\))x"),
+                number(R"x(\d+\.+)x"), nag(R"x(\$\d+)x"), spaces(R"x(\s+)x"),
+                roundTag(R"x(\[Round "(\d+)"\])x"), resultTag(R"x(\[Result "([^"]+)"\])x");
+            int compared = 0;
+            const auto blocks = QString::fromUtf8(pgn.data()).split("\n\n", Qt::SkipEmptyParts);
+            for (int i = 0; i + 1 < blocks.size(); i += 2) {
+                const auto round = roundTag.match(blocks[i]).captured(1);
+                const auto result = resultTag.match(blocks[i]).captured(1);
+                auto text = blocks[i + 1];
+                text.remove(comment).remove(variation).remove(number).remove(nag);
+                text = text.replace(spaces, " ").trimmed();
+                // Le témoin note « résultat coups », le PGN « coups résultat ».
+                const auto reference = QString::fromUtf8(expected[round.toInt()]);
+                const auto wanted =
+                    (reference.section(' ', 1) + " " + reference.section(' ', 0, 0)).trimmed();
+                if (text != wanted || result != reference.section(' ', 0, 0))
+                    throw std::runtime_error("Decoded game differs from Shakmaty: " + round.toStdString());
+                ++compared;
+            }
+            check(compared == 300, "The 300 main lines are the ones Shakmaty played");
+            rejects([] {
+                t64::croissant::movetext(QByteArray(1, char(250)), std::string(chess::constants::STARTPOS));
+            });
+            rejects([] {
+                t64::croissant::movetext(QByteArray::fromHex("fd0500"),
+                                         std::string(chess::constants::STARTPOS));
+            });
+            rejects([] {
+                t64::croissant::movetext(QByteArray(1, char(254)), std::string(chess::constants::STARTPOS));
+            });
+            check(t64::croissant::movetext({}, std::string(chess::constants::STARTPOS)).empty(),
+                  "An empty game reads as no move, and broken ones are refused");
         }
         std::cout << checks << " storage checks passed\n";
         return 0;

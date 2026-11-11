@@ -1739,6 +1739,33 @@ int main(int argc, char **argv) {
                 shelf.createStudyFolder(folder, "Classiques");
                 check(QFileInfo(folder + "/Classiques").isDir(), "And creates the folder asked for");
             }
+            // Une base d'En Croissant posée dans le dossier se lit comme un PGN.
+            {
+                QFile packed(QString(T64_TEST_DATA) + "/croissant_legacy.db3.qz");
+                check(packed.open(QIODevice::ReadOnly), "Open the En Croissant fixture");
+                QFile base(folder + "/Classiques/Essai.db3");
+                check(base.open(QIODevice::WriteOnly) && base.write(qUncompress(packed.readAll())) > 0,
+                      "Write an En Croissant base into the study folder");
+                base.close();
+                const auto listed = shelf.browseStudies(folder + "/Classiques")["entries"].toList();
+                check(listed.size() == 1 && listed.first().toMap()["readable"].toBool(),
+                      "An En Croissant base is offered as readable");
+                idleShelf();
+                const int known = shelf.studyCollections().size();
+                shelf.openStudyFile(folder + "/Classiques/Essai.db3");
+                settle.restart();
+                while ((shelf.studyCollections().size() <= known || shelf.busy()) && settle.elapsed() < 60000)
+                    QTest::qWait(20);
+                idleShelf();
+                qint64 imported = 0;
+                for (const auto &row : shelf.studyCollections())
+                    if (row.toMap()["title"] == "Essai")
+                        imported = row.toMap()["games"].toLongLong();
+                check(imported == 300, "Its 300 games arrive in a collection of their own");
+                check(QDir(home.path()).entryList({"croissant-*.pgn"}).isEmpty(),
+                      "The intermediate PGN is removed once read");
+                QFile::remove(folder + "/Classiques/Essai.db3");
+            }
             check(shelf.browseStudies(folder + "/Classiques")["entries"].toList().isEmpty() &&
                       shelf.browseStudies(files.filePath("nowhere"))["path"].toString().isEmpty(),
                   "An empty folder reads empty, a missing one reads as nothing at all");

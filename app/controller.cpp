@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "archive.h"
+#include "croissant.h"
 #include "move_notation.h"
 #include <QClipboard>
 #include <QDate>
@@ -15,8 +16,10 @@
 #include <QJsonObject>
 #include <QLocale>
 #include <QSaveFile>
+#include <QScopeGuard>
 #include <QStandardPaths>
 #include <QUrl>
+#include <QUuid>
 #include <QtConcurrent>
 #include <algorithm>
 #include <functional>
@@ -738,7 +741,22 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
     try {
         require(!busy_, "Un traitement est déjà en cours.");
         const auto path = localPath(url);
-        if (path.endsWith(".pgn", Qt::CaseInsensitive)) {
+        // Une base d'En Croissant se relit en PGN, puis s'importe comme un PGN : elle
+        // suit le même chemin, avec une étape de plus dans le fil de travail.
+        const bool croissant = path.endsWith(".db3", Qt::CaseInsensitive);
+        if (croissant) {
+            require(t64::croissant::isCroissantBase(path),
+                    "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.");
+            // Mesuré : 200 parties à la seconde et 17 Ko par partie, parce que chaque
+            // position de chaque partie est indexée. Un million de parties, c'est une
+            // heure et demie et 17 Go ; les neuf millions de Lumbra's, treize heures et
+            // 160 Go. Mieux vaut le dire avant qu'après.
+            require(t64::croissant::games(path) <= 1000000,
+                    "Cette base dépasse un million de parties : l’importer prendrait des heures et des "
+                    "dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne "
+                    "depuis le dossier de la position.");
+        }
+        if (croissant || path.endsWith(".pgn", Qt::CaseInsensitive)) {
             require(QFileInfo(path).isFile(), "PGN introuvable.");
             if (trainingActive())
                 finishTraining();
@@ -750,26 +768,43 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             const auto databasePath = db_->path();
             const auto canceled = cancelTask_;
             const auto progress = taskProgress_;
-            importer_.setFuture(QtConcurrent::run([databasePath, path, canceled, progress, source] {
-                ImportResult r;
-                r.operation = source.isEmpty()                  ? "import"
-                              : source.value("online").toBool() ? "online"
-                                                                : "source";
-                try {
-                    t64::Database db(databasePath);
-                    r.count = db.importPgnFile(
-                        path,
-                        [&](int n) {
-                            progress->store(n);
-                            return !canceled->load();
-                        },
-                        source);
-                    r.duplicates = progress->load() - r.count;
-                } catch (const std::exception &e) {
-                    r.error = QString::fromUtf8(e.what());
-                }
-                return r;
-            }));
+            importer_.setFuture(
+                QtConcurrent::run([databasePath, path, canceled, progress, source, croissant] {
+                    ImportResult r;
+                    r.operation = source.isEmpty()                  ? "import"
+                                  : source.value("online").toBool() ? "online"
+                                                                    : "source";
+                    // Le PGN tiré d'une base En Croissant, écrit à côté de la bibliothèque
+                    // et retiré quoi qu'il arrive.
+                    const auto converted = QFileInfo(databasePath).absolutePath() + "/croissant-" +
+                                           QUuid::createUuid().toString(QUuid::WithoutBraces) + ".pgn";
+                    const auto cleanup = qScopeGuard([&] { QFile::remove(converted); });
+                    try {
+                        if (croissant) {
+                            QFile out(converted);
+                            if (!out.open(QIODevice::WriteOnly))
+                                throw std::runtime_error(out.errorString().toStdString());
+                            t64::croissant::exportPgn(
+                                path, out, [&](int done, int) { progress->store(done); }, canceled);
+                            out.close();
+                            if (canceled->load())
+                                throw std::runtime_error("Import annulé.");
+                            progress->store(0);
+                        }
+                        t64::Database db(databasePath);
+                        r.count = db.importPgnFile(
+                            croissant ? converted : path,
+                            [&](int n) {
+                                progress->store(n);
+                                return !canceled->load();
+                            },
+                            source);
+                        r.duplicates = progress->load() - r.count;
+                    } catch (const std::exception &e) {
+                        r.error = QString::fromUtf8(e.what());
+                    }
+                    return r;
+                }));
             return;
         }
         if (path.endsWith(".t64", Qt::CaseInsensitive)) {
