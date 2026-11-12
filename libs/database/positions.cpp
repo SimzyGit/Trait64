@@ -2,9 +2,9 @@
 // Schema 8: positions are indexed by their 64-bit Zobrist key instead of FEN text.
 #include "database.h"
 #include "game.h"
+#include <QSaveFile>
 #include <QSqlError>
 #include <QSqlQuery>
-#include <QSaveFile>
 #include <QUuid>
 #include <algorithm>
 #include <stdexcept>
@@ -12,10 +12,12 @@
 namespace t64 {
 namespace {
 void check(bool ok, const QString &error) {
-    if (!ok) throw std::runtime_error(error.toStdString());
+    if (!ok)
+        throw std::runtime_error(error.toStdString());
 }
 void run(QSqlQuery &q) {
-    if (!q.exec()) throw std::runtime_error(q.lastError().text().toStdString());
+    if (!q.exec())
+        throw std::runtime_error(q.lastError().text().toStdString());
 }
 // Opening statistics triggers of schema 3, keyed by position hash.
 const char *openingTriggers[] = {
@@ -42,8 +44,12 @@ const char *openingTriggers[] = {
     "(SELECT key,uci FROM opening_edges WHERE game_id=NEW.id); END"};
 } // namespace
 
-qint64 Database::hashKey(const std::string &fen) { return static_cast<qint64>(positionHash(fen)); }
-qint64 Database::pawnsKey(const std::string &fen) { return static_cast<qint64>(pawnKey(fen)); }
+qint64 Database::hashKey(const std::string &fen) {
+    return static_cast<qint64>(positionHash(fen));
+}
+qint64 Database::pawnsKey(const std::string &fen) {
+    return static_cast<qint64>(pawnKey(fen));
+}
 
 QVariantMap Database::novelty(const Game &game, qint64 self) const {
     QSqlQuery stats(db_), own(db_);
@@ -54,7 +60,9 @@ QVariantMap Database::novelty(const Game &game, qint64 self) const {
     const bool counted = self > 0 && own.next();
     own.finish();
     const auto line = game.mainline();
-    for (size_t i = 0; i + 1 < line.size(); ++i) {
+    // Passé l'horizon de l'index il n'y a plus de statistiques : ce n'est pas que les
+    // autres parties aient quitté la ligne, c'est qu'on ne le sait plus.
+    for (size_t i = 0; i + 1 < line.size() && i < size_t(indexedPlies); ++i) {
         const auto &node = game.nodes[line[i]];
         const auto &next = game.nodes[line[i + 1]];
         stats.bindValue(0, nodeKey(node));
@@ -64,15 +72,19 @@ QVariantMap Database::novelty(const Game &game, qint64 self) const {
         while (stats.next()) {
             const bool mine = counted && stats.value(0).toString() == QString::fromStdString(next.uci);
             const qint64 count = stats.value(2).toLongLong() - (mine ? 1 : 0);
-            if (count <= 0) continue;
+            if (count <= 0)
+                continue;
             reached += count;
-            if (stats.value(0).toString() == QString::fromStdString(next.uci)) played = count;
-            else if (known.size() < 3) known << QVariantMap{{"san", stats.value(1)}, {"count", count}};
+            if (stats.value(0).toString() == QString::fromStdString(next.uci))
+                played = count;
+            else if (known.size() < 3)
+                known << QVariantMap{{"san", stats.value(1)}, {"count", count}};
         }
         if (reached == 0) // the previous move already left every known game
             return {{"found", false}, {"reason", "unknownStart"}};
         if (played == 0)
-            return {{"found", true}, {"node", line[i + 1]}, {"ply", int(i)}, {"san", QString::fromStdString(next.san)},
+            return {{"found", true},      {"node", line[i + 1]},
+                    {"ply", int(i)},      {"san", QString::fromStdString(next.san)},
                     {"reached", reached}, {"known", known}};
     }
     return {{"found", false}, {"reason", "known"}};
@@ -92,17 +104,22 @@ int Database::exportPolyglot(const QString &path, int minGames) const {
     run(q);
     while (q.next()) {
         const auto uci = q.value(1).toString(), san = q.value(2).toString();
-        if (uci.size() < 4) continue;
+        if (uci.size() < 4)
+            continue;
         auto square = [](QStringView s) { return (s[1].unicode() - '1') * 8 + (s[0].unicode() - 'a'); };
         const int from = square(QStringView(uci).mid(0, 2));
         int to = square(QStringView(uci).mid(2, 2));
         // Polyglot stores castling as the king taking its own rook.
-        if (san.startsWith("O-O")) to = (from / 8) * 8 + (san.startsWith("O-O-O") ? 0 : 7);
+        if (san.startsWith("O-O"))
+            to = (from / 8) * 8 + (san.startsWith("O-O-O") ? 0 : 7);
         int promotion = 0;
-        if (uci.size() == 5) promotion = QString("nbrq").indexOf(uci[4]) + 1;
-        if (from < 0 || from > 63 || to < 0 || to > 63 || promotion < 0) continue;
+        if (uci.size() == 5)
+            promotion = QString("nbrq").indexOf(uci[4]) + 1;
+        if (from < 0 || from > 63 || to < 0 || to > 63 || promotion < 0)
+            continue;
         const auto clamped = quint16(std::clamp(q.value(3).toInt(), 1, 65535));
-        entries.push_back({quint64(q.value(0).toLongLong()), quint16(to | from << 6 | promotion << 12), clamped});
+        entries.push_back(
+            {quint64(q.value(0).toLongLong()), quint16(to | from << 6 | promotion << 12), clamped});
     }
     std::sort(entries.begin(), entries.end(), [](const Entry &a, const Entry &b) {
         return a.key != b.key ? a.key < b.key : a.weight > b.weight;
@@ -112,7 +129,8 @@ int Database::exportPolyglot(const QString &path, int minGames) const {
     QByteArray bytes;
     bytes.reserve(int(entries.size() * 16));
     for (const auto &e : entries) {
-        for (int shift = 56; shift >= 0; shift -= 8) bytes.append(char(e.key >> shift & 0xff));
+        for (int shift = 56; shift >= 0; shift -= 8)
+            bytes.append(char(e.key >> shift & 0xff));
         bytes.append(char(e.move >> 8)).append(char(e.move & 0xff));
         bytes.append(char(e.weight >> 8)).append(char(e.weight & 0xff));
         bytes.append(4, '\0'); // learn field
@@ -132,7 +150,8 @@ void Database::upgradeV8(int originalVersion) {
     try {
         // FEN text -> hash, computed once per distinct position. SQL then converts every table
         // without re-reading a single PGN.
-        sql("CREATE TEMP TABLE keymap(fen TEXT PRIMARY KEY,key INTEGER NOT NULL,pawns INTEGER NOT NULL) WITHOUT ROWID");
+        sql("CREATE TEMP TABLE keymap(fen TEXT PRIMARY KEY,key INTEGER NOT NULL,pawns INTEGER NOT NULL) "
+            "WITHOUT ROWID");
         QSqlQuery distinct(db_), insert(db_);
         distinct.setForwardOnly(true);
         check(distinct.exec("SELECT fen FROM all_positions UNION SELECT fen FROM positions"),
@@ -149,14 +168,17 @@ void Database::upgradeV8(int originalVersion) {
         for (const char *name : {"edge_game_delete", "edge_add", "edge_remove", "edge_game_update"})
             sql(QString("DROP TRIGGER IF EXISTS ") + name);
         sql("CREATE TABLE positions8(game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,ply "
-            "INTEGER NOT NULL,key INTEGER NOT NULL,uci TEXT,san TEXT,PRIMARY KEY(game_id,ply)) WITHOUT ROWID");
+            "INTEGER NOT NULL,key INTEGER NOT NULL,uci TEXT,san TEXT,PRIMARY KEY(game_id,ply)) WITHOUT "
+            "ROWID");
         sql("INSERT INTO positions8 SELECT p.game_id,p.ply,k.key,p.uci,p.san FROM positions p JOIN keymap k "
             "ON k.fen=p.fen");
-        sql("CREATE TABLE all_positions8(game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,node "
+        sql("CREATE TABLE all_positions8(game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE "
+            "CASCADE,node "
             "INTEGER NOT NULL,key INTEGER NOT NULL,material TEXT NOT NULL,pawns INTEGER NOT NULL,PRIMARY "
             "KEY(game_id,node)) WITHOUT "
             "ROWID");
-        sql("INSERT INTO all_positions8 SELECT a.game_id,a.node,k.key,a.material,k.pawns FROM all_positions a JOIN "
+        sql("INSERT INTO all_positions8 SELECT a.game_id,a.node,k.key,a.material,k.pawns FROM all_positions "
+            "a JOIN "
             "keymap k ON k.fen=a.fen");
         sql("CREATE TABLE opening_edges8(game_id INTEGER REFERENCES games(id) ON DELETE CASCADE,key INTEGER "
             "NOT NULL,uci TEXT NOT NULL,san TEXT NOT NULL,PRIMARY KEY(game_id,key,uci)) WITHOUT ROWID");
@@ -176,7 +198,8 @@ void Database::upgradeV8(int originalVersion) {
         sql("CREATE INDEX all_positions_key ON all_positions(key)");
         sql("CREATE INDEX all_positions_material ON all_positions(material)");
         sql("CREATE INDEX all_positions_pawns ON all_positions(pawns)");
-        for (const char *trigger : openingTriggers) sql(trigger);
+        for (const char *trigger : openingTriggers)
+            sql(trigger);
         sql("DROP TABLE keymap");
         sql("PRAGMA user_version=8");
         sql("RELEASE schema8");
@@ -187,6 +210,7 @@ void Database::upgradeV8(int originalVersion) {
     }
     keyed_ = true;
     // Return the pages freed by the text keys to the file system once.
-    if (originalVersion > 0) sql("VACUUM");
+    if (originalVersion > 0)
+        sql("VACUUM");
 }
 } // namespace t64

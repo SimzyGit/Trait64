@@ -1,5 +1,46 @@
 # Mesures de lecture et limites de qualification
 
+## Index allégé (schéma 12) — 12 novembre 2026
+
+Corpus : parties de maîtres réelles (`mega2400` et `mega2600`, 79 demi-coups en moyenne,
+1 217 564 parties en tout), Release GCC 13.3 / Qt 6.4.2, machine à **2 cœurs et 7 Go**,
+deux lecteurs. `pgn_benchmark` : import par lots avec pause et reprise, puis empreinte
+du fichier, contrôle d'intégrité et mesures de lecture. Les débits incluent tout cela.
+
+| Parties | Index | Durée totale | Parties/s | Base | Par partie | Pic mémoire |
+|---:|---|---:|---:|---:|---:|---:|
+| 10 000 | ancien (schéma 11) | 76 s | 131 | 217 Mo | 21,7 Ko | 18 Mo |
+| 10 000 | allégé | 24 s | 409 | 73 Mo | 7,3 Ko | 18 Mo |
+| 100 000 | allégé | 330 s | 303 | 697 Mo | 7,0 Ko | 803 Mo |
+| 500 000 | allégé | 2 309 s | 217 | 3 604 Mo | 7,2 Ko | 1 170 Mo |
+
+Sur les 10 000 parties, les PGN normalisés, les empreintes de doublons et les positions
+des 40 premiers demi-coups sont **identiques** à ceux de l'ancien index, ligne à ligne. Le pic mémoire vient du cache de pages prêté à l'import
+(un huitième de la mémoire, 64 Mo à 1 Go) ; il est rendu à la fin.
+
+Lectures sur la base de 500 000 parties, première exécution, cache de fichiers chaud (`search_probe`) :
+
+| Recherche | Temps |
+|---|---:|
+| Page des 200 parties récentes | 2 ms |
+| Position exacte au 15ᵉ coup (indexée) | 1 ms |
+| Position exacte au 30ᵉ coup, puis la dernière de la partie (rejouées) | 1 ms |
+| Arbre d'ouvertures, position de départ ou 4ᵉ coup | < 1 ms |
+| Même structure de pions qu'au 30ᵉ coup | 66–80 ms |
+| Matériel d'une finale de tours | 17 ms |
+| Matériel de la position finale d'une partie | 100 ms |
+| Fragment de nom de joueur | 15–19 ms |
+| Liste des joueurs | 9–11 ms |
+| Dossier d'une position du 4ᵉ coup | 23–26 ms |
+| Position exacte au 4ᵉ coup (des dizaines de milliers de parties) | 1,3–1,7 s |
+| Recherche des doublons | 1,7–1,8 s |
+| Dossier de la position de départ | 2,2–2,7 s |
+
+**Limites.** Le débit baisse avec la taille (303 → 217 parties/s de 100 000 à 500 000) :
+les index rangés par clé de position sont écrits partout à la fois. Les trois dernières
+lignes du tableau restent au-dessus de la seconde. Un million est en cours de mesure ;
+2, 5 et 10 millions ne sont pas mesurés.
+
 ## Import réel : deux optimisations ciblées — 23 octobre 2026
 
 Trois exécutions successives sur les mêmes **10 000 parties / 661 314 positions**

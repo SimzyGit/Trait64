@@ -6,8 +6,8 @@
 #include <functional>
 #include <regex>
 #include <sstream>
-#include <string_view>
 #include <stdexcept>
+#include <string_view>
 
 namespace t64 {
 namespace {
@@ -197,44 +197,76 @@ chess::Board Game::boardAt(int node) const {
     return board;
 }
 
+const chess::Board &Game::boardOf(int node) const {
+    require(node >= 0 && node < int(nodes.size()), "Position introuvable.");
+    // La FEN fait foi : un nœud supprimé ou réécrit entre-temps ne ressert pas l'ancien.
+    if (cachedNode_ != node || !cachedBoard_ || cachedFen_ != nodes[node].fen) {
+        cachedBoard_ = checkedBoard(nodes[node].fen, chess960);
+        cachedFen_ = nodes[node].fen;
+        cachedNode_ = node;
+    }
+    return *cachedBoard_;
+}
+
+int Game::add(int parent, chess::Board board, chess::Move move) {
+    const auto uci = chess::uci::moveToUci(move, chess960);
+    for (int c : nodes[parent].children)
+        if (nodes[c].uci == uci)
+            return c;
+    require(nodes.size() < 100000, "Limite de 100 000 positions par étude atteinte.");
+    Node n;
+    n.parent = parent;
+    n.uci = uci;
+    n.san = chess::uci::moveToSan(board, move);
+    board.makeMove(move);
+    checkBoardCounters(board);
+    n.fen = board.getFen();
+    n.hash = board.hash();
+    const int id = int(nodes.size());
+    nodes[parent].children.push_back(id);
+    nodes.push_back(std::move(n));
+    // Le coup suivant part presque toujours d'ici : l'échiquier qui vient d'écrire cette
+    // FEN la représente exactement, inutile de la relire.
+    cachedFen_ = nodes.back().fen;
+    cachedBoard_ = std::move(board);
+    cachedNode_ = id;
+    return id;
+}
+
 int Game::play(int parent, const std::string &uci) {
     require(parent >= 0 && parent < int(nodes.size()), "Position parente introuvable.");
     for (int c : nodes[parent].children)
         if (nodes[c].uci == uci)
             return c;
-    require(nodes.size() < 100000, "Limite de 100 000 positions par étude atteinte.");
-    auto board = checkedBoard(nodes[parent].fen, chess960);
+    const auto &board = boardOf(parent);
     chess::Movelist moves;
     chess::movegen::legalmoves(moves, board);
-    for (auto m : moves) {
-        if (chess::uci::moveToUci(m, chess960) != uci)
-            continue;
-        Node n;
-        n.parent = parent;
-        n.uci = uci;
-        n.san = chess::uci::moveToSan(board, m);
-        board.makeMove(m);
-        checkBoardCounters(board);
-        n.fen = board.getFen();
-        n.hash = board.hash();
-        const int id = int(nodes.size());
-        nodes[parent].children.push_back(id);
-        nodes.push_back(std::move(n));
-        return id;
-    }
+    for (auto m : moves)
+        if (chess::uci::moveToUci(m, chess960) == uci)
+            return add(parent, board, m);
     throw std::runtime_error("Coup illégal : " + uci);
 }
 
 int Game::playSan(int parent, const std::string &san) {
-    auto board = checkedBoard(nodes.at(parent).fen, chess960);
+    const auto &board = boardOf(parent);
     chess::Movelist moves;
     chess::movegen::legalmoves(moves, board);
     auto target = san;
     std::replace(target.begin(), target.end(), '0', 'O');
     target = stripCheck(target);
-    for (auto m : moves)
+    // Écrire la notation de chaque coup légal pour la comparer en demandait une
+    // trentaine par coup lu. Seuls ceux qui arrivent sur la case nommée — ou les roques,
+    // pour un roque — peuvent correspondre : la comparaison exacte ne porte que sur eux.
+    const bool castle = target.starts_with('O');
+    const auto body = target.substr(0, target.find('='));
+    const auto square = body.size() >= 2 ? body.substr(body.size() - 2) : std::string();
+    for (auto m : moves) {
+        const bool castling = m.typeOf() == chess::Move::CASTLING;
+        if (castling != castle || (!castle && !square.empty() && std::string(m.to()) != square))
+            continue;
         if (stripCheck(chess::uci::moveToSan(board, m)) == target)
-            return play(parent, chess::uci::moveToUci(m, chess960));
+            return add(parent, board, m);
+    }
     // Historical PGN exports sometimes include an unnecessary origin, e.g. Rd1d2.
     // Accept it only when it identifies exactly one legal move, with the correct
     // capture marker. Pawns, promotions and castling keep their canonical syntax.
@@ -294,9 +326,11 @@ std::string Game::pgn() const {
         require(depth <= 128, "Trop de niveaux de variantes.");
         while (node > 0) {
             const auto &n = nodes[node];
-            const auto b = checkedBoard(nodes[n.parent].fen, chess960);
-            out << b.fullMoveNumber() << (b.sideToMove() == chess::Color::WHITE ? ". " : "... ") << n.san
-                << ' ';
+            // Le numéro du coup et le trait se lisent dans la FEN du parent, déjà validée
+            // à sa création : reconstruire un échiquier pour deux champs était inutile.
+            const auto &fen = nodes[n.parent].fen;
+            const auto turn = fen.find(' ');
+            out << fen.substr(fen.rfind(' ') + 1) << (fen[turn + 1] == 'w' ? ". " : "... ") << n.san << ' ';
             for (int nag : n.nags)
                 out << '$' << nag << ' ';
             if (!n.comment.empty())
@@ -493,10 +527,11 @@ std::uint64_t positionHash(const std::string &fen) {
     std::istringstream in(fen);
     std::array<std::string, 6> field{"", "w", "-", "-", "0", "1"};
     for (auto &value : field)
-        if (!(in >> value)) break;
+        if (!(in >> value))
+            break;
     const bool variant960 = field[2].find_first_not_of("KQkq-") != std::string::npos;
-    const chess::Board board(field[0] + ' ' + field[1] + ' ' + field[2] + ' ' + field[3] + ' ' + field[4] + ' ' +
-                                 field[5],
+    const chess::Board board(field[0] + ' ' + field[1] + ' ' + field[2] + ' ' + field[3] + ' ' + field[4] +
+                                 ' ' + field[5],
                              variant960);
     return board.hash();
 }
@@ -505,9 +540,12 @@ std::uint64_t pawnKey(const std::string &fen) {
     std::uint64_t key = 1469598103934665603ULL;
     int square = 56; // a8, the first square of a FEN
     for (const char c : fen) {
-        if (c == ' ') break;
-        if (c == '/') square -= 16;
-        else if (c >= '1' && c <= '8') square += c - '0';
+        if (c == ' ')
+            break;
+        if (c == '/')
+            square -= 16;
+        else if (c >= '1' && c <= '8')
+            square += c - '0';
         else {
             if (c == 'P' || c == 'p') {
                 key ^= std::uint64_t(square << 1 | (c == 'p'));

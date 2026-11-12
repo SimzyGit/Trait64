@@ -1,5 +1,15 @@
 # Changements
 
+## Les grosses bases : un index trois fois plus petit — 12 novembre 2026
+
+- **Une partie de maître occupe 7 Ko au lieu de 22.** Chaque position de chaque partie était rangée trois fois, alors que passé l'ouverture presque aucune n'est jouée deux fois. Les positions ne sont plus indexées une à une que sur les 20 premiers coups, là où les parties se recoupent ; au-delà, chaque partie garde ses « signatures » — matériel et squelette de pions rencontrés.
+- **La recherche de position reste complète.** Une position du 30ᵉ ou du 60ᵉ coup se retrouve en rejouant les seules parties qui ont eu ce matériel et ces pions : une milliseconde sur 500 000 parties. Les recherches par matériel et par structure de pions répondent directement depuis les signatures.
+- **L'import va plus de deux fois plus vite** sur les mêmes 10 000 parties réelles (131 → 409 parties/s) : requêtes préparées une fois, lecture des coups et écriture du PGN allégées, cache de pages et journal réglés le temps de l'import.
+- **500 000 parties réelles qualifiées** : 38 minutes sur deux cœurs, 3,6 Go, intégrité vérifiée ; première page en 1,4 ms, arbre d'ouvertures en 0,1 ms. Détail et limites dans [PERFORMANCE.md](PERFORMANCE.md).
+- **Votre bibliothèque est convertie au premier lancement** (schéma 12), après une sauvegarde complète à côté d'elle, et rend au disque la place libérée.
+- L'arbre d'ouvertures couvre les 20 premiers coups ; au-delà il le dit, au lieu de laisser croire que personne n'a joué la suite.
+- La feuille de route a été rapprochée du code, case par case.
+
 ## L'échiquier fluide : pièces qui glissent, moteur trouvé tout seul — 12 novembre 2026
 
 - **Stockfish déjà installé est trouvé.** Trait64 ne regardait que le `PATH`, où `/usr/games` — l'endroit où Debian et Ubuntu installent Stockfish — ne figure pas pour une application lancée depuis le bureau. Il fouille maintenant les dossiers du système, `~/.local/bin`, Snap, Flatpak, Téléchargements, le dossier personnel et les moteurs du catalogue. Un bouton **Détecter** relance la recherche, et un chemin devenu invalide est remplacé au démarrage.

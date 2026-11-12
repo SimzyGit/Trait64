@@ -473,7 +473,7 @@ objectName:"analysisSplit"
                                                 Label {text:Math.round(100*(treeRow.modelData.white+treeRow.modelData.draw/2)/treeRow.total)+" %";Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted}
                                             }
                                         }
-                                        Label {anchors.centerIn:parent;visible:controller.openings.length===0;text:qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                        Label {anchors.centerIn:parent;width:parent.width-16;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     }
                                     ListView {id:bookList;objectName:"bookMoves";model:controller.bookMoves;clip:true;spacing:0
                                         delegate:ItemDelegate {
@@ -990,6 +990,9 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onTriggered:{if(win.page===2&&controller.state.canForward&&!controller.state.training)controller.step(1);else running=false}
     }
     // Espace actionne déjà le bouton ou la liste qui a le focus : on ne le lui prend pas.
+    // Passé le 20e coup, les positions ne sont plus indexées une à une : l'arbre se tait,
+    // et il vaut mieux le dire que laisser croire que personne n'a joué la suite.
+    function pastOpeningIndex(){var f=(controller.state.fen||"").split(" ");return f.length>5&&(parseInt(f[5])-1)*2+(f[1]==="b"?1:0)>=40}
     function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
     Shortcut {sequence:"Space";enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
     // Haut et bas servent d'abord à la liste ou au menu déroulant qui a le focus.

@@ -94,7 +94,7 @@ class BenchmarkTests(unittest.TestCase):
             self.assertTrue(path.read_bytes().startswith(b'SQLite format 3\x00'))
             with sqlite3.connect(path) as db:
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM games').fetchone()[0], 2)
-                self.assertEqual(db.execute('SELECT COUNT(*) FROM all_positions').fetchone()[0], 9)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM positions').fetchone()[0], 9)
 
     def test_database_only_options_cannot_silently_run_in_parse_mode(self):
         for option in ('--backup', '--reindex', '--probe-reads'):

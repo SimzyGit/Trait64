@@ -3,9 +3,11 @@
 #include "game.h"
 #include <QIODevice>
 #include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QVariantList>
 #include <QVariantMap>
 #include <atomic>
+#include <map>
 #include <memory>
 
 namespace t64 {
@@ -145,6 +147,14 @@ class Database {
     QVariantList duplicates() const;
     int rebuildIndexes(const std::function<bool(int)> &progress = {});
     QString path() const { return path_; }
+    // Demi-coups de la ligne principale dont chaque position est indexée. Au-delà, une
+    // partie se retrouve par son matériel et ses pions, puis en étant rejouée.
+    static constexpr int indexedPlies = 40;
+    // Cache de pages d'une connexion ordinaire. Celui de SQLite, 2 Mo, fait relire le
+    // disque à chaque recherche dès que la bibliothèque compte quelques milliers de parties.
+    static constexpr int defaultCacheKib = 32 * 1024;
+    static qint64 materialCode(std::string_view fen);
+    static qint64 materialCode(const QString &pieces);
 
   private:
     bool enhanced_ = false, fts_ = false;
@@ -162,6 +172,19 @@ class Database {
     void upgradeV9(int originalVersion);
     void upgradeV10(int originalVersion);
     void upgradeV11(int originalVersion);
+    void upgradeV12(int originalVersion);
+    // Schéma 12 : index allégé. Voir lightindex.cpp.
+    bool light_ = false;
+    void saveLegacyIndex(const Game &game, qint64 id);
+    void indexGame(const Game &game, qint64 id, bool existing);
+    void retireOpeningStats(qint64 id);
+    void creditOpeningStats(qint64 id);
+    bool collectPositionMatches(const QString &fen, const std::shared_ptr<std::atomic_bool> &canceled) const;
+    static constexpr int sparseMatches = 20000;
+    QSqlQuery &statement(const QString &text) const;
+    mutable std::map<QString, QSqlQuery> statements_;
+    mutable bool lateValid_ = false, lateSparse_ = false;
+    mutable qint64 lateKey_ = 0, lateState_ = 0;
     // Calcule et enregistre le bilan chiffré d'une analyse menée à son terme.
     void recordGameReview(qint64 job, qint64 game, int depth);
     qint64 registerSource(const QVariantMap &source);

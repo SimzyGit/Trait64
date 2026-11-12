@@ -73,7 +73,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 11, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 12, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -147,11 +147,13 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV9(v);
         upgradeV10(v);
         upgradeV11(v);
+        upgradeV12(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
         sql("PRAGMA journal_mode=WAL");
         sql("PRAGMA synchronous=FULL");
+        sql(QString("PRAGMA cache_size=-%1").arg(defaultCacheKib));
     } catch (...) {
         db_.close();
         db_ = QSqlDatabase();
@@ -160,6 +162,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
     }
 }
 Database::~Database() {
+    statements_.clear(); // avant la connexion qu'elles référencent
     db_.close();
     db_ = QSqlDatabase();
     QSqlDatabase::removeDatabase(connection_);
@@ -175,41 +178,81 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
     const auto digest =
         QString::fromLatin1(QCryptographicHash::hash(pgn.toUtf8(), QCryptographicHash::Sha256).toHex());
     if (!id) {
-        QSqlQuery q(db_);
         // With no ANALYZE statistics SQLite can prefer an index starting with
         // deleted, scanning every active game for each new PGN (quadratic import).
         // This mandatory schema-1 index bounds the lookup to the matching digest.
-        q.prepare("SELECT id FROM games INDEXED BY games_digest WHERE digest=? AND deleted=0 LIMIT 1");
-        q.addBindValue(digest);
+        auto &q =
+            statement("SELECT id FROM games INDEXED BY games_digest WHERE digest=? AND deleted=0 LIMIT 1");
+        q.bindValue(0, digest);
         run(q);
-        if (q.next())
-            return q.value(0).toLongLong();
+        const auto known = q.next() ? q.value(0).toLongLong() : 0;
+        q.finish();
+        if (known)
+            return known;
     }
     sql("SAVEPOINT save_game");
     try {
-        QSqlQuery q(db_);
-        if (id)
-            q.prepare("UPDATE games SET "
-                      "white=?,black=?,event=?,date=?,result=?,eco=?,pgn=?,digest=?,updated=? WHERE id=?");
-        else
-            q.prepare(
-                "INSERT INTO games(white,black,event,date,result,eco,pgn,digest,updated,uuid,collection) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?)");
+        const bool existing = id != 0;
+        if (light_ && existing) {
+            // L'ancien apport aux statistiques se retire tant que l'ancien résultat et les
+            // anciennes positions sont là ; celles-ci partent avant la mise à jour, pour
+            // que le déclencheur de changement de résultat n'ait plus rien à corriger.
+            retireOpeningStats(id);
+            auto &gone = statement("DELETE FROM positions WHERE game_id=?");
+            gone.bindValue(0, id);
+            run(gone);
+        }
+        // Classements, longueur et empreinte partent dans la même écriture que le reste :
+        // les poser après coup réécrivait la ligne et quatre de ses index.
+        const auto line = game.mainline();
+        QByteArray fingerprint =
+            QByteArray::fromStdString(game.nodes[0].fen) + (game.chess960 ? "960" : "standard");
+        for (int n : line)
+            fingerprint += ' ' + QByteArray::fromStdString(game.nodes[n].uci);
+        auto &q = statement(
+            id ? "UPDATE games SET white=?,black=?,event=?,date=?,result=?,eco=?,pgn=?,digest=?,updated=?,"
+                 "white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?"
+               : "INSERT INTO games(white,black,event,date,result,eco,pgn,digest,updated,white_elo,black_elo,"
+                 "plies,fingerprint,uuid,collection) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        int slot = 0;
         for (const char *key : {"White", "Black", "Event", "Date", "Result", "ECO"})
-            q.addBindValue(tag(game, key));
-        q.addBindValue(pgn);
-        q.addBindValue(digest);
-        q.addBindValue(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+            q.bindValue(slot++, tag(game, key));
+        q.bindValue(slot++, pgn);
+        q.bindValue(slot++, digest);
+        q.bindValue(slot++, QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+        q.bindValue(slot++, tag(game, "WhiteElo").toInt());
+        q.bindValue(slot++, tag(game, "BlackElo").toInt());
+        q.bindValue(slot++, int(line.size()) - 1);
+        q.bindValue(slot++, QString::fromLatin1(
+                                QCryptographicHash::hash(fingerprint, QCryptographicHash::Sha256).toHex()));
         if (id)
-            q.addBindValue(id);
+            q.bindValue(slot++, id);
         else {
-            q.addBindValue(QUuid::createUuid().toString(QUuid::WithoutBraces));
-            q.addBindValue(collection);
+            q.bindValue(slot++, QUuid::createUuid().toString(QUuid::WithoutBraces));
+            q.bindValue(slot++, collection);
         }
         run(q);
         if (!id)
             id = q.lastInsertId().toLongLong();
         check(q.numRowsAffected() > 0, "Partie introuvable lors de la sauvegarde.");
+        if (light_) {
+            indexGame(game, id, existing);
+            creditOpeningStats(id);
+        } else {
+            // Ancien index complet : ne sert plus qu'aux migrations d'une bibliothèque
+            // antérieure au schéma 12, qui réindexent avant d'être converties.
+            saveLegacyIndex(game, id);
+        }
+        sql("RELEASE save_game");
+        return id;
+    } catch (...) {
+        sql("ROLLBACK TO save_game");
+        sql("RELEASE save_game");
+        throw;
+    }
+}
+void Database::saveLegacyIndex(const Game &game, qint64 id) {
+    {
         if (enhanced_) {
             QSqlQuery edges(db_);
             edges.prepare("DELETE FROM opening_edges WHERE game_id=?");
@@ -245,19 +288,6 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             edges.addBindValue(id);
             run(edges);
         }
-        QSqlQuery metadata(db_);
-        metadata.prepare("UPDATE games SET white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?");
-        metadata.addBindValue(tag(game, "WhiteElo").toInt());
-        metadata.addBindValue(tag(game, "BlackElo").toInt());
-        metadata.addBindValue(int(line.size()) - 1);
-        QByteArray fingerprint =
-            QByteArray::fromStdString(game.nodes[0].fen) + (game.chess960 ? "960" : "standard");
-        for (int n : line)
-            fingerprint += ' ' + QByteArray::fromStdString(game.nodes[n].uci);
-        metadata.addBindValue(
-            QString::fromLatin1(QCryptographicHash::hash(fingerprint, QCryptographicHash::Sha256).toHex()));
-        metadata.addBindValue(id);
-        run(metadata);
         QSqlQuery erase(db_);
         erase.prepare("DELETE FROM all_positions WHERE game_id=?");
         erase.addBindValue(id);
@@ -280,12 +310,6 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
             run(all);
             pending.insert(pending.end(), node.children.begin(), node.children.end());
         }
-        sql("RELEASE save_game");
-        return id;
-    } catch (...) {
-        sql("ROLLBACK TO save_game");
-        sql("RELEASE save_game");
-        throw;
     }
 }
 int Database::importGames(const std::vector<Game> &games, const std::function<bool(int)> &progress) {
@@ -323,6 +347,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
                               const std::shared_ptr<std::atomic_bool> &canceled) const {
     const QueryCancellation cancellation(db_, canceled);
     const bool fullText = fts_ && query.size() >= 3 && !query.contains('%') && !query.contains('_');
+    const bool exactPosition = !position.isEmpty() && !filters.value("pawnStructure").toBool();
+    const bool sparsePosition = exactPosition && collectPositionMatches(position, canceled) && !fullText;
     QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite,"
                         "g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo ";
     QVariantList args;
@@ -334,7 +360,12 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         term.replace('"', "\"\"");
         args << '"' + term + '"' << (trash ? 1 : 0);
     } else {
-        statement += "FROM games g WHERE g.deleted=?";
+        // Une position rare part de ses parties et les trie ; une position courante part
+        // des parties récentes et s'arrête à la page demandée. L'inverse coûte, dans le
+        // premier cas, de parcourir toute la bibliothèque pour y trouver mille parties.
+        statement += sparsePosition
+                         ? "FROM temp.scan_hits h CROSS JOIN games g ON g.id=h.game_id WHERE g.deleted=?"
+                         : "FROM games g WHERE g.deleted=?";
         args << (trash ? 1 : 0);
     }
     if (!fullText && !query.isEmpty()) {
@@ -387,9 +418,15 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (!position.isEmpty()) {
         // Same pawn structure (any other pieces) or the exact position.
         const bool pawns = filters.value("pawnStructure").toBool();
-        statement += QString(" AND g.id IN(SELECT game_id FROM all_positions WHERE ") +
-                     (pawns ? "pawns" : "key") + "=?)";
-        args << (pawns ? pawnsKey(position.toStdString()) : hashKey(position.toStdString()));
+        if (pawns) {
+            statement += " AND g.id IN(SELECT game_id FROM game_signatures WHERE pawns=?)";
+            args << pawnsKey(position.toStdString());
+        } else if (!sparsePosition) {
+            // Position courante, ou recherche plein texte qui mène déjà la requête.
+            statement += " AND g.id IN(SELECT game_id FROM positions WHERE key=? UNION SELECT game_id FROM "
+                         "variation_positions WHERE key=? UNION SELECT game_id FROM temp.scan_hits)";
+            args << hashKey(position.toStdString()) << hashKey(position.toStdString());
+        }
     }
     for (const auto &key : QStringList{"white", "black", "event", "eco", "collection"})
         if (!filters.value(key).toString().isEmpty()) {
@@ -415,8 +452,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         args << filters["maxPlies"];
     }
     if (!filters.value("material").toString().isEmpty()) {
-        statement += " AND g.id IN(SELECT game_id FROM all_positions WHERE material=?)";
-        args << materialKey(filters["material"].toString());
+        statement += " AND g.id IN(SELECT game_id FROM game_material WHERE material=?)";
+        args << materialCode(filters["material"].toString());
     }
     struct SortField {
         QString column, key;

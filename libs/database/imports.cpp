@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "database.h"
+#include "hardware.h"
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
 #include <QLockFile>
-#include <vector>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUrl>
@@ -13,6 +13,7 @@
 #include <array>
 #include <fstream>
 #include <stdexcept>
+#include <vector>
 
 namespace t64 {
 namespace {
@@ -160,6 +161,35 @@ QVariantMap Database::runImportJob(qint64 id, const std::function<bool(const Imp
             transaction = false;
         }
     };
+    // Un import écrit dans des index rangés par clé de position, donc partout à la fois.
+    // Trois réglages ne valent que le temps qu'il dure :
+    //  - le cache de pages : avec quelques mégaoctets chaque partie relit ses pages sur le
+    //    disque dès que la base grossit. On lui prête un huitième de la mémoire (64 Mo à 1 Go) ;
+    //  - le point de contrôle du journal : par défaut il recopie toutes les pages touchées
+    //    dans la base à chaque lot, avec deux synchronisations. Tous les 64 Mo de journal,
+    //    une page modifiée par dix lots n'est recopiée qu'une fois ;
+    //  - la synchronisation à chaque lot : en mode WAL, « NORMAL » garde la base cohérente
+    //    après une coupure et ne peut perdre que les derniers lots — que la reprise rejoue,
+    //    puisque sa position est validée dans la même transaction que les parties.
+    const struct ImportCache {
+        const Database &db;
+        explicit ImportCache(const Database &d) : db(d) {
+            const auto memory = installedMemoryMb();
+            db.sql(QString("PRAGMA cache_size=-%1").arg(std::clamp<long long>(memory / 8, 64, 1024) * 1024));
+            db.sql("PRAGMA wal_autocheckpoint=16384");
+            db.sql("PRAGMA synchronous=NORMAL");
+        }
+        ~ImportCache() {
+            for (const auto &restore :
+                 {QString("PRAGMA synchronous=FULL"), QString("PRAGMA wal_autocheckpoint=1000"),
+                  QString("PRAGMA wal_checkpoint(PASSIVE)"),
+                  QString("PRAGMA cache_size=-%1").arg(defaultCacheKib)})
+                try {
+                    db.sql(restore);
+                } catch (...) {
+                }
+        }
+    } cache(*this);
     try {
         setStatus("running", "");
         notify();

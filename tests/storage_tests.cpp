@@ -155,15 +155,15 @@ int main(int argc, char **argv) {
                               "[Variant \"Chess960\"]\n[SetUp \"1\"]\n"
                               "[FEN \"4k3/8/8/8/8/8/8/RK5R w HA - 0 1\"]\n1.O-O *");
             QMap<QString, QSet<qint64>> matching;
-            QMap<QPair<qint64, int>, QString> expected;
+            QSet<QPair<qint64, qint64>> expected;
             for (const auto &game : specimens) {
                 const auto id = materialDb.save(game);
                 for (size_t node = 0; node < game.nodes.size(); ++node) {
-                    // The old persisted representation is the compatibility oracle.
+                    // L'ancienne clé en toutes lettres reste la référence de la recherche.
                     auto key = QString::fromStdString(game.nodes[node].fen).section(' ', 0, 0);
                     key.remove(QRegularExpression("[^prnbqkPRNBQK]"));
                     std::sort(key.begin(), key.end());
-                    expected.insert({id, int(node)}, key);
+                    expected.insert({id, t64::Database::materialCode(key)});
                     matching[key].insert(id);
                 }
             }
@@ -175,14 +175,12 @@ int main(int argc, char **argv) {
                         connection = candidate;
                 }
                 QSqlQuery query(connection);
-                check(query.exec("SELECT game_id,node,material FROM all_positions"),
+                check(query.exec("SELECT game_id,material FROM game_material"),
                       "Read persisted material index");
-                QMap<QPair<qint64, int>, QString> actual;
+                QSet<QPair<qint64, qint64>> actual;
                 while (query.next())
-                    actual.insert({query.value(0).toLongLong(), query.value(1).toInt()},
-                                  query.value(2).toString());
-                check(actual == expected,
-                      "Material keys preserve the legacy format for variants, special moves and colours");
+                    actual.insert({query.value(0).toLongLong(), query.value(1).toLongLong()});
+                check(actual == expected, "Material signatures cover variants, special moves and colours");
                 for (auto it = matching.cbegin(); it != matching.cend(); ++it) {
                     auto input = it.key();
                     std::reverse(input.begin(), input.end());
@@ -593,11 +591,11 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 11,
-                      "Schema version 11");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 12,
+                      "Schema version 12");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
-                check(q.exec("SELECT typeof(key) FROM all_positions LIMIT 1") && q.next() &&
+                check(q.exec("SELECT typeof(key) FROM positions LIMIT 1") && q.next() &&
                           q.value(0).toString() == "integer",
                       "Positions are stored as integers");
                 q.finish();
@@ -694,6 +692,21 @@ int main(int argc, char **argv) {
                           .front())["reason"] == "unknownStart",
                   "An unknown starting position is reported as such");
         }
+        // Une longue partie traverse la migration : son milieu de jeu, indexé position par
+        // position dans l'ancien schéma, doit rester trouvable par signature dans le nouveau.
+        t64::Game marathon;
+        marathon.tags["White"] = "Marathon";
+        for (int i = 0, node = 0; i < 90; ++i) {
+            chess::Movelist moves;
+            chess::movegen::legalmoves(moves, marathon.boardOf(node));
+            if (moves.empty())
+                break;
+            node = marathon.play(node, chess::uci::moveToUci(moves[(i * 5) % moves.size()]));
+        }
+        const auto marathonLine = marathon.mainline();
+        const auto marathonId = db.save(marathon);
+        const auto marathonLate = QString::fromStdString(marathon.nodes[marathonLine[70]].fen);
+        const auto treeBefore = db.explorer(QString::fromStdString(chess::constants::STARTPOS));
         const auto oldPath = dir.path() + "/old.sqlite";
         db.backup(oldPath);
         downgradePositionsToV7(oldPath, "old-v7");
@@ -735,7 +748,23 @@ int main(int argc, char **argv) {
         QSqlDatabase::removeDatabase("old-fixture");
         {
             t64::Database migrated(oldPath);
-            check(migrated.stats()["games"].toInt() == 4, "Migration preserves games");
+            check(migrated.stats()["games"].toInt() == 5, "Migration preserves games");
+            const auto ids = [&](const QVariantList &rows) {
+                QSet<qint64> out;
+                for (const auto &row : rows)
+                    out.insert(row.toMap()["id"].toLongLong());
+                return out;
+            };
+            check(ids(migrated.search({}, {}, false, marathonLate)) == QSet<qint64>{marathonId},
+                  "Migration keeps a middlegame position findable without its index row");
+            check(ids(migrated.search({}, {}, false, marathonLate, false, {{"pawnStructure", true}}))
+                          .contains(marathonId) &&
+                      ids(migrated.search({}, {}, false, {}, false,
+                                          {{"material", marathonLate.section(' ', 0, 0)}}))
+                          .contains(marathonId),
+                  "Migration carries material and pawn structure into the signatures");
+            check(migrated.explorer(QString::fromStdString(chess::constants::STARTPOS)) == treeBefore,
+                  "Migration rebuilds the same opening tree");
             check(migrated.search({}, {}, false, QString::fromStdString(annotated.nodes[vn].fen)).size() == 1,
                   "Migration rebuilds variant positions");
             check(migrated.integrity() == "ok", "Migrated database integrity");
@@ -807,6 +836,88 @@ int main(int argc, char **argv) {
             raw.close();
             raw = QSqlDatabase();
             QSqlDatabase::removeDatabase("counter-raw");
+        }
+        // Index allégé : quarante demi-coups indexés, le reste retrouvé par signature.
+        {
+            const auto path = dir.path() + "/light.sqlite";
+            t64::Database light(path);
+            // Une partie de cent demi-coups, toujours la même : le k-ième coup légal.
+            const auto longGame = [](int stride, const char *white) {
+                t64::Game g;
+                g.tags["White"] = white;
+                int node = 0;
+                for (int i = 0; i < 100; ++i) {
+                    chess::Movelist moves;
+                    chess::movegen::legalmoves(moves, g.boardOf(node));
+                    if (moves.empty())
+                        break;
+                    node = g.play(node, chess::uci::moveToUci(moves[(i * stride) % moves.size()]));
+                }
+                return g;
+            };
+            auto g = longGame(7, "Long");
+            const auto line = g.mainline();
+            check(line.size() > 80, "The fixture game is long enough to cross the index horizon");
+            // Deux variantes : l'une tôt, dans l'index ; l'autre bien après l'horizon.
+            const auto branch = [&](int ply) {
+                chess::Movelist moves;
+                chess::movegen::legalmoves(moves, g.boardOf(line[ply]));
+                for (const auto m : moves)
+                    if (chess::uci::moveToUci(m) != g.nodes[line[ply + 1]].uci)
+                        return g.play(line[ply], chess::uci::moveToUci(m));
+                return -1;
+            };
+            const int earlySide = branch(5), lateSide = branch(60);
+            const auto id = light.save(g);
+            light.save(t64::parsePgn("[White \"Short\"]\n1.e4 e5 2.Nf3 *").at(0));
+            const auto fen = [&](int node) { return QString::fromStdString(g.nodes[node].fen); };
+            const auto found = [&](const QString &position, const QVariantMap &filters = {}) {
+                QSet<qint64> ids;
+                for (const auto &row : light.search({}, {}, false, position, false, filters))
+                    ids.insert(row.toMap()["id"].toLongLong());
+                return ids;
+            };
+            {
+                auto raw = QSqlDatabase::addDatabase("QSQLITE", "light-raw");
+                raw.setDatabaseName(path);
+                check(raw.open(), "Open light index verification connection");
+                QSqlQuery q(raw);
+                q.prepare("SELECT COUNT(*) FROM positions WHERE game_id=?");
+                q.addBindValue(id);
+                check(q.exec() && q.next() && q.value(0).toInt() == t64::Database::indexedPlies,
+                      "Only the first plies of a game are indexed position by position");
+                q.finish();
+                raw.close();
+            }
+            QSqlDatabase::removeDatabase("light-raw");
+            check(found(fen(line[10])) == QSet<qint64>{id}, "An opening position is found by the index");
+            check(found(fen(line[75])) == QSet<qint64>{id},
+                  "A position past the horizon is found by replaying the games that share its signature");
+            check(found(fen(earlySide)) == QSet<qint64>{id} && found(fen(lateSide)) == QSet<qint64>{id},
+                  "Variations are found on both sides of the horizon");
+            check(found(fen(line[75]), {{"pawnStructure", true}}).contains(id),
+                  "Pawn structure search covers the whole game");
+            check(found({}, {{"material", fen(line[90]).section(' ', 0, 0)}}).contains(id),
+                  "Material search covers the whole game");
+            // Même matériel, mêmes pions, autre position : la signature propose, le rejeu écarte.
+            auto other = longGame(11, "Other");
+            const auto otherLine = other.mainline();
+            check(found(QString::fromStdString(other.nodes[otherLine[75]].fen)).isEmpty(),
+                  "A position no game reached is not found");
+            // Une partie ajoutée après coup doit sortir à la recherche suivante.
+            auto twin = g;
+            twin.tags["White"] = "Twin";
+            const auto twinId = light.save(twin);
+            check(found(fen(line[75])) == QSet<qint64>({id, twinId}),
+                  "A later search sees games saved since the previous one");
+            check(light.novelty(g, id)["reason"] == "known",
+                  "Past the indexed plies a line is not reported as leaving the library");
+            // Rejouer la partie raccourcie retire ses anciennes signatures.
+            auto cut = t64::parsePgn("[White \"Twin\"]\n1.d4 d5 *").at(0);
+            light.save(cut, twinId);
+            check(found(fen(line[75])) == QSet<qint64>{id} && found(fen(line[10])) == QSet<qint64>{id},
+                  "Editing a game removes it from the positions it no longer reaches");
+            check(light.integrity() == "ok", "Light index integrity");
         }
         {
             t64::Database sources(dir.path() + "/sources.sqlite");

@@ -4,6 +4,7 @@
 #include <functional>
 #include <istream>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,9 +27,19 @@ struct Game {
     int playSan(int parent, const std::string &san);
     std::string pgn() const;
     std::vector<int> mainline() const;
+    // Échiquier d'un nœud, lu depuis sa FEN. Le dernier lu est gardé : jouer un coup le
+    // demande deux fois de suite, et relire la FEN à chaque fois coûtait plus cher que
+    // tout le reste de la lecture d'un PGN.
+    const chess::Board &boardOf(int node) const;
     void promote(int node);
     void removeVariation(int node);
     void merge(const Game &other);
+
+  private:
+    int add(int parent, chess::Board board, chess::Move move);
+    mutable int cachedNode_ = -1;
+    mutable std::string cachedFen_;
+    mutable std::optional<chess::Board> cachedBoard_;
 };
 chess::Board checkedBoard(const std::string &fen, bool chess960 = false);
 // Keep every generated position within the same serializable limits as imported FENs.

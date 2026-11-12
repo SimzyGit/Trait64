@@ -41,7 +41,10 @@ int main(int argc, char **argv) {
                            "white_elo,black_elo,plies) "
                            "VALUES(?,?,?,?,?,'2026.10.10','*','','Synthetic',?,?,?,2000,2100,1)"),
                  q.lastError().text());
-            must(edge.prepare("INSERT INTO opening_edges VALUES(?,?, 'e2e4','e4')"), edge.lastError().text());
+            must(edge.prepare(
+                     "INSERT INTO opening_stats VALUES(?,'e2e4','e4',1,0,0,0) ON CONFLICT(key,uci) DO "
+                     "UPDATE SET count=count+1"),
+                 edge.lastError().text());
             // Le banc n'écrivait que les arêtes : il ne mesurait donc rien de ce qui passe
             // par `positions`, que tout vrai import remplit — dossier de position et
             // classement des ouvertures compris.
@@ -70,8 +73,7 @@ int main(int argc, char **argv) {
                 position.bindValue(3, "e2e4");
                 position.bindValue(4, "e4");
                 must(position.exec(), position.lastError().text());
-                edge.bindValue(0, i);
-                edge.bindValue(1, key);
+                edge.bindValue(0, key);
                 must(edge.exec(), edge.lastError().text());
                 if (i % 10000 == 0) {
                     must(writer.commit(), writer.lastError().text());

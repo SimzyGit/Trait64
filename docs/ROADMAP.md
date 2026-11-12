@@ -87,6 +87,8 @@ Trois moteurs amont avec versions, tailles et SHA-256 épinglés ; options et pr
 
 ## Cahier de continuation accepté
 
+> **Rapproché du code le 12 novembre 2026.** Une case n'est cochée que si la fonction existe dans `main` et qu'un test ou une lecture du code le confirme. `◐` signale une fonction commencée, avec ce qui manque. Les cases vides n'ont pas été trouvées dans le code.
+
 Les listes suivantes représentent les objectifs détaillés demandés le 11 octobre. Une case ouverte signifie que l’objectif complet reste à terminer, même lorsqu’une première capacité figure dans le tableau ci-dessus. Les fonctions déjà utilisables doivent rester opérationnelles. Les mesures de performances seront publiées avec leur protocole, sans comparaison non étayée.
 
 ### A. Performances et grandes bases de données — PRIORITÉ CRITIQUE
@@ -95,23 +97,23 @@ Je veux que Trait64 puisse travailler efficacement avec plusieurs millions de pa
 
 Implémente :
 
-- [ ] Un importateur PGN parallèle et performant. Parallélisme livré (1–8 lecteurs), mesuré sur 10 000 parties réelles ; qualification à plusieurs millions encore ouverte.
+- [ ] ◐ Un importateur PGN parallèle et performant — partiel : 1 à 8 lecteurs, qualifié à 500 000 parties réelles (voir PERFORMANCE.md) ; un million en cours de mesure, 2, 5 et 10 millions restent à faire.
 - [x] Une importation reprenable après interruption.
 - [x] Une progression détaillée des importations.
-- [ ] L'indexation progressive des positions.
-- [ ] Des index persistants réutilisables.
+- [x] L'indexation progressive des positions — index allégé du schéma 12 : 20 premiers coups position par position, le reste par signature (matériel, pions).
+- [x] Des index persistants réutilisables. — clés Zobrist et index SQLite conservés dans la base
 - [x] Des recherches annulables en arrière-plan.
 - [x] Une pagination efficace par curseur.
-- [ ] Des modèles Qt incrémentaux.
-- [ ] Le chargement paresseux des parties.
-- [ ] L'optimisation des requêtes SQLite.
+- [ ] ◐ Des modèles Qt incrémentaux — partiel : pages par curseur ; à qualifier au million.
+- [ ] ◐ Le chargement paresseux des parties — partiel : la liste est paginée ; le reste à mesurer.
+- [ ] ◐ L'optimisation des requêtes SQLite — partiel : requêtes préparées gardées, recherche de position menée par ses résultats quand elle est rare ; le dossier d'une position très courante reste lent sur une grosse base.
 - [ ] La fusion intelligente des doublons.
 - [ ] La conservation des annotations lors des fusions.
-- [ ] Une recherche structurelle par matériel et configuration des pions.
-- [ ] Une recherche combinant joueur, Elo, couleur, position, tournoi, date et ouverture.
-- [ ] Une surveillance de l'intégrité des bases.
-- [ ] Une procédure de restauration et de réparation.
-- [ ] Une gestion fiable des migrations.
+- [x] Une recherche structurelle par matériel et configuration des pions. — filtre matériel et « même structure de pions »
+- [x] Une recherche combinant joueur, Elo, couleur, position, tournoi, date et ouverture. — recherche avancée de la bibliothèque
+- [x] Une surveillance de l'intégrité des bases. — contrôle en arrière-plan, annulable
+- [ ] ◐ Une procédure de restauration et de réparation — partiel : sauvegarde complète et restauration ; pas de réparation d'une base abîmée.
+- [x] Une gestion fiable des migrations. — schéma 12, sauvegarde avant chaque migration
 
 Teste le logiciel sur de véritables corpus PGN de 1, 2, 5 et 10 millions de parties.
 
@@ -147,10 +149,10 @@ Fonctionnalités :
 - [x] Analyse automatique des variantes secondaires.
 - [x] File de tâches d'analyse persistante.
 - [ ] Budgets de calcul adaptatifs.
-- [ ] Comparaison détaillée des conclusions de plusieurs moteurs.
-- [ ] Exploitation des tables de finales Syzygy.
+- [ ] ◐ Comparaison détaillée des conclusions de plusieurs moteurs — partiel : 2 à 4 profils côte à côte, sans synthèse.
+- [ ] ◐ Exploitation des tables de finales Syzygy — partiel : chemin transmis au moteur et tables à 7 pièces en ligne ; pas de gestionnaire local.
 - [x] Conservation et réutilisation des évaluations précédentes.
-- [ ] Explications pédagogiques en français.
+- [ ] ◐ Explications pédagogiques en français — partiel : suites légales et cinq motifs ; pas encore le « pourquoi ».
 
 Les explications doivent s'appuyer sur de véritables calculs et des caractéristiques échiquéennes vérifiables.
 
@@ -170,20 +172,20 @@ Je considère cette information peu utile et potentiellement trompeuse.
 
 À la place, le bilan doit fournir :
 
-- [ ] Un graphique d'évaluation.
+- [x] Un graphique d'évaluation. — bilan de partie
 - [ ] Les moments critiques.
-- [ ] Les imprécisions, erreurs et gaffes.
-- [ ] La perte en centipions.
-- [ ] L'évolution des chances de gain si elle peut être calculée correctement.
+- [x] Les imprécisions, erreurs et gaffes.
+- [x] La perte en centipions.
+- [ ] ◐ L'évolution des chances de gain si elle peut être calculée correctement — partiel : WDL affiché quand le moteur le fournit.
 - [ ] Les coups ayant réellement changé le cours de la partie.
-- [ ] Les meilleures alternatives.
-- [ ] Les variantes justificatives.
-- [ ] Les erreurs tactiques.
+- [x] Les meilleures alternatives.
+- [x] Les variantes justificatives. — suites légales rejouées
+- [ ] ◐ Les erreurs tactiques — partiel : limitées aux motifs reconnus.
 - [ ] Les erreurs stratégiques suffisamment identifiables.
 - [ ] Les possibilités manquées.
-- [ ] Les phases de la partie à retravailler.
-- [ ] Des exercices créés à partir des erreurs.
-- [ ] Une comparaison avec les erreurs récurrentes des parties précédentes.
+- [ ] ◐ Les phases de la partie à retravailler — partiel : précision par phase.
+- [x] Des exercices créés à partir des erreurs. — cartes et puzzles tirés du bilan
+- [ ] ◐ Une comparaison avec les erreurs récurrentes des parties précédentes — partiel : tableau de bord d'un profil, sans rapprochement partie par partie.
 - [ ] Des recommandations d'entraînement justifiées.
 
 Ajouter des paramètres permettant de régler la profondeur, le moteur et le temps consacré au bilan.
@@ -194,25 +196,25 @@ Le bilan doit être sérieux, informatif et pédagogique, sans gamification arti
 
 Ajouter :
 
-- [ ] Importation directe de parties Lichess.
-- [ ] Importation directe de parties Chess.com.
-- [ ] Synchronisation facultative de ces sources.
+- [x] Importation directe de parties Lichess. — compte synchronisé, lien de partie collable
+- [x] Importation directe de parties Chess.com.
+- [x] Synchronisation facultative de ces sources. — seules les nouvelles parties sont téléchargées
 - [ ] Importation des formats ChessBase compatibles.
 - [ ] Importation des formats SCID SI4/SI5.
-- [ ] Lecture et création de livres Polyglot.
-- [ ] Gestionnaire de bases téléchargeables.
-- [ ] Gestionnaire de sources de données.
-- [ ] Historique des importations.
-- [ ] Vérification des licences des bases.
-- [ ] Bases consacrées aux champions du monde.
-- [ ] Bases de parties historiques.
-- [ ] Bases thématiques.
-- [ ] Collections personnalisables.
-- [ ] Recherche de nouveautés par rapport à une base de référence.
+- [x] Lecture et création de livres Polyglot. — lecture `.bin` et export depuis la bibliothèque
+- [x] Gestionnaire de bases téléchargeables. — 42 collections
+- [x] Gestionnaire de sources de données. — bases nommées, recueils qui suivent leur fichier
+- [x] Historique des importations.
+- [ ] ◐ Vérification des licences des bases — partiel : licence affichée au catalogue, non vérifiée pour un fichier importé.
+- [x] Bases consacrées aux champions du monde.
+- [x] Bases de parties historiques.
+- [x] Bases thématiques. — ouvertures
+- [x] Collections personnalisables. — collections et favoris
+- [x] Recherche de nouveautés par rapport à une base de référence. — première position absente de la base locale
 - [ ] Statistiques avancées de tournois.
 - [x] Exportation CSV des statistiques de préparation, avec filtres et FEN.
 - [ ] Comparaison de plusieurs bases.
-- [ ] Recherche de positions indépendamment de l'ordre des coups.
+- [x] Recherche de positions indépendamment de l'ordre des coups. — index par position, variantes comprises
 
 Privilégie les formats ouverts et les sources légalement réutilisables.
 
@@ -227,15 +229,15 @@ Ajouter :
 - [x] Répertoires séparés pour les Blancs et les Noirs.
 - [x] Variantes principales et secondaires.
 - [x] Gestion des transpositions.
-- [ ] Couverture des réponses adverses.
-- [ ] Détection des trous dans les répertoires.
+- [ ] ◐ Couverture des réponses adverses — partiel : lacunes observées ; pas de couverture probabiliste.
+- [x] Détection des trous dans les répertoires. — lacunes observées dans la bibliothèque
 - [x] Statistiques par position.
 - [x] Statistiques par plage de la moyenne des deux Elo connus.
 - [x] Statistiques par période (années).
 - [x] Références vers des parties modèles.
 - [x] Identification des positions peu maîtrisées par l’historique des rappels.
 - [ ] Comparaison de plusieurs répertoires.
-- [ ] Détection des nouveautés théoriques.
+- [ ] ◐ Détection des nouveautés théoriques — partiel : nouveauté dans la base locale seulement.
 - [x] Entraînement du répertoire par positions dues et réponses préparées multiples.
 - [x] Répétition espacée simple par position.
 - [x] Importation et exportation PGN des répertoires.
@@ -244,16 +246,16 @@ Créer un mode **Préparation d'adversaire**.
 
 L'utilisateur doit pouvoir sélectionner un adversaire et obtenir :
 
-- [ ] Ses ouvertures principales.
+- [x] Ses ouvertures principales. — fiche joueur et préparation
 - [ ] Ses réponses les plus fréquentes.
-- [ ] Ses résultats avec chaque couleur.
-- [ ] Ses tendances selon les périodes.
+- [x] Ses résultats avec chaque couleur.
+- [ ] ◐ Ses tendances selon les périodes — partiel : filtre de période, pas de courbe dans le temps.
 - [ ] Les variantes qu'il joue régulièrement.
 - [ ] Ses choix dans des positions précises.
 - [ ] Les faiblesses statistiques réellement observables.
 - [ ] Des propositions de préparation.
 - [ ] Des parties de référence.
-- [ ] Un dossier de préparation exportable.
+- [ ] ◐ Un dossier de préparation exportable — partiel : CSV ; pas de PDF.
 
 Distingue toujours une nouveauté théorique d'un simple coup absent de la base utilisée.
 
@@ -263,22 +265,22 @@ Améliore fortement le système d'entraînement.
 
 Ajouter :
 
-- [ ] Exercices tactiques par thème et difficulté.
-- [ ] Entraînement aux ouvertures.
+- [x] Exercices tactiques par thème et difficulté. — puzzles Lichess, classement Elo, thèmes
+- [x] Entraînement aux ouvertures. — révision des positions de répertoire
 - [ ] Entraînement aux finales.
 - [ ] Entraînement au calcul.
 - [ ] Entraînement à la visualisation.
 - [ ] Échecs à l'aveugle.
 - [ ] Exercices de coordonnées.
 - [ ] Exercices personnalisés.
-- [ ] Exercices extraits des parties personnelles.
+- [x] Exercices extraits des parties personnelles.
 - [ ] Entraînement sur les erreurs récurrentes.
-- [ ] Plusieurs solutions correctes acceptées lorsqu'elles sont vérifiées.
-- [ ] Répétition espacée avancée.
-- [ ] Calendrier de révision.
-- [ ] Historique des entraînements.
+- [ ] ◐ Plusieurs solutions correctes acceptées lorsqu'elles sont vérifiées — partiel : pour le répertoire seulement, pas par moteur.
+- [ ] ◐ Répétition espacée avancée — partiel : version simple.
+- [x] Calendrier de révision.
+- [ ] ◐ Historique des entraînements — partiel : suivi quotidien et hebdomadaire.
 - [ ] Statistiques de progression par thème.
-- [ ] Objectifs personnels.
+- [x] Objectifs personnels. — objectif quotidien
 - [ ] Programmes d'entraînement personnalisés.
 - [ ] Un mode entraîneur pour créer des exercices destinés aux élèves.
 
@@ -295,7 +297,7 @@ Créer également un entraîneur interactif proposant, après une erreur :
 
 Ajouter :
 
-- [ ] Organisation des études en chapitres.
+- [ ] ◐ Organisation des études en chapitres — partiel : un recueil PGN tient lieu de chapitres.
 - [ ] Sous-chapitres.
 - [ ] Titres et sous-titres.
 - [ ] Paragraphes pédagogiques.
@@ -304,10 +306,10 @@ Ajouter :
 - [ ] Liens entre plusieurs études.
 - [ ] Réutilisation d'analyses sans duplication inutile.
 - [ ] Projets de travail enregistrables.
-- [ ] Organisation des documents de préparation.
-- [ ] Recherche globale dans les études.
-- [ ] Historique des modifications.
-- [ ] Instantanés récupérables.
+- [ ] ◐ Organisation des documents de préparation — partiel : explorateur d'études : dossiers, renommage, déplacement.
+- [ ] ◐ Recherche globale dans les études — partiel : noms de fichiers et parties ; pas le texte des commentaires.
+- [ ] ◐ Historique des modifications — partiel : annuler/rétablir et instantanés.
+- [x] Instantanés récupérables. — 14 instantanés automatiques
 - [ ] Importation d'études Lichess.
 
 ## Pistes retenues pour se distinguer (6 novembre 2026)
@@ -317,8 +319,8 @@ Trois ajouts qui n'existent chez aucun concurrent libre, et que l'architecture l
 - [ ] **Suivre les tournois en direct.** Lichess diffuse ses retransmissions en PGN par une API publique et gratuite. Suivre une partie coup par coup avec son propre moteur, et voir en direct quand elle entre dans son répertoire et où elle en sort. ChessBase fait payer cet usage.
 - [ ] **Partager sans serveur.** Exporter une étude ou un bilan en un fichier HTML autonome, échiquier et variantes compris. Cela règle la faiblesse du « tout local » sans renier la promesse : un fichier n'est pas un compte.
 - [ ] **Saisir une partie depuis une feuille de notation.** Photographier la feuille et en tirer le PGN. C'est le point de douleur du joueur de club, et personne ne le fait bien. Le plus coûteux des trois.
-- [ ] Rapports PDF avancés.
-- [ ] Exportation de diagrammes SVG.
+- [ ] ◐ Rapports PDF avancés — partiel : étude en PDF avec diagramme et notation.
+- [x] Exportation de diagrammes SVG.
 - [ ] Modèles personnalisables de rapports.
 
 L'objectif est de permettre à Trait64 de servir aussi bien à un joueur qu'à un entraîneur, un auteur ou un club.
@@ -327,15 +329,15 @@ L'objectif est de permettre à Trait64 de servir aussi bien à un joueur qu'à u
 
 Ajouter des gestionnaires permettant à l'utilisateur :
 
-- [ ] De rechercher les moteurs disponibles.
-- [ ] De télécharger des moteurs open source.
-- [ ] De les installer.
-- [ ] De les supprimer.
+- [x] De rechercher les moteurs disponibles. — détection des moteurs installés, 12 novembre
+- [x] De télécharger des moteurs open source. — Stockfish, Arasan, PlentyChess
+- [x] De les installer.
+- [x] De les supprimer.
 - [ ] De les mettre à jour.
-- [ ] De créer différents profils.
-- [ ] De configurer indépendamment les threads, le Hash, le MultiPV et les autres options UCI.
-- [ ] De télécharger des bases de parties.
-- [ ] De consulter leur taille, source et licence.
+- [x] De créer différents profils.
+- [x] De configurer indépendamment les threads, le Hash, le MultiPV et les autres options UCI.
+- [x] De télécharger des bases de parties.
+- [x] De consulter leur taille, source et licence.
 - [ ] De gérer les versions installées.
 - [ ] De télécharger des tables Syzygy adaptées à son stockage disponible.
 
@@ -350,20 +352,20 @@ Le système GitHub existe déjà. Il faut le conserver et le perfectionner.
 Ajouter ou vérifier :
 
 - [ ] Signatures cryptographiques indépendantes des publications.
-- [ ] Vérification d'intégrité des téléchargements.
+- [x] Vérification d'intégrité des téléchargements. — SHA-256
 - [ ] Restauration guidée après échec.
-- [ ] Sauvegardes complètes avant migration.
-- [ ] Installation asynchrone.
+- [x] Sauvegardes complètes avant migration.
+- [x] Installation asynchrone.
 - [ ] Gestion correcte des interruptions.
-- [ ] Conservation des préférences.
-- [ ] Conservation des bases de données.
+- [x] Conservation des préférences.
+- [x] Conservation des bases de données.
 - [ ] Gestion des versions incompatibles.
-- [ ] Tests d'installation sur Voyager/Debian.
+- [ ] ◐ Tests d'installation sur Voyager/Debian — partiel : Debian 12/13 et 10 autres images en CI ; jamais sur la machine réelle.
 - [ ] Tests Wayland et X11.
-- [ ] Tests de régression.
+- [x] Tests de régression. — 20 suites, parcours rejoués à vrais clics
 - [ ] Tests de sécurité.
-- [ ] Journaux de diagnostic exportables.
-- [ ] Vérification des dépendances.
+- [ ] ◐ Journaux de diagnostic exportables — partiel : page Intégrité & diagnostic, sans export.
+- [x] Vérification des dépendances. — lanceur de l'AppImage, 12 distributions testées à chaque version
 
 Éviter toute télémétrie obligatoire.
 
@@ -371,23 +373,23 @@ Ajouter ou vérifier :
 
 Poursuivre le support Linux, puis préparer :
 
-- [ ] Windows.
-- [ ] macOS.
+- [x] Windows. — installateur publié à chaque version
+- [x] macOS. — image `.dmg` puce Apple
 - [ ] Flatpak.
 - [ ] Distribution Flathub.
-- [ ] Traductions complètes.
+- [ ] ◐ Traductions complètes — partiel : interface français/anglais ; diagnostics techniques non traduits.
 - [x] Libellés français/anglais de l’interface et changement de langue conservant les valeurs des listes.
 - [ ] Compléter les traductions des diagnostics C++ et descriptifs de catalogue.
 - [x] Navigation principale et palette de commandes au clavier.
 - [ ] Audit exhaustif du parcours clavier et des technologies d’assistance.
 - [ ] Raccourcis personnalisables.
 - [ ] Améliorations d'accessibilité.
-- [ ] Gestion des petites résolutions.
+- [x] Gestion des petites résolutions. — vérifiée à 960 × 640
 - [ ] Panneaux détachables si compatibles avec notre conception.
 - [ ] Dispositions de travail enregistrées.
 - [ ] Configuration de plusieurs espaces de travail.
 - [ ] Tutoriel de première utilisation.
-- [ ] Documentation utilisateur intégrée.
+- [ ] ◐ Documentation utilisateur intégrée — partiel : aide et raccourcis ; pas de manuel.
 
 Conserve l'identité visuelle actuelle. L'esthétique n'est pas notre priorité immédiate : nous y reviendrons plus tard.
 
@@ -398,7 +400,7 @@ Lorsque les fonctions principales seront suffisamment robustes :
 - [ ] Reconnaissance de diagrammes à partir d'images.
 - [ ] Validation manuelle des FEN reconnues.
 - [ ] Prise en charge des échiquiers électroniques.
-- [ ] Tournois moteur contre moteur.
+- [x] Tournois moteur contre moteur. — toutes rondes, 2 à 8 profils
 - [ ] Benchmarks automatisés de moteurs.
 - [ ] Assistant IA pédagogique facultatif.
 - [ ] Modèles IA locaux.
@@ -408,7 +410,7 @@ Lorsque les fonctions principales seront suffisamment robustes :
 - [ ] Application compagnon mobile.
 - [ ] Rapports approfondis sur les faiblesses.
 - [ ] Bibliothèques de cours.
-- [ ] Compatibilité avec d'autres variantes d'échecs lorsque cela ne fragilise pas les fonctions principales.
+- [ ] ◐ Compatibilité avec d'autres variantes d'échecs lorsque cela ne fragilise pas les fonctions principales — partiel : Chess960.
 
 ---
 

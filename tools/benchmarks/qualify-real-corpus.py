@@ -134,11 +134,13 @@ def main():
                 digest.update(pgn.encode('utf-8'))
                 count += 1
             positions = db.execute('SELECT COUNT(*) FROM positions').fetchone()[0]
-            all_positions = db.execute('SELECT COUNT(*) FROM all_positions').fetchone()[0]
-            if count != 100000 or positions != 6817385 or all_positions != 6817385 or digest.hexdigest() != CANONICAL_SHA:
+            # Index allégé : 40 demi-coups au plus par partie, et des signatures pour le reste.
+            expected = db.execute('SELECT SUM(MIN(plies+1,40)) FROM games').fetchone()[0]
+            signatures = db.execute('SELECT COUNT(*) FROM game_signatures').fetchone()[0]
+            if count != 100000 or positions != expected or signatures < count or digest.hexdigest() != CANONICAL_SHA:
                 raise RuntimeError('Canonical content mismatch in ' + path.name)
             content['databases'][path.name] = {'games': count, 'positions': positions,
-                'all_positions': all_positions, 'canonical_sha256': digest.hexdigest(),
+                'signatures': signatures, 'canonical_sha256': digest.hexdigest(),
                 'closed_database_bytes': path.stat().st_size}
     emit('restored-content-100k', content)
     with sqlite3.connect('file:' + str(out / 'material-100k.sqlite') + '?mode=ro', uri=True) as db:
