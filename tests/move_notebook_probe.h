@@ -117,7 +117,7 @@ int moveNotebookProbe(const QString &directory) {
         check(p.y()>=list->mapToScene(QPointF()).y() && p.y()<=list->mapToScene(QPointF(0,list->height())).y(),"Half-move cell is visible before click");
         QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,p.toPoint());settled();
         cell=visualItem(window->contentItem(),"notebookMove_"+QString::number(id));
-        check(c.state()["node"].toInt()==id && cell && cell->property("move").toMap()["active"].toBool(),"Half-move click selects exact node and highlights its cell");
+        check(c.state()["node"].toInt()==id && cell && cell->property("active").toBool(),"Half-move click selects exact node and highlights its cell");
     }
     c.navigate(1);QTest::qWait(20);
     auto *black=visualItem(window->contentItem(),"notebookMove_"+QString::number(game.nodes[1].children[0]));

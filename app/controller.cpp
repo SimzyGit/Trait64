@@ -2,6 +2,7 @@
 #include "controller.h"
 #include "archive.h"
 #include "croissant.h"
+#include "discovery.h"
 #include "hardware.h"
 #include "move_notation.h"
 #include <QClipboard>
@@ -53,6 +54,8 @@ void atomicWrite(const QString &path, const QByteArray &bytes) {
 Controller::Controller(const QString &path, QObject *parent)
     : QObject(parent), dataPath_(path), sessionPath_(path + "/session.json"), engine_(this),
       comparison_(this) {
+    stateObject_ = new QQmlPropertyMap(this);
+    cells_ = new QQmlPropertyMap(this);
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "auto").toString());
     adoptLoneCustomPieceSet();
@@ -121,11 +124,13 @@ Controller::Controller(const QString &path, QObject *parent)
         !settings_.value("onlineAccounts").toList().isEmpty())
         QTimer::singleShot(2500, this, &Controller::syncAllAccounts);
     flipped_ = settings_.value("flipped", false).toBool();
-    if (!settings_.contains("enginePath")) {
-        QString stockfish = QStandardPaths::findExecutable("stockfish");
-        if (stockfish.isEmpty() && QFileInfo("/usr/games/stockfish").isExecutable())
-            stockfish = "/usr/games/stockfish";
-        settings_.setValue("enginePath", stockfish);
+    // À chaque lancement tant qu'aucun moteur n'est réglé, ou que celui qui l'était a
+    // disparu : la recherche n'avait lieu qu'une fois, et Stockfish installé après le
+    // premier lancement restait introuvable.
+    if (const auto current = settings_.value("enginePath").toString();
+        current.isEmpty() || !QFileInfo(current).isExecutable()) {
+        const auto found = detectEngines();
+        settings_.setValue("enginePath", found.isEmpty() ? QString() : found.first());
     }
     autosave_.setSingleShot(true);
     autosave_.setInterval(600);
@@ -213,7 +218,7 @@ Controller::Controller(const QString &path, QObject *parent)
         }
         if (r.operation == "puzzles") {
             refreshPuzzleStats();
-            emit changed();
+            publish();
             emit message(
                 r.error.isEmpty()
                     ? tr("%1 puzzle(s) ajouté(s), %2 déjà présent(s).").arg(r.count).arg(r.duplicates)
@@ -548,14 +553,40 @@ void Controller::refresh(bool content) {
     } catch (const std::exception &e) {
         fail(e);
     }
-    emit notationChanged();
-    emit changed();
+    refreshNotation();
+    publish();
     if (positionFilter_ && previousFen != s(current.fen))
         requestLibrarySearch();
     if ((analysis_ || playing_) && !trainingActive() && previousFen != s(current.fen))
         analysisTimer_.start();
     if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
+}
+void Controller::publish() {
+    // Une case par clé : après un coup, seules les deux ou trois cases touchées
+    // préviennent l'échiquier, les soixante autres ne sont pas réévaluées.
+    for (int i = 0; i < squares_.size(); ++i) {
+        const auto key = QStringLiteral("s%1").arg(i);
+        if (cells_->value(key) != squares_[i])
+            cells_->insert(key, squares_[i]);
+    }
+    for (auto it = state_.cbegin(); it != state_.cend(); ++it)
+        if (stateObject_->value(it.key()) != it.value())
+            stateObject_->insert(it.key(), it.value());
+    // Les listes : comparées avant d'être annoncées. La plupart des coups ne changent ni
+    // les onglets ni les puzzles, et un modèle annoncé reconstruit tout ce qui l'affiche.
+    const auto announce = [](auto &shown, const auto &now, auto signal) {
+        if (shown == now)
+            return;
+        shown = now;
+        signal();
+    };
+    announce(shownSquares_, squares_, [this] { emit squaresChanged(); });
+    announce(shownOpenings_, openings_, [this] { emit openingsChanged(); });
+    announce(shownBook_, bookMoves_, [this] { emit bookMovesChanged(); });
+    announce(shownTabs_, tabs(), [this] { emit tabsChanged(); });
+    announce(shownPuzzles_, puzzles(), [this] { emit puzzlesChanged(); });
+    emit changed();
 }
 void Controller::openBook() {
     const auto path = settings_.value("bookPath").toString();
@@ -574,11 +605,17 @@ int Controller::frenchNotation() const {
                ? t64::FrenchLetters
                : t64::EnglishLetters;
 }
-QVariantList Controller::moveRows() const {
-    return t64::moveRows(game_, node_, frenchNotation());
-}
-QVariantList Controller::moveFlow() const {
-    return t64::moveFlow(game_, node_, frenchNotation());
+// Le coup courant n'entre pas dans ces listes : l'affichage le compare lui-même au nœud
+// actif. Parcourir une partie ne change donc rien ici, et la notation n'est redessinée
+// que lorsqu'un coup, un commentaire ou une annotation a réellement bougé.
+void Controller::refreshNotation() {
+    auto rows = t64::moveRows(game_, -1, frenchNotation());
+    auto flow = t64::moveFlow(game_, -1, frenchNotation());
+    if (rows == moveRows_ && flow == moveFlow_)
+        return;
+    moveRows_ = std::move(rows);
+    moveFlow_ = std::move(flow);
+    emit notationChanged();
 }
 void Controller::writeSession() {
     if (trainingActive())
@@ -1106,6 +1143,17 @@ void Controller::step(int direction) {
         navigate(n);
     }
 }
+// Haut et bas passent d'une variante à sa voisine : les coups qui répondent à la même
+// position, dans l'ordre où la notation les montre.
+void Controller::stepVariation(int delta) {
+    if (node_ <= 0 || trainingActive())
+        return;
+    const auto &siblings = game_.nodes[game_.nodes[node_].parent].children;
+    const auto here = std::find(siblings.begin(), siblings.end(), node_) - siblings.begin();
+    const auto next = here + delta;
+    if (next >= 0 && next < std::ssize(siblings))
+        navigate(siblings[next]);
+}
 void Controller::flip() {
     flipped_ = !flipped_;
     settings_.setValue("flipped", flipped_);
@@ -1313,6 +1361,23 @@ void Controller::groupLibraryByOpening() {
 void Controller::copyText(const QString &what) {
     QGuiApplication::clipboard()->setText(what == "fen" ? s(game_.nodes[node_].fen) : s(game_.pgn()));
     emit message(what.toUpper() + tr(" copié."));
+}
+QStringList Controller::detectEngines() const {
+    // Les moteurs installés depuis le catalogue vivent dans le dossier des données.
+    return t64::findEngines(
+        t64::engineSearchFolders(QDir::homePath(), qEnvironmentVariable("PATH"), {dataPath_ + "/content"}));
+}
+QString Controller::useDetectedEngine() {
+    const auto found = detectEngines();
+    if (found.isEmpty()) {
+        emit message(tr("Aucun moteur trouvé sur cette machine. Installez Stockfish, ou indiquez son "
+                        "emplacement avec « Parcourir »."),
+                     true);
+        return {};
+    }
+    setPreference("enginePath", found.first());
+    emit message(tr("Moteur trouvé : ") + found.first());
+    return found.first();
 }
 void Controller::startEngine() {
     auto options = settings_.value("uciOptions").toMap();

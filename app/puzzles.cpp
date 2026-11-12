@@ -190,7 +190,7 @@ void Controller::createMistakePuzzles() {
         }
         const int added = db_->addPuzzles(rows);
         refreshPuzzleStats();
-        emit changed();
+        publish();
         emit message(tr("%1 puzzle(s) créé(s) depuis les erreurs, %2 déjà présent(s).")
                          .arg(added).arg(int(rows.size()) - added));
     } catch (const std::exception &e) {

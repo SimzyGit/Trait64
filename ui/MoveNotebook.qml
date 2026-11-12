@@ -86,6 +86,10 @@ Item {
         target: root.backend
         function onNotationChanged() { root.requestFollow(false) }
     }
+    // La notation ne change plus quand on parcourt la partie : c'est le nœud actif qui
+    // dit quel coup suivre.
+    property int node: backend.state.node
+    onNodeChanged: requestFollow(false)
     onVisibleChanged: if (visible) requestFollow(true)
     onFlowModeChanged: requestFollow(true)
     onHeightChanged: requestFollow(true)
@@ -271,11 +275,11 @@ Item {
                     contentItem: Label {
                         text: initialButton.text; wrapMode: Text.Wrap
                         font.pixelSize: 11 * root.textScale; color: root.foreground
-                        font.bold: !!row.modelData.active
+                        font.bold: !!(!!row.modelData.initial && root.backend.state.node === 0)
                     }
                     background: Rectangle {
-                        color: row.modelData.active || initialButton.hovered ? root.raised : "transparent"
-                        border.width: row.modelData.active || initialButton.visualFocus ? 1 : 0
+                        color: (!!row.modelData.initial && root.backend.state.node === 0) || initialButton.hovered ? root.raised : "transparent"
+                        border.width: (!!row.modelData.initial && root.backend.state.node === 0) || initialButton.visualFocus ? 1 : 0
                         border.color: root.accent; radius: 3
                     }
                     onClicked: root.backend.navigate(0)
@@ -303,6 +307,7 @@ Item {
                     Button {
                         id: cell
                         property var move: parent.move
+                        readonly property bool active: !!move.id && move.id === root.backend.state.node
                         objectName: move.id ? "notebookMove_" + move.id : "emptyMoveCell"
                         enabled: !!move.id
                         implicitHeight: Math.max(32 * root.textScale, contentItem.implicitHeight + 12)
@@ -328,14 +333,14 @@ Item {
                                 wrapMode: Text.WrapAnywhere
                                 verticalAlignment: Text.AlignVCenter
                                 font.pixelSize: 12 * root.textScale
-                                font.bold: !!cell.move.active
+                                font.bold: !!cell.active
                                 color: root.foreground
                             }
                         }
                         background: Rectangle {
                             radius: 3
-                            color: cell.move.active || cell.hovered ? root.raised : "transparent"
-                            border.width: cell.move.active || cell.visualFocus ? 2 : 0
+                            color: cell.active || cell.hovered ? root.raised : "transparent"
+                            border.width: cell.active || cell.visualFocus ? 2 : 0
                             border.color: root.accent
                         }
                         onClicked: root.backend.navigate(move.id)

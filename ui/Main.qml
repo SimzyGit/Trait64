@@ -393,7 +393,7 @@ objectName:"analysisSplit"
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
-                                    Board {id:chessboard;objectName:"chessboard";backend:controller;coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
+                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
                                 }
                             }
                         }
@@ -402,10 +402,11 @@ objectName:"analysisSplit"
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.Black||qsTr("Noirs")):(controller.state.tags.White||qsTr("Blancs"));font.weight:Font.DemiBold}
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):((controller.state.flipped?controller.state.tags.BlackElo:controller.state.tags.WhiteElo)||"");color:win.muted}
                         }
-                        RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,430))/2);Layout.rightMargin:Layout.leftMargin
+                        RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,476))/2);Layout.rightMargin:Layout.leftMargin
                             TButton {text:"|◀";implicitWidth:38;padding:6;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2);Accessible.name:qsTr("Début de la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Début")}
                             TButton {text:"◀";implicitWidth:38;padding:6;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-1);Accessible.name:qsTr("Coup précédent");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup précédent")}
                             TButton {text:"▶";implicitWidth:38;padding:6;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(1);Accessible.name:qsTr("Coup suivant");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup suivant")}
+                            TButton {objectName:"autoplay";visible:boardPanel.width>=450;text:autoplay.running?"❚❚":"▶▶";implicitWidth:38;padding:6;enabled:autoplay.running||(controller.state.canForward&&!controller.state.training);onClicked:autoplay.running=!autoplay.running;Accessible.name:autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:(autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie"))+" ("+qsTr("Espace")+")"}
                             TButton {text:"▶|";implicitWidth:38;padding:6;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2);Accessible.name:qsTr("Fin de la variante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Fin de la variante")}
                             TButton {text:"⇅";implicitWidth:38;onClicked:controller.flip();Accessible.name:qsTr("Retourner l’échiquier");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Retourner l’échiquier · F")}
                             Item {Layout.fillWidth:true}
@@ -530,7 +531,10 @@ objectName:"analysisSplit"
                                     Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     // Sans moteur configuré, « Analyser » ne mène nulle part et rien
                                     // ne dit où en choisir un : premier mur venu pour qui découvre.
-                                    TButton {visible:!controller.preferences.enginePath;text:qsTr("Choisir un moteur…");accent:true;onClicked:settingsDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
+                                    TButton {visible:!controller.preferences.enginePath;text:qsTr("Choisir un moteur…");accent:true
+                                             // D'abord chercher : la plupart du temps Stockfish est déjà là.
+                                             onClicked:{if(controller.useDetectedEngine()==="")settingsDialog.open()}
+                                             ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
                                     TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
                                 }
                                 ListView {
@@ -851,7 +855,9 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:settingsScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:settingsScroll.availableWidth;spacing:18
             Label {text:qsTr("Moteur UCI local");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
-            RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {text:qsTr("Parcourir");onClicked:engineFileDialog.open()}}
+            RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {objectName:"detectEngine";text:qsTr("Détecter");onClicked:{var found=controller.useDetectedEngine();if(found!=="")enginePathField.text=found}
+                         ToolTip.visible:hovered;ToolTip.text:qsTr("Cherche Stockfish et les autres moteurs dans les dossiers du système, dans Téléchargements et dans votre dossier personnel.")}
+                TButton {text:qsTr("Parcourir");onClicked:engineFileDialog.open()}}
             CheckBox {text:qsTr("Sauvegardes automatiques (14 instantanés)");checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
             TButton {text:qsTr("Créer une sauvegarde automatique maintenant");onClicked:controller.automaticBackup()}
             GridLayout {columns:settingsScroll.availableWidth>700*win.textScale?4:2;columnSpacing:14;rowSpacing:10;Layout.fillWidth:true
@@ -893,7 +899,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:helpScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:helpScroll.availableWidth;spacing:15
             Label {objectName:"helpTitle";Layout.fillWidth:true;Layout.minimumWidth:0;wrapMode:Text.WordWrap;text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
-            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
+            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:qsTr("Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne");Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;lineHeight:1.6}
             Label {text:qsTr("Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
         }}
@@ -977,6 +983,19 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
     function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!preparationDialog.visible&&!repertoiresDialog.visible&&!importsDialog.visible&&!advancedDialog.visible&&!helpDialog.visible&&!pgnDialog.visible&&!collectionDialog.visible&&!promotionDialog.visible&&!chess960Dialog.visible&&!deleteCardDialog.visible&&!deleteVariationDialog.visible&&!analysisMenu.visible&&!positionMenu.visible}
+    // Lecture automatique : un coup toutes les secondes et demie, jusqu'au bout de la
+    // variante ; quitter l'analyse ou reprendre la main l'arrête.
+    Timer {
+        id:autoplay;objectName:"autoplayTimer";interval:1500;repeat:true
+        onTriggered:{if(win.page===2&&controller.state.canForward&&!controller.state.training)controller.step(1);else running=false}
+    }
+    // Espace actionne déjà le bouton ou la liste qui a le focus : on ne le lui prend pas.
+    function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
+    Shortcut {sequence:"Space";enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
+    // Haut et bas servent d'abord à la liste ou au menu déroulant qui a le focus.
+    function verticalKeysFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&(f.currentIndex!==undefined||f.down!==undefined))}
+    Shortcut {sequence:"Up";enabled:win.verticalKeysFree();onActivated:controller.stepVariation(-1)}
+    Shortcut {sequence:"Down";enabled:win.verticalKeysFree();onActivated:controller.stepVariation(1)}
     Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
     Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
     // Les flèches parcourent les coups, Alt + flèche les parties de la liste.

@@ -15,6 +15,7 @@
 #include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QObject>
+#include <QQmlPropertyMap>
 #include <QSettings>
 #include <QTimer>
 #include <atomic>
@@ -42,9 +43,13 @@ class Controller : public QObject {
     Q_PROPERTY(t64::Comparison *comparison READ comparison CONSTANT)
     Q_PROPERTY(t64::Tournament *tournament READ tournament CONSTANT)
     Q_PROPERTY(t64::AnalysisQueue *analysisQueue READ analysisQueue CONSTANT)
-    Q_PROPERTY(QVariantMap state READ state NOTIFY changed)
-    Q_PROPERTY(QVariantList squares READ squares NOTIFY changed)
-    Q_PROPERTY(QVariantList notation READ notation NOTIFY changed)
+    // L'état par clé : une liaison QML sur « state.fen » n'est réévaluée que si fen
+    // change. Exposé d'un bloc, chaque coup — et chaque tic de pendule — faisait relire
+    // toute la carte à des centaines de liaisons : trente millisecondes par coup.
+    Q_PROPERTY(QQmlPropertyMap *state READ stateObject CONSTANT)
+    Q_PROPERTY(QQmlPropertyMap *cells READ cells CONSTANT)
+    Q_PROPERTY(QVariantList squares READ squares NOTIFY squaresChanged)
+    Q_PROPERTY(QVariantList notation READ notation NOTIFY notationChanged)
     Q_PROPERTY(QVariantList moveRows READ moveRows NOTIFY notationChanged)
     Q_PROPERTY(QVariantList moveFlow READ moveFlow NOTIFY notationChanged)
     Q_PROPERTY(QVariantList games READ games NOTIFY libraryChanged)
@@ -52,13 +57,13 @@ class Controller : public QObject {
     // c'est le lot que le bouton de bilan propose de passer en revue. 0 : rien à proposer.
     Q_PROPERTY(int importedGames READ importedGames NOTIFY libraryChanged)
     Q_PROPERTY(QVariantMap stats READ stats NOTIFY libraryChanged)
-    Q_PROPERTY(QVariantList openings READ openings NOTIFY changed)
+    Q_PROPERTY(QVariantList openings READ openings NOTIFY openingsChanged)
     // Dossier de la position courante : coups joués, scores, tranches de force et
     // parties modèles. Construit en arrière-plan, comme la préparation.
     Q_PROPERTY(QVariantMap openingReport READ openingReport NOTIFY reportChanged)
     Q_PROPERTY(QVariantMap onlineReport READ onlineReport NOTIFY onlineReportChanged)
-    Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY changed)
-    Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY changed)
+    Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY bookMovesChanged)
+    Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY puzzlesChanged)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
@@ -79,7 +84,7 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap fideSync READ fideSync NOTIFY fideSyncChanged)
     Q_PROPERTY(int taskProgress READ taskProgress NOTIFY busyChanged)
     Q_PROPERTY(QString taskStatus READ taskStatus NOTIFY busyChanged)
-    Q_PROPERTY(QVariantList tabs READ tabs NOTIFY changed)
+    Q_PROPERTY(QVariantList tabs READ tabs NOTIFY tabsChanged)
     Q_PROPERTY(QVariantList review READ review NOTIFY reviewChanged)
     // Le point coloré par coup, rangé par numéro de nœud : le carnet de coups a des
     // centaines de lignes, et chacune parcourant la liste du bilan, l'affichage
@@ -179,10 +184,12 @@ class Controller : public QObject {
     Q_INVOKABLE void searchLibrary(const QString &query, const QString &result, bool favorite, bool position,
                                    bool trash, const QVariantMap &filters);
     QVariantMap state() const { return state_; }
+    QQmlPropertyMap *stateObject() const { return stateObject_; }
     QVariantList squares() const { return squares_; }
     QVariantList notation() const { return notation_; }
-    QVariantList moveRows() const;
-    QVariantList moveFlow() const;
+    QVariantList moveRows() const { return moveRows_; }
+    QVariantList moveFlow() const { return moveFlow_; }
+    QQmlPropertyMap *cells() const { return cells_; }
     QVariantList games() const { return games_; }
     int importedGames() const { return importedGames_; }
     QVariantMap stats() const { return stats_; }
@@ -344,6 +351,7 @@ class Controller : public QObject {
     Q_INVOKABLE void move(const QString &uci);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
+    Q_INVOKABLE void stepVariation(int delta);
     Q_INVOKABLE void flip();
     Q_INVOKABLE void setComment(const QString &comment);
     Q_INVOKABLE void setNag(int nag);
@@ -367,6 +375,10 @@ class Controller : public QObject {
     Q_INVOKABLE void cancelOnlineReport();
     QVariantMap onlineReport() const { return onlineReport_; }
     // Rapatrie une partie de Lichess dans la bibliothèque, par son identifiant.
+    // Les moteurs d'échecs installés sur la machine, Stockfish en tête.
+    Q_INVOKABLE QStringList detectEngines() const;
+    // Règle le premier trouvé comme moteur et rend son chemin, vide s'il n'y en a aucun.
+    Q_INVOKABLE QString useDetectedEngine();
     Q_INVOKABLE void importOnlineGame(const QString &id);
     // L'identifiant d'une partie dans un lien Lichess, vide si le texte n'en est pas un.
     static QString lichessGameId(const QString &text);
@@ -405,6 +417,11 @@ class Controller : public QObject {
     void showAnalysisQueue();
     void preparationChanged();
     void reportChanged();
+    void squaresChanged();
+    void openingsChanged();
+    void bookMovesChanged();
+    void puzzlesChanged();
+    void tabsChanged();
     void onlineReportChanged();
     void searchChanged();
     void libraryOpened();
@@ -619,6 +636,14 @@ class Controller : public QObject {
     void writeSession();
     void replaceGame(t64::Game game, qint64 id = 0);
     void adoptGame(t64::Game game, qint64 id);
+    // Publie ce qui a réellement changé depuis la dernière fois, clé par clé et liste
+    // par liste, puis « changed » pour ceux qui écoutent tout.
+    void publish();
+    void refreshNotation();
+    QQmlPropertyMap *stateObject_ = nullptr, *cells_ = nullptr;
+    QVariantList moveRows_, moveFlow_;
+    QVariantList shownSquares_, shownOpenings_, shownBook_, shownTabs_;
+    QVariantMap shownPuzzles_;
     // Relève une seule fois les anciens réglages par défaut qui bridaient le moteur.
     void unleashEngineOnce();
     // Rang de la partie ouverte dans la liste de la bibliothèque, -1 si absente.

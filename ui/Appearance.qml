@@ -116,6 +116,7 @@ TDialog {
                 CheckBox {text:qsTr("Coordonnées");checked:root.backend.preferences.coordinates;onToggled:root.backend.setPreference("coordinates",checked)}
                 CheckBox {text:qsTr("Coups possibles");checked:root.backend.preferences.legalMoves;onToggled:root.backend.setPreference("legalMoves",checked)}
                 CheckBox {text:qsTr("Dernier coup");checked:root.backend.preferences.lastMove;onToggled:root.backend.setPreference("lastMove",checked)}
+                CheckBox {text:qsTr("Flèches du moteur");checked:root.backend.preferences.engineArrows;onToggled:root.backend.setPreference("engineArrows",checked)}
                 CheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Bande verticale contre l’échiquier : la part claire est l’avantage des Blancs.")}
             }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "discovery.h"
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -106,11 +107,74 @@ int main(int argc, char **argv) {
             return uiLayoutProbe(dir.path());
         if (app.arguments().contains("--explorer-walk"))
             return explorerProbeMain(dir.path());
+        if (app.arguments().contains("--board-walk"))
+            return boardProbeMain(dir.path());
         if (const int i = int(app.arguments().indexOf("--showcase")); i > 0 && i + 1 < app.arguments().size())
             return showcaseProbe(dir.path(), app.arguments()[i + 1]);
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
+        {
+            // Trouver un moteur déjà installé : par son nom, dans les dossiers du système
+            // et là où l'on dépose un téléchargement, sans rien lancer.
+            check(t64::looksLikeEngine("stockfish") && t64::looksLikeEngine("Stockfish-17-avx2") &&
+                      t64::looksLikeEngine("stockfish-windows-x86-64.exe") && t64::looksLikeEngine("lc0") &&
+                      !t64::looksLikeEngine("stockfish.zip") &&
+                      !t64::looksLikeEngine("stockfish-17.tar.gz") &&
+                      !t64::looksLikeEngine("nn-1111cefa1111.nnue") && !t64::looksLikeEngine("README.md") &&
+                      !t64::looksLikeEngine("stockfish.desktop") && !t64::looksLikeEngine("firefox"),
+                  "An engine is recognised by its name, and an archive or a network file is not");
+            QTemporaryDir machine;
+            const auto place = [&](const QString &relative, bool executable) {
+                const auto path = machine.path() + "/" + relative;
+                QDir().mkpath(QFileInfo(path).absolutePath());
+                QFile file(path);
+                check(file.open(QIODevice::WriteOnly) && file.write("#!/bin/sh\n") > 0,
+                      "Write a fake program");
+                file.close();
+                file.setPermissions(executable ? QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner
+                                               : QFile::ReadOwner | QFile::WriteOwner);
+                return path;
+            };
+            const auto games = place("usr/games/stockfish", true);
+            const auto unpacked = place(
+                "home/Downloads/stockfish-ubuntu-x86-64-avx2/stockfish/stockfish-ubuntu-x86-64-avx2", true);
+            place("home/Downloads/stockfish-ubuntu-x86-64-avx2.tar", true);
+            place("home/Downloads/stockfish-notes", false); // porte le nom, mais ne se lance pas
+            const auto leela = place("home/.local/bin/lc0", true);
+            place("home/.local/bin/firefox", true);
+            const auto folders =
+                t64::engineSearchFolders(machine.path() + "/home", machine.path() + "/usr/games");
+            check(folders.contains(machine.path() + "/usr/games") &&
+                      folders.contains(machine.path() + "/home/Downloads") && folders.contains("/usr/games"),
+                  "The search covers the PATH, the package folders and where downloads land");
+            QStringList mine;
+            for (const auto &path : t64::findEngines(folders))
+                if (path.startsWith(machine.path()))
+                    mine << path;
+            check(mine.size() == 3 && mine.contains(games) && mine.contains(unpacked) && mine.contains(leela),
+                  "Installed and unpacked engines are found; archives, notes and other programs are not");
+            check(mine.indexOf(leela) > mine.indexOf(games) && mine.indexOf(leela) > mine.indexOf(unpacked),
+                  "Stockfish comes before the others");
+            check(t64::findEngines({machine.path() + "/nowhere"}).isEmpty(),
+                  "A missing folder yields nothing");
+        }
         if (!qEnvironmentVariable("T64_STOCKFISH").isEmpty()) {
+            {
+                // Un moteur installé après le premier lancement est trouvé au suivant : la
+                // recherche n'avait lieu qu'une fois, et un chemin vide restait vide.
+                const auto path = dir.path() + "/late-engine";
+                {
+                    Controller first(path);
+                    first.setPreference("enginePath", "");
+                }
+                Controller second(path);
+                check(QFileInfo(second.preferences()["enginePath"].toString()).isExecutable(),
+                      "An engine installed after the first launch is found at the next one");
+                second.setPreference("enginePath", dir.path() + "/gone/stockfish");
+                check(!second.useDetectedEngine().isEmpty() &&
+                          QFileInfo(second.preferences()["enginePath"].toString()).isExecutable(),
+                      "Detecting replaces a path that no longer exists");
+            }
             // La barre d'évaluation retombait à l'équilibre à chaque coup : le moteur vide
             // ses lignes dès qu'il change de position, et rien ne gardait la dernière
             // évaluation reçue le temps que la suivante arrive.
@@ -322,6 +386,9 @@ int main(int argc, char **argv) {
             wait.restart();
             while (c.librarySearching() && wait.elapsed() < 5000)
                 QTest::qWait(10);
+            // Le moteur de la machine est maintenant trouvé d'office : le cas « sans
+            // moteur » se demande explicitement.
+            c.setPreference("enginePath", "");
             QSignalSpy refused(&c, &Controller::message);
             c.enqueueLibrary(100, -1, 2);
             check(refused.size() == 1 && refused.first().at(1).toBool() &&

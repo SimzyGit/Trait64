@@ -101,6 +101,7 @@ QVariantMap Controller::preferences() const {
                          {"accentColor", "#ef997a"},
                          {"legalMoves", true},
                          {"lastMove", true},
+                         {"engineArrows", true},
                          {"dailyGoal", 10},
                          {"autoBackup", true},
                          {"lastBackup", settings_.value("backup/last")},
@@ -197,7 +198,8 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!QStringList{"auto", "fr", "en"}.contains(value.toString()))
                 return;
         } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
-                               "lightTheme", "coordinates", "legalMoves", "lastMove", "autoBackup"}
+                               "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
+                               "autoBackup"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
@@ -230,10 +232,9 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         settings_.setValue(key, clean);
         if (key == "language") {
             translator_->setLanguage(clean.toString());
-            emit notationChanged();
+            refreshNotation();
         }
         if (key == "figurines") {
-            emit notationChanged();
             refresh();
         }
         if (key == "enginePath")
@@ -295,10 +296,10 @@ void Controller::retranslateUi(QObject *window) {
         engine->retranslate();
 }
 void Controller::resetAppearance() {
-    for (const auto &key : QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast",
-                                       "reduceMotion", "analysisPanelRatio", "lightTheme", "pieceStyle",
-                                       "boardLight", "boardDark", "boardHighlight", "backgroundColor",
-                                       "accentColor", "coordinates", "legalMoves", "lastMove"})
+    for (const auto &key : QStringList{
+             "fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion",
+             "analysisPanelRatio", "lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
+             "backgroundColor", "accentColor", "coordinates", "legalMoves", "lastMove", "engineArrows"})
         settings_.remove(key);
     emit preferencesChanged();
 }

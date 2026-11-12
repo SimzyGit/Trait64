@@ -23,6 +23,10 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 | Livres d’ouvertures | ✅ Polyglot `.bin`, lecture et écriture | ✅ CTG et livres maison | ✅ Polyglot | ❌ Non documenté |
 | Analyse avec moteurs UCI locaux | ✅ | ✅ | ✅ | ✅ |
 | MultiPV | ✅ | ✅ | ✅ | ✅ |
+| Flèches du moteur sur l’échiquier | ✅ Trois premières lignes | ✅ | ✅ | ✅ |
+| Pièces animées, glisser ou clic-clic | ✅ | ✅ | ◐ Sans animation | ✅ |
+| Lecture automatique d’une partie | ✅ | ✅ | ✅ | ❌ |
+| Détection des moteurs déjà installés | ✅ | ◐ Moteurs fournis | ❌ Ajout manuel | ◐ Téléchargement intégré |
 | Comparaison simultanée de plusieurs moteurs | ✅ 2–4 profils | ✅ | ✅ Plusieurs moteurs | ◐ Plusieurs moteurs configurables |
 | Syzygy | ✅ Via moteur compatible | ✅ | ✅ | ◐ API / moteur selon usage |
 | Analyse complète d’une partie + graphe | ✅ | ✅ | ✅ | ✅ |

@@ -1,5 +1,16 @@
 # Changements
 
+## L'échiquier fluide : pièces qui glissent, moteur trouvé tout seul — 12 novembre 2026
+
+- **Stockfish déjà installé est trouvé.** Trait64 ne regardait que le `PATH`, où `/usr/games` — l'endroit où Debian et Ubuntu installent Stockfish — ne figure pas pour une application lancée depuis le bureau. Il fouille maintenant les dossiers du système, `~/.local/bin`, Snap, Flatpak, Téléchargements, le dossier personnel et les moteurs du catalogue. Un bouton **Détecter** relance la recherche, et un chemin devenu invalide est remplacé au démarrage.
+- **On peut glisser les pièces.** Le panneau défilant qui porte l'échiquier reprenait la souris au bout de quelques pixels : tout glisser était annulé avant d'avoir commencé, seul le clic-clic marchait.
+- **Les pièces glissent vers leur case** quand un coup est joué, repris ou parcouru au clavier, roque compris. Une pièce posée à la main ne rejoue pas son trajet ; « Réduire les animations » coupe l'effet.
+- **Un coup s'affiche en 7 ms au lieu de 55.** Chaque coup — et chaque seconde de pendule — faisait relire tout l'état de l'application à chaque élément de l'interface, redessiner les 64 cases et rebâtir la notation. Seules les cases et les valeurs qui changent sont désormais annoncées, et la notation n'est plus refaite quand on ne fait que parcourir la partie.
+- **Flèches du moteur** sur l'échiquier pendant l'analyse : le meilleur coup, et plus discrètement les deux suivants (Apparence → Flèches du moteur).
+- **Lecture automatique** de la partie : bouton ▶▶ ou barre d'espace.
+- **Haut et bas passent d'une variante à l'autre**, comme gauche et droite passent d'un coup à l'autre.
+- Le glisser, le lâcher interdit, le clic-clic, la lecture et le temps d'affichage d'un coup sont rejoués à vraie souris à chaque version.
+
 ## Le moteur sans bride, et les études réparées — 12 novembre 2026
 
 - **L'analyse n'a plus de plafond de profondeur.** Le moteur s'arrêtait d'office à la profondeur 24, qu'une machine d'aujourd'hui atteint en quelques secondes — puis il ne faisait plus rien, quoi qu'on attende. Il creuse désormais tant que la position reste affichée, et cède la place dès qu'elle change. Une profondeur fixe reste possible dans les réglages.

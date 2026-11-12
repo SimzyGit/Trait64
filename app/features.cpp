@@ -1048,7 +1048,7 @@ void Controller::tickClock() {
     state_["whiteClock"] = clockText(whiteMs_);
     state_["blackClock"] = clockText(blackMs_);
     state_["clockRunning"] = clockRunning_;
-    emit changed();
+    publish();
 }
 void Controller::afterClockMove(bool white) {
     if (!clockRunning_)

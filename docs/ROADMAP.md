@@ -1,5 +1,26 @@
 # Périmètre livré et travaux restants
 
+## Ce que font les autres, relevé du 12 novembre 2026
+
+Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et Arena, côté échiquier et analyse.
+
+| Option | Vue chez | État |
+|---|---|---|
+| Glisser les pièces | tous | ✅ réparé |
+| Pièces qui glissent vers leur case | ChessBase, Lichess, En Croissant | ✅ ajouté |
+| Flèches du meilleur coup du moteur | Lichess, En Croissant, ChessBase | ✅ ajouté |
+| Lecture automatique d’une partie | Scid vs. PC, ChessBase, Arena | ✅ ajouté |
+| Haut/bas pour changer de variante | Lichess, Scid vs. PC | ✅ ajouté |
+| Détection des moteurs installés | Arena, En Croissant (téléchargement) | ✅ ajouté |
+| Affichage d’un coup sous une image (16 ms) | — | ✅ 55 → 7 ms |
+| Sons des coups | Lichess, ChessBase, En Croissant | à faire : demande Qt Multimedia dans les paquets |
+| Afficher la menace (coup nul) | ChessBase, Scid vs. PC | à faire |
+| Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | à faire |
+| Molette pour parcourir les coups | ChessBase, Scid vs. PC | à faire : la molette fait défiler le panneau, il faut un réglage |
+| Deviner le coup, jouer à l’aveugle | ChessBase, Scid vs. PC | à faire |
+| Recherche par placement partiel de pièces | ChessBase, Scid vs. PC | à faire |
+| Import léger des très grosses bases (positions des 30–40 premiers demi-coups) | Scid vs. PC, En Croissant | à décider |
+
 ## Interface native — dev.64, 28 octobre 2026
 
 Navigation latérale, grand échiquier, panneaux adaptables, commandes clavier, police et tailles réglables, contraste renforcé et libellés français/anglais. Débordements, palette des dialogues et profil Joueurs vide corrigés. Treize suites en CI et 1 180 contrôles locaux (captures comprises), schéma 7 conservé. [Périmètre et limites](UI-REDESIGN.md) · [Publication](VALIDATION.md).
