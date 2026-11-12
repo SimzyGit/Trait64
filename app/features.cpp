@@ -839,64 +839,122 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
             moves.push_back(move.toStdString());
         const auto facts = t64::explainLine(
             t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool()), moves);
-        const QStringList names{"pion", "cavalier", "fou", "tour", "dame", "roi", ""};
+        const QStringList names{tr("pion"), tr("cavalier"), tr("fou"), tr("tour"), tr("dame"), tr("roi"), ""};
+        const auto motifName = [this](t64::TacticalKind kind) {
+            switch (kind) {
+            case t64::TacticalKind::Fork:
+                return tr("Fourchette / attaque multiple");
+            case t64::TacticalKind::AbsolutePin:
+                return tr("Clouage au roi (déplacement limité à cet alignement)");
+            case t64::TacticalKind::KingSkewer:
+                return tr("Enfilade du roi");
+            case t64::TacticalKind::DiscoveredCheck:
+                return tr("Échec à la découverte");
+            case t64::TacticalKind::DoubleCheck:
+                return tr("Échec double");
+            case t64::TacticalKind::Hanging:
+                return tr("Pièce en prise");
+            case t64::TacticalKind::DiscoveredAttack:
+                return tr("Attaque à la découverte");
+            case t64::TacticalKind::MateThreat:
+                return tr("Menace de mat en un coup");
+            }
+            return QString();
+        };
         QVariantList steps;
         for (const auto &move : facts.moves) {
             QStringList events;
             if (move.castle)
-                events << "Roque : déplacement du roi et de la tour.";
+                events << tr("Roque : déplacement du roi et de la tour.");
             if (move.captured != chess::PieceType::NONE)
-                events << QString("Capture%1 : %2 en %3.")
-                              .arg(move.enPassant ? " en passant" : "", names[int(move.captured)],
-                                   qs(move.captureSquare));
+                events << (move.enPassant ? tr("Capture en passant : %1 en %2.") : tr("Capture : %1 en %2."))
+                              .arg(names[int(move.captured)], qs(move.captureSquare));
             if (move.promotion != chess::PieceType::NONE)
-                events << "Promotion en " + names[int(move.promotion)] + ".";
+                events << tr("Promotion en %1.").arg(names[int(move.promotion)]);
             if (move.mate)
-                events << "Échec et mat : aucune réponse légale.";
+                events << tr("Échec et mat : aucune réponse légale.");
             else if (move.check)
-                events << "Échec au roi adverse.";
+                events << tr("Échec au roi adverse.");
             else if (move.stalemate)
-                events << "Pat : aucun coup légal, sans échec.";
+                events << tr("Pat : aucun coup légal, sans échec.");
             for (const auto &tactic : move.tactics) {
                 QStringList attackers, targets;
                 for (const auto &piece : tactic.attackers)
                     attackers << names[int(piece.type)] + " " + qs(piece.square);
                 for (const auto &piece : tactic.targets)
                     targets << names[int(piece.type)] + " " + qs(piece.square);
-                QString label;
-                switch (tactic.kind) {
-                case t64::TacticalKind::Fork:
-                    label = "Fourchette / attaque multiple";
-                    break;
-                case t64::TacticalKind::AbsolutePin:
-                    label = "Clouage au roi (déplacement limité à cet alignement)";
-                    break;
-                case t64::TacticalKind::KingSkewer:
-                    label = "Enfilade du roi";
-                    break;
-                case t64::TacticalKind::DiscoveredCheck:
-                    label = "Échec à la découverte";
-                    break;
-                case t64::TacticalKind::DoubleCheck:
-                    label = "Échec double";
-                    break;
-                }
+                const auto label = motifName(tactic.kind);
                 events << QString("%1 : %2 → %3.").arg(label, attackers.join(", "), targets.join(", "));
             }
             if (!move.tactics.empty())
-                events << "Motifs observés ; aucun gain matériel forcé n’est démontré.";
+                events << tr("Motifs observés ; aucun gain matériel forcé n’est démontré.");
             if (events.empty())
-                events << "Le matériel ne change pas.";
+                events << tr("Le matériel ne change pas.");
             steps << QVariantMap{{"uci", qs(move.uci)},
                                  {"san", qs(move.san)},
                                  {"fen", qs(move.fen)},
-                                 {"side", move.white ? "Blancs" : "Noirs"},
+                                 {"side", move.white ? tr("Blancs") : tr("Noirs")},
                                  {"facts", events.join(' ')},
                                  {"material", move.material},
                                  {"marks", qs(t64::tacticalAnnotations(move.tactics))},
                                  {"motifCount", int(move.tactics.size())}};
         }
+        // Le « pourquoi » : les deux suites rejouées côte à côte, quelle que soit celle affichée.
+        QString why;
+        const auto bestLine = row["best"].toString().split(' ', Qt::SkipEmptyParts).mid(0, 128);
+        const auto playedLine = (row["played"].toString() + " " + row["reply"].toString())
+                                    .split(' ', Qt::SkipEmptyParts)
+                                    .mid(0, 128);
+        if (!bestLine.isEmpty() && !playedLine.isEmpty() && bestLine.first() == playedLine.first())
+            why = tr("C’est le coup que le moteur proposait.");
+        else if (!bestLine.isEmpty() && !playedLine.isEmpty()) {
+            const auto replay = [&](const QStringList &ucis) {
+                std::vector<std::string> list;
+                for (const auto &uci : ucis)
+                    list.push_back(uci.toStdString());
+                return t64::explainLine(
+                    t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool()), list);
+            };
+            const auto verdict = t64::explainMistake(replay(playedLine), replay(bestLine));
+            const auto piece = names[int(verdict.piece)], square = qs(verdict.square),
+                       proof = qs(verdict.proof);
+            switch (verdict.reason) {
+            case t64::MistakeReason::AllowsMate:
+                why = tr("Ce coup permet un mat en %1 : %2.").arg(verdict.mateIn).arg(proof);
+                break;
+            case t64::MistakeReason::MissesMate:
+                why = tr("Il y avait un mat en %1 : %2.").arg(verdict.mateIn).arg(proof);
+                break;
+            case t64::MistakeReason::LosesMaterial:
+                why = proof.isEmpty() ? tr("Ce coup perd du matériel dans la suite calculée.")
+                      : verdict.leftHanging
+                          ? tr("Ce coup laisse en prise : %1 en %2, que prend %3.").arg(piece, square, proof)
+                          : tr("Ce coup perd du matériel : %1 en %2, sur %3.").arg(piece, square, proof);
+                break;
+            case t64::MistakeReason::MissesMaterial:
+                why = verdict.piece == chess::PieceType::NONE
+                          ? tr("Il y avait mieux : %1 gagnait du matériel.").arg(proof)
+                          : tr("Il y avait mieux : %1 gagnait du matériel (%2 en %3).")
+                                .arg(proof, piece, square);
+                break;
+            case t64::MistakeReason::Positional:
+                why = tr("Aucune différence de matériel entre les deux suites calculées : l’écart est "
+                         "positionnel.");
+                break;
+            }
+            if (verdict.material > 0)
+                why +=
+                    " " + tr("Écart entre les deux suites : %1 point(s) de matériel.").arg(verdict.material);
+            QStringList motifs;
+            for (const auto kind : verdict.motifs)
+                motifs << motifName(kind);
+            if (!motifs.isEmpty())
+                why += " " + tr("Motifs dans la suite : %1.").arg(motifs.join(", "));
+            why += " " + tr("Établi en rejouant les deux suites du moteur ; un calcul plus long peut dire "
+                            "autre chose.");
+        }
         return {{"available", true},
+                {"why", why},
                 {"steps", steps},
                 {"uci", line.join(' ')},
                 {"fen", row["fen"]},

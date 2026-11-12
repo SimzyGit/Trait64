@@ -938,6 +938,9 @@ int main(int argc, char **argv) {
                 check(c.reviewState()["passes"] == 1 && c.review().size() == 2 &&
                           c.review()[0].toMap()["pass"] == 1,
                       "A single forward pass stays available");
+                // Les explications sont traduites : on les lit ici en français, la langue des
+                // textes attendus, quelle que soit celle de la machine de test.
+                c.setPreference("language", "fr");
                 const auto reviewBeforeExplanation = c.review();
                 const auto beforeExplanation = c.state();
                 const auto actual = c.explainReview(0, false);
@@ -946,6 +949,8 @@ int main(int argc, char **argv) {
                           !actual["steps"].toList().empty() && !alternative["steps"].toList().empty() &&
                           actual["steps"].toList().first().toMap()["uci"] == c.review()[0].toMap()["played"],
                       "Real Stockfish review explains played move and pre-move alternative legally");
+                check(!actual["why"].toString().isEmpty() && actual["why"] == alternative["why"],
+                      "Every explained move carries a verdict drawn from both lines");
                 check(!c.explainReview(-1)["available"].toBool() &&
                           !c.explainReview(999)["available"].toBool(),
                       "Unavailable review rows cannot fabricate explanations");
@@ -1069,6 +1074,33 @@ int main(int argc, char **argv) {
                     c.switchTab(originalTab);
                     c.closeTab(fixtureTab);
                 }
+                {
+                    // Le pourquoi : un cavalier posé là où un pion le prend.
+                    const int whyTab = c.tabs().size();
+                    c.setPosition("4k3/ppp5/3p4/8/8/5N2/PPP5/4K3 w - - 0 1", false);
+                    c.move("f3e5");
+                    c.analyseGame(100);
+                    timer.restart();
+                    while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)
+                        QTest::qWait(20);
+                    const auto details = c.explainReview(0, false);
+                    const auto why = details["why"].toString();
+                    check(why.contains("en prise") && why.contains("cavalier en e5") &&
+                              why.contains("dxe5") && why.contains("point(s) de matériel"),
+                          "The review says why: the knight was left en prise and the pawn takes it");
+                    const auto first = details["steps"].toList().value(0).toMap();
+                    check(first["facts"].toString().contains("Pièce en prise") &&
+                              first["marks"].toString() == "[%cal Rd6e5]",
+                          "The hanging piece is named in the steps and drawn in red");
+                    check(c.explainReview(0, true)["why"] == details["why"],
+                          "The verdict is the same whichever line is displayed");
+                    c.switchTab(originalTab);
+                    c.closeTab(whyTab);
+                }
+                c.setPreference("language", "en");
+                check(c.explainReview(0, false)["steps"].toList().value(0).toMap()["side"] == "White",
+                      "Explanations follow the interface language");
+                c.setPreference("language", "auto");
                 window->resize(1440, 940);
                 c.annotateReview();
                 check(c.state()["comment"].toString().contains("[%eval"),

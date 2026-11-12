@@ -52,6 +52,13 @@ TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enable
         ColumnLayout {
             width:explanationViewport.availableWidth;spacing:10
             Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+explanation.details.label+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+qsTr(" (Blancs)"):explanation.details.error;wrapMode:Text.WordWrap}
+            // Le pourquoi, avant le détail : c'est la question qu'on se pose en ouvrant ce panneau.
+            Rectangle {
+                Layout.fillWidth:true;visible:explanation.details.available&&!!explanation.details.why
+                readonly property color accent:controller.preferences.accentColor
+                implicitHeight:whyText.implicitHeight+16;radius:6;color:Qt.rgba(accent.r,accent.g,accent.b,.12);border.color:accent;border.width:1
+                Label {id:whyText;objectName:"reviewWhy";anchors.fill:parent;anchors.margins:8;wrapMode:Text.WordWrap;text:explanation.details.why||""}
+            }
             TComboBox {id:choice;objectName:"reviewLineChoice";Layout.fillWidth:true;model:["Coup joué et réponse moteur", "Proposition moteur avant le coup"]}
             Label {Layout.fillWidth:true;visible:explanation.details.available;text:explanation.details.available?explanation.details.engine+" · "+explanation.details.milliseconds+qsTr(" ms par position · profondeur ")+explanation.details.depth:"";wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
             Label {Layout.fillWidth:true;visible:explanation.details.available;text:explanation.details.available?qsTr("Matériel (Blancs − Noirs) : ")+explanation.details.initialMaterial+" → "+explanation.details.finalMaterial+qsTr(". Pion = 1, cavalier/fou = 3, tour = 5, dame = 9. Ce compte ne mesure pas la qualité de la position."):"";wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -64,7 +71,7 @@ TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enable
                     Label {width:parent.width;text:modelData.facts;wrapMode:Text.WordWrap}
                 }
             }
-            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:qsTr("Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites.")+(explanation.details.truncated?qsTr(" Suite limitée aux 128 premiers demi-coups."):"")}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:qsTr("Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, flèches rouges = prises adverses, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites.")+(explanation.details.truncated?qsTr(" Suite limitée aux 128 premiers demi-coups."):"")}
             TButton {objectName:"openReviewLineButton";text:qsTr("Ouvrir la suite dans une nouvelle étude");enabled:explanation.details.available&&!root.backend.reviewState.running;onClicked:{if(root.backend.openReviewLine(explanation.rowIndex,choice.currentIndex===1)){explanation.close();root.close()}}}
         }
         }
