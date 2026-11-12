@@ -43,6 +43,18 @@ réparation restent des travaux distincts. Les autres objectifs restent prévus.
 
 La version 0.3 est une nouvelle étape de l’application locale. Elle n’achève pas le catalogue d’environ 245 fonctions envisagé pour Trait64. Les fonctions ci-dessous sont celles réellement présentes dans le code.
 
+## Prochain cycle de travail — cible 0.4
+
+La prochaine étape doit partir de l’état 0.3 existant, sans réécriture. Les éléments ci-dessous sont **planifiés mais pas encore livrés dans `main`** :
+
+1. **Gestionnaire de moteurs** : plusieurs moteurs installables et configurables séparément, avec profils indépendants (binaire, Hash, Threads, MultiPV, limites, Syzygy et options UCI). Prévoir un catalogue local de moteurs téléchargeables avec provenance, version, licence, plateforme, empreinte SHA-256 et validation avant installation. Les premiers candidats étudiés sont Stockfish, Arasan et PlentyChess, sous réserve de compatibilité de licence et de distribution.
+2. **Gestionnaire de bases** : plusieurs bases locales ouvrables/activables indépendamment, import et mise à jour par lots, métadonnées de provenance et empreintes. Une partie doit pouvoir appartenir à plusieurs collections sans duplication physique.
+3. **Collections historiques** : packs optionnels de parties, notamment des collections dédiées aux champions du monde, avec source, licence, date de génération, déduplication et historique d’import. Aucun corpus ne doit être embarqué sans droit de redistribution explicite.
+4. **Recherche d’ouverture plus précise** : filtres combinables par ECO, nom d’ouverture/variante, joueur, couleur, date, Elo, événement, résultat, collection et position ; recherche annulable en arrière-plan sur les gros corpus.
+5. **Reprise du catalogue fonctionnel** : après ce bloc, continuer les répertoires structurés, l’entraînement avancé, la qualification multi-millions de parties, l’analyse approfondie et les outils de préparation déjà listés plus bas.
+
+Cette cible est un jalon de développement, pas une promesse de numéro de version stable. Une publication 0.4 ne doit être préparée qu’après tests réels, documentation des licences et validation des paquets Linux.
+
 | Domaine | Fonctions présentes après 0.3 | Travaux restants |
 |---|---|---|
 | Apparence | 4 jeux SVG + Unicode, import SVG personnel, 9 palettes, couleurs des cases/fond/repères, préférences persistantes | Textures, animations avancées, logo final |
