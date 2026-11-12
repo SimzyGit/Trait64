@@ -13,6 +13,7 @@ du fichier, contrôle d'intégrité et mesures de lecture. Les débits incluent 
 | 10 000 | allégé | 24 s | 409 | 73 Mo | 7,3 Ko | 18 Mo |
 | 100 000 | allégé | 330 s | 303 | 697 Mo | 7,0 Ko | 803 Mo |
 | 500 000 | allégé | 2 309 s | 217 | 3 604 Mo | 7,2 Ko | 1 170 Mo |
+| 1 000 000 | allégé | 5 109 s (85 min) | 196 | 7 505 Mo | 7,5 Ko | 1 165 Mo |
 
 Sur les 10 000 parties, les PGN normalisés, les empreintes de doublons et les positions
 des 40 premiers demi-coups sont **identiques** à ceux de l'ancien index, ligne à ligne. Le pic mémoire vient du cache de pages prêté à l'import
@@ -36,10 +37,32 @@ Lectures sur la base de 500 000 parties, première exécution, cache de fichiers
 | Recherche des doublons | 1,7–1,8 s |
 | Dossier de la position de départ | 2,2–2,7 s |
 
-**Limites.** Le débit baisse avec la taille (303 → 217 parties/s de 100 000 à 500 000) :
-les index rangés par clé de position sont écrits partout à la fois. Les trois dernières
-lignes du tableau restent au-dessus de la seconde. Un million est en cours de mesure ;
-2, 5 et 10 millions ne sont pas mesurés.
+Sur la base d'**un million** de parties (deux passes, la première avec un cache de fichiers froid) :
+
+| Recherche | Temps |
+|---|---:|
+| Page des 200 parties récentes | 3 ms |
+| Position exacte au 15ᵉ ou au 30ᵉ coup | 1 ms |
+| Dernière position d'une partie (rejouée) | 98–144 ms |
+| Arbre d'ouvertures | < 1 ms |
+| Position exacte au 4ᵉ coup | 101–247 ms |
+| Même structure de pions qu'au 30ᵉ coup | 239–320 ms |
+| Matériel (finale de tours, position finale) | 22–38 ms |
+| Fragment de nom de joueur | 41–56 ms |
+| Liste des joueurs | 14–76 ms |
+| Dossier d'une position du 4ᵉ coup | 113 ms |
+| Recherche des doublons | 3,2 s |
+| Dossier de la position de départ | 6–17 s |
+
+Réouverture de la base : 2 ms. Contrôle d'intégrité complet : 6 min 22 s.
+
+**Limites.** Le débit baisse avec la taille (303 → 217 → 196 parties/s de 100 000 à un
+million) : les index rangés par clé de position sont écrits partout à la fois. Le dossier
+d'une position jouée dans presque toutes les parties agrège un million de lignes — 3 s
+une fois les pages en mémoire, bien plus à froid ; un index couvrant sur `games` a été
+essayé et n'y change rien (2,9 s), le temps est dans l'agrégat lui-même. La machine de
+mesure n'a ni le corpus (1,2 million de parties) ni le disque pour 2, 5 et 10 millions :
+ces paliers ne sont pas mesurés.
 
 ## Import réel : deux optimisations ciblées — 23 octobre 2026
 

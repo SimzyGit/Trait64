@@ -97,7 +97,7 @@ Je veux que Trait64 puisse travailler efficacement avec plusieurs millions de pa
 
 Implémente :
 
-- [ ] ◐ Un importateur PGN parallèle et performant — partiel : 1 à 8 lecteurs, qualifié à 500 000 parties réelles (voir PERFORMANCE.md) ; un million en cours de mesure, 2, 5 et 10 millions restent à faire.
+- [ ] ◐ Un importateur PGN parallèle et performant — partiel : 1 à 8 lecteurs, qualifié à 500 000 et un million de parties réelles (voir PERFORMANCE.md) ; 2, 5 et 10 millions restent à mesurer.
 - [x] Une importation reprenable après interruption.
 - [x] Une progression détaillée des importations.
 - [x] L'indexation progressive des positions — index allégé du schéma 12 : 20 premiers coups position par position, le reste par signature (matériel, pions).
