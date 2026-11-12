@@ -5,6 +5,7 @@
 #include "discovery.h"
 #include "hardware.h"
 #include "move_notation.h"
+#include "sounds.h"
 #include <QClipboard>
 #include <QDate>
 #include <QDateTime>
@@ -573,6 +574,15 @@ void Controller::publish() {
     for (auto it = state_.cbegin(); it != state_.cend(); ++it)
         if (stateObject_->value(it.key()) != it.value())
             stateObject_->insert(it.key(), it.value());
+    // Un coup en avant s'entend, qu'il soit joué, reçu du moteur ou parcouru ; un saut,
+    // un retour ou une partie qu'on ouvre restent silencieux.
+    if (node_ != heardNode_) {
+        const bool forward =
+            node_ > 0 && node_ < int(game_.nodes.size()) && game_.nodes[node_].parent == heardNode_;
+        heardNode_ = node_;
+        if (forward && settings_.value("sounds", true).toBool())
+            t64::playSound(t64::soundFor(game_.nodes[node_].san));
+    }
     // Les listes : comparées avant d'être annoncées. La plupart des coups ne changent ni
     // les onglets ni les puzzles, et un modèle annoncé reconstruit tout ce qui l'affiche.
     const auto announce = [](auto &shown, const auto &now, auto signal) {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "discovery.h"
+#include "sounds.h"
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -113,6 +114,18 @@ int main(int argc, char **argv) {
             return showcaseProbe(dir.path(), app.arguments()[i + 1]);
         if (app.arguments().contains("--benchmark-import"))
             return importGuiProbe(app, dir.path());
+        {
+            using t64::BoardSound;
+            check(t64::soundFor("e4") == BoardSound::Move && t64::soundFor("O-O") == BoardSound::Move,
+                  "A quiet move sounds like a move");
+            check(t64::soundFor("exd5") == BoardSound::Capture, "A capture has its own sound");
+            check(t64::soundFor("Qxf7#") == BoardSound::Check && t64::soundFor("Bb5+") == BoardSound::Check,
+                  "Check and mate take precedence over the capture");
+            check(!t64::playSound(BoardSound::Move),
+                  "Without a screen nothing is played and nothing is loaded");
+            check(QFile::exists(QString(T64_TEST_DATA) + "/../assets/sounds/move.wav"),
+                  "The move sound ships");
+        }
         {
             // Trouver un moteur déjà installé : par son nom, dans les dossiers du système
             // et là où l'on dépose un téléchargement, sans rien lancer.

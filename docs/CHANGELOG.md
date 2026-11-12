@@ -1,5 +1,10 @@
 # Changements
 
+## Sons des coups — 12 novembre 2026
+
+- **Un coup, une prise et un échec s'entendent**, qu'ils soient joués, reçus du moteur ou parcourus vers l'avant. Apparence → « Sons des coups » les coupe. Les trois sons sont synthétisés par `tools/make-sounds.py` : aucun fichier tiers.
+- Ils sont livrés par le paquet **.deb**. L'AppImage, Windows et macOS restent muets pour l'instant : le son vit dans un module à part, pour que Trait64 démarre aussi là où la pile audio de Qt manque.
+
 ## Les grosses bases : un index trois fois plus petit — 12 novembre 2026
 
 - **Une partie de maître occupe 7 Ko au lieu de 22.** Chaque position de chaque partie était rangée trois fois, alors que passé l'ouverture presque aucune n'est jouée deux fois. Les positions ne sont plus indexées une à une que sur les 20 premiers coups, là où les parties se recoupent ; au-delà, chaque partie garde ses « signatures » — matériel et squelette de pions rencontrés.

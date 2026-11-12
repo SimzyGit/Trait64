@@ -643,6 +643,7 @@ class Controller : public QObject {
     QQmlPropertyMap *stateObject_ = nullptr, *cells_ = nullptr;
     QVariantList moveRows_, moveFlow_;
     QVariantList shownSquares_, shownOpenings_, shownBook_, shownTabs_;
+    int heardNode_ = 0;
     QVariantMap shownPuzzles_;
     // Relève une seule fois les anciens réglages par défaut qui bridaient le moteur.
     void unleashEngineOnce();

@@ -1313,5 +1313,6 @@
   "Arrêter la lecture": "Stop playback",
   "Lire la partie": "Play the game",
   "Espace": "Space",
-  "L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties.": "The tree covers the first 20 moves. Beyond that, position search finds the games."
+  "L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties.": "The tree covers the first 20 moves. Beyond that, position search finds the games.",
+  "Sons des coups": "Move sounds"
 }

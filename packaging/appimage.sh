@@ -32,6 +32,10 @@ if ! sha256sum --check SHA256SUMS; then
 fi
 chmod +x ./*.AppImage
 DESTDIR="${trait64_stage}/AppDir" cmake --install "${trait64_build}" --prefix /usr
+# Le module sonore reste hors de l'AppImage : il y ferait entrer Qt Multimedia, GStreamer
+# et PulseAudio, soit une pile audio entière à faire tourner sur douze distributions.
+# Les sons sont livrés par le paquet .deb, qui prend ces bibliothèques au système.
+rm -rf "${trait64_stage}/AppDir/usr/lib/trait64"
 export QMAKE=/usr/bin/qmake6
 export QML_SOURCES_PATHS="${trait64_root}/ui"
 export EXTRA_QT_MODULES='svg;sql'
