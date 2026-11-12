@@ -169,16 +169,22 @@ int main(int argc, char **argv) {
                 while (depthNow() <= 24 && engineWait.elapsed() < 30000)
                     QTest::qWait(20);
                 check(depthNow() > 24, "Without a limit the engine goes past the old ceiling of 24");
-                const int reached = depthNow();
                 // Et il s'arrête proprement quand la position change : la nouvelle
-                // analyse repart, au lieu d'attendre une fin qui ne viendra pas.
+                // analyse repart, au lieu d'attendre une fin qui ne viendra pas. On le
+                // reconnaît au coup proposé — celui des Noirs, dont la seule pièce est le
+                // roi en e5 — et non à la profondeur : sur une finale aussi simple un
+                // moteur récent retrouve la sienne avant qu'on ait eu le temps de regarder.
+                const auto firstMove = [&deep] {
+                    return deep.engineLines().isEmpty()
+                               ? QString()
+                               : deep.engineLines().first().toMap()["uci"].toString().left(2);
+                };
+                check(firstMove() != "e5", "Before the move, the line is White's");
                 deep.move("e2e4");
                 engineWait.restart();
-                while ((deep.engineLines().isEmpty() || depthNow() >= reached) &&
-                       engineWait.elapsed() < 10000)
+                while (firstMove() != "e5" && engineWait.elapsed() < 10000)
                     QTest::qWait(10);
-                check(!deep.engineLines().isEmpty() && depthNow() < reached,
-                      "An unlimited search yields to the next position at once");
+                check(firstMove() == "e5", "An unlimited search yields to the next position at once");
                 deep.toggleAnalysis();
             }
             {
