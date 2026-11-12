@@ -54,16 +54,42 @@ ColumnLayout {
             root.backend.rememberStudyExpanded(root.expanded)
         }
     }
+    // Le fichier dont on attend la lecture : son recueil s'ouvrira de lui-même à la fin
+    // de l'import. Sans cela, « Lire ce fichier » importait, puis laissait la page vide
+    // — il fallait deviner qu'un second clic montrerait les parties.
+    property string awaiting: ""
     function open(entry) {
         // Le premier clic lit le fichier, les suivants rouvrent son recueil : relire
         // doublerait les parties.
         var id = root.backend.openStudyFile(entry.path)
         if (id > 0)
             root.collectionOpened(id)
+        else if (root.backend.busy)
+            root.awaiting = entry.path
+    }
+    function showAwaited() {
+        if (root.awaiting === "" || root.backend.busy)
+            return
+        root.reload()
+        for (var i = 0; i < root.rows.length; ++i)
+            if (root.rows[i].path === root.awaiting && Number(root.rows[i].sourceId) > 0) {
+                root.selected = root.rows[i]
+                root.collectionOpened(root.rows[i].sourceId)
+            }
+        root.awaiting = ""
     }
     function size(bytes) {
         return bytes >= 1048576 ? qsTr("%1 Mo").arg((bytes / 1048576).toFixed(1))
                                 : qsTr("%1 Ko").arg(Math.max(1, Math.round(bytes / 1024)))
+    }
+    // Relit l'arbre et choisit l'entrée de ce chemin — jamais un objet à moitié rempli,
+    // que la fiche lirait avant que l'arbre ne soit relu.
+    function choose(path) {
+        root.selected = null
+        root.reload()
+        for (var i = 0; i < root.rows.length; ++i)
+            if (root.rows[i].path === path)
+                root.selected = root.rows[i]
     }
     function parentOf(path) { return path.substring(0, path.lastIndexOf("/")) }
 
@@ -74,7 +100,8 @@ ColumnLayout {
     // le dossier pour rien.
     Connections {
         target: root.backend
-        function onSourcesChanged() { root.reload() }
+        function onSourcesChanged() { root.reload(); root.showAwaited() }
+        function onBusyChanged() { root.showAwaited() }
     }
 
     RowLayout {
@@ -118,7 +145,7 @@ ColumnLayout {
         TButton {
             objectName: "explorerNewFile"
             text: qsTr("+ Fichier")
-            onClicked: { fileName.clear(); filePgn.clear(); newFile.open() }
+            onClicked: { fileName.clear(); filePgn.clear(); newFile.open(); fileName.forceActiveFocus() }
             ToolTip.visible: hovered || visualFocus
             ToolTip.text: qsTr("Créer un fichier PGN dans %1").arg(root.target)
         }
@@ -384,8 +411,10 @@ ColumnLayout {
                 root.unfold(root.target)
             } else if (purpose === "rename") {
                 var moved = root.backend.renameStudyEntry(root.selected.path, name)
-                if (moved !== "")
-                    root.selected = {path: moved}
+                if (moved !== "") {
+                    root.choose(moved)
+                    return
+                }
             } else {
                 if (!name.toLowerCase().endsWith(".pgn"))
                     name += ".pgn"
@@ -427,6 +456,7 @@ ColumnLayout {
                 objectName: "explorerFileName"
                 Layout.preferredWidth: root.s(420)
                 placeholderText: qsTr("Nom du fichier")
+                onAccepted: newFile.accept()
             }
             Label {
                 Layout.preferredWidth: root.s(420)
@@ -485,12 +515,11 @@ ColumnLayout {
                 enabled: !!root.selected && modelData.path !== root.parentOf(root.selected.path)
                 onClicked: {
                     var moved = root.backend.moveStudyEntry(root.selected.path, modelData.path)
+                    moveDialog.close()
                     if (moved !== "") {
                         root.unfold(modelData.path)
-                        root.selected = {path: moved}
+                        root.choose(moved)
                     }
-                    moveDialog.close()
-                    root.reload()
                 }
             }
         }

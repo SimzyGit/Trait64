@@ -65,8 +65,8 @@ QVariantMap normalizedProfile(QVariantMap profile) {
     const auto engine = QFileInfo(profile["enginePath"].toString());
     require(engine.isFile() && engine.isExecutable(), "Choisissez un moteur UCI dans les paramètres.");
     result["enginePath"] = engine.canonicalFilePath();
-    result["threads"] = std::clamp(profile.value("threads", t64::recommendedThreads()).toInt(), 1, 32);
-    result["hash"] = std::clamp(profile.value("hash", t64::recommendedHashMb()).toInt(), 16, 4096);
+    result["threads"] = std::clamp(profile.value("threads", t64::recommendedThreads()).toInt(), 1, 1024);
+    result["hash"] = std::clamp(profile.value("hash", t64::recommendedHashMb()).toInt(), 16, 262144);
     result["multiPV"] = std::clamp(profile.value("multiPV", 3).toInt(), 1, 5);
     result["milliseconds"] = std::clamp(profile.value("milliseconds", 500).toInt(), 100, 10000);
     // 0 : la durée seule décide, comme avant. Au-delà, la profondeur décide et la durée plafonne.
@@ -129,8 +129,7 @@ QVariantMap engineIdentity(const QVariantMap &config, const Uci &engine) {
 }
 QVariantList terminalScore(const chess::Board &board, const QString &fen) {
     const auto end = gameResult(board);
-    if (end.first != chess::GameResultReason::CHECKMATE &&
-        end.first != chess::GameResultReason::STALEMATE &&
+    if (end.first != chess::GameResultReason::CHECKMATE && end.first != chess::GameResultReason::STALEMATE &&
         end.first != chess::GameResultReason::INSUFFICIENT_MATERIAL)
         return {};
     const bool mate = end.first == chess::GameResultReason::CHECKMATE;
@@ -591,8 +590,7 @@ void AnalysisQueue::shutdown() {
     thread_.wait();
     worker_ = nullptr;
 }
-void AnalysisQueue::enqueue(const QString &pgn, const QVariantMap &profile, bool variations,
-                            qint64 gameId) {
+void AnalysisQueue::enqueue(const QString &pgn, const QVariantMap &profile, bool variations, qint64 gameId) {
     if (worker_)
         QMetaObject::invokeMethod(worker_, [w = worker_, pgn, profile, variations, gameId] {
             w->enqueue(pgn, profile, variations, gameId);

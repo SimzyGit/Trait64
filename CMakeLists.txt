@@ -166,6 +166,9 @@ if(T64_BUILD_GUI)
     set_tests_properties(move_notebook PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 60)
     add_test(NAME desktop_layout COMMAND desktop_tests --ui-layout)
     set_tests_properties(desktop_layout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
+    # Le parcours des études à vrais clics : dossier, fichier, recueil, aperçu, dialogues.
+    add_test(NAME study_walk COMMAND desktop_tests --explorer-walk)
+    set_tests_properties(study_walk PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
     add_test(NAME desktop_interactions COMMAND desktop_tests)
     # Le scénario par défaut traverse toute l'application : il lui faut nettement plus
     # de temps que les scénarios ciblés ci-dessus, surtout sous sanitizers.

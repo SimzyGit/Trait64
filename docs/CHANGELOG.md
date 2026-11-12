@@ -1,5 +1,15 @@
 # Changements
 
+## Le moteur sans bride, et les études réparées — 12 novembre 2026
+
+- **L'analyse n'a plus de plafond de profondeur.** Le moteur s'arrêtait d'office à la profondeur 24, qu'une machine d'aujourd'hui atteint en quelques secondes — puis il ne faisait plus rien, quoi qu'on attende. Il creuse désormais tant que la position reste affichée, et cède la place dès qu'elle change. Une profondeur fixe reste possible dans les réglages.
+- **Toute la machine est mise à sa disposition** : plus de plafond à 32 fils de calcul, et la table de transposition passe d'un huitième de la mémoire plafonné à 4 Go à un quart, jusqu'à 32 Go. C'est elle qui permet d'aller profond sans recalculer. Les fils sont bornés au nombre réel de cœurs et la table aux trois quarts de la mémoire : au-delà, le moteur ralentit au lieu d'accélérer.
+- **Les anciens réglages par défaut sont relevés une fois** au premier lancement, y compris dans les profils de moteur enregistrés. Un réglage que vous aviez choisi vous-même n'est pas touché.
+- **Dans un recueil, la liste des parties n'avait plus un pixel de large** : l'aperçu prenait toute la place, et il n'y avait rien à cliquer — donc jamais de position affichée. Corrigé.
+- **« Lire ce fichier » montre le recueil une fois l'import fini.** La page restait vide, et il fallait deviner qu'un second clic ferait apparaître les parties.
+- Un recueil ouvert pendant un import se met à jour au lieu de rester figé ; créer un fichier se valide à la touche Entrée.
+- Tout ce parcours — choisir un dossier, déplier, lire, parcourir, créer, renommer, corbeille, recherche — est maintenant rejoué à vrais clics à chaque version.
+
 ## Les mises à jour se proposent d'elles-mêmes, y compris en cours de route — 12 novembre 2026
 
 - **Une version publiée pendant que Trait64 tourne est proposée sans redémarrer.** La vérification n'avait lieu qu'au lancement : un logiciel laissé ouvert plusieurs jours ne l'apprenait qu'au suivant. Elle est refaite toutes les six heures.

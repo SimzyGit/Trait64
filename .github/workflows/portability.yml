@@ -57,4 +57,4 @@ jobs:
       - run: cmake --build build --config Release --parallel 3
       # Engine fixtures are POSIX shell scripts and the QML suites need a desktop session:
       # run the storage, import, repertoire, content, online and update suites here.
-      - run: ctest --test-dir build -C Release --output-on-failure -E "^(engine|persistent_analysis|desktop_.*|move_notebook)$"
+      - run: ctest --test-dir build -C Release --output-on-failure -E "^(engine|persistent_analysis|desktop_.*|move_notebook|study_walk)$"

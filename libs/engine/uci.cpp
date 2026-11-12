@@ -168,8 +168,8 @@ void Uci::analyse(const QString &fen, const QString &position, bool play, int mi
                   bool variant960) {
     start(fen, position, play, milliseconds, depth, variant960, false);
 }
-void Uci::analyseToDepth(const QString &fen, const QString &position, int depth,
-                         int millisecondsCeiling, bool variant960) {
+void Uci::analyseToDepth(const QString &fen, const QString &position, int depth, int millisecondsCeiling,
+                         bool variant960) {
     start(fen, position, true, millisecondsCeiling, depth, variant960, true);
 }
 void Uci::start(const QString &fen, const QString &position, bool play, int milliseconds, int depth,
@@ -184,7 +184,8 @@ void Uci::start(const QString &fen, const QString &position, bool play, int mill
     }
     pending960_ = variant960;
     ++generation_;
-    depth_ = std::clamp(depth, 1, 99);
+    // 0 : aucune limite de profondeur. 245 est le plafond de Stockfish lui-même.
+    depth_ = std::clamp(depth, 0, 245);
     pendingFen_ = fen;
     pendingPosition_ = position;
     pendingPlay_ = play;
@@ -232,10 +233,14 @@ void Uci::beginSearch() {
     // Le moteur s'arrête à la première limite atteinte : profondeur et temps à la fois
     // pour un bilan, le seul temps pour une partie jouée, la seule profondeur pour
     // l'analyse locale, qui tourne tant que la position reste affichée.
-    command(!activePlay_        ? "go depth " + QString::number(depth_)
-            : activeDepthCeiling_ ? "go depth " + QString::number(depth_) + " movetime " +
-                                        QString::number(moveTime_)
-                                  : "go movetime " + QString::number(moveTime_));
+    //
+    // Sans limite de profondeur, l'analyse locale part en « go infinite » : le moteur
+    // creuse tant qu'on regarde la position, au lieu de s'arrêter à la profondeur 24
+    // qu'une machine d'aujourd'hui atteint en quelques secondes pour ne plus rien faire.
+    const auto ceiling = depth_ > 0 ? "depth " + QString::number(depth_) : QString();
+    command(!activePlay_                        ? (depth_ > 0 ? "go " + ceiling : QString("go infinite"))
+            : activeDepthCeiling_ && depth_ > 0 ? "go " + ceiling + " movetime " + QString::number(moveTime_)
+                                                : "go movetime " + QString::number(moveTime_));
     if (activePlay_)
         timeout_.start(moveTime_ + 10000);
     emit status(name_ + (activePlay_ ? " · réfléchit…" : " · analyse locale"));
@@ -271,8 +276,8 @@ void Uci::parse(const QString &line) {
         return;
     }
     if (line == "uciok" && state_ == Handshake) {
-        QVariantMap automatic{{"Threads", threads_}, {"Hash", hash_},
-                              {"MultiPV", multiPV_}, {"Skill Level", skill_}};
+        QVariantMap automatic{
+            {"Threads", threads_}, {"Hash", hash_}, {"MultiPV", multiPV_}, {"Skill Level", skill_}};
         QStringList managed{"Threads", "Hash", "MultiPV", "Skill Level", "UCI_Chess960", "SyzygyPath"};
         appliedElo_ = 0;
         if (limitElo_ > 0 && options_.contains("UCI_LimitStrength") && options_.contains("UCI_Elo")) {
@@ -290,7 +295,8 @@ void Uci::parse(const QString &line) {
             const auto name = option["name"].toString();
             try {
                 if (automatic.contains(name))
-                    command("setoption name " + name + " value " + optionValue(option, automatic[name], true));
+                    command("setoption name " + name + " value " +
+                            optionValue(option, automatic[name], true));
                 else if (name == "SyzygyPath" && !syzygyPath_.isEmpty())
                     command("setoption name " + name + " value " + optionValue(option, syzygyPath_));
                 else if (!managed.contains(name) && customOptions_.contains(name))

@@ -619,6 +619,8 @@ class Controller : public QObject {
     void writeSession();
     void replaceGame(t64::Game game, qint64 id = 0);
     void adoptGame(t64::Game game, qint64 id);
+    // Relève une seule fois les anciens réglages par défaut qui bridaient le moteur.
+    void unleashEngineOnce();
     // Rang de la partie ouverte dans la liste de la bibliothèque, -1 si absente.
     int gameIndex() const;
     void importBytes(const QByteArray &bytes);

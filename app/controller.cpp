@@ -2,6 +2,7 @@
 #include "controller.h"
 #include "archive.h"
 #include "croissant.h"
+#include "hardware.h"
 #include "move_notation.h"
 #include <QClipboard>
 #include <QDate>
@@ -24,6 +25,7 @@
 #include <QtConcurrent>
 #include <algorithm>
 #include <functional>
+#include <thread>
 
 namespace {
 QString s(const std::string &v) {
@@ -290,6 +292,7 @@ Controller::Controller(const QString &path, QObject *parent)
         }
     }
     initFeatures();
+    unleashEngineOnce();
     initReliability();
     initContent();
     initLibrarySearch();
@@ -1316,9 +1319,16 @@ void Controller::startEngine() {
     if (!playing_)
         options["UCI_LimitStrength"] = false;
     engine_.setLimitElo(playing_ ? settings_.value("playElo", 0).toInt() : 0);
-    engine_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
-                  settings_.value("hash", 128).toInt(), settings_.value("multiPV", 3).toInt(),
-                  playing_ ? settings_.value("skill", 12).toInt() : 20,
+    // Plus de fils que de cœurs ralentit le moteur, et une table plus grande que la
+    // mémoire fait échanger la machine : on borne à ce qu'elle a réellement, pas à un
+    // chiffre rond. Mémoire inconnue (0) : on fait confiance au réglage.
+    const int cores = std::max(1, int(std::thread::hardware_concurrency()));
+    const auto memory = t64::installedMemoryMb();
+    const int threads = std::clamp(settings_.value("threads", t64::recommendedThreads()).toInt(), 1, cores);
+    const int wanted = settings_.value("hash", t64::recommendedHashMb()).toInt();
+    const int hash = memory > 0 ? int(std::min<long long>(wanted, memory * 3 / 4)) : wanted;
+    engine_.start(settings_.value("enginePath").toString(), threads, hash,
+                  settings_.value("multiPV", 3).toInt(), playing_ ? settings_.value("skill", 12).toInt() : 20,
                   settings_.value("syzygyPath").toString(), options);
     if (analysis_ || playing_)
         requestEngine();
@@ -1342,10 +1352,10 @@ void Controller::requestEngine() {
         if ((b.sideToMove() == chess::Color::WHITE) != humanWhite_)
             engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), true,
                             settings_.value("moveTime", 1000).toInt(),
-                            settings_.value("analysisDepth", 24).toInt(), game_.chess960);
+                            settings_.value("analysisDepth", 0).toInt(), game_.chess960);
     } else if (analysis_)
         engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), false, 800,
-                        settings_.value("analysisDepth", 24).toInt(), game_.chess960);
+                        settings_.value("analysisDepth", 0).toInt(), game_.chess960);
 }
 void Controller::toggleAnalysis() {
     if (trainingActive())

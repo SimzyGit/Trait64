@@ -856,15 +856,19 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             TButton {text:qsTr("Créer une sauvegarde automatique maintenant");onClicked:controller.automaticBackup()}
             GridLayout {columns:settingsScroll.availableWidth>700*win.textScale?4:2;columnSpacing:14;rowSpacing:10;Layout.fillWidth:true
                 Label {text:qsTr("Fils de calcul");color:win.muted;ToolTip.visible:threadsHover.hovered;ToolTip.text:qsTr("Votre processeur offre %1 cœurs. Trait64 en laisse un libre pour que la machine reste fluide pendant l’analyse.").arg(controller.preferences.cpuCores);HoverHandler {id:threadsHover}}
-                SpinBox {from:1;to:32;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
+                SpinBox {from:1;to:1024;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
                 Label {text:qsTr("Mémoire (Mio)");color:win.muted;ToolTip.visible:hashHover.hovered;ToolTip.text:qsTr("Table de hachage du moteur. Votre machine dispose de %1 Mio.").arg(Math.round(controller.preferences.memoryMb));HoverHandler {id:hashHover}}
-                SpinBox {from:16;to:4096;stepSize:16;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
+                SpinBox {from:16;to:262144;stepSize:64;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
                 Label {text:qsTr("Variantes");color:win.muted} SpinBox {from:1;to:5;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
                 Label {text:qsTr("Niveau de jeu");color:win.muted} SpinBox {from:0;to:20;value:controller.preferences.skill;onValueModified:controller.setPreference("skill",value)}
                 Label {text:qsTr("Réflexion (ms)");color:win.muted} SpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}
             }
             Label {text:qsTr("Le niveau concerne le jeu contre Stockfish. L’analyse utilise sa pleine force.\nLes réglages sont appliqués au démarrage du moteur.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
-            RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} SpinBox {from:1;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)}}
+            RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} SpinBox {objectName:"analysisDepth";from:0;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)
+                        // 0 : le moteur creuse tant qu'on regarde la position.
+                        textFromValue:function(value){return value===0?qsTr("sans limite"):String(value)}
+                        valueFromText:function(text){var n=parseInt(text);return isNaN(n)?0:n}
+                        ToolTip.visible:hovered;ToolTip.text:qsTr("Sans limite, le moteur approfondit tant que la position reste affichée. Une profondeur fixe l’arrête dès qu’elle est atteinte.")}}
             TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
             TextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
             RowLayout {Layout.fillWidth:true

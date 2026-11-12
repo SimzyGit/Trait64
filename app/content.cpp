@@ -22,7 +22,7 @@ void Controller::initContent() {
                                     {"multiPV", 3},
                                     {"skill", 12},
                                     {"moveTime", 1000},
-                                    {"analysisDepth", 24},
+                                    {"analysisDepth", 0},
                                     {"syzygyPath", ""},
                                     {"uciOptions", QVariantMap()}};
             settings_.setValue("engineProfiles", profiles);

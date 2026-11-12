@@ -14,6 +14,48 @@
 #include <cmath>
 #include <thread>
 
+void Controller::unleashEngineOnce() {
+    // Les anciens réglages par défaut bridaient le moteur : profondeur 24, table de
+    // 4 Go au plus. Ils ont été écrits tels quels dans les préférences et dans les
+    // profils de moteur ; un nouveau défaut ne les atteindrait pas. On relève, une
+    // seule fois, ceux qui valent encore exactement l'ancien défaut — un réglage que
+    // l'utilisateur a choisi lui-même n'est pas touché.
+    if (settings_.value("engine/unleashed").toBool())
+        return;
+    const int oldHash = t64::legacyHashMb(), newHash = t64::recommendedHashMb();
+    const auto lift = [&](QVariantMap &values) {
+        bool changed = false;
+        if (values.value("analysisDepth").toInt() == 24) {
+            values["analysisDepth"] = 0;
+            changed = true;
+        }
+        if (values.contains("hash") && values.value("hash").toInt() == oldHash && newHash > oldHash) {
+            values["hash"] = newHash;
+            changed = true;
+        }
+        return changed;
+    };
+    QVariantMap own;
+    for (const auto *key : {"analysisDepth", "hash"})
+        if (settings_.contains(key))
+            own[key] = settings_.value(key);
+    if (lift(own))
+        for (auto it = own.cbegin(); it != own.cend(); ++it)
+            settings_.setValue(it.key(), it.value());
+    auto profiles = settings_.value("engineProfiles").toList();
+    bool any = false;
+    for (auto &entry : profiles) {
+        auto profile = entry.toMap();
+        if (lift(profile)) {
+            entry = profile;
+            any = true;
+        }
+    }
+    if (any)
+        settings_.setValue("engineProfiles", profiles);
+    settings_.setValue("engine/unleashed", true);
+}
+
 QVariantMap Controller::preferences() const {
     QVariantMap defaults{{"enginePath", ""},
                          {"uciOptions", QVariantMap()},
@@ -25,7 +67,7 @@ QVariantMap Controller::preferences() const {
                          {"skill", 12},
                          {"playElo", 0},
                          {"moveTime", 1000},
-                         {"analysisDepth", 24},
+                         {"analysisDepth", 0},
                          {"importWorkers", t64::recommendedImportWorkers()},
                          {"syzygyPath", ""},
                          // Le dossier d'études que l'explorateur rouvre : on travaille
@@ -128,9 +170,9 @@ QVariantMap Controller::preferences() const {
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
         const QMap<QString, QPair<int, int>> limits{
-            {"threads", {1, 32}},       {"hash", {16, 4096}},     {"multiPV", {1, 5}},
+            {"threads", {1, 1024}},     {"hash", {16, 262144}},   {"multiPV", {1, 5}},
             {"skill", {0, 20}},         {"playElo", {0, 4000}},   {"moveTime", {100, 10000}},
-            {"analysisDepth", {1, 99}}, {"dailyGoal", {1, 1000}}, {"importWorkers", {1, 8}}};
+            {"analysisDepth", {0, 99}}, {"dailyGoal", {1, 1000}}, {"importWorkers", {1, 8}}};
         QVariant clean = value;
         if (limits.contains(key)) {
             bool ok;

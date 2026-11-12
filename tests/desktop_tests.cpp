@@ -53,6 +53,7 @@ QQuickItem *visualItem(QQuickItem *parent, const QString &name) {
             return found;
     return nullptr;
 }
+#include "explorer_probe.h"
 #include "import_gui_probe.h"
 #include "move_notebook_probe.h"
 #include "showcase_probe.h"
@@ -103,6 +104,8 @@ int main(int argc, char **argv) {
             return moveNotebookProbe(dir.path());
         if (app.arguments().contains("--ui-layout"))
             return uiLayoutProbe(dir.path());
+        if (app.arguments().contains("--explorer-walk"))
+            return explorerProbeMain(dir.path());
         if (const int i = int(app.arguments().indexOf("--showcase")); i > 0 && i + 1 < app.arguments().size())
             return showcaseProbe(dir.path(), app.arguments()[i + 1]);
         if (app.arguments().contains("--benchmark-import"))
@@ -136,6 +139,70 @@ int main(int argc, char **argv) {
             bar.toggleAnalysis();
             check(bar.heldEvaluation().isEmpty(),
                   "Stopping the analysis forgets the evaluation rather than showing a stale one");
+            {
+                // La profondeur : avec une limite, le moteur s'y arrête ; sans, il creuse
+                // tant qu'on regarde la position. C'était 24 d'office, qu'une machine
+                // d'aujourd'hui atteint en quelques secondes pour ne plus rien faire.
+                Controller deep(dir.path() + "/depth");
+                deep.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                deep.setPreference("hash", 16);
+                deep.setPreference("multiPV", 1);
+                check(deep.preferences()["analysisDepth"].toInt() == 0,
+                      "Analysis has no depth limit by default");
+                const auto depthNow = [&deep] {
+                    return deep.engineLines().isEmpty() ? 0
+                                                        : deep.engineLines().first().toMap()["depth"].toInt();
+                };
+                // Une finale simple : le moteur y descend très vite.
+                deep.setFen("8/8/8/4k3/8/8/4P3/4K3 w - - 0 1");
+                deep.setPreference("analysisDepth", 6);
+                deep.toggleAnalysis();
+                engineWait.restart();
+                while (depthNow() < 6 && engineWait.elapsed() < 20000)
+                    QTest::qWait(20);
+                QTest::qWait(600);
+                check(depthNow() == 6, "A depth limit stops the engine exactly there");
+                deep.toggleAnalysis();
+                deep.setPreference("analysisDepth", 0);
+                deep.toggleAnalysis();
+                engineWait.restart();
+                while (depthNow() <= 24 && engineWait.elapsed() < 30000)
+                    QTest::qWait(20);
+                check(depthNow() > 24, "Without a limit the engine goes past the old ceiling of 24");
+                const int reached = depthNow();
+                // Et il s'arrête proprement quand la position change : la nouvelle
+                // analyse repart, au lieu d'attendre une fin qui ne viendra pas.
+                deep.move("e2e4");
+                engineWait.restart();
+                while ((deep.engineLines().isEmpty() || depthNow() >= reached) &&
+                       engineWait.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(!deep.engineLines().isEmpty() && depthNow() < reached,
+                      "An unlimited search yields to the next position at once");
+                deep.toggleAnalysis();
+            }
+            {
+                // Les anciens réglages par défaut, écrits dans les préférences, sont
+                // relevés une fois ; un réglage choisi par l'utilisateur ne l'est pas.
+                const auto path = dir.path() + "/unleash";
+                {
+                    Controller before(path);
+                    before.setPreference("analysisDepth", 24);
+                }
+                QSettings().remove("engine/unleashed");
+                {
+                    Controller after(path);
+                    check(after.preferences()["analysisDepth"].toInt() == 0,
+                          "The old default depth of 24 is lifted on the first start");
+                    after.setPreference("analysisDepth", 24);
+                }
+                {
+                    Controller again(path);
+                    check(again.preferences()["analysisDepth"].toInt() == 24,
+                          "A depth chosen afterwards is kept: the lift happens once");
+                    again.setPreference("analysisDepth", 0);
+                }
+            }
             Controller c(dir.path() + "/tournament");
             c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
             c.setPreference("hash", 16);

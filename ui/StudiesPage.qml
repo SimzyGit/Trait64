@@ -275,8 +275,16 @@ ColumnLayout {
                 Layout.fillHeight: true
                 visible: !!root.collection
                 spacing: 8
-                readonly property var games: root.collection
+                // Relue quand la base change : un recueil ouvert pendant un import
+                // restait figé sur les parties du moment où on l'avait ouvert.
+                property int revision: 0
+                readonly property var games: root.collection && revision >= 0
                                              ? root.backend.studyGames(root.collection.id) : []
+                Connections {
+                    target: root.backend
+                    function onSourcesChanged() { collectionPane.revision++ }
+                    function onLibraryChanged() { collectionPane.revision++ }
+                }
 
                 Label {
                     Layout.fillWidth: true
@@ -347,7 +355,11 @@ ColumnLayout {
                     GamePreview {
                         id: studyPreview
                         objectName: "studyPreview"
+                        // Largeur fixe, comme dans la bibliothèque : sans plafond l'aperçu
+                        // prenait toute la place et la liste des parties n'avait plus un pixel.
                         Layout.preferredWidth: Math.round(280 * controller.preferences.uiScale)
+                        Layout.minimumWidth: Layout.preferredWidth
+                        Layout.maximumWidth: Layout.preferredWidth
                         Layout.alignment: Qt.AlignTop
                         visible: parent.width > Math.round(760 * controller.preferences.uiScale)
                         backend: root.backend
