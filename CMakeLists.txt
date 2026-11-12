@@ -45,10 +45,6 @@ if(BUILD_TESTING)
     set_tests_properties(robustness PROPERTIES TIMEOUT 300)
   else()
     set_tests_properties(robustness PROPERTIES TIMEOUT 120)
-    # Le budget d'une image vaut pour une machine au repos ; les exécuteurs partagés et
-    # les sanitizers sont plusieurs fois plus lents, sans que l'échiquier y soit pour rien.
-    add_test(NAME board_walk COMMAND desktop_tests --board-walk)
-    set_tests_properties(board_walk PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;T64_FRAME_BUDGET=150" TIMEOUT 120)
   endif()
 endif()
 if(T64_BUILD_GUI)
@@ -174,6 +170,10 @@ if(T64_BUILD_GUI)
     # Le parcours des études à vrais clics : dossier, fichier, recueil, aperçu, dialogues.
     add_test(NAME study_walk COMMAND desktop_tests --explorer-walk)
     set_tests_properties(study_walk PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
+    # Le budget d'une image vaut pour une machine au repos ; les exécuteurs partagés et
+    # les sanitizers sont plusieurs fois plus lents, sans que l'échiquier y soit pour rien.
+    add_test(NAME board_walk COMMAND desktop_tests --board-walk)
+    set_tests_properties(board_walk PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;T64_FRAME_BUDGET=150" TIMEOUT 120)
     add_test(NAME desktop_interactions COMMAND desktop_tests)
     # Le scénario par défaut traverse toute l'application : il lui faut nettement plus
     # de temps que les scénarios ciblés ci-dessus, surtout sous sanitizers.
