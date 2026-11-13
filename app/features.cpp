@@ -2,6 +2,7 @@
 #include "accuracy.h"
 #include "controller.h"
 #include "explanation.h"
+#include "structure.h"
 #include <QDate>
 #include <QDateTime>
 #include <QDir>
@@ -950,6 +951,40 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 motifs << motifName(kind);
             if (!motifs.isEmpty())
                 why += " " + tr("Motifs dans la suite : %1.").arg(motifs.join(", "));
+            // Ce que le coup change à la structure : des faits de géométrie, donnés à côté
+            // du verdict et non à sa place.
+            {
+                const auto before =
+                    t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool());
+                auto after = before;
+                after.makeMove(chess::uci::uciToMove(before, playedLine.first().toStdString()));
+                QStringList changes;
+                for (const auto &change : t64::structureChanges(before, after)) {
+                    const auto where = qs(change.where);
+                    switch (change.kind) {
+                    case t64::StructureKind::IsolatedPawn:
+                        changes << tr("isole le pion %1").arg(where);
+                        break;
+                    case t64::StructureKind::DoubledPawns:
+                        changes << tr("double les pions sur la colonne %1").arg(where);
+                        break;
+                    case t64::StructureKind::PassedPawn:
+                        changes << tr("crée un pion passé en %1").arg(where);
+                        break;
+                    case t64::StructureKind::EnemyPassedPawn:
+                        changes << tr("laisse un pion passé adverse en %1").arg(where);
+                        break;
+                    case t64::StructureKind::WeakenedShield:
+                        changes << tr("retire un pion de devant le roi");
+                        break;
+                    case t64::StructureKind::OpenFileNearKing:
+                        changes << tr("ouvre la colonne %1 près du roi").arg(where);
+                        break;
+                    }
+                }
+                if (!changes.isEmpty())
+                    why += " " + tr("Sur l’échiquier, ce coup %1.").arg(changes.join(", "));
+            }
             why += " " + tr("Établi en rejouant les deux suites du moteur ; un calcul plus long peut dire "
                             "autre chose.");
         }

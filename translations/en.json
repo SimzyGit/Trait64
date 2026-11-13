@@ -1364,5 +1364,12 @@
   "Commencer (30 s)": "Start (30 s)",
   "Vu des Noirs": "From Black's side",
   "Vu des Blancs": "From White's side",
-  "Meilleure série : %1": "Best run: %1"
+  "Meilleure série : %1": "Best run: %1",
+  "isole le pion %1": "isolates the %1 pawn",
+  "double les pions sur la colonne %1": "doubles the pawns on the %1-file",
+  "crée un pion passé en %1": "creates a passed pawn on %1",
+  "laisse un pion passé adverse en %1": "leaves the opponent a passed pawn on %1",
+  "retire un pion de devant le roi": "removes a pawn from in front of the king",
+  "ouvre la colonne %1 près du roi": "opens the %1-file next to the king",
+  "Sur l’échiquier, ce coup %1.": "On the board, this move %1."
 }

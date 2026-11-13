@@ -141,7 +141,7 @@ Fonctionnalités :
 - [ ] Détection des sacrifices tactiques justifiés.
 - [x] Reconnaissance des menaces de mat. — mat en un coup si l'adversaire passait
 - [ ] Explication des séquences forcées.
-- [ ] Analyse des structures de pions.
+- [ ] Analyse des structures de pions. — commencé : ce qu'un coup change (isolé, doublés, passé) est dit dans l'explication ; pas d'analyse d'ensemble
 - [ ] Analyse de la sécurité des rois.
 - [ ] Identification des colonnes ouvertes et des cases faibles.
 - [ ] Explication des plans stratégiques lorsque des éléments concrets les justifient.

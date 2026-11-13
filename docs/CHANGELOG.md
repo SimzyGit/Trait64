@@ -1,5 +1,9 @@
 # Changements
 
+## Structure de pions et abri du roi dans les explications — 13 novembre 2026
+
+- L'explication d'un coup dit aussi ce qu'il change sur l'échiquier : pion isolé, pions doublés, pion passé créé ou laissé à l'adversaire, pion retiré de devant un roi roqué, colonne ouverte près de lui. Ce sont des constats de géométrie, donnés à côté du verdict du moteur et non à sa place.
+
 ## Pourquoi un coup est mauvais, menace, pièces prises, études Lichess — 13 novembre 2026
 
 - **Le bilan dit pourquoi.** En ouvrant l'explication d'un coup, un encadré donne la raison tirée des deux suites du moteur rejouées : mat permis ou manqué, matériel perdu ou manqué (pièce, case et coup qui le montre), pièce laissée en prise, sinon écart positionnel. Rien n'y est affirmé qui ne se lise sur l'échiquier.

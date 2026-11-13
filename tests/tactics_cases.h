@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "explanation.h"
+#include "structure.h"
 #include <algorithm>
 // Shares the core test runner's check() function.
 void tacticalChecks() {
@@ -195,4 +196,35 @@ void tacticalChecks() {
     const auto greedy = t64::explainMistake(line(trade, {"f3e5"}), line(trade, {"f3d2"}));
     check(greedy.reason == Reason::LosesMaterial && greedy.material == 2,
           "A line cut in mid-exchange is settled: knight for pawn costs two");
+
+    // Structure : ce qu'un coup change aux pions et à l'abri du roi.
+    using Structure = t64::StructureKind;
+    const auto changes = [](const char *fen, const char *uci) {
+        auto before = t64::checkedBoard(fen);
+        auto after = before;
+        after.makeMove(chess::uci::uciToMove(before, uci));
+        return t64::structureChanges(before, after);
+    };
+    const auto changed = [](const std::vector<t64::StructureChange> &list, Structure kind,
+                            const char *where) {
+        return std::find(list.begin(), list.end(), t64::StructureChange{kind, where}) != list.end();
+    };
+    check(changes("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "e2e4").empty(),
+          "An ordinary opening move changes nothing in the structure");
+    const auto recapture = changes("4k3/8/8/8/8/2n5/PPP5/4K3 w - - 0 1", "b2c3");
+    check(changed(recapture, Structure::DoubledPawns, "c") &&
+              changed(recapture, Structure::IsolatedPawn, "a2"),
+          "Recapturing towards the centre doubles the c-pawns and isolates the a-pawn");
+    check(changed(changes("4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1", "e4d5"), Structure::PassedPawn, "d5"),
+          "A pawn with no enemy pawn left in front or beside it is passed");
+    check(changed(changes("4k3/8/8/1p6/P7/8/8/4K3 w - - 0 1", "a4a5"), Structure::EnemyPassedPawn, "b5"),
+          "Pushing past leaves the opponent a passed pawn");
+    const auto shelter = changes("4k3/8/8/8/8/8/5PPP/6K1 w - - 0 1", "g2g4");
+    check(changed(shelter, Structure::WeakenedShield, "g1") &&
+              !changed(shelter, Structure::OpenFileNearKing, "g"),
+          "Pushing the g-pawn two squares thins the shield without opening the file");
+    check(changed(changes("4k3/8/8/8/7p/6P1/5P1P/6K1 w - - 0 1", "g3h4"), Structure::OpenFileNearKing, "g"),
+          "Capturing away from the g-file opens it next to the king");
+    check(changes("4k3/8/8/8/8/8/5PPP/6K1 w - - 0 1", "g1h1").empty(),
+          "A king move is not compared with the shelter it left");
 }

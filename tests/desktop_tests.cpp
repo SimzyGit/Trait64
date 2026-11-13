@@ -1144,6 +1144,8 @@ int main(int argc, char **argv) {
                     check(first["facts"].toString().contains("Pièce en prise") &&
                               first["marks"].toString() == "[%cal Rd6e5]",
                           "The hanging piece is named in the steps and drawn in red");
+                    check(!why.contains("Sur l’échiquier"),
+                          "A knight move that changes no pawn says nothing of structure");
                     check(c.explainReview(0, true)["why"] == details["why"],
                           "The verdict is the same whichever line is displayed");
                     c.switchTab(originalTab);
