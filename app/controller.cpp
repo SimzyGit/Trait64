@@ -1289,6 +1289,7 @@ void Controller::deleteVariation() {
         game_.removeVariation(node_);
         node_ = parent;
         refresh(true);
+        emit message(tr("Coup supprimé avec sa suite. Ctrl+Z pour annuler."));
     } catch (const std::exception &e) {
         fail(e);
     }

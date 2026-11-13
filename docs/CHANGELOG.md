@@ -1,5 +1,10 @@
 # Changements
 
+## Supprimer des coups comme sur Lichess — 13 novembre 2026
+
+- **Clic droit sur un coup** de la notation : « Supprimer à partir d'ici » retire le coup et sa suite, « Promouvoir la variante » la fait passer en ligne principale. La touche **Suppr** fait la même suppression sur le coup courant. Pas de confirmation : Ctrl+Z annule.
+- **Corrigé : les raccourcis ne répondaient plus pendant qu'un message était affiché** en bas de la fenêtre (six secondes sans flèches ni Ctrl+Z après un export, une erreur, etc.).
+
 ## Puzzles : les manqués reviennent — 13 novembre 2026
 
 - Un puzzle manqué est reproposé le lendemain, puis trois et sept jours après chaque réussite ; trois réussites de suite et il est tenu pour acquis. Ces révisions passent avant les nouveaux puzzles, dans le thème et l'origine choisis. La fenêtre des puzzles indique combien sont à revoir.

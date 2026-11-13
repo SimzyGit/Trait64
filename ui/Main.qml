@@ -720,7 +720,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         function onShowAnalysis(){win.page=2}
         function onShowAnalysisQueue(){analysisQueueDialog.open()}
     }
-    Popup {id:toast;parent:Overlay.overlay;property bool error:false;x:(parent.width-width)/2;y:Math.max(8,parent.height-height-34);width:Math.min(760,win.width-280);height:toastLabel.implicitHeight+topPadding+bottomPadding;padding:18;closePolicy:Popup.CloseOnEscape|Popup.CloseOnPressOutside
+    // Pas de fermeture à Échap : un Popup qui l'accepte prend tous les raccourcis de la
+    // fenêtre, et pendant les six secondes du message ni les flèches ni Ctrl+Z ne
+    // répondaient plus. Un clic, sur le message ou ailleurs, l'écarte toujours.
+    Popup {id:toast;objectName:"toast";parent:Overlay.overlay;property bool error:false;x:(parent.width-width)/2;y:Math.max(8,parent.height-height-34);width:Math.min(760,win.width-280);height:toastLabel.implicitHeight+topPadding+bottomPadding;padding:18;closePolicy:Popup.CloseOnPressOutside
         background:Rectangle {color:toast.error?"#633c37":win.raised;border.color:toast.error?"#a86559":win.line;radius:2}
         // Il se pose devant les boutons de navigation : au moins qu'un clic l'écarte, au
         // lieu d'obliger à attendre qu'il s'efface.
@@ -905,7 +908,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:helpScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:helpScroll.availableWidth;spacing:15
             Label {objectName:"helpTitle";Layout.fillWidth:true;Layout.minimumWidth:0;wrapMode:Text.WordWrap;text:qsTr("Un atelier personnel pour vos échecs.");font.pixelSize:Math.round(21*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
-            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
+            Label {text:qsTr("• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Clic droit sur un coup ou touche Suppr : le supprimer avec sa suite (Ctrl+Z pour annuler).\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.");wrapMode:Text.WordWrap;Layout.fillWidth:true;lineHeight:1.5}
             Label {text:qsTr("Ctrl N : nouvelle étude    ·    Ctrl O : importer\nCtrl S : enregistrer    ·    Ctrl K : commandes\n← / → : précédent / suivant    ·    F : retourner\nDébut / Fin : début / fin de la ligne");Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;lineHeight:1.6}
             Label {text:qsTr("Version de développement 0.3.0. Les sauvegardes PGN et SQLite sont recommandées pour vos études importantes. Le format .t64 est expérimental.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
         }}
@@ -1018,5 +1021,6 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:"End";enabled:win.navigationKeys();onActivated:controller.step(2)}
     Shortcut {sequence:"F";enabled:win.navigationKeys();onActivated:controller.flip()}
     Shortcut {sequence:"Ctrl+Z";enabled:win.navigationKeys()&&controller.state.canUndo;onActivated:controller.undo()}
+    Shortcut {sequence:"Delete";enabled:win.navigationKeys()&&controller.state.node>0&&!controller.state.training;onActivated:controller.deleteVariation()}
     Shortcut {sequence:"Ctrl+Shift+Z";enabled:win.navigationKeys()&&controller.state.canRedo;onActivated:controller.redo()}
 }

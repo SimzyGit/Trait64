@@ -129,6 +129,27 @@ int moveNotebookProbe(const QString &directory) {
     QTest::keyClick(window,Qt::Key_Right);QTest::qWait(20);
     check(c.state()["node"].toInt()==game.nodes[1].children[0],"Right shortcut returns to black half-move");
 
+    // Clic droit sur un coup : on s'y place et le menu s'ouvre ; Suppr retire le coup et sa
+    // suite sans demander, Ctrl+Z les rend.
+    {
+        const auto rowsBefore=c.moveRows();
+        const int blackId=game.nodes[1].children[0];
+        c.navigate(0);settled();
+        black=visualItem(window->contentItem(),"notebookMove_"+QString::number(blackId));
+        QTest::mouseClick(window,Qt::RightButton,Qt::NoModifier,black->mapToScene(QPointF(black->width()/2,black->height()/2)).toPoint());
+        QTest::qWait(150);
+        auto *menu=window->findChild<QObject *>("moveMenu");
+        check(menu && menu->property("visible").toBool() && c.state()["node"].toInt()==blackId,"Right-clicking a move selects it and opens its menu");
+        QMetaObject::invokeMethod(menu,"close");QTest::qWait(250);
+        QTest::keyClick(window,Qt::Key_Delete);QTest::qWait(50);
+        check(c.state()["node"]==1 && c.moveRows()!=rowsBefore,"Delete removes the move and what follows, and steps back");
+        auto *toast=window->findChild<QObject *>("toast");
+        check(toast && toast->property("visible").toBool() && c.state()["canUndo"].toBool(),"The deletion is announced and can be undone");
+        QTest::keyClick(window,Qt::Key_Z,Qt::ControlModifier);QTest::qWait(50);
+        check(c.moveRows()==rowsBefore,"Ctrl+Z brings the deleted moves back, even while the message is shown");
+        c.navigate(blackId);settled();
+    }
+
     auto *flowSwitch=visualItem(window->contentItem(),"notebookLayoutFlow");
     check(flowSwitch,"Notebook offers the continuous layout");
     QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,flowSwitch->mapToScene(QPointF(flowSwitch->width()/2,flowSwitch->height()/2)).toPoint());settled();

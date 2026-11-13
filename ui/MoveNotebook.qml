@@ -20,6 +20,18 @@ Item {
     function cellWidth(available) { return Math.max(0, Math.min((available - numberWidth) / 2, 170 * textScale)) }
     readonly property bool flowMode: backend.preferences.notebookLayout === "flow"
 
+    // Clic droit sur un coup, comme sur Lichess : on s'y place, puis on le supprime avec sa
+    // suite ou on promeut sa variante. Sans confirmation : Ctrl+Z défait.
+    function openMoveMenu(item, id) {
+        if (!id || backend.state.training) return
+        backend.navigate(id)
+        moveMenu.popup(item, 0, item.height)
+    }
+    Menu {
+        id: moveMenu; objectName: "moveMenu"
+        MenuItem { objectName: "deleteFromHere"; text: qsTr("Supprimer à partir d’ici"); onTriggered: root.backend.deleteVariation() }
+        MenuItem { text: qsTr("Promouvoir la variante"); onTriggered: root.backend.promote() }
+    }
     property bool forceFollow: false
     function requestFollow(force) {
         forceFollow = forceFollow || force
@@ -216,6 +228,7 @@ Item {
                         border.color: root.accent
                     }
                     onClicked: root.backend.navigate(token.id)
+                    TapHandler { acceptedButtons: Qt.RightButton; onTapped: root.openMoveMenu(fm, fm.token.id) }
                 }
             }
             Component {
@@ -344,6 +357,7 @@ Item {
                             border.color: root.accent
                         }
                         onClicked: root.backend.navigate(move.id)
+                        TapHandler { acceptedButtons: Qt.RightButton; onTapped: root.openMoveMenu(cell, cell.move.id) }
                     }
                 }
                 Repeater {
