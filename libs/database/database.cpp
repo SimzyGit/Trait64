@@ -594,73 +594,112 @@ QVariantMap Database::openingReport(const QString &fen, int models,
     const auto key = hashKey(fen.toStdString());
     // Les tranches sont celles que l'on distingue réellement : le club, le joueur de
     // tournoi, le maître. Une partie dont un seul Elo manque n'est pas rangée de force.
-    const QString band = "CASE WHEN g.white_elo<=0 OR g.black_elo<=0 THEN '' "
-                         "WHEN (g.white_elo+g.black_elo)/2<2000 THEN 'club' "
-                         "WHEN (g.white_elo+g.black_elo)/2<2300 THEN 'tournoi' ELSE 'maitre' END";
+    const auto bandOf = [](int whiteElo, int blackElo) {
+        if (whiteElo <= 0 || blackElo <= 0)
+            return QString();
+        const int mean = (whiteElo + blackElo) / 2;
+        return QString(mean < 2000 ? "club" : mean < 2300 ? "tournoi" : "maitre");
+    };
+    // Un seul passage sur les parties qui atteignent la position, compté ici plutôt que
+    // par un GROUP BY : pour la position de départ d'une grosse base ce sont toutes les
+    // parties, et SQLite les triait deux fois (les coups, puis les parties modèles).
+    struct Tally {
+        QString san, last;
+        qint64 count = 0, white = 0, draw = 0, black = 0;
+        QMap<QString, qint64> bands;
+    };
+    QHash<QString, Tally> tallies;
+    struct Model {
+        int strength;
+        QString date;
+        qint64 id;
+        bool operator<(const Model &other) const {
+            return std::tie(strength, date) > std::tie(other.strength, other.date);
+        }
+    };
+    std::vector<Model> strongest; // gardé trié, du plus fort au moins fort
+    const size_t wanted = models > 0 ? size_t(std::clamp(models, 1, 50)) : 0;
+    QVariantMap bandTotals;
+    qint64 total = 0, white = 0, draw = 0, black = 0, previous = -1;
     QSqlQuery q(db_);
-    q.prepare("SELECT p.uci,MIN(p.san)," + band +
-              " AS band,COUNT(*),SUM(g.result='1-0'),SUM(g.result='1/2-1/2'),SUM(g.result='0-1'),"
-              "MAX(substr(g.date,1,4)) FROM positions p JOIN games g ON g.id=p.game_id"
-              " WHERE p.key=? AND p.uci<>'' AND g.deleted=0 GROUP BY p.uci,band");
+    q.setForwardOnly(true);
+    q.prepare("SELECT p.uci,p.san,g.id,g.white_elo,g.black_elo,g.result,g.date FROM positions p"
+              " JOIN games g ON g.id=p.game_id WHERE p.key=? AND g.deleted=0");
     q.addBindValue(key);
     run(q);
-    // Un coup par ligne, ses tranches rassemblées : l'agrégat SQL en rend une par
-    // tranche, et c'est le coup que l'on veut lire d'un bloc.
-    QMap<QString, QVariantMap> byMove;
-    QVariantMap bandTotals;
-    qint64 total = 0, white = 0, draw = 0, black = 0;
     while (q.next()) {
         const auto uci = q.value(0).toString();
-        auto move = byMove.value(uci);
-        const qint64 count = q.value(3).toLongLong(), w = q.value(4).toLongLong(),
-                     d = q.value(5).toLongLong(), b = q.value(6).toLongLong();
-        move["uci"] = uci;
-        move["san"] = q.value(1);
-        move["count"] = move["count"].toLongLong() + count;
-        move["white"] = move["white"].toLongLong() + w;
-        move["draw"] = move["draw"].toLongLong() + d;
-        move["black"] = move["black"].toLongLong() + b;
-        if (q.value(7).toString() > move["last"].toString())
-            move["last"] = q.value(7);
-        const auto name = q.value(2).toString();
-        if (!name.isEmpty()) {
-            auto bands = move["bands"].toMap();
-            bands[name] = bands[name].toLongLong() + count;
-            move["bands"] = bands;
-            bandTotals[name] = bandTotals[name].toLongLong() + count;
+        const qint64 id = q.value(2).toLongLong();
+        const int whiteElo = q.value(3).toInt(), blackElo = q.value(4).toInt();
+        const auto date = q.value(6).toString();
+        // Une partie qui repasse par la position n'est proposée qu'une fois en modèle ;
+        // les lignes d'une même partie se suivent dans l'index.
+        if (wanted && id != previous) {
+            const Model model{whiteElo + blackElo, date, id};
+            if (strongest.size() < wanted || model < strongest.back()) {
+                strongest.insert(std::upper_bound(strongest.begin(), strongest.end(), model), model);
+                if (strongest.size() > wanted)
+                    strongest.pop_back();
+            }
         }
-        byMove[uci] = move;
-        total += count;
-        white += w;
-        draw += d;
-        black += b;
+        previous = id;
+        if (uci.isEmpty())
+            continue;
+        auto &tally = tallies[uci];
+        const auto san = q.value(1).toString(), result = q.value(5).toString(), year = date.left(4);
+        if (tally.san.isEmpty() || san < tally.san)
+            tally.san = san;
+        ++tally.count;
+        ++total;
+        if (result == "1-0")
+            ++tally.white, ++white;
+        else if (result == "1/2-1/2")
+            ++tally.draw, ++draw;
+        else if (result == "0-1")
+            ++tally.black, ++black;
+        if (year > tally.last)
+            tally.last = year;
+        if (const auto name = bandOf(whiteElo, blackElo); !name.isEmpty()) {
+            ++tally.bands[name];
+            bandTotals[name] = bandTotals[name].toLongLong() + 1;
+        }
     }
     QVariantList moves;
-    for (const auto &move : byMove)
+    for (auto it = tallies.cbegin(); it != tallies.cend(); ++it) {
+        QVariantMap move{{"uci", it.key()},    {"san", it->san},   {"count", it->count},
+                         {"white", it->white}, {"draw", it->draw}, {"black", it->black}};
+        if (!it->last.isEmpty())
+            move["last"] = it->last;
+        if (!it->bands.isEmpty()) {
+            QVariantMap bands;
+            for (auto band = it->bands.cbegin(); band != it->bands.cend(); ++band)
+                bands[band.key()] = band.value();
+            move["bands"] = bands;
+        }
         moves.append(move);
-    // Du plus joué au moins joué : c'est l'ordre dans lequel on lit une position.
+    }
+    // Du plus joué au moins joué : c'est l'ordre dans lequel on lit une position. À
+    // nombre égal, l'ordre des coups reste le même d'une fois sur l'autre.
     std::sort(moves.begin(), moves.end(), [](const QVariant &a, const QVariant &b) {
-        return a.toMap()["count"].toLongLong() > b.toMap()["count"].toLongLong();
+        const auto left = a.toMap(), right = b.toMap();
+        const auto x = left["count"].toLongLong(), y = right["count"].toLongLong();
+        return x != y ? x > y : left["uci"].toString() < right["uci"].toString();
     });
     QVariantList best;
-    if (models > 0) {
-        QSqlQuery games(db_);
-        games.prepare("SELECT g.id,g.white,g.black,g.result,g.date,g.event,g.white_elo,g.black_elo"
-                      " FROM positions p JOIN games g ON g.id=p.game_id"
-                      " WHERE p.key=? AND g.deleted=0 GROUP BY g.id"
-                      " ORDER BY (g.white_elo+g.black_elo) DESC,g.date DESC LIMIT ?");
-        games.addBindValue(key);
-        games.addBindValue(std::clamp(models, 1, 50));
+    QSqlQuery games(db_);
+    games.prepare("SELECT white,black,result,date,event,white_elo,black_elo FROM games WHERE id=?");
+    for (const auto &model : strongest) {
+        games.bindValue(0, model.id);
         run(games);
-        while (games.next())
-            best.append(QVariantMap{{"id", games.value(0)},
-                                    {"white", games.value(1)},
-                                    {"black", games.value(2)},
-                                    {"result", games.value(3)},
-                                    {"date", games.value(4)},
-                                    {"event", games.value(5)},
-                                    {"whiteElo", games.value(6)},
-                                    {"blackElo", games.value(7)}});
+        if (games.next())
+            best.append(QVariantMap{{"id", model.id},
+                                    {"white", games.value(0)},
+                                    {"black", games.value(1)},
+                                    {"result", games.value(2)},
+                                    {"date", games.value(3)},
+                                    {"event", games.value(4)},
+                                    {"whiteElo", games.value(5)},
+                                    {"blackElo", games.value(6)}});
     }
     return {{"total", total}, {"whiteWins", white},  {"draws", draw}, {"blackWins", black},
             {"moves", moves}, {"bands", bandTotals}, {"models", best}};

@@ -1,74 +1,53 @@
-# Trait64 — état du projet au 28 octobre 2026
+# Trait64 — état du projet au 13 novembre 2026
 
-> **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux d’abord · AGPL-3.0-or-later**
+> **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux, Windows et macOS · AGPL-3.0-or-later**
 
-Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Il ne remplace ni le [suivi technique](PROJECT-STATUS.md) ni la [feuille de route complète](ROADMAP.md). L’interface, le moteur et les données utilisateur doivent continuer à fonctionner localement, sans compte ou connexion obligatoire.
+Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Le détail des changements est dans le [journal](CHANGELOG.md), ce qui reste à faire dans la [feuille de route](ROADMAP.md), les mesures dans [PERFORMANCE.md](PERFORMANCE.md). L'interface, le moteur et les données restent utilisables localement, sans compte ni connexion obligatoire.
 
-## Carnet de coups
+## Dernière version publiée
 
-PR #14 intégrée à main : Blancs et Noirs côte à côte, variantes séparées et SAN
-français à l'affichage. Un affichage continu des coups (ordre PGN, variantes
-entre parenthèses) est proposé en option. Voir [MOVE-NOTEBOOK.md](MOVE-NOTEBOOK.md).
+**[v0.3.0-dev.177](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.177)** — 13 novembre 2026. Construction, tests et publication Linux verts (Debian 12 et 13, sanitizers), constructions et tests Windows et macOS verts. Localement : 20 suites vertes.
 
-## Dernière version publiée et vérifiée
-
-**[v0.3.0-dev.64](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64)** — publiée le **28 octobre 2026**. Refonte native intégrée dans la [PR #13](https://github.com/SimzyGit/Trait64/pull/13) : navigation latérale, grand échiquier, panneaux adaptables, commandes clavier et réglages de lecture français/anglais. [Périmètre et limites](UI-REDESIGN.md).
-
-Les 13 suites passent sous Debian 12/13 et Qt ASan/UBSan ; le cœur passe également sous sanitizers. Paquets Debian installés et AppImage démarrés. Localement : 1 180 contrôles incluant ceux des captures, 9 configurations, 164 images et zéro avertissement QML. Tag, cinq fichiers publiés, tailles, SHA-256 et sélection de la mise à jour depuis dev.57 vérifiés ; aucune archive Actions. [Rapport](VALIDATION.md).
-
-### Versions précédentes
-
-**[v0.3.0-dev.57](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.57)** — publiée le **25 octobre 2026 à 16 h 31, heure de Paris**. Tag et cinq fichiers vérifiés par comparaison des noms, tailles et SHA-256 avec le manifeste de construction ; aucune archive Actions. [Rapport](VALIDATION.md).
-
-La [PR #12](https://github.com/SimzyGit/Trait64/pull/12) rend le contrôle manuel d'intégrité asynchrone et annulable. L'étude non enregistrée est conservée ; chevauchements, relances réentrantes et fermeture sont testés. La sauvegarde manuelle et la validation préalable à l'ouverture restent synchrones. [Détails](ASYNC-INTEGRITY.md).
-
-La [PR #10](https://github.com/SimzyGit/Trait64/pull/10) est intégrée : doublons recherchés par empreinte et indexation du matériel accélérée, sans migration. Les 12 suites passent sous Debian 12/13 et avec Qt ASan/UBSan ; paquets installés et AppImage démarrés.
-
-La [PR #9](https://github.com/SimzyGit/Trait64/pull/9) a été fusionnée et a livré un **audit global de fiabilité**. Dix groupes de problèmes ont été corrigés : récupération des sessions, réindexation annulable, bornes FEN, réponses UCI réentrantes, fin de partie et nulles réclamables, anciens caches, options UCI, limites de pendule et durée de vie du système de mises à jour pendant l’authentification.
-
-**Contrôles historiques de l’audit** : 12/12 suites en CI sous Debian 12 et 13, ASan/UBSan sur le cœur et les modules Qt, 3 000 mutations FEN/PGN, installation puis démarrage des deux paquets Debian et test de démarrage AppImage. Voir [DEBUG-AUDIT.md](DEBUG-AUDIT.md) et [TESTING.md](TESTING.md). Ces tests ne remplacent **pas** un essai graphique sur Voyager/Wayland avec le matériel de l’utilisateur.
+Le lancement de l'AppImage est rejoué sur 12 distributions à chaque version ; la dernière passe relevée ici est verte sur dev.173.
 
 ## Ce qui est intégré
 
 | Domaine | Capacités réellement développées |
 | --- | --- |
-| Interface | Navigation latérale, panneaux adaptables, commandes clavier, police et tailles persistées, libellés français/anglais |
-| Échiquier et études | Coups légaux, variantes, Chess960, FEN, PGN annoté, flèches/cases, onglets, fusion et sauvegarde |
-| Moteurs | UCI, Stockfish/Arasan/PlentyChess téléchargeables, profils indépendants, MultiPV et comparaison de 2 à 4 moteurs |
-| Analyse | Graphique et bilan, file persistante avec analyses de variantes, pause/reprise, cache contextualisé et export |
-| Comprendre les coups | Variantes légalement rejouées, matériel/captures ; fourchettes, clouages/enfilades du roi, échecs à la découverte et doubles échecs, avec repères PGN |
-| Bibliothèques | SQLite schéma 7, bases nommées, recherches combinées annulables, pagination par curseur, index de positions, import PGN parallèle et reprenable |
-| Ouvertures et préparation | ECO, répertoires par position/transposition, import/export, couverture locale, préparation filtrée et export CSV |
-| Entraînement | Cartes issues d’études/erreurs et révisions espacées simples des répertoires |
-| Fiabilité et distribution | Sauvegardes automatiques, migrations sauvegardées, 3 canaux de mises à jour GitHub, CI Debian, AppImage et nettoyage des archives Actions |
+| Interface | Navigation latérale, panneaux adaptables, clavier, thèmes, français/anglais |
+| Échiquier | Glisser ou clic-clic, pièces animées, sons (paquet .deb), flèches du moteur, menace, pièces prises et avance matérielle, lecture automatique, molette en option |
+| Études | Variantes, Chess960, PGN annoté, onglets, explorateur de fichiers avec arbre, corbeille du système, export PGN, EPD et page HTML autonome |
+| Moteurs | UCI, détection des moteurs installés, catalogue téléchargeable, MultiPV, comparaison de 2 à 4 moteurs, recherche sans plafond de profondeur, de fils ni de mémoire autre que la machine |
+| Analyse | Graphique et bilan, file persistante, cache, précision ; explication de chaque coup avec sa raison tirée des deux suites du moteur |
+| Motifs | Fourchette, clouage et enfilade au roi, échec à la découverte, échec double, pièce en prise, attaque à la découverte, menace de mat en un coup |
+| Bibliothèques | SQLite schéma 12, index allégé (positions sur 20 coups, signatures au-delà, recherche de position complète), import parallèle et reprenable, bases `.db3` d'En Croissant |
+| En ligne (facultatif) | Explorateur Lichess, base des maîtres, tables de finales, comptes Lichess et Chess.com, lien de partie ou d'étude Lichess |
+| Ouvertures et préparation | ECO, livres Polyglot, répertoires par position, dossier de position, préparation filtrée |
+| Entraînement | Puzzles classés, cartes issues des erreurs, répétition des répertoires, exercice de coordonnées |
+| Distribution | Paquets .deb, AppImage vérifiant son hôte, Windows et macOS construits et testés en CI, mise à jour proposée à chaque version |
 
-**Limites importantes :** les motifs détectés ne démontrent pas toujours un gain forcé ; les analyses ne prétendent pas attribuer un **niveau Elo fictif**. Le jeu multijoueur en ligne reste hors périmètre.
+## Mesures de référence
 
-## Qualification des performances en cours
+Un million de parties de maîtres réelles : import en 85 minutes sur deux cœurs, 7,5 Go, intégrité vérifiée ; page de parties en 3 ms, position du 30ᵉ coup en 1 ms. Le dossier de la position de départ y demande encore 6 à 17 s. Deux, cinq et dix millions ne sont pas mesurés.
 
-La comparaison archivée sur **10 000 parties Lichess CC0 / 661 314 positions** passe de **93,114 s à 42,498 s (−54,4 %)**. Elle compare deux versions de Trait64 avec le même protocole sur un hôte partagé ; elle ne démontre pas une supériorité sur un autre logiciel. Les corrections sont livrées dans dev.55.
+## Limites à ne pas présenter comme levées
 
-Le parsing et l'import local de 100 000 parties avec pause/reprise, intégrité, sauvegarde et restauration sont mesurés. Le rapport conserve un pic de lecture concurrente de 4,031 s, dont la cause reste à établir. La qualification GitHub a réussi : 100 000 parties importées via Qt, 1 842 navigations, zéro avertissement QML, empreinte identique de tous les PGN dans les trois bases et réindexation 10k. Le pic local n'a pas été reproduit sur l'autre hôte, sans cause établie. Les positions/ouvertures et leurs index occupent 93,82 % des pages de la base ; voir [PERFORMANCE](PERFORMANCE.md). Aucun résultat sur 500 000 ou plusieurs millions de parties complètes ni sur le PC Voyager n'est revendiqué.
-
-## Principaux travaux restants
-
-Ordre de priorité : **performances → explications vérifiables → entraînement
-tactique → répertoires/préparation**, puis le reste de la [roadmap](ROADMAP.md).
-Toute évolution du schéma SQLite exige une migration 8 sauvegardée.
-
-1. **Grandes bases réelles** : qualifier 500 000 puis 1/2/5/10 millions de parties, indexations, mémoire, recherches, sauvegardes et restauration ; optimiser à partir des mesures.
-2. **Pédagogie** : compléter les explications tactiques démontrables, variantes justifiées, thèmes et exercices ; développer un véritable corpus tactique libre et sa progression.
-3. **Répertoires et adversaires** : couverture probabiliste, comparaison de répertoires, tendances et dossiers de préparation.
-4. **Interopérabilité** : import volontaire Lichess/Chess.com, études, Polyglot, formats compatibles SCID/ChessBase.
-5. **Entraînement** : finales, calcul, visualisation, solutions équivalentes vérifiées et répétition espacée enrichie.
-6. **Fiabilité et diffusion** : restauration guidée, tests réels sur Voyager/Wayland/X11, Syzygy local, traduction des diagnostics C++ et descriptifs du catalogue puis éventuels ports Windows/macOS/Flatpak.
-
-**À ne pas annoncer comme livrés :** performances certifiées sur plusieurs millions de PGN complets, OCR, intégration Lichess/Chess.com, format T64 compact définitif, tests matériels Voyager, version stable 1.0 ou compatibilité Windows/macOS.
+- Les explications reposent sur les suites calculées par le moteur : un calcul plus long peut dire autre chose. Déviations, surcharges, structures de pions et plans ne sont pas reconnus.
+- L'import d'étude Lichess et les requêtes Lichess en ligne ne sont testés que par faux réseau.
+- Les sons ne sont livrés que dans le .deb, et n'ont pas été écoutés lors des tests.
+- Aucun essai sur le matériel réel de l'utilisateur (Voyager, Wayland, écran 120 Hz).
+- Formats SCID et ChessBase, tables Syzygy locales, recherche par placement partiel, OCR, échiquiers électroniques : non faits.
+- Le format `.t64` reste expérimental. Pas de version stable 1.0.
 
 ## Historique des jalons vérifiés
 
 | Version | Évolution principale |
 | --- | --- |
+| [dev.177](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.177) | Pourquoi un coup est mauvais, menace, pièces prises, études Lichess, export HTML, coordonnées |
+| [dev.175](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.175) | Index allégé (schéma 12), un million de parties qualifié, sons des coups |
+| [dev.173](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.173) | Échiquier fluide, pièces qui glissent, détection des moteurs, flèches du moteur |
+| [dev.171](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.171) | Explorateur d'études, moteur sans plafond de puissance |
+| [dev.168](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.168) | Lichess en ligne (explorateur, maîtres, finales), bases `.db3` d'En Croissant, test sur 12 distributions |
 | [dev.64](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.64) | Refonte native, navigation latérale, lecture personnalisable et régressions visuelles |
 | [dev.57](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.57) | Vérification d'intégrité en arrière-plan et annulable, relance réentrante protégée |
 | [dev.55](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.55) | Import PGN accéléré, protocole de performance et restauration |

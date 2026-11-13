@@ -11,6 +11,7 @@
 - **Export HTML autonome** d'une étude : une seule page, sans rien d'extérieur, qui se parcourt dans n'importe quel navigateur.
 - **Exercice de coordonnées** (Entraînement) : trente secondes pour cliquer les cases nommées.
 - Les explications du bilan suivent la langue de l'interface.
+- Le dossier de position compte les parties en un seul passage au lieu de deux tris : gain mesuré d'environ 20 % sur 100 000 parties, pas davantage. Le rendre instantané sur une grosse base demandera des statistiques précalculées par tranche (migration de schéma), non faites.
 
 ## Sons des coups — 12 novembre 2026
 
