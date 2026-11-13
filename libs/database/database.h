@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "game.h"
+#include <QDateTime>
 #include <QIODevice>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -132,6 +133,12 @@ class Database {
     // Puzzle bank: insert ignores references already present; returns the number added.
     int addPuzzles(const std::vector<Puzzle> &puzzles);
     // An unsolved puzzle near `rating` (± spread), optionally of a theme and a source.
+    // Un puzzle manqué revient : le lendemain, puis trois et sept jours après chaque
+    // réussite. Trois réussites de suite, et il est tenu pour acquis. Rend le plus ancien
+    // puzzle dû, ou rien. `now` ne sert qu'aux tests.
+    QVariantMap duePuzzle(const QString &theme = {}, const QString &source = {},
+                          const QDateTime &now = QDateTime::currentDateTimeUtc()) const;
+    int duePuzzles(const QDateTime &now = QDateTime::currentDateTimeUtc()) const;
     QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {},
                            const QString &source = {}) const;
     void recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter);

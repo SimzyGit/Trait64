@@ -92,6 +92,53 @@ QVariantMap Database::nextPuzzle(int rating, int spread, const QString &theme, c
     return {};
 }
 
+namespace {
+// Les puzzles manqués au moins une fois, avec la date de leur dernière tentative et le
+// nombre de réussites depuis le dernier échec ; n'en reste que ceux dont le délai est passé.
+const char *const dueRows =
+    "SELECT a.puzzle AS id,MAX(a.at) AS last,(SELECT COUNT(*) FROM puzzle_attempts b WHERE b.puzzle=a.puzzle "
+    "AND b.id>(SELECT MAX(c.id) FROM puzzle_attempts c WHERE c.puzzle=a.puzzle AND c.success=0)) AS streak "
+    "FROM puzzle_attempts a WHERE a.puzzle IN(SELECT puzzle FROM puzzle_attempts WHERE success=0) "
+    "GROUP BY a.puzzle HAVING streak<3 AND julianday(?)-julianday(last)>=CASE streak WHEN 0 THEN 1 WHEN 1 "
+    "THEN 3 ELSE 7 END";
+QString utc(const QDateTime &now) {
+    return now.toUTC().toString("yyyy-MM-dd HH:mm:ss");
+}
+} // namespace
+
+QVariantMap Database::duePuzzle(const QString &theme, const QString &source, const QDateTime &now) const {
+    QString statement =
+        QString("SELECT p.id,p.fen,p.solution,p.rating,p.themes,p.source FROM (%1) d JOIN puzzles "
+                "p ON p.id=d.id WHERE 1")
+            .arg(dueRows);
+    QVariantList args{utc(now)};
+    if (!source.isEmpty()) {
+        statement += " AND p.source=?";
+        args << source;
+    }
+    if (!theme.isEmpty()) {
+        statement += " AND (' '||p.themes||' ') LIKE ?";
+        args << "% " + theme + " %";
+    }
+    QSqlQuery q(db_);
+    q.prepare(statement + " ORDER BY d.last LIMIT 1");
+    for (const auto &arg : args)
+        q.addBindValue(arg);
+    run(q);
+    if (!q.next())
+        return {};
+    return {{"id", q.value(0)},     {"fen", q.value(1)},    {"solution", q.value(2)}, {"rating", q.value(3)},
+            {"themes", q.value(4)}, {"source", q.value(5)}, {"review", true}};
+}
+
+int Database::duePuzzles(const QDateTime &now) const {
+    QSqlQuery q(db_);
+    q.prepare(QString("SELECT COUNT(*) FROM (%1)").arg(dueRows));
+    q.addBindValue(utc(now));
+    run(q);
+    return q.next() ? q.value(0).toInt() : 0;
+}
+
 void Database::recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter) {
     QSqlQuery q(db_);
     q.prepare("INSERT INTO puzzle_attempts(puzzle,success,seconds,rating_after) VALUES(?,?,?,?)");
@@ -132,6 +179,7 @@ QVariantMap Database::puzzleStats() const {
             {"solved", q.value(2)},
             {"today", q.value(3)},
             {"recentSuccess", qRound(q.value(4).toDouble() * 100)},
-            {"themes", themes}};
+            {"themes", themes},
+            {"due", duePuzzles()}};
 }
 } // namespace t64

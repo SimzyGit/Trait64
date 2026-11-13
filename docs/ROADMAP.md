@@ -276,7 +276,7 @@ Ajouter :
 - [x] Exercices extraits des parties personnelles.
 - [ ] Entraînement sur les erreurs récurrentes.
 - [ ] ◐ Plusieurs solutions correctes acceptées lorsqu'elles sont vérifiées — partiel : pour le répertoire seulement, pas par moteur.
-- [ ] ◐ Répétition espacée avancée — partiel : version simple.
+- [ ] ◐ Répétition espacée avancée — partiel : répertoires (version simple) et puzzles manqués (1, 3, 7 jours) ; pas d'intervalle ajusté à la difficulté
 - [x] Calendrier de révision.
 - [ ] ◐ Historique des entraînements — partiel : suivi quotidien et hebdomadaire.
 - [x] Statistiques de progression par thème. — réussite par thème des puzzles ; pas d'évolution dans le temps

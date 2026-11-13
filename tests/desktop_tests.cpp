@@ -1767,6 +1767,49 @@ int main(int argc, char **argv) {
                   "Repertoire deletion preserves study");
             check(warnings.empty(), "Repertoire and training UI have no QML errors");
             {
+                // Répétition espacée : un puzzle manqué revient le lendemain, puis 3 et 7 jours
+                // après chaque réussite ; trois réussites de suite et il est acquis.
+                t64::Database bank(dir.path() + "/spaced.sqlite");
+                t64::Puzzle one;
+                one.ref = "s1";
+                one.fen = "6k1/r4ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1";
+                one.solution = "d1d8";
+                one.rating = 1500;
+                one.themes = "mateIn1";
+                one.source = "lichess";
+                auto two = one;
+                two.ref = "s2";
+                bank.addPuzzles({one, two});
+                const auto now = QDateTime::currentDateTimeUtc();
+                const auto in = [&](double days) { return now.addSecs(qint64(days * 86400)); };
+                const auto id = bank.nextPuzzle(1500)["id"].toLongLong();
+                bank.recordPuzzle(id, false, 5, 1490);
+                check(bank.duePuzzle({}, {}, in(0.5)).isEmpty() && bank.duePuzzles(in(0.5)) == 0,
+                      "A puzzle just missed is not asked again the same day");
+                check(bank.duePuzzle({}, {}, in(1.1))["id"] == id &&
+                          bank.duePuzzle({}, {}, in(1.1))["review"].toBool() && bank.duePuzzles(in(1.1)) == 1,
+                      "It comes back the next day, marked as a review");
+                check(bank.duePuzzle("fork", {}, in(1.1)).isEmpty() &&
+                          bank.duePuzzle({}, "mine", in(1.1)).isEmpty() &&
+                          bank.duePuzzle("mateIn1", "lichess", in(1.1))["id"] == id,
+                      "Reviews respect the chosen theme and origin");
+                bank.recordPuzzle(id, true, 5, 1500);
+                check(bank.duePuzzle({}, {}, in(2)).isEmpty() && bank.duePuzzle({}, {}, in(3.1))["id"] == id,
+                      "After one success it waits three days");
+                bank.recordPuzzle(id, true, 5, 1510);
+                check(bank.duePuzzle({}, {}, in(6)).isEmpty() && bank.duePuzzle({}, {}, in(7.1))["id"] == id,
+                      "After two it waits seven");
+                bank.recordPuzzle(id, true, 5, 1520);
+                check(bank.duePuzzle({}, {}, in(400)).isEmpty(),
+                      "Three successes in a row and it is learned");
+                bank.recordPuzzle(id, false, 5, 1500);
+                check(bank.duePuzzle({}, {}, in(1.1))["id"] == id,
+                      "Missing it again starts the schedule over");
+                const auto other = id == 1 ? 2 : 1;
+                bank.recordPuzzle(other, true, 5, 1510);
+                check(bank.duePuzzles(in(30)) == 1, "A puzzle solved at the first try is never a review");
+            }
+            {
                 // Deux répertoires qui partagent le début et divergent au deuxième coup blanc.
                 t64::Database both(dir.path() + "/compare.sqlite");
                 const auto spanish = both.createRepertoire("Espagnole", true,

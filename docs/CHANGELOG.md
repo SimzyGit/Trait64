@@ -1,5 +1,9 @@
 # Changements
 
+## Puzzles : les manqués reviennent — 13 novembre 2026
+
+- Un puzzle manqué est reproposé le lendemain, puis trois et sept jours après chaque réussite ; trois réussites de suite et il est tenu pour acquis. Ces révisions passent avant les nouveaux puzzles, dans le thème et l'origine choisis. La fenêtre des puzzles indique combien sont à revoir.
+
 ## Recherche par placement partiel de pièces — 13 novembre 2026
 
 - Recherche avancée → « Pièces sur des cases » : par exemple `Ke1 Pd4 pd5` (majuscule pour les Blancs). Trouve les parties où ces pièces ont occupé ces cases en même temps, à n'importe quel moment, variantes comprises.

@@ -650,7 +650,6 @@
   "Base Lichess": "Lichess database",
   "Mes erreurs (%1)": "My mistakes (%1)",
   "Commencer": "Start",
-  "Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec.": "Each puzzle is picked near your rating, which moves like an Elo. On the last move any mate is accepted. A hint or the solution counts as a failure.",
   "IMPORTER LA BASE LICHESS": "IMPORT THE LICHESS DATABASE",
   "Environ 5 millions de puzzles notés, sous licence CC0. Téléchargez « lichess_db_puzzle.csv.zst » (≈ 280 Mo) depuis le site, puis importez-le ici : le fichier compressé est lu directement.": "About 5 million rated puzzles, CC0 licensed. Download “lichess_db_puzzle.csv.zst” (≈ 280 MB) from the site, then import it here: the compressed file is read directly.",
   "Ouvrir la page de téléchargement": "Open the download page",
@@ -1386,5 +1385,8 @@
   "Voir": "View",
   "Aucune différence sur les positions communes.": "No difference on the shared positions.",
   "Choisissez deux répertoires différents.": "Choose two different repertoires.",
-  "Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)": "Pieces on squares (e.g. Ke1 Pd4 pd5; uppercase = White; slow: replays every game)"
+  "Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)": "Pieces on squares (e.g. Ke1 Pd4 pd5; uppercase = White; slow: replays every game)",
+  "Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec. Un puzzle manqué revient le lendemain, puis trois et sept jours après chaque réussite.": "Each puzzle is picked near your rating, which moves like an Elo. On the last move any mate is accepted. A hint or the solution counts as a failure. A missed puzzle comes back the next day, then three and seven days after each success.",
+  "Révision d’un puzzle manqué · ": "Review of a missed puzzle · ",
+  "À revoir": "To review"
 }

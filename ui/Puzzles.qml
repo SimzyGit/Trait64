@@ -41,6 +41,7 @@ TDialog {
                             {label: qsTr("Puzzles disponibles"), value: root.state.total || 0},
                             {label: qsTr("Résolus"), value: root.state.solved || 0},
                             {label: qsTr("Aujourd’hui"), value: root.state.today || 0},
+                            {label: qsTr("À revoir"), value: root.state.due || 0},
                             {label: qsTr("Réussite récente"), value: (root.state.recentSuccess || 0) + " %"}]
                     ColumnLayout {
                         required property var modelData
@@ -69,7 +70,7 @@ TDialog {
             }
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
-                text: qsTr("Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec.")
+                text: qsTr("Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec. Un puzzle manqué revient le lendemain, puis trois et sept jours après chaque réussite.")
             }
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid; visible: root.worked.length > 0 }
             Label { text: qsTr("Vos résultats par thème"); font.bold: true; visible: root.worked.length > 0 }
