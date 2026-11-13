@@ -899,6 +899,45 @@ int main(int argc, char **argv) {
                   "Pawn structure search covers the whole game");
             check(found({}, {{"material", fen(line[90]).section(' ', 0, 0)}}).contains(id),
                   "Material search covers the whole game");
+            {
+                // Placement partiel : trois pièces prises telles qu'elles sont au 75e demi-coup.
+                const auto pieces = [](const QString &position, int count) {
+                    QStringList tokens;
+                    int square = 0;
+                    for (const QChar c : position.section(' ', 0, 0)) {
+                        if (c == '/')
+                            continue;
+                        if (c.isDigit()) {
+                            square += c.digitValue();
+                            continue;
+                        }
+                        if (tokens.size() < count)
+                            tokens
+                                << QString("%1%2%3").arg(c).arg(QChar('a' + square % 8)).arg(8 - square / 8);
+                        ++square;
+                    }
+                    return tokens.join(' ');
+                };
+                const auto late = pieces(fen(line[75]), 3);
+                check(found({}, {{"placement", late}}).contains(id),
+                      "A partial placement is found wherever it occurs in the game");
+                check(found({}, {{"placement", "Ka8 ka1 Qh5 qh4 Pa7 pa2"}}).isEmpty(),
+                      "A placement no game ever reached finds nothing");
+                const auto wanted = t64::Database::parsePlacement("Ke1, pd5");
+                check(t64::Database::placementMatches(wanted, "4k3/8/8/3p4/8/8/8/4K3 w - - 0 1") &&
+                          !t64::Database::placementMatches(wanted, "4k3/8/8/3P4/8/8/8/4K3 w - - 0 1") &&
+                          !t64::Database::placementMatches(wanted, "4k3/8/8/3p4/8/8/8/3K4 w - - 0 1"),
+                      "A placement asks for that piece, of that colour, on that square");
+                for (const char *bad : {"", "Ke9", "Xe1", "e1", "Ke1 Qe1"}) {
+                    bool refused = false;
+                    try {
+                        t64::Database::parsePlacement(bad);
+                    } catch (const std::exception &) {
+                        refused = true;
+                    }
+                    check(refused, "An unreadable placement is refused, not guessed");
+                }
+            }
             // Même matériel, mêmes pions, autre position : la signature propose, le rejeu écarte.
             auto other = longGame(11, "Other");
             const auto otherLine = other.mainline();

@@ -6,6 +6,7 @@
 #include <QSqlQuery>
 #include <QVariantList>
 #include <QVariantMap>
+#include <array>
 #include <atomic>
 #include <map>
 #include <memory>
@@ -158,6 +159,11 @@ class Database {
     static constexpr int defaultCacheKib = 32 * 1024;
     static qint64 materialCode(std::string_view fen);
     static qint64 materialCode(const QString &pieces);
+    // Placement partiel : « Ke1 Pd4 pd5 » — une lettre de pièce (majuscule pour les
+    // Blancs, comme dans une FEN) et sa case. Rend, par case de 0 (a8) à 63 (h1) dans
+    // l'ordre d'une FEN, la pièce exigée ou 0 ; lève une erreur si le texte ne se lit pas.
+    static std::array<char, 64> parsePlacement(const QString &text);
+    static bool placementMatches(const std::array<char, 64> &wanted, std::string_view fen);
 
   private:
     bool enhanced_ = false, fts_ = false;
@@ -183,6 +189,10 @@ class Database {
     void retireOpeningStats(qint64 id);
     void creditOpeningStats(qint64 id);
     bool collectPositionMatches(const QString &fen, const std::shared_ptr<std::atomic_bool> &canceled) const;
+    // Aucun index ne répond à « ces pièces sur ces cases » : les parties sont rejouées
+    // toutes, une fois par motif, et la liste est gardée tant que la base ne change pas.
+    void collectPlacementMatches(const QString &pattern,
+                                 const std::shared_ptr<std::atomic_bool> &canceled) const;
     static constexpr int sparseMatches = 20000;
     QSqlQuery &statement(const QString &text) const;
     mutable std::map<QString, QSqlQuery> statements_;

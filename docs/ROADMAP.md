@@ -18,7 +18,7 @@ Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et A
 | Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | ✅ ajouté |
 | Molette pour parcourir les coups | ChessBase, Scid vs. PC | ✅ ajouté, en option |
 | Deviner le coup, jouer à l’aveugle | ChessBase, Scid vs. PC | à faire |
-| Recherche par placement partiel de pièces | ChessBase, Scid vs. PC | à faire |
+| Recherche par placement partiel de pièces | ChessBase, Scid vs. PC | ✅ ajouté, sans index : rejoue toutes les parties |
 | Import léger des très grosses bases (positions des 30–40 premiers demi-coups) | Scid vs. PC, En Croissant | à décider |
 
 ## Interface native — dev.64, 28 octobre 2026

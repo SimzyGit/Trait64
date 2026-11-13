@@ -17,9 +17,13 @@
 #include "cancellation.h"
 #include "database.h"
 #include "game.h"
+#include <QFileInfo>
+#include <QMutex>
+#include <QRegularExpression>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
+#include <cstring>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -169,6 +173,101 @@ void Database::indexGame(const Game &game, qint64 id, bool existing) {
 // que la recherche parte d'elle — et faux quand elle ne contient que les parties
 // rejouées, l'index se chargeant du reste. Le résultat est gardé tant que ni la position
 // ni la base n'ont changé : paginer ne rejoue rien.
+std::array<char, 64> Database::parsePlacement(const QString &text) {
+    std::array<char, 64> wanted{};
+    const auto tokens = text.split(QRegularExpression("[\\s,;]+"), Qt::SkipEmptyParts);
+    if (tokens.isEmpty() || tokens.size() > 32)
+        throw std::runtime_error("Placement invalide : de 1 à 32 pièces, par exemple « Ke1 Pd4 pd5 ».");
+    for (const auto &token : tokens) {
+        const auto piece = token.size() == 3 ? token[0].toLatin1() : char(0);
+        const int file = token.size() == 3 ? token[1].toLatin1() - 'a' : -1;
+        const int rank = token.size() == 3 ? token[2].toLatin1() - '1' : -1;
+        if (!piece || !std::strchr("KQRBNPkqrbnp", piece) || file < 0 || file > 7 || rank < 0 || rank > 7)
+            throw std::runtime_error(
+                ("Placement invalide : « " + token + " ». Écrivez une pièce et sa case, par exemple « Ke1 ».")
+                    .toStdString());
+        auto &square = wanted[size_t((7 - rank) * 8 + file)];
+        if (square && square != piece)
+            throw std::runtime_error(
+                ("Placement invalide : deux pièces sur la case de « " + token + " ».").toStdString());
+        square = piece;
+    }
+    return wanted;
+}
+bool Database::placementMatches(const std::array<char, 64> &wanted, std::string_view fen) {
+    size_t square = 0;
+    for (const char c : fen) {
+        if (c == ' ' || square >= 64)
+            break;
+        if (c == '/')
+            continue;
+        if (c >= '1' && c <= '8') {
+            for (int skipped = c - '0'; skipped > 0 && square < 64; --skipped)
+                if (wanted[square++])
+                    return false;
+        } else if (wanted[square] && wanted[square] != c)
+            return false;
+        else
+            ++square;
+    }
+    return square == 64;
+}
+void Database::collectPlacementMatches(const QString &pattern,
+                                       const std::shared_ptr<std::atomic_bool> &canceled) const {
+    const auto wanted = parsePlacement(pattern);
+    // Chaque page de résultats ouvre sa propre connexion : la liste trouvée est gardée
+    // pour tout le programme, tant que le fichier de la base et son journal n'ont pas
+    // bougé. Sans cela, tourner une page rejouerait toute la bibliothèque.
+    struct Kept {
+        QString stamp;
+        QList<qint64> hits;
+    };
+    static QMutex guard;
+    static Kept kept;
+    QString stamp = path_ + "|" + pattern;
+    for (const char *suffix : {"", "-wal"}) {
+        const QFileInfo file(path_ + suffix);
+        stamp += QString("|%1:%2").arg(file.size()).arg(file.lastModified().toMSecsSinceEpoch());
+    }
+    QList<qint64> hits;
+    bool known = false;
+    {
+        const QMutexLocker lock(&guard);
+        if (kept.stamp == stamp) {
+            hits = kept.hits;
+            known = true;
+        }
+    }
+    if (!known) {
+        QSqlQuery games(db_);
+        games.setForwardOnly(true);
+        games.prepare("SELECT id,pgn FROM games WHERE deleted=0");
+        run(games);
+        while (games.next()) {
+            if (canceled && canceled->load())
+                throw std::runtime_error("Recherche annulée.");
+            const auto parsed = parsePgn(games.value(1).toString().toStdString());
+            if (parsed.size() != 1)
+                continue;
+            for (const auto &node : parsed[0].nodes)
+                if (placementMatches(wanted, node.fen)) {
+                    hits << games.value(0).toLongLong();
+                    break;
+                }
+        }
+        games.finish();
+        const QMutexLocker lock(&guard);
+        kept = {stamp, hits};
+    }
+    sql("CREATE TEMP TABLE IF NOT EXISTS placement_hits(game_id INTEGER PRIMARY KEY)");
+    sql("DELETE FROM placement_hits");
+    QSqlQuery insert(db_);
+    insert.prepare("INSERT OR IGNORE INTO placement_hits VALUES(?)");
+    for (const auto id : hits) {
+        insert.bindValue(0, id);
+        run(insert);
+    }
+}
 bool Database::collectPositionMatches(const QString &fen,
                                       const std::shared_ptr<std::atomic_bool> &canceled) const {
     const auto state = [this] {

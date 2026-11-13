@@ -1,5 +1,10 @@
 # Changements
 
+## Recherche par placement partiel de pièces — 13 novembre 2026
+
+- Recherche avancée → « Pièces sur des cases » : par exemple `Ke1 Pd4 pd5` (majuscule pour les Blancs). Trouve les parties où ces pièces ont occupé ces cases en même temps, à n'importe quel moment, variantes comprises.
+- Aucun index n'y répond : toutes les parties sont rejouées. Mesuré sur 100 000 parties réelles : 28 à 43 secondes la première fois, puis 55 ms pour les pages suivantes tant que la bibliothèque n'a pas changé. La recherche tourne en arrière-plan et s'annule.
+
 ## Comparer deux répertoires — 13 novembre 2026
 
 - Répertoires → « Comparer… » : nombre de positions communes et propres à chacun, puis la liste des positions communes où les coups préparés diffèrent, avec un bouton pour ouvrir chacune.

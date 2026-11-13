@@ -1385,5 +1385,6 @@
   "Là-bas : rien": "There: nothing",
   "Voir": "View",
   "Aucune différence sur les positions communes.": "No difference on the shared positions.",
-  "Choisissez deux répertoires différents.": "Choose two different repertoires."
+  "Choisissez deux répertoires différents.": "Choose two different repertoires.",
+  "Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)": "Pieces on squares (e.g. Ke1 Pd4 pd5; uppercase = White; slow: replays every game)"
 }

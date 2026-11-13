@@ -52,6 +52,14 @@ int main(int argc, char **argv) {
         measure("material_of_final_position",
                 [&] { return count({}, {{"material", fen(line.size() - 1).section(' ', 0, 0)}}); });
         measure("material_rook_ending", [&] { return count({}, {{"material", "KRPPPkrppp"}}); });
+        // Placement partiel : aucune aide d'index, toutes les parties sont rejouées.
+        measure("placement_isolated_queen_pawn",
+                [&] { return count({}, {{"placement", "Pd4 pd5 Nf3 nf6"}}); });
+        measure("placement_again_other_connection", [&] {
+            t64::Database again(db.path());
+            return qsizetype(
+                again.search({}, {}, false, {}, false, {{"placement", "Pd4 pd5 Nf3 nf6"}}).size());
+        });
         const auto start = QString::fromStdString(chess::constants::STARTPOS);
         measure("opening_tree_start", [&] { return db.explorer(start).size(); });
         measure("opening_tree_ply_8", [&] { return db.explorer(fen(8)).size(); });

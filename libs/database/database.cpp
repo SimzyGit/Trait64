@@ -451,6 +451,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         statement += " AND g.plies<=?";
         args << filters["maxPlies"];
     }
+    if (const auto placement = filters.value("placement").toString().trimmed(); !placement.isEmpty()) {
+        collectPlacementMatches(placement, canceled);
+        statement += " AND g.id IN(SELECT game_id FROM temp.placement_hits)";
+    }
     if (!filters.value("material").toString().isEmpty()) {
         statement += " AND g.id IN(SELECT game_id FROM game_material WHERE material=?)";
         args << materialCode(filters["material"].toString());
