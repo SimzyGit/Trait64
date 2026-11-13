@@ -2197,6 +2197,11 @@ int main(int argc, char **argv) {
                   "The dossier counts the games that reached the position");
             check(dossier["moves"].toList()[0].toMap()["san"] == "c5",
                   "The move played from the position is the one reported");
+            shelf.buildOpeningReport();
+            check(!shelf.openingReport()["running"].toBool() &&
+                      shelf.openingReport()["total"] == dossier["total"] &&
+                      shelf.openingReport()["moves"] == dossier["moves"],
+                  "Asking again for a dossier already computed answers at once, with the same figures");
             check(dossier["name"].toString().contains("B"),
                   "The dossier names the opening of the position it describes");
             // Et la commande explicite doit rattraper ce qui est déjà en base.

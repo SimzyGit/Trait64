@@ -1,5 +1,9 @@
 # Changements
 
+## Dossier de position gardé en mémoire — 13 novembre 2026
+
+- Un dossier déjà calculé est resservi tout de suite tant que le fichier de la bibliothèque n'a pas changé. Le premier calcul sur une position très courante d'une grosse base reste long (voir PERFORMANCE.md).
+
 ## Structure de pions et abri du roi dans les explications — 13 novembre 2026
 
 - L'explication d'un coup dit aussi ce qu'il change sur l'échiquier : pion isolé, pions doublés, pion passé créé ou laissé à l'adversaire, pion retiré de devant un roi roqué, colonne ouverte près de lui. Ce sont des constats de géométrie, donnés à côté du verdict du moteur et non à sa place.

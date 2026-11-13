@@ -12,6 +12,11 @@ void Controller::initPreparation() {
         if (result["generation"].toLongLong() == reportGeneration_) {
             result["running"] = false;
             report_ = result;
+            if (!result.contains("error") && result["stamp"].toString() == reportStamp()) {
+                if (reportCache_.size() >= 64)
+                    reportCache_.clear();
+                reportCache_.insert(result["stamp"].toString() + result["fen"].toString(), result);
+            }
             emit reportChanged();
         }
         if (reportPending_)
@@ -185,6 +190,17 @@ void Controller::cancelOnlineReport() {
     }
 }
 
+// Ce qui change dès qu'on écrit dans la bibliothèque : le fichier ou son journal. Une
+// empreinte qui bouge à tort ne coûte qu'un recalcul ; elle ne peut pas servir un dossier
+// périmé sans que ni l'un ni l'autre n'ait été touché.
+QString Controller::reportStamp() const {
+    QString stamp = db_->path();
+    for (const char *suffix : {"", "-wal"}) {
+        const QFileInfo file(db_->path() + suffix);
+        stamp += QString("|%1:%2").arg(file.size()).arg(file.lastModified().toMSecsSinceEpoch());
+    }
+    return stamp + "|";
+}
 void Controller::buildOpeningReport() {
     // Même schéma que la préparation : la requête peut parcourir toutes les parties
     // passées par la position, et l'interface ne doit pas se figer pendant ce temps.
@@ -201,10 +217,18 @@ void Controller::buildOpeningReport() {
     const auto name = state_["opening"].toString();
     const auto generation = reportGeneration_;
     const auto canceled = cancelReport_;
+    const auto stamp = reportStamp();
+    if (const auto known = reportCache_.constFind(stamp + fen); known != reportCache_.cend()) {
+        report_ = *known;
+        report_["generation"] = generation;
+        report_["name"] = name;
+        emit reportChanged();
+        return;
+    }
     report_ = {{"running", true}, {"fen", fen}, {"name", name}};
     emit reportChanged();
     reportWorker_.setFuture(QtConcurrent::run([=] {
-        QVariantMap result{{"generation", generation}, {"fen", fen}, {"name", name}};
+        QVariantMap result{{"generation", generation}, {"fen", fen}, {"name", name}, {"stamp", stamp}};
         try {
             t64::Database db(path);
             const auto found = db.openingReport(fen, 6, canceled);

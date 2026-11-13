@@ -597,6 +597,10 @@ class Controller : public QObject {
     QVariantList review_, players_;
     QVariantMap reviewAccuracy_, reviewQuality_;
     QVariantMap report_;
+    // Dossiers déjà calculés, tant que le fichier de la bibliothèque n'a pas bougé : sur
+    // une grosse base, revenir à une position courante ne relit pas un million de lignes.
+    QHash<QString, QVariantMap> reportCache_;
+    QString reportStamp() const;
     std::shared_ptr<QTemporaryFile> unpackedStudy_;
     QStringList pendingStudies_;
     QFutureWatcher<int> classifier_;
