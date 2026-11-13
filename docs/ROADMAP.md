@@ -236,7 +236,7 @@ Ajouter :
 - [x] Statistiques par période (années).
 - [x] Références vers des parties modèles.
 - [x] Identification des positions peu maîtrisées par l’historique des rappels.
-- [ ] Comparaison de plusieurs répertoires.
+- [x] Comparaison de plusieurs répertoires. — deux à la fois : positions communes, propres, et coups préparés différents
 - [ ] ◐ Détection des nouveautés théoriques — partiel : nouveauté dans la base locale seulement.
 - [x] Entraînement du répertoire par positions dues et réponses préparées multiples.
 - [x] Répétition espacée simple par position.

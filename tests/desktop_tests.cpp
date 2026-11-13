@@ -1766,6 +1766,29 @@ int main(int argc, char **argv) {
             check(c.repertoires().empty() && c.stats()["games"].toInt() == 1,
                   "Repertoire deletion preserves study");
             check(warnings.empty(), "Repertoire and training UI have no QML errors");
+            {
+                // Deux répertoires qui partagent le début et divergent au deuxième coup blanc.
+                t64::Database both(dir.path() + "/compare.sqlite");
+                const auto spanish = both.createRepertoire("Espagnole", true,
+                                                           t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 *")[0]);
+                const auto italian = both.createRepertoire(
+                    "Italienne", true, t64::parsePgn("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 *")[0]);
+                const auto compared = both.compareRepertoires(spanish, italian);
+                const auto rows = compared["differences"].toList();
+                check(compared["shared"] == 5 && compared["onlyFirst"] == 1 && compared["onlySecond"] == 2,
+                      "Comparing repertoires counts shared positions and those each has alone");
+                check(rows.size() == 1 && rows[0].toMap()["first"] == "Bb5" &&
+                          rows[0].toMap()["second"] == "Bc4" &&
+                          rows[0].toMap()["fen"].toString().startsWith("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/"),
+                      "The one shared position prepared differently is listed with each side's move");
+                bool refused = false;
+                try {
+                    both.compareRepertoires(spanish, spanish);
+                } catch (const std::exception &) {
+                    refused = true;
+                }
+                check(refused, "A repertoire is not compared with itself");
+            }
             c.createRepertoire("Ancienne base", true);
             waitRepertoire();
             const auto otherPath = dir.path() + "/other-library.sqlite";

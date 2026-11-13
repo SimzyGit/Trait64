@@ -90,6 +90,9 @@ class Database {
     void reviewRepertoire(qint64 id, const QString &fen, bool success);
     QVariantList repertoireWeaknesses(qint64 id) const;
     QVariantList repertoireGaps(qint64 id) const;
+    // Deux répertoires position par position : combien de positions chacun a en propre,
+    // combien ils partagent, et celles où ils ne préparent pas les mêmes coups.
+    QVariantMap compareRepertoires(qint64 first, qint64 second) const;
     // L'écart entre un répertoire et les parties réellement jouées : combien de parties y
     // sont entrées, dans combien le joueur a quitté sa propre préparation, et où. Personne
     // d'autre ne peut le dire : il faut le répertoire et le corpus du joueur au même endroit.

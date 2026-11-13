@@ -501,6 +501,53 @@ QVariantList Database::repertoireWeaknesses(qint64 id) const {
     return rows;
 }
 
+QVariantMap Database::compareRepertoires(qint64 first, qint64 second) const {
+    require(first != second, "Choisissez deux répertoires différents.");
+    // Les deux identifiants sont des entiers : les écrire dans la requête ne laisse entrer
+    // aucun texte, et chacun y revient plusieurs fois.
+    QSqlQuery counts(db_);
+    counts.prepare(
+        QString("SELECT (SELECT COUNT(*) FROM repertoire_positions WHERE repertoire=%1),"
+                "(SELECT COUNT(*) FROM repertoire_positions WHERE repertoire=%2),"
+                "(SELECT COUNT(*) FROM repertoire_positions a JOIN repertoire_positions b ON b.key=a.key"
+                " WHERE a.repertoire=%1 AND b.repertoire=%2)")
+            .arg(first)
+            .arg(second));
+    run(counts);
+    counts.next();
+    const qint64 shared = counts.value(2).toLongLong();
+    // Les positions communes dont les coups préparés diffèrent. Les coups propres à
+    // chacun sont rassemblés en une chaîne par position : la différence se lit d'un coup.
+    QSqlQuery q(db_);
+    q.prepare(
+        QString(
+            "SELECT a.fen,a.white,"
+            "(SELECT group_concat(m.san,' ') FROM repertoire_moves m WHERE m.repertoire=%1 AND m.key=a.key "
+            "AND NOT"
+            " EXISTS(SELECT 1 FROM repertoire_moves o WHERE o.repertoire=%2 AND o.key=a.key AND "
+            "o.uci=m.uci)) AS mine,"
+            "(SELECT group_concat(m.san,' ') FROM repertoire_moves m WHERE m.repertoire=%2 AND m.key=a.key "
+            "AND NOT"
+            " EXISTS(SELECT 1 FROM repertoire_moves o WHERE o.repertoire=%1 AND o.key=a.key AND "
+            "o.uci=m.uci)) AS theirs"
+            " FROM repertoire_positions a JOIN repertoire_positions b ON b.key=a.key"
+            " WHERE a.repertoire=%1 AND b.repertoire=%2 AND (mine IS NOT NULL OR theirs IS NOT NULL)"
+            " ORDER BY length(a.fen),a.key LIMIT 200")
+            .arg(first)
+            .arg(second));
+    run(q);
+    QVariantList differences;
+    while (q.next())
+        differences << QVariantMap{{"fen", q.value(0)},
+                                   {"whiteToMove", q.value(1).toBool()},
+                                   {"first", q.value(2).toString()},
+                                   {"second", q.value(3).toString()}};
+    return {{"shared", shared},
+            {"onlyFirst", counts.value(0).toLongLong() - shared},
+            {"onlySecond", counts.value(1).toLongLong() - shared},
+            {"differences", differences}};
+}
+
 QVariantList Database::repertoireGaps(qint64 id) const {
     // Only opponent turns. Statistics describe the local reference corpus, not theoretical truth.
     // Repertoires keep their text key; the opening statistics are keyed by position hash.

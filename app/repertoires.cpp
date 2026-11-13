@@ -85,6 +85,16 @@ void Controller::removeRepertoireMove(qint64 id, const QString &fen, const QStri
         fail(e);
     }
 }
+QVariantMap Controller::compareRepertoires(qint64 first, qint64 second) {
+    try {
+        auto result = db_->compareRepertoires(first, second);
+        result["ready"] = true;
+        return result;
+    } catch (const std::exception &e) {
+        fail(e);
+        return {{"ready", false}};
+    }
+}
 void Controller::openRepertoirePosition(qint64 id, const QString &fen) {
     try {
         require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
@@ -143,7 +153,8 @@ bool Controller::playRepertoireAnswer(const QString &uci) {
             accepted = value.toMap();
     if (accepted.isEmpty()) {
         trainingFailed_ = true;
-        emit message(tr("Ce coup ne figure pas dans les réponses préparées. Réessayez ; cela ne signifie pas qu’il est mauvais."));
+        emit message(tr("Ce coup ne figure pas dans les réponses préparées. Réessayez ; cela ne signifie pas "
+                        "qu’il est mauvais."));
         return true;
     }
     auto candidate = game_;

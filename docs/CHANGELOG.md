@@ -1,5 +1,9 @@
 # Changements
 
+## Comparer deux répertoires — 13 novembre 2026
+
+- Répertoires → « Comparer… » : nombre de positions communes et propres à chacun, puis la liste des positions communes où les coups préparés diffèrent, avec un bouton pour ouvrir chacune.
+
 ## Puzzles : résultats par thème — 13 novembre 2026
 
 - La fenêtre des puzzles montre vos résultats par thème, du moins réussi au mieux réussi (à partir de cinq tentatives), avec un bouton pour retravailler chacun.

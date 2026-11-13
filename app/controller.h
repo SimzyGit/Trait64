@@ -167,6 +167,7 @@ class Controller : public QObject {
                                         const QString &note, bool principal);
     Q_INVOKABLE void removeRepertoireMove(qint64 id, const QString &fen, const QString &uci);
     Q_INVOKABLE void openRepertoirePosition(qint64 id, const QString &fen);
+    Q_INVOKABLE QVariantMap compareRepertoires(qint64 first, qint64 second);
     Q_INVOKABLE void startRepertoireTraining(qint64 id, bool includeFuture = false);
     QVariantMap preparation() const { return preparation_; }
     Q_INVOKABLE void preparePosition(const QVariantMap &filters);

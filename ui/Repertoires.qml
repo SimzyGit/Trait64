@@ -64,6 +64,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
             TButton {text:qsTr("Importer PGN");onClicked:{importPgn.repertoireId=root.selectedId;importPgn.open()}}
             TButton {text:qsTr("Exporter PGN");onClicked:{exportPgn.repertoireId=root.selectedId;exportPgn.open()}}
             TButton {objectName:"analyseRepertoire";text:qsTr("Analyser le répertoire");enabled:!!root.backend.analysisQueue.state.ready;onClicked:analysisDialog.open()}
+            TButton {objectName:"compareRepertoires";text:qsTr("Comparer…");enabled:root.backend.repertoires.length>1;onClicked:compareDialog.open()}
             TButton {text:qsTr("Renommer");onClicked:{renameField.text=root.detail.name;renameDialog.open()}}
             TButton {text:qsTr("Supprimer");onClicked:deleteDialog.open()}
         }
@@ -147,6 +148,39 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         }
     }
 }
+    TDialog {
+        id:compareDialog;objectName:"compareDialog";title:qsTr("Comparer deux répertoires");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Close
+        width:Math.min(760,root.width-24);height:Math.min(600,root.height-24)
+        property var outcome:({})
+        readonly property var others:root.backend.repertoires.filter(r=>r.id!==root.selectedId)
+        function refresh(){outcome=others.length&&other.currentIndex>=0?root.backend.compareRepertoires(root.selectedId,others[other.currentIndex].id):({})}
+        onOpened:refresh()
+        ColumnLayout {anchors.fill:parent;spacing:10
+            RowLayout {Layout.fillWidth:true
+                Label {text:(root.detail.name||"")+qsTr(" comparé à")}
+                TComboBox {id:other;objectName:"compareOther";Layout.fillWidth:true;model:compareDialog.others.map(r=>r.name);onActivated:compareDialog.refresh()}
+            }
+            Label {
+                Layout.fillWidth:true;wrapMode:Text.WordWrap;visible:!!compareDialog.outcome.ready
+                text:qsTr("%1 position(s) communes, %2 propres au premier, %3 propres au second. Ci-dessous, les positions communes où les coups préparés diffèrent (200 au plus).").arg(compareDialog.outcome.shared||0).arg(compareDialog.outcome.onlyFirst||0).arg(compareDialog.outcome.onlySecond||0)
+            }
+            ListView {
+                id:differences;objectName:"compareDifferences";Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:6;model:compareDialog.outcome.differences||[]
+                ScrollBar.vertical:ScrollBar {}
+                delegate:Rectangle {
+                    required property var modelData;width:differences.width;height:74;color:root.palette.alternateBase
+                    RowLayout {anchors.fill:parent;anchors.margins:10
+                        ColumnLayout {Layout.fillWidth:true
+                            Label {Layout.fillWidth:true;elide:Text.ElideRight;font.bold:true;text:(modelData.first?qsTr("Ici : ")+modelData.first:qsTr("Ici : rien"))+"   ·   "+(modelData.second?qsTr("Là-bas : ")+modelData.second:qsTr("Là-bas : rien"))}
+                            Label {text:modelData.fen;Layout.fillWidth:true;elide:Text.ElideMiddle;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
+                        }
+                        TButton {text:qsTr("Voir");onClicked:{root.backend.openRepertoirePosition(root.selectedId,modelData.fen);compareDialog.close();root.close()}}
+                    }
+                }
+                Label {anchors.centerIn:parent;visible:differences.count===0&&!!compareDialog.outcome.ready;text:qsTr("Aucune différence sur les positions communes.")}
+            }
+        }
+    }
     TDialog {
         id:createDialog;title:qsTr("Nouveau répertoire depuis l’étude");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:460
         ColumnLayout {anchors.fill:parent

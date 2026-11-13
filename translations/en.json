@@ -1374,5 +1374,16 @@
   "Sur l’échiquier, ce coup %1.": "On the board, this move %1.",
   "Vos résultats par thème": "Your results by theme",
   "%1 % sur %2": "%1% of %2",
-  "Travailler": "Practise"
+  "Travailler": "Practise",
+  "Comparer…": "Compare…",
+  "Comparer deux répertoires": "Compare two repertoires",
+  " comparé à": " compared with",
+  "%1 position(s) communes, %2 propres au premier, %3 propres au second. Ci-dessous, les positions communes où les coups préparés diffèrent (200 au plus).": "%1 shared position(s), %2 only in the first, %3 only in the second. Below, the shared positions where the prepared moves differ (200 at most).",
+  "Ici : ": "Here: ",
+  "Ici : rien": "Here: nothing",
+  "Là-bas : ": "There: ",
+  "Là-bas : rien": "There: nothing",
+  "Voir": "View",
+  "Aucune différence sur les positions communes.": "No difference on the shared positions.",
+  "Choisissez deux répertoires différents.": "Choose two different repertoires."
 }
