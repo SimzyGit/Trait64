@@ -490,6 +490,9 @@ void Controller::refresh(bool content) {
         {"canUndo", !undo_.empty() && !trainingActive() && !clockRunning_},
         {"canRedo", !redo_.empty() && !trainingActive() && !clockRunning_},
         {"training", trainingActive()},
+        {"guessing", guessing_},
+        {"guessFound", guessFound_},
+        {"guessAsked", guessAsked_},
         {"trainingComplete", trainingComplete_},
         {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
         {"repertoireDue", repertoireState_.value("due", 0)},
@@ -1120,6 +1123,32 @@ void Controller::move(const QString &uci) {
             auto b = game_.boardAt(node_);
             require((b.sideToMove() == chess::Color::WHITE) == humanWhite_, "Le moteur réfléchit.");
         }
+        if (guessing_) {
+            if (trainingComplete_ || solutionIndex_ >= solution_.size())
+                return;
+            // Un seul essai : trouvé ou non, c'est le coup de la partie qui est joué, puis
+            // la réponse adverse. On compare ce que l'on a cherché, pas ce que l'on a répété.
+            const auto expected = solution_[solutionIndex_];
+            const bool found = uci == expected;
+            ++guessAsked_;
+            guessFound_ += found;
+            node_ = game_.play(node_, expected.toStdString());
+            const auto played = s(game_.nodes[node_].san);
+            ++solutionIndex_;
+            if (solutionIndex_ < solution_.size()) {
+                node_ = game_.play(node_, solution_[solutionIndex_].toStdString());
+                ++solutionIndex_;
+            }
+            trainingComplete_ = solutionIndex_ >= solution_.size();
+            selected_ = -1;
+            refresh();
+            if (trainingComplete_)
+                emit message(
+                    tr("Partie terminée : %1 coup(s) trouvé(s) sur %2.").arg(guessFound_).arg(guessAsked_));
+            else if (!found)
+                emit message(tr("Le coup de la partie était %1.").arg(played));
+            return;
+        }
         if (trainingActive()) {
             if (trainingComplete_)
                 return;
@@ -1641,9 +1670,59 @@ void Controller::startCard(qint64 id) {
         fail(e);
     }
 }
+void Controller::startGuessing(bool white) {
+    try {
+        require(!busy_, "Attendez la fin du traitement.");
+        if (trainingActive())
+            finishTraining();
+        QStringList line;
+        for (int n = 0; !game_.nodes[n].children.empty();) {
+            n = game_.nodes[n].children.front();
+            line << s(game_.nodes[n].uci);
+        }
+        const bool whiteStarts = game_.boardAt(0).sideToMove() == chess::Color::WHITE;
+        // Le camp choisi doit avoir au moins un coup à chercher.
+        require(line.size() >= (white == whiteStarts ? 1 : 2),
+                "Cette étude n’a pas de coups à deviner pour ce camp.");
+        checkpoint();
+        beforeTraining_ = game_;
+        beforeNode_ = node_;
+        beforeId_ = gameId_;
+        beforeDirty_ = dirty_;
+        beforeFlipped_ = flipped_;
+        cancelReview();
+        stopPlaying();
+        const auto tags = game_.tags;
+        game_ = t64::Game(game_.nodes[0].fen, game_.chess960);
+        game_.tags = tags;
+        node_ = 0;
+        selected_ = -1;
+        solution_ = line;
+        solutionIndex_ = 0;
+        guessing_ = true;
+        guessFound_ = guessAsked_ = 0;
+        trainingComplete_ = trainingFailed_ = false;
+        flipped_ = !white;
+        if (white != whiteStarts) {
+            node_ = game_.play(node_, solution_[0].toStdString());
+            solutionIndex_ = 1;
+        }
+        forgetEngineLines();
+        emit engineChanged();
+        refresh();
+        emit showAnalysis();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::revealCard() {
     if (!trainingActive() || trainingComplete_)
         return;
+    if (guessing_) {
+        // Montrer revient à ne pas avoir trouvé : le coup est compté manqué, puis joué.
+        move("0000");
+        return;
+    }
     trainingFailed_ = true;
     if (!repertoireExercise_.isEmpty()) {
         QStringList answers;
@@ -1670,6 +1749,7 @@ void Controller::finishTraining() {
     dirty_ = beforeDirty_;
     flipped_ = beforeFlipped_;
     cardId_ = 0;
+    guessing_ = false;
     puzzleId_ = 0;
     puzzle_.clear();
     repertoireExercise_.clear();

@@ -134,6 +134,8 @@ ApplicationWindow {
         Menu { title: qsTr("&Entraînement")
             MenuItem {text: qsTr("Puzzles tactiques…"); onTriggered: puzzlesDialog.open()}
             MenuItem {text: qsTr("Coordonnées…"); onTriggered: coordinatesDialog.open()}
+            MenuItem {text: qsTr("Deviner les coups des Blancs"); enabled: !controller.busy; onTriggered: controller.startGuessing(true)}
+            MenuItem {text: qsTr("Deviner les coups des Noirs"); enabled: !controller.busy; onTriggered: controller.startGuessing(false)}
             MenuItem {text: qsTr("Réviser la prochaine carte"); enabled: (controller.stats.due||0) > 0; onTriggered: controller.nextDueCard()}
             MenuItem {text: qsTr("Réviser un répertoire…"); onTriggered: repertoiresDialog.open()}
             MenuItem {text: qsTr("Tableau d’entraînement"); onTriggered: win.page = 4}
@@ -351,7 +353,8 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                                  Accessible.name:qsTr("Partie suivante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie suivante de la liste (Alt+→)")}
                     }
                     Label {visible:controller.state.training;Layout.maximumWidth:420;elide:Text.ElideRight;color:win.fg;font.weight:Font.DemiBold
-                        text:controller.puzzles.active?(controller.puzzles.current.review?qsTr("Révision d’un puzzle manqué · "):"")+qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress}
+                        text:controller.puzzles.active?(controller.puzzles.current.review?qsTr("Révision d’un puzzle manqué · "):"")+qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.guessing?qsTr("Deviner le coup · %1 trouvé(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress)}
+                    TButton {objectName:"guessReveal";text:qsTr("Montrer le coup");visible:!!controller.state.guessing&&!controller.state.trainingComplete;onClicked:controller.revealCard()}
                     TButton {objectName:"puzzleHint";text:qsTr("Indice");visible:controller.puzzles.active&&!controller.state.trainingComplete;onClicked:controller.puzzleHint();ToolTip.visible:hovered;ToolTip.text:qsTr("Montre la pièce à jouer ; compte comme un échec.")}
                     TButton {objectName:"nextPuzzle";text:qsTr("Puzzle suivant");accent:true;visible:controller.puzzles.active&&controller.state.trainingComplete;onClicked:controller.nextPuzzle()}
                     TButton {text:qsTr("Position suivante");visible:controller.state.repertoireTraining>0;enabled:controller.state.trainingComplete && controller.state.repertoireDue>0;onClicked:controller.startRepertoireTraining(controller.state.repertoireTraining)}
@@ -954,6 +957,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Tournoi de moteurs"),run:function(){tournamentDialog.open()}},
             {title:qsTr("Puzzles tactiques"),run:function(){puzzlesDialog.open()}},
             {title:qsTr("Exercice de coordonnées"),run:function(){coordinatesDialog.open()}},
+            {title:qsTr("Deviner les coups des Blancs"),run:function(){controller.startGuessing(true)}},
+            {title:qsTr("Deviner les coups des Noirs"),run:function(){controller.startGuessing(false)}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},

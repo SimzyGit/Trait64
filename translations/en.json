@@ -1392,5 +1392,12 @@
   "Supprimer à partir d’ici": "Delete from here",
   "Promouvoir la variante": "Promote variation",
   "Coup supprimé avec sa suite. Ctrl+Z pour annuler.": "Move deleted with what followed. Ctrl+Z to undo.",
-  "À l’aveugle : pièces masquées": "Blindfold: pieces hidden"
+  "À l’aveugle : pièces masquées": "Blindfold: pieces hidden",
+  "Partie terminée : %1 coup(s) trouvé(s) sur %2.": "Game over: %1 move(s) found out of %2.",
+  "Le coup de la partie était %1.": "The game move was %1.",
+  "Cette étude n’a pas de coups à deviner pour ce camp.": "This study has no moves to guess for that side.",
+  "Deviner le coup · %1 trouvé(s) sur %2": "Guess the move · %1 found out of %2",
+  "Montrer le coup": "Show the move",
+  "Deviner les coups des Blancs": "Guess White's moves",
+  "Deviner les coups des Noirs": "Guess Black's moves"
 }

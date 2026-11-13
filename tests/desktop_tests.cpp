@@ -1767,6 +1767,41 @@ int main(int argc, char **argv) {
                   "Repertoire deletion preserves study");
             check(warnings.empty(), "Repertoire and training UI have no QML errors");
             {
+                // Deviner le coup : la partie est rejouée, un essai par coup du camp choisi.
+                c.newGame();
+                for (const char *uci : {"e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6"})
+                    c.move(uci);
+                const auto studyFen = c.state()["fen"];
+                const auto rowsBefore = c.moveRows();
+                c.startGuessing(true);
+                check(c.state()["guessing"].toBool() && c.state()["training"].toBool() &&
+                          c.state()["node"] == 0 && !c.state()["flipped"].toBool(),
+                      "Guessing White's moves starts from the first position, seen from White");
+                c.move("e2e4");
+                check(c.state()["guessFound"] == 1 && c.state()["guessAsked"] == 1 &&
+                          c.state()["fen"].toString().startsWith(
+                              "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w"),
+                      "A move found is counted, and the opponent's reply is played");
+                c.move("d2d4");
+                check(c.state()["guessFound"] == 1 && c.state()["guessAsked"] == 2 &&
+                          c.state()["fen"].toString().startsWith(
+                              "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w"),
+                      "A wrong guess is counted as missed and the game move is played instead");
+                c.revealCard();
+                check(c.state()["trainingComplete"].toBool() && c.state()["guessAsked"] == 3 &&
+                          c.state()["guessFound"] == 1,
+                      "Showing the move counts as a miss; the last move ends the exercise");
+                c.finishTraining();
+                check(!c.state()["guessing"].toBool() && c.state()["fen"] == studyFen &&
+                          c.moveRows() == rowsBefore,
+                      "Leaving the exercise restores the study untouched");
+                c.startGuessing(false);
+                check(c.state()["flipped"].toBool() && c.state()["fen"].toString().startsWith(
+                                                           "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b"),
+                      "Guessing Black's moves plays White's first move and turns the board");
+                c.finishTraining();
+            }
+            {
                 // Répétition espacée : un puzzle manqué revient le lendemain, puis 3 et 7 jours
                 // après chaque réussite ; trois réussites de suite et il est acquis.
                 t64::Database bank(dir.path() + "/spaced.sqlite");

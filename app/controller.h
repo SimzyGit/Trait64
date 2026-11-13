@@ -404,6 +404,9 @@ class Controller : public QObject {
     Q_INVOKABLE void stopPlaying();
     Q_INVOKABLE void createCard(const QString &title);
     Q_INVOKABLE void startCard(qint64 id);
+    // Deviner le coup : la partie ouverte est rejouée depuis le début, et l'on cherche
+    // chaque coup du camp choisi. Un essai par coup ; le coup de la partie est ensuite joué.
+    Q_INVOKABLE void startGuessing(bool white);
     Q_INVOKABLE void revealCard();
     Q_INVOKABLE void finishTraining();
     Q_INVOKABLE void deleteCard(qint64 id);
@@ -484,7 +487,9 @@ class Controller : public QObject {
     qint64 selectedRepertoire_ = 0;
     QVariantList repertoires_;
     QVariantMap repertoireState_, repertoireExercise_;
-    bool trainingActive() const { return cardId_ || puzzleId_ || !repertoireExercise_.isEmpty(); }
+    bool trainingActive() const {
+        return cardId_ || puzzleId_ || guessing_ || !repertoireExercise_.isEmpty();
+    }
     void refreshRepertoires(bool overview = true);
     bool playRepertoireAnswer(const QString &uci);
     struct SearchResult {
@@ -533,6 +538,8 @@ class Controller : public QObject {
     qint64 gameId_ = 0, beforeId_ = 0, cardId_ = 0;
     QStringList solution_;
     int solutionIndex_ = 0;
+    bool guessing_ = false;
+    int guessFound_ = 0, guessAsked_ = 0;
     bool trainingFailed_ = false, trainingComplete_ = false, beforeDirty_ = false;
     bool flipped_ = false, dirty_ = false, busy_ = false, analysis_ = false, playing_ = false,
          humanWhite_ = true;
