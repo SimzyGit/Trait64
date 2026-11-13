@@ -18,6 +18,11 @@ TDialog {
         {tag: "hangingPiece", label: qsTr("Pièce en prise")}, {tag: "backRankMate", label: qsTr("Mat du couloir")},
         {tag: "promotion", label: qsTr("Promotion")}, {tag: "endgame", label: qsTr("Finale")},
         {tag: "opening", label: qsTr("Ouverture")}, {tag: "short", label: qsTr("Court")}, {tag: "long", label: qsTr("Long")}]
+    // Les thèmes travaillés au moins cinq fois, du moins réussi au mieux réussi : c'est
+    // l'ordre dans lequel il vaut la peine de les reprendre.
+    readonly property var worked: (state.themes || []).filter(t => t.attempts >= 5 && root.themes.some(k => k.tag === t.tag))
+        .sort((a, b) => a.success - b.success || b.attempts - a.attempts)
+    function themeLabel(tag) { for (const t of themes) if (t.tag === tag) return t.label; return tag }
     title: qsTr("Puzzles tactiques")
     width: Math.min(820, parent.width - 32)
     height: Math.min(680, parent.height - 32)
@@ -65,6 +70,23 @@ TDialog {
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
                 text: qsTr("Chaque puzzle est choisi près de votre classement, qui évolue comme un Elo. Au dernier coup, tout mat est accepté. Un indice ou la solution comptent comme un échec.")
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid; visible: root.worked.length > 0 }
+            Label { text: qsTr("Vos résultats par thème"); font.bold: true; visible: root.worked.length > 0 }
+            Repeater {
+                model: root.worked
+                RowLayout {
+                    required property var modelData
+                    required property int index
+                    Layout.fillWidth: true; spacing: 10
+                    Label { text: root.themeLabel(modelData.tag); Layout.preferredWidth: 190; elide: Text.ElideRight }
+                    ProgressBar { from: 0; to: 100; value: modelData.success; Layout.fillWidth: true }
+                    Label { text: qsTr("%1 % sur %2").arg(modelData.success).arg(modelData.attempts); Layout.preferredWidth: 110; color: palette.placeholderText }
+                    TButton {
+                        objectName: "trainTheme" + index; text: qsTr("Travailler"); accent: index === 0; enabled: !root.backend.busy
+                        onClicked: { root.backend.startPuzzle(modelData.tag, ""); if (root.backend.puzzles.active) root.close() }
+                    }
+                }
             }
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
             Label { text: qsTr("Importer la base Lichess"); font.bold: true }

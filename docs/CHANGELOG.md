@@ -1,5 +1,9 @@
 # Changements
 
+## Puzzles : résultats par thème — 13 novembre 2026
+
+- La fenêtre des puzzles montre vos résultats par thème, du moins réussi au mieux réussi (à partir de cinq tentatives), avec un bouton pour retravailler chacun.
+
 ## Dossier de position gardé en mémoire — 13 novembre 2026
 
 - Un dossier déjà calculé est resservi tout de suite tant que le fichier de la bibliothèque n'a pas changé. Le premier calcul sur une position très courante d'une grosse base reste long (voir PERFORMANCE.md).

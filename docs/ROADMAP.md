@@ -279,7 +279,7 @@ Ajouter :
 - [ ] ◐ Répétition espacée avancée — partiel : version simple.
 - [x] Calendrier de révision.
 - [ ] ◐ Historique des entraînements — partiel : suivi quotidien et hebdomadaire.
-- [ ] Statistiques de progression par thème.
+- [x] Statistiques de progression par thème. — réussite par thème des puzzles ; pas d'évolution dans le temps
 - [x] Objectifs personnels. — objectif quotidien
 - [ ] Programmes d'entraînement personnalisés.
 - [ ] Un mode entraîneur pour créer des exercices destinés aux élèves.

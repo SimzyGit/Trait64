@@ -1371,5 +1371,8 @@
   "laisse un pion passé adverse en %1": "leaves the opponent a passed pawn on %1",
   "retire un pion de devant le roi": "removes a pawn from in front of the king",
   "ouvre la colonne %1 près du roi": "opens the %1-file next to the king",
-  "Sur l’échiquier, ce coup %1.": "On the board, this move %1."
+  "Sur l’échiquier, ce coup %1.": "On the board, this move %1.",
+  "Vos résultats par thème": "Your results by theme",
+  "%1 % sur %2": "%1% of %2",
+  "Travailler": "Practise"
 }

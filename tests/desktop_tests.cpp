@@ -401,6 +401,18 @@ int main(int argc, char **argv) {
             check(c.state()["trainingComplete"].toBool(), "Any mate solves the last move");
             check(c.puzzles()["rating"].toInt() > before && c.puzzles()["solved"].toInt() == 1,
                   "Solving raises the rating and counts the puzzle");
+            {
+                // Une tentative manquée puis une réussie, chacune comptée pour les deux thèmes.
+                QMap<QString, QVariantMap> byTheme;
+                for (const auto &row : c.puzzles()["themes"].toList())
+                    byTheme[row.toMap()["tag"].toString()] = row.toMap();
+                check(byTheme.size() == 2 &&
+                          byTheme["mateIn1"]["attempts"] == byTheme["backRankMate"]["attempts"] &&
+                          byTheme["mateIn1"]["attempts"].toInt() >= 1 &&
+                          byTheme["mateIn1"]["success"].toInt() ==
+                              100 / byTheme["mateIn1"]["attempts"].toInt(),
+                      "Results are kept per theme, every attempt counting for each theme of its puzzle");
+            }
             c.nextPuzzle();
             const auto second = c.puzzles()["current"].toMap();
             check(c.puzzles()["active"].toBool() && second["id"] != (rooks ? QVariant(1) : QVariant(2)) &&

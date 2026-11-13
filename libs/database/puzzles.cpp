@@ -9,18 +9,22 @@
 namespace t64 {
 namespace {
 void run(QSqlQuery &q) {
-    if (!q.exec()) throw std::runtime_error(q.lastError().text().toStdString());
+    if (!q.exec())
+        throw std::runtime_error(q.lastError().text().toStdString());
 }
 } // namespace
 
 void Database::createPuzzleTables() {
     // `fen` is the position the solver faces; `solution` starts with the solver's move.
-    sql("CREATE TABLE IF NOT EXISTS puzzles(id INTEGER PRIMARY KEY,ref TEXT NOT NULL UNIQUE,fen TEXT NOT NULL,"
-        "solution TEXT NOT NULL,rating INTEGER NOT NULL,themes TEXT NOT NULL DEFAULT '',popularity INTEGER NOT "
+    sql("CREATE TABLE IF NOT EXISTS puzzles(id INTEGER PRIMARY KEY,ref TEXT NOT NULL UNIQUE,fen TEXT NOT "
+        "NULL,"
+        "solution TEXT NOT NULL,rating INTEGER NOT NULL,themes TEXT NOT NULL DEFAULT '',popularity INTEGER "
+        "NOT "
         "NULL DEFAULT 0,source TEXT NOT NULL,added TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
     sql("CREATE INDEX IF NOT EXISTS puzzles_rating ON puzzles(source,rating)");
     sql("CREATE INDEX IF NOT EXISTS puzzles_any_rating ON puzzles(rating)");
-    sql("CREATE TABLE IF NOT EXISTS puzzle_attempts(id INTEGER PRIMARY KEY,puzzle INTEGER NOT NULL REFERENCES "
+    sql("CREATE TABLE IF NOT EXISTS puzzle_attempts(id INTEGER PRIMARY KEY,puzzle INTEGER NOT NULL "
+        "REFERENCES "
         "puzzles(id) ON DELETE CASCADE,at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,success INTEGER NOT NULL,"
         "seconds REAL NOT NULL,rating_after INTEGER NOT NULL)");
     sql("CREATE INDEX IF NOT EXISTS puzzle_attempts_puzzle ON puzzle_attempts(puzzle,success)");
@@ -70,17 +74,20 @@ QVariantMap Database::nextPuzzle(int rating, int spread, const QString &theme, c
             statement += " AND (' '||themes||' ') LIKE ?";
             args << "% " + theme + " %";
         }
-        statement += " AND NOT EXISTS(SELECT 1 FROM puzzle_attempts a WHERE a.puzzle=puzzles.id AND a.success=1) "
-                     "ORDER BY rating LIMIT 20";
+        statement +=
+            " AND NOT EXISTS(SELECT 1 FROM puzzle_attempts a WHERE a.puzzle=puzzles.id AND a.success=1) "
+            "ORDER BY rating LIMIT 20";
         QSqlQuery q(db_);
         q.prepare(statement);
-        for (const auto &arg : args) q.addBindValue(arg);
+        for (const auto &arg : args)
+            q.addBindValue(arg);
         run(q);
         QVariantList found;
         while (q.next())
             found << QVariantMap{{"id", q.value(0)},     {"fen", q.value(1)},    {"solution", q.value(2)},
                                  {"rating", q.value(3)}, {"themes", q.value(4)}, {"source", q.value(5)}};
-        if (!found.isEmpty()) return found[random->bounded(int(found.size()))].toMap();
+        if (!found.isEmpty())
+            return found[random->bounded(int(found.size()))].toMap();
     }
     return {};
 }
@@ -100,10 +107,31 @@ QVariantMap Database::puzzleStats() const {
     q.prepare("SELECT (SELECT COUNT(*) FROM puzzles),(SELECT COUNT(*) FROM puzzles WHERE source='mine'),"
               "(SELECT COUNT(DISTINCT puzzle) FROM puzzle_attempts WHERE success=1),"
               "(SELECT COUNT(*) FROM puzzle_attempts WHERE date(at,'localtime')=date('now','localtime')),"
-              "(SELECT COALESCE(AVG(success),0) FROM (SELECT success FROM puzzle_attempts ORDER BY id DESC LIMIT 50))");
+              "(SELECT COALESCE(AVG(success),0) FROM (SELECT success FROM puzzle_attempts ORDER BY id DESC "
+              "LIMIT 50))");
     run(q);
     q.next();
-    return {{"total", q.value(0)},  {"mine", q.value(1)}, {"solved", q.value(2)},
-            {"today", q.value(3)},  {"recentSuccess", qRound(q.value(4).toDouble() * 100)}};
+    // Par thème : chaque tentative compte pour tous les thèmes du puzzle. Les tentatives
+    // sont celles d'un joueur, quelques milliers au plus : on les lit toutes.
+    QSqlQuery attempts(db_);
+    attempts.prepare("SELECT p.themes,a.success FROM puzzle_attempts a JOIN puzzles p ON p.id=a.puzzle");
+    run(attempts);
+    QMap<QString, QPair<int, int>> tally; // thème → (tentatives, réussites)
+    while (attempts.next())
+        for (const auto &theme : attempts.value(0).toString().split(' ', Qt::SkipEmptyParts)) {
+            auto &entry = tally[theme];
+            ++entry.first;
+            entry.second += attempts.value(1).toInt();
+        }
+    QVariantList themes;
+    for (auto it = tally.cbegin(); it != tally.cend(); ++it)
+        themes.append(QVariantMap{
+            {"tag", it.key()}, {"attempts", it->first}, {"success", qRound(100.0 * it->second / it->first)}});
+    return {{"total", q.value(0)},
+            {"mine", q.value(1)},
+            {"solved", q.value(2)},
+            {"today", q.value(3)},
+            {"recentSuccess", qRound(q.value(4).toDouble() * 100)},
+            {"themes", themes}};
 }
 } // namespace t64
