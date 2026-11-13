@@ -262,6 +262,31 @@ int main(int argc, char **argv) {
                 while (firstMove() != "e5" && engineWait.elapsed() < 10000)
                     QTest::qWait(10);
                 check(firstMove() == "e5", "An unlimited search yields to the next position at once");
+                // La menace : la même position, le trait passé. Les Noirs sont au trait,
+                // la ligne devient celle des Blancs (roi e1 ou pion e4).
+                deep.toggleThreat();
+                engineWait.restart();
+                while (firstMove() != "e1" && firstMove() != "e4" && engineWait.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(deep.state()["threat"].toBool() && (firstMove() == "e1" || firstMove() == "e4"),
+                      "Showing the threat analyses the position with the move passed");
+                const auto nodesBefore = deep.moveFlow().size();
+                deep.addEngineLine(0);
+                check(deep.moveFlow().size() == nodesBefore,
+                      "A threat cannot be inserted as a line of the game");
+                deep.step(-1);
+                check(!deep.state()["threat"].toBool(), "Leaving the position ends the threat display");
+                deep.setFen("4k3/8/8/8/8/8/4R3/4K3 b - - 0 1");
+                deep.toggleThreat();
+                check(!deep.state()["threat"].toBool(), "In check there is no move to pass, so no threat");
+                deep.setFen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+                check(deep.state()["takenByWhite"] == "♛" && deep.state()["takenByBlack"] == "" &&
+                          deep.state()["materialLead"] == 9,
+                      "A missing black queen shows as taken by White, nine points ahead");
+                deep.setFen("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1");
+                check(deep.state()["takenByBlack"].toString().count("♟") == 7 &&
+                          deep.state()["materialLead"] == 1,
+                      "Taken pieces are listed from queen to pawn, with the lead in points");
                 deep.toggleAnalysis();
             }
             {
@@ -954,6 +979,33 @@ int main(int argc, char **argv) {
                 check(!c.explainReview(-1)["available"].toBool() &&
                           !c.explainReview(999)["available"].toBool(),
                       "Unavailable review rows cannot fabricate explanations");
+                {
+                    auto *coordinates = window->findChild<QObject *>("coordinatesDialog");
+                    check(coordinates && QMetaObject::invokeMethod(coordinates, "open") &&
+                              QMetaObject::invokeMethod(coordinates, "start"),
+                          "The coordinates exercise opens and starts");
+                    QTest::qWait(50);
+                    const auto target = coordinates->property("target").toString();
+                    QVariant right, wrong, name;
+                    QMetaObject::invokeMethod(coordinates, "answer", Q_RETURN_ARG(QVariant, wrong),
+                                              Q_ARG(QVariant, target == "a1" ? "h8" : "a1"));
+                    QMetaObject::invokeMethod(coordinates, "answer", Q_RETURN_ARG(QVariant, right),
+                                              Q_ARG(QVariant, target));
+                    check(target.size() == 2 && !wrong.toBool() && right.toBool() &&
+                              coordinates->property("score") == 1 && coordinates->property("errors") == 1 &&
+                              coordinates->property("target").toString() != target,
+                          "A right square scores and asks another; a wrong one counts as a mistake");
+                    QMetaObject::invokeMethod(coordinates, "stop");
+                    coordinates->setProperty("blackSide", true);
+                    QMetaObject::invokeMethod(coordinates, "squareName", Q_RETURN_ARG(QVariant, name),
+                                              Q_ARG(QVariant, 0));
+                    check(coordinates->property("best") == 1 && name == "h1" &&
+                              !coordinates->property("running").toBool(),
+                          "Stopping keeps the best run, and Black's view starts from h1");
+                    coordinates->setProperty("blackSide", false);
+                    QMetaObject::invokeMethod(coordinates, "close");
+                    QTest::qWait(50);
+                }
                 auto *reviewDialog = window->findChild<QObject *>("reviewDialog");
                 QMetaObject::invokeMethod(reviewDialog, "open");
                 QMetaObject::invokeMethod(reviewDialog, "explain", Q_ARG(QVariant, 0));
@@ -1343,6 +1395,22 @@ int main(int argc, char **argv) {
             check(whole["openingCodes"].toStringList().contains("B90") &&
                       !whole["openingCodes"].toStringList().contains("C00"),
                   "A family name matches the start of the name and nothing else");
+            check(Controller::lichessStudy("https://lichess.org/study/AbCd1234") ==
+                          QStringList{"AbCd1234", ""} &&
+                      Controller::lichessStudy(" lichess.org/study/AbCd1234/WxYz5678#12 ") ==
+                          QStringList{"AbCd1234", "WxYz5678"} &&
+                      Controller::lichessStudy("https://lichess.org/study").isEmpty() &&
+                      Controller::lichessStudy("https://lichess.org/AbCd1234").isEmpty() &&
+                      Controller::lichessStudy("https://evil.test/lichess.org/study/AbCd1234").isEmpty(),
+                  "A Lichess study link names the study and, if present, one chapter");
+            check(t64::OnlineGames::studyUrl("AbCd1234", "").toString() ==
+                          "https://lichess.org/api/study/"
+                          "AbCd1234.pgn?comments=true&variations=true&clocks=false" &&
+                      t64::OnlineGames::studyUrl("AbCd1234", "WxYz5678").path() ==
+                          "/api/study/AbCd1234/WxYz5678.pgn" &&
+                      !t64::OnlineGames::studyUrl("../secret", "").isValid() &&
+                      !t64::OnlineGames::studyUrl("AbCd1234", "x").isValid(),
+                  "A study is fetched from the PGN export, with comments and variations, and nothing else");
             check(Controller::lichessGameId("https://lichess.org/AbCd1234") == "AbCd1234" &&
                       Controller::lichessGameId(" lichess.org/AbCd1234/black#42 ") == "AbCd1234" &&
                       Controller::lichessGameId("https://lichess.org/AbCd1234wxyz") == "AbCd1234" &&

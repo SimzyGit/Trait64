@@ -133,6 +133,7 @@ ApplicationWindow {
         }
         Menu { title: qsTr("&Entraînement")
             MenuItem {text: qsTr("Puzzles tactiques…"); onTriggered: puzzlesDialog.open()}
+            MenuItem {text: qsTr("Coordonnées…"); onTriggered: coordinatesDialog.open()}
             MenuItem {text: qsTr("Réviser la prochaine carte"); enabled: (controller.stats.due||0) > 0; onTriggered: controller.nextDueCard()}
             MenuItem {text: qsTr("Réviser un répertoire…"); onTriggered: repertoiresDialog.open()}
             MenuItem {text: qsTr("Tableau d’entraînement"); onTriggered: win.page = 4}
@@ -375,6 +376,7 @@ objectName:"analysisSplit"
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
                             Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#ffffff":"#1d2125";border.color:"#1d2125"}
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.White||qsTr("Blancs")):(controller.state.tags.Black||qsTr("Noirs"));font.weight:Font.DemiBold}
+                            Label {objectName:"takenTop";text:win.takenLine(!!controller.state.flipped);color:win.muted;font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale)}
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.whiteClock:controller.state.blackClock):((controller.state.flipped?controller.state.tags.WhiteElo:controller.state.tags.BlackElo)||"");color:win.muted}
                         }
                         Item {
@@ -393,13 +395,14 @@ objectName:"analysisSplit"
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
-                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
+                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
                                 }
                             }
                         }
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
                             Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#1d2125":"#ffffff";border.color:"#1d2125"}
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.Black||qsTr("Noirs")):(controller.state.tags.White||qsTr("Blancs"));font.weight:Font.DemiBold}
+                            Label {objectName:"takenBottom";text:win.takenLine(!controller.state.flipped);color:win.muted;font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale)}
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):((controller.state.flipped?controller.state.tags.BlackElo:controller.state.tags.WhiteElo)||"");color:win.muted}
                         }
                         RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,476))/2);Layout.rightMargin:Layout.leftMargin
@@ -535,6 +538,7 @@ objectName:"analysisSplit"
                                              // D'abord chercher : la plupart du temps Stockfish est déjà là.
                                              onClicked:{if(controller.useDetectedEngine()==="")settingsDialog.open()}
                                              ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
+                                    TButton {objectName:"toggleThreat";visible:!!controller.preferences.enginePath;text:qsTr("Menace");accent:!!controller.state.threat;enabled:!controller.state.training&&!controller.state.playing;onClicked:controller.toggleThreat();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ce que jouerait l’adversaire si vous passiez votre tour (touche M).")}
                                     TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
                                 }
                                 ListView {
@@ -611,6 +615,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 }
                 Flow {Layout.fillWidth:true;spacing:8
                     TButton {objectName:"openPuzzles";text:qsTr("Puzzles");accent:true;onClicked:puzzlesDialog.open()}
+                    TButton {objectName:"openCoordinates";text:qsTr("Coordonnées");onClicked:coordinatesDialog.open()}
                     TButton {text:qsTr("Réviser un répertoire");onClicked:repertoiresDialog.open()}
                     TButton {text:qsTr("Réviser la prochaine carte");accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
                     Label {text:qsTr("Aujourd’hui : ")+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+qsTr(" · Cette semaine : ")+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
@@ -730,7 +735,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}
     Native.FileDialog {id:sourceExportDialog;title:qsTr("Exporter cette base en PGN");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
     Native.FileDialog {id:importDialog;title:qsTr("Importer des parties");nameFilters:[qsTr("Parties et positions (*.pgn *.t64 *.epd *.fen)"),qsTr("Tous les fichiers (*)")];onAccepted:controller.importFile(selectedFile.toString())}
-    Native.FileDialog {id:exportDialog;title:qsTr("Exporter en PGN ou archive T64 expérimentale");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)",qsTr("Position EPD (*.epd)"),qsTr("Archive T64 expérimentale (*.t64)")];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
+    Native.FileDialog {id:exportDialog;title:qsTr("Exporter en PGN ou archive T64 expérimentale");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)",qsTr("Page HTML autonome, étude ouverte (*.html)"),qsTr("Position EPD (*.epd)"),qsTr("Archive T64 expérimentale (*.t64)")];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
     Native.FileDialog {id:backupDialog;title:qsTr("Créer une sauvegarde complète");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"sqlite";nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.backup(selectedFile.toString())}
     Native.FileDialog {id:openDatabaseDialog;title:qsTr("Ouvrir une bibliothèque Trait64");nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.openBackup(selectedFile.toString())}
     Native.FileDialog {id:engineFileDialog;title:qsTr("Choisir l’exécutable Stockfish ou UCI");onAccepted:{controller.setPreference("enginePath",selectedFile.toString());enginePathField.text=controller.preferences.enginePath}}
@@ -745,7 +750,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onAccepted:controller.setFen(fenField.text)
     }
     TDialog {id:pgnDialog;objectName:"pgnDialog";title:qsTr("Importer un PGN ou un lien Lichess");anchors.centerIn:parent;width:Math.min(700,win.width-32);height:Math.min(550,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *\n\nhttps://lichess.org/AbCd1234";wrapMode:TextEdit.Wrap;selectByMouse:true}}
+        ScrollView {anchors.fill:parent;TextArea {id:pgnField;placeholderText:"[Event \"Mon étude\"]\n\n1. e4 e5 2. Nf3 *\n\nhttps://lichess.org/AbCd1234\nhttps://lichess.org/study/AbCd1234";wrapMode:TextEdit.Wrap;selectByMouse:true}}
         onAccepted:controller.importText(pgnField.text)
     }
     TDialog {id:promotionDialog;objectName:"promotionDialog";width:Math.min(650,win.width-32);title:qsTr("Choisir la promotion");anchors.centerIn:parent;modal:true
@@ -841,6 +846,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     CompareEngines {id:compareDialog;objectName:"compareDialog";backend:controller}
     Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
     Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
+    Coordinates {id:coordinatesDialog;objectName:"coordinatesDialog"}
     Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
@@ -944,6 +950,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Comparer les moteurs"),run:function(){compareDialog.open()}},
             {title:qsTr("Tournoi de moteurs"),run:function(){tournamentDialog.open()}},
             {title:qsTr("Puzzles tactiques"),run:function(){puzzlesDialog.open()}},
+            {title:qsTr("Exercice de coordonnées"),run:function(){coordinatesDialog.open()}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},
@@ -982,6 +989,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
     Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
     Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
+    // Ce qu'un camp a pris, puis son avance en points s'il en a une.
+    function takenLine(white){var lead=(controller.state.materialLead||0)*(white?1:-1);return ((white?controller.state.takenByWhite:controller.state.takenByBlack)||"")+(lead>0?" +"+lead:"")}
     function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!preparationDialog.visible&&!repertoiresDialog.visible&&!importsDialog.visible&&!advancedDialog.visible&&!helpDialog.visible&&!pgnDialog.visible&&!collectionDialog.visible&&!promotionDialog.visible&&!chess960Dialog.visible&&!deleteCardDialog.visible&&!deleteVariationDialog.visible&&!analysisMenu.visible&&!positionMenu.visible}
     // Lecture automatique : un coup toutes les secondes et demie, jusqu'au bout de la
     // variante ; quitter l'analyse ou reprendre la main l'arrête.
@@ -994,6 +1003,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     // et il vaut mieux le dire que laisser croire que personne n'a joué la suite.
     function pastOpeningIndex(){var f=(controller.state.fen||"").split(" ");return f.length>5&&(parseInt(f[5])-1)*2+(f[1]==="b"?1:0)>=40}
     function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
+    Shortcut {sequence:"M";enabled:win.navigationKeys();onActivated:controller.toggleThreat()}
     Shortcut {sequence:"Space";enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
     // Haut et bas servent d'abord à la liste ou au menu déroulant qui a le focus.
     function verticalKeysFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&(f.currentIndex!==undefined||f.down!==undefined))}

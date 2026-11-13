@@ -1347,5 +1347,22 @@
   "Écart entre les deux suites : %1 point(s) de matériel.": "Gap between the two lines: %1 point(s) of material.",
   "Motifs dans la suite : %1.": "Patterns in the line: %1.",
   "Établi en rejouant les deux suites du moteur ; un calcul plus long peut dire autre chose.": "Established by replaying both engine lines; a longer calculation may say otherwise.",
-  "Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, flèches rouges = prises adverses, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites.": "Observed patterns do not guarantee a forced win. In the copy: green arrows show attacks, red arrows show opposing captures, yellow marks show pin/skewer alignments. The engine line may change; repetitions before the diagram are not reproduced."
+  "Motifs observés, sans garantie de gain forcé. Dans la copie : flèches vertes = attaques, flèches rouges = prises adverses, marques jaunes = alignements de clouage/enfilade. La suite du moteur peut évoluer ; les répétitions antérieures au diagramme ne sont pas reproduites.": "Observed patterns do not guarantee a forced win. In the copy: green arrows show attacks, red arrows show opposing captures, yellow marks show pin/skewer alignments. The engine line may change; repetitions before the diagram are not reproduced.",
+  "Le camp au trait est en échec : il n’y a pas de menace à montrer.": "The side to move is in check: there is no threat to show.",
+  "Molette : parcourir les coups": "Mouse wheel: step through moves",
+  "Menace": "Threat",
+  "Ce que jouerait l’adversaire si vous passiez votre tour (touche M).": "What the opponent would play if you passed your turn (M key).",
+  "Une menace n’est pas une suite jouable : c’est à vous de jouer.": "A threat is not a playable line: it is your move.",
+  "Lien d’étude Lichess invalide.": "Invalid Lichess study link.",
+  "Cette étude est vide ou privée.": "This study is empty or private.",
+  "Page HTML autonome, étude ouverte (*.html)": "Standalone HTML page, open study (*.html)",
+  "Coordonnées…": "Coordinates…",
+  "Exercice de coordonnées": "Coordinates exercise",
+  "%1 case(s) trouvée(s), %2 erreur(s)": "%1 square(s) found, %2 mistake(s)",
+  "Cliquez la case demandée, le plus vite possible.": "Click the named square, as fast as you can.",
+  "Case de l’échiquier": "Board square",
+  "Commencer (30 s)": "Start (30 s)",
+  "Vu des Noirs": "From Black's side",
+  "Vu des Blancs": "From White's side",
+  "Meilleure série : %1": "Best run: %1"
 }

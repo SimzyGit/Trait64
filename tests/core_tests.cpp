@@ -3,6 +3,7 @@
 #include "explanation.h"
 #include "game.h"
 #include "hardware.h"
+#include "html_export.h"
 #include "polyglot.h"
 #include <algorithm>
 #include <cmath>
@@ -59,6 +60,31 @@ int main() {
             rejects([&] { t64::explainLine(bounded.boardAt(0), {move}); });
         }
         tacticalChecks();
+        {
+            // Export HTML : une page entière, fermée sur elle-même.
+            auto study =
+                t64::parsePgn("[Event \"Test <b>\"]\n[White \"A & B\"]\n[Black \"C\"]\n\n"
+                              "1. e4 {[%cal Ge2e4] Le centre </script><script>alert(1)} e5 (1... c5 2. Nf3) "
+                              "2. Nf3 $1 *")[0];
+            const auto page = t64::studyHtml(study);
+            check(page.starts_with("<!doctype html>") && page.ends_with("</html>\n") &&
+                      page.find("<title>A &amp; B — C</title>") != std::string::npos &&
+                      page.find("Test &lt;b&gt;") != std::string::npos,
+                  "The HTML study is a whole page, with its title and tags escaped");
+            bool every = true;
+            for (const auto &node : study.nodes)
+                every &= page.find("f:\"" + node.fen + "\"") != std::string::npos;
+            check(every && page.find("s:\"c5\"") != std::string::npos,
+                  "Every position is in the page, variations included");
+            check(page.find("</script><script>alert") == std::string::npos &&
+                      page.find("Le centre \\u003c/script\\u003e") != std::string::npos &&
+                      page.find("%cal") == std::string::npos,
+                  "A comment cannot close the script, and PGN drawing directives are not shown as text");
+            check(page.find("http") == std::string::npos && page.find("src=") == std::string::npos &&
+                      page.find("@import") == std::string::npos,
+                  "The page refers to no outside address or file");
+            check(page.find("g:[1]") != std::string::npos, "Annotation symbols travel with their move");
+        }
         const chess::Board initial;
         const auto exchange = t64::explainLine(initial, {"e2e4", "d7d5", "e4d5", "d8d5"});
         check(exchange.initialMaterial == 0 && exchange.moves.back().material == 0,

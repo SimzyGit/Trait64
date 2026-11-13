@@ -25,6 +25,10 @@ class OnlineGames : public QObject {
     // Une seule partie, par son identifiant Lichess : ce que l'explorateur en ligne
     // propose quand on veut garder une partie modèle.
     void fetchGame(const QString &id, const QString &destination);
+    // Une étude Lichess entière, ou un seul de ses chapitres : chaque chapitre arrive
+    // comme une partie, avec ses variantes et ses commentaires.
+    void fetchStudy(const QString &study, const QString &chapter, const QString &destination);
+    static QUrl studyUrl(const QString &study, const QString &chapter);
     void cancel();
     // Keeps the last `max` games of a PGN text (games start with an [Event tag).
     static QByteArray lastGames(const QByteArray &pgn, int max, int *count = nullptr);
@@ -41,6 +45,7 @@ class OnlineGames : public QObject {
     void fail(const QString &message);
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
+    QString empty_; // ce qu'on dit quand la réponse ne contient aucune partie
     QString user_, destination_;
     int max_ = 0;
     qint64 since_ = 0;

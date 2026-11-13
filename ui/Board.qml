@@ -86,6 +86,9 @@ Item {
     // Premiers coups des lignes du moteur, « e2e4 d2d4 » : dessinés en flèches discrètes,
     // la meilleure plus marquée que les suivantes.
     property string hintMoves: ""
+    // Les flèches montrent une menace : ce sont les coups de l'adversaire, en rouge.
+    property bool hintThreat: false
+    onHintThreatChanged: drawing.requestPaint()
     onHintMovesChanged: drawing.requestPaint()
     property bool flipped: backend.state.flipped
     property string arrowFrom: ""
@@ -161,11 +164,11 @@ Item {
                 var hf=hints[h].substring(0,2),ht=hints[h].substring(2,4)
                 var piece=root.cellAt(hf.charCodeAt(0)-97+(hf.charCodeAt(1)-49)*8)
                 // Une ligne calculée pour la position d'avant ne doit pas flécher celle-ci.
-                if(!piece.occupied||piece.white!==root.backend.state.whiteTurn)continue
+                if(!piece.occupied||(piece.white===root.backend.state.whiteTurn)===root.hintThreat)continue
                 var ha=root.displayIndex(hf),hb=root.displayIndex(ht)
                 var hx1=(ha%8+0.5)*root.cell,hy1=(Math.floor(ha/8)+0.5)*root.cell,hx2=(hb%8+0.5)*root.cell,hy2=(Math.floor(hb/8)+0.5)*root.cell
                 var hang=Math.atan2(hy2-hy1,hx2-hx1),hhead=root.cell*(h===0?0.3:0.22)
-                ctx.strokeStyle="#3d7fc4";ctx.fillStyle="#3d7fc4";ctx.globalAlpha=h===0?.62:.3;ctx.lineWidth=root.cell*(h===0?0.12:0.07);ctx.lineCap="round"
+                ctx.strokeStyle=ctx.fillStyle=root.hintThreat?"#c9483a":"#3d7fc4";ctx.globalAlpha=h===0?.62:.3;ctx.lineWidth=root.cell*(h===0?0.12:0.07);ctx.lineCap="round"
                 ctx.beginPath();ctx.moveTo(hx1,hy1);ctx.lineTo(hx2-hhead*0.45*Math.cos(hang),hy2-hhead*0.45*Math.sin(hang));ctx.stroke()
                 ctx.beginPath();ctx.moveTo(hx2,hy2);ctx.lineTo(hx2-hhead*Math.cos(hang-0.5),hy2-hhead*Math.sin(hang-0.5));ctx.lineTo(hx2-hhead*Math.cos(hang+0.5),hy2-hhead*Math.sin(hang+0.5));ctx.closePath();ctx.fill()
             }
@@ -223,6 +226,12 @@ Item {
             root.backend.setPreference("boardScale",
                                        Math.max(.5, Math.min(1, Number(root.prefs.boardScale) + step)))
         }
+    }
+    // Réglage « Molette : parcourir les coups ». Sans lui la molette fait défiler le panneau.
+    WheelHandler {
+        enabled: root.interactive && !root.squares && !!root.prefs.wheelMoves
+        acceptedModifiers: Qt.NoModifier
+        onWheel: function(event) { if (event.angleDelta.y !== 0) root.backend.step(event.angleDelta.y > 0 ? -1 : 1) }
     }
     Piece {
         visible: root.draggedFrom!==""

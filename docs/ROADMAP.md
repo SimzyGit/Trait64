@@ -14,9 +14,9 @@ Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et A
 | Détection des moteurs installés | Arena, En Croissant (téléchargement) | ✅ ajouté |
 | Affichage d’un coup sous une image (16 ms) | — | ✅ 55 → 7 ms |
 | Sons des coups | Lichess, ChessBase, En Croissant | ✅ ajouté dans le .deb ; AppImage, Windows et macOS à faire |
-| Afficher la menace (coup nul) | ChessBase, Scid vs. PC | à faire |
-| Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | à faire |
-| Molette pour parcourir les coups | ChessBase, Scid vs. PC | à faire : la molette fait défiler le panneau, il faut un réglage |
+| Afficher la menace (coup nul) | ChessBase, Scid vs. PC | ✅ ajouté |
+| Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | ✅ ajouté |
+| Molette pour parcourir les coups | ChessBase, Scid vs. PC | ✅ ajouté, en option |
 | Deviner le coup, jouer à l’aveugle | ChessBase, Scid vs. PC | à faire |
 | Recherche par placement partiel de pièces | ChessBase, Scid vs. PC | à faire |
 | Import léger des très grosses bases (positions des 30–40 premiers demi-coups) | Scid vs. PC, En Croissant | à décider |
@@ -139,7 +139,7 @@ Fonctionnalités :
 - [ ] Détection des attaques à la découverte : échecs à la découverte et doubles échecs implémentés ; attaques sans échec à développer.
 - [ ] Détection des déviations et surcharges.
 - [ ] Détection des sacrifices tactiques justifiés.
-- [ ] Reconnaissance des menaces de mat.
+- [x] Reconnaissance des menaces de mat. — mat en un coup si l'adversaire passait
 - [ ] Explication des séquences forcées.
 - [ ] Analyse des structures de pions.
 - [ ] Analyse de la sécurité des rois.
@@ -271,7 +271,7 @@ Ajouter :
 - [ ] Entraînement au calcul.
 - [ ] Entraînement à la visualisation.
 - [ ] Échecs à l'aveugle.
-- [ ] Exercices de coordonnées.
+- [x] Exercices de coordonnées. — trente secondes, vu des Blancs ou des Noirs
 - [ ] Exercices personnalisés.
 - [x] Exercices extraits des parties personnelles.
 - [ ] Entraînement sur les erreurs récurrentes.
@@ -310,14 +310,14 @@ Ajouter :
 - [ ] ◐ Recherche globale dans les études — partiel : noms de fichiers et parties ; pas le texte des commentaires.
 - [ ] ◐ Historique des modifications — partiel : annuler/rétablir et instantanés.
 - [x] Instantanés récupérables. — 14 instantanés automatiques
-- [ ] Importation d'études Lichess.
+- [x] Importation d'études Lichess. — lien d'étude ou de chapitre collable ; jamais vu répondre en vrai (pas d'accès à Lichess en test)
 
 ## Pistes retenues pour se distinguer (6 novembre 2026)
 
 Trois ajouts qui n'existent chez aucun concurrent libre, et que l'architecture locale de Trait64 rend possibles.
 
 - [ ] **Suivre les tournois en direct.** Lichess diffuse ses retransmissions en PGN par une API publique et gratuite. Suivre une partie coup par coup avec son propre moteur, et voir en direct quand elle entre dans son répertoire et où elle en sort. ChessBase fait payer cet usage.
-- [ ] **Partager sans serveur.** Exporter une étude ou un bilan en un fichier HTML autonome, échiquier et variantes compris. Cela règle la faiblesse du « tout local » sans renier la promesse : un fichier n'est pas un compte.
+- [x] **Partager sans serveur.** Exporter une étude ou un bilan en un fichier HTML autonome, échiquier et variantes compris. Cela règle la faiblesse du « tout local » sans renier la promesse : un fichier n'est pas un compte. — fait pour une étude (export HTML) ; pas pour un bilan
 - [ ] **Saisir une partie depuis une feuille de notation.** Photographier la feuille et en tirer le PGN. C'est le point de douleur du joueur de club, et personne ne le fait bien. Le plus coûteux des trois.
 - [ ] ◐ Rapports PDF avancés — partiel : étude en PDF avec diagramme et notation.
 - [x] Exportation de diagrammes SVG.

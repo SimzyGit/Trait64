@@ -103,6 +103,7 @@ QVariantMap Controller::preferences() const {
                          {"lastMove", true},
                          {"engineArrows", true},
                          {"sounds", true},
+                         {"wheelMoves", false},
                          {"dailyGoal", 10},
                          {"autoBackup", true},
                          {"lastBackup", settings_.value("backup/last")},
@@ -200,7 +201,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 return;
         } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
-                               "sounds", "autoBackup"}
+                               "sounds", "wheelMoves", "autoBackup"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}

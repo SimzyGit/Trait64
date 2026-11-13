@@ -314,6 +314,28 @@ int boardProbeMain(const QString &home) {
     shot(window, "b3-fleches");
     board->setProperty("hintMoves", "");
 
+    // 3 ter. La molette parcourt les coups quand le réglage le demande, pas avant.
+    {
+        controller.navigate(0);
+        QTest::qWait(250);
+        const auto wheel = [&](int delta) {
+            const QPoint at = centre("e4");
+            QWheelEvent event(at, window->mapToGlobal(at), QPoint(), QPoint(0, delta), Qt::NoButton,
+                              Qt::NoModifier, Qt::NoScrollPhase, false);
+            QCoreApplication::sendEvent(window, &event);
+            QTest::qWait(150);
+        };
+        wheel(-120);
+        check(controller.state()["node"].toInt() == 0,
+              "Without the setting the wheel does not step through moves");
+        controller.setPreference("wheelMoves", true);
+        wheel(-120);
+        check(controller.state()["node"].toInt() != 0, "With the setting, wheel down plays the next move");
+        wheel(120);
+        check(controller.state()["node"].toInt() == 0, "And wheel up goes back");
+        controller.setPreference("wheelMoves", false);
+    }
+
     // 4. Ce que coûte un coup à l'écran : cent allers-retours dans la partie.
     controller.move("g1f3");
     controller.move("b8c6");

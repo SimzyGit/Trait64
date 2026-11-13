@@ -45,6 +45,7 @@ void OnlineGames::fetchGame(const QString &id, const QString &destination) {
     static const QRegularExpression shape("^[A-Za-z0-9]{8}$");
     if (!shape.match(id).hasMatch())
         return fail(tr("Identifiant de partie Lichess invalide."));
+    empty_.clear();
     user_.clear();
     max_ = 1;
     destination_ = destination;
@@ -56,12 +57,38 @@ void OnlineGames::fetchGame(const QString &id, const QString &destination) {
     get(url, "application/x-chess-pgn", [this](const QByteArray &body) { finish(body); });
 }
 
+QUrl OnlineGames::studyUrl(const QString &study, const QString &chapter) {
+    static const QRegularExpression shape("^[A-Za-z0-9]{8}$");
+    if (!shape.match(study).hasMatch() || (!chapter.isEmpty() && !shape.match(chapter).hasMatch()))
+        return {};
+    QUrl url("https://lichess.org/api/study/" + study + (chapter.isEmpty() ? QString() : "/" + chapter) +
+             ".pgn");
+    url.setQuery(QUrlQuery{{"comments", "true"}, {"variations", "true"}, {"clocks", "false"}});
+    return url;
+}
+void OnlineGames::fetchStudy(const QString &study, const QString &chapter, const QString &destination) {
+    if (busy())
+        return fail(tr("Un téléchargement est déjà en cours."));
+    const auto url = studyUrl(study, chapter);
+    if (!url.isValid())
+        return fail(tr("Lien d’étude Lichess invalide."));
+    user_.clear();
+    max_ = 5000; // une étude compte au plus 64 chapitres : tous sont gardés, dans l'ordre
+    destination_ = destination;
+    since_ = 0;
+    collected_.clear();
+    archives_.clear();
+    empty_ = tr("Cette étude est vide ou privée.");
+    get(url, "application/x-chess-pgn", [this](const QByteArray &body) { finish(body); });
+}
+
 void OnlineGames::fetch(const QString &site, const QString &user, int max, const QString &destination,
                         qint64 sinceMs) {
     if (busy())
         return fail(tr("Un téléchargement est déjà en cours."));
     if (!validUser(user))
         return fail(tr("Pseudo invalide : lettres, chiffres, - et _ uniquement."));
+    empty_.clear();
     user_ = user;
     max_ = std::clamp(max, 1, 5000);
     destination_ = destination;
@@ -147,7 +174,7 @@ void OnlineGames::finish(const QByteArray &pgn) {
     if (count == 0) {
         if (since_ > 0)
             return emit upToDate();
-        return fail(tr("Aucune partie publique pour ce joueur."));
+        return fail(empty_.isEmpty() ? tr("Aucune partie publique pour ce joueur.") : empty_);
     }
     QSaveFile file(destination_);
     if (!file.open(QIODevice::WriteOnly) || file.write(games + "\n") < 0 || !file.commit())

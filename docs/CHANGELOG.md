@@ -1,5 +1,17 @@
 # Changements
 
+## Pourquoi un coup est mauvais, menace, pièces prises, études Lichess — 13 novembre 2026
+
+- **Le bilan dit pourquoi.** En ouvrant l'explication d'un coup, un encadré donne la raison tirée des deux suites du moteur rejouées : mat permis ou manqué, matériel perdu ou manqué (pièce, case et coup qui le montre), pièce laissée en prise, sinon écart positionnel. Rien n'y est affirmé qui ne se lise sur l'échiquier.
+- **Trois motifs de plus** : pièce en prise (flèche rouge), attaque à la découverte, menace de mat en un coup. Les échanges sont comptés reprises comprises.
+- **Menace** (bouton ou touche M) : le moteur analyse la position comme si vous passiez votre tour ; flèches rouges.
+- **Pièces prises et avance matérielle** à côté du nom de chaque joueur.
+- **Molette pour parcourir les coups**, en option (Apparence).
+- **Études Lichess** : collez le lien d'une étude ou d'un chapitre là où l'on colle un PGN.
+- **Export HTML autonome** d'une étude : une seule page, sans rien d'extérieur, qui se parcourt dans n'importe quel navigateur.
+- **Exercice de coordonnées** (Entraînement) : trente secondes pour cliquer les cases nommées.
+- Les explications du bilan suivent la langue de l'interface.
+
 ## Sons des coups — 12 novembre 2026
 
 - **Un coup, une prise et un échec s'entendent**, qu'ils soient joués, reçus du moteur ou parcourus vers l'avant. Apparence → « Sons des coups » les coupe. Les trois sons sont synthétisés par `tools/make-sounds.py` : aucun fichier tiers.

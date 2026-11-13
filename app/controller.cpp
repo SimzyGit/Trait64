@@ -4,6 +4,7 @@
 #include "croissant.h"
 #include "discovery.h"
 #include "hardware.h"
+#include "html_export.h"
 #include "move_notation.h"
 #include "sounds.h"
 #include <QClipboard>
@@ -26,6 +27,7 @@
 #include <QUuid>
 #include <QtConcurrent>
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <thread>
 
@@ -382,6 +384,28 @@ void Controller::refreshLibrary() {
         fail(e);
     }
 }
+// Les pièces qui manquent à un camp par rapport à la position de départ, de la dame au
+// pion, en figurines. Une promotion peut fausser le compte d'une pièce ; l'écart de
+// matériel, lui, est exact.
+static QString taken(const std::string &fen, bool white) {
+    const std::string kinds = white ? "QRBNP" : "qrbnp";
+    const int initial[]{1, 2, 2, 2, 8};
+    static const QString glyphs[]{"♛", "♜", "♝", "♞", "♟"};
+    const auto placement = fen.substr(0, fen.find(' '));
+    QString result;
+    for (size_t i = 0; i < kinds.size(); ++i)
+        result += glyphs[i].repeated(
+            std::max(0, initial[i] - int(std::count(placement.begin(), placement.end(), kinds[i]))));
+    return result;
+}
+static int materialLead(const std::string &fen) {
+    const auto placement = fen.substr(0, fen.find(' '));
+    int lead = 0;
+    for (const char piece : placement)
+        if (const auto at = std::string_view("PNBRQpnbrq").find(piece); at != std::string_view::npos)
+            lead += (at < 5 ? 1 : -1) * std::array{1, 3, 3, 5, 9}[at % 5];
+    return lead;
+}
 void Controller::refresh(bool content) {
     const QString previousFen = state_["fen"].toString();
     if (content) {
@@ -451,6 +475,10 @@ void Controller::refresh(bool content) {
         {"gameIndex", gameIndex()},
         {"gameCount", games_.size()},
         {"analysis", analysis_},
+        {"threat", threatActive()},
+        {"takenByWhite", taken(current.fen, false)},
+        {"takenByBlack", taken(current.fen, true)},
+        {"materialLead", materialLead(current.fen)},
         {"playing", playing_ || localGame_},
         {"clockRunning", clockRunning_},
         {"whiteClock", QString("%1:%2").arg(whiteMs_ / 60000).arg((whiteMs_ / 1000) % 60, 2, 10, QChar('0'))},
@@ -759,7 +787,31 @@ QString Controller::lichessGameId(const QString &text) {
     static const QStringList pages{"training", "analysis", "practice", "streamer", "features", "patron"};
     return match.hasMatch() && !pages.contains(match.captured(1)) ? match.captured(1) : QString();
 }
+QStringList Controller::lichessStudy(const QString &text) {
+    static const QRegularExpression link(
+        R"(^\s*(?:https?://)?(?:www\.)?lichess\.org/study/([A-Za-z0-9]{8})(?:/([A-Za-z0-9]{8}))?(?:[?#]\S*)?\s*$)");
+    const auto match = link.match(text);
+    return match.hasMatch() ? QStringList{match.captured(1), match.captured(2)} : QStringList();
+}
+void Controller::importOnlineStudy(const QString &study, const QString &chapter) {
+    try {
+        require(!busy_ && !online_->busy(), "Un traitement est déjà en cours.");
+        QDir().mkpath(dataPath_ + "/downloads");
+        onlineSyncKey_.clear();
+        onlineFile_ = dataPath_ + "/downloads/lichess-etude-" + study +
+                      (chapter.isEmpty() ? "" : "-" + chapter) + ".pgn";
+        online_->fetchStudy(study, chapter, onlineFile_);
+        emit busyChanged();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::importText(const QString &text) {
+    // Un lien d'étude Lichess : tous ses chapitres, ou celui que le lien désigne.
+    if (const auto study = lichessStudy(text); !study.isEmpty()) {
+        importOnlineStudy(study[0], study[1]);
+        return;
+    }
     // Un lien de partie Lichess collé là où l'on attend un PGN : on va la chercher.
     if (const auto id = lichessGameId(text); !id.isEmpty()) {
         importOnlineGame(id);
@@ -930,14 +982,18 @@ void Controller::exportFile(const QString &url, bool all) {
     try {
         const auto path = localPath(url);
         db_->validateOutputPath(path);
-        if (all && !path.endsWith(".epd", Qt::CaseInsensitive) &&
+        const bool page = path.endsWith(".html", Qt::CaseInsensitive);
+        if (all && !page && !path.endsWith(".epd", Qt::CaseInsensitive) &&
             !path.endsWith(".t64", Qt::CaseInsensitive)) {
             QSaveFile file(path);
             require(file.open(QIODevice::WriteOnly), file.errorString());
             db_->exportPgn(file);
             require(file.commit(), file.errorString());
         } else {
-            auto data = path.endsWith(".epd", Qt::CaseInsensitive)
+            // Une page HTML porte l'étude ouverte, jamais la bibliothèque : c'est un
+            // document à lire, pas une base.
+            auto data = page ? QByteArray::fromStdString(t64::studyHtml(game_))
+                        : path.endsWith(".epd", Qt::CaseInsensitive)
                             ? QByteArray::fromStdString(t64::exportEpd(game_, node_))
                             : (all ? db_->exportPgn() : s(game_.pgn())).toUtf8();
             if (path.endsWith(".t64", Qt::CaseInsensitive))
@@ -1428,9 +1484,41 @@ void Controller::requestEngine() {
             engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), true,
                             settings_.value("moveTime", 1000).toInt(),
                             settings_.value("analysisDepth", 0).toInt(), game_.chess960);
-    } else if (analysis_)
-        engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), false, 800,
-                        settings_.value("analysisDepth", 0).toInt(), game_.chess960);
+    } else if (analysis_) {
+        // La menace : la même position, le trait rendu à l'adversaire. Ce que le moteur
+        // y trouve est ce qui arriverait si l'on passait son tour.
+        auto fen = s(game_.nodes[node_].fen);
+        auto command = positionCommand();
+        if (threatActive()) {
+            auto fields = fen.split(' ');
+            fields[1] = fields[1] == "w" ? "b" : "w";
+            fields[3] = "-";
+            fen = fields.join(' ');
+            command = "position fen " + fen;
+        }
+        engine_.analyse(fen, command, false, 800, settings_.value("analysisDepth", 0).toInt(),
+                        game_.chess960);
+    }
+}
+void Controller::toggleThreat() {
+    if (trainingActive() || playing_ || localGame_)
+        return;
+    if (threatActive())
+        threatNode_ = -1;
+    else {
+        if (game_.boardAt(node_).inCheck()) {
+            emit message(tr("Le camp au trait est en échec : il n’y a pas de menace à montrer."));
+            return;
+        }
+        if (!analysis_)
+            toggleAnalysis();
+        if (!analysis_)
+            return;
+        threatNode_ = node_;
+    }
+    forgetEngineLines();
+    requestEngine();
+    refresh();
 }
 void Controller::toggleAnalysis() {
     if (trainingActive())
@@ -1455,6 +1543,7 @@ void Controller::toggleAnalysis() {
 void Controller::addEngineLine(int index) {
     try {
         require(index >= 0 && index < engineLines_.size(), "Ligne indisponible.");
+        require(!threatActive(), "Une menace n’est pas une suite jouable : c’est à vous de jouer.");
         auto line = engineLines_[index].toMap();
         require(line["fen"].toString() == s(game_.nodes[node_].fen),
                 "Cette analyse correspond à une autre position.");

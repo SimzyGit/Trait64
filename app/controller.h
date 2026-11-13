@@ -382,6 +382,9 @@ class Controller : public QObject {
     Q_INVOKABLE void importOnlineGame(const QString &id);
     // L'identifiant d'une partie dans un lien Lichess, vide si le texte n'en est pas un.
     static QString lichessGameId(const QString &text);
+    // { étude, chapitre } d'un lien d'étude Lichess ; chapitre vide pour l'étude entière.
+    static QStringList lichessStudy(const QString &text);
+    Q_INVOKABLE void importOnlineStudy(const QString &study, const QString &chapter);
     Q_INVOKABLE void classifyLibraryOpenings();
     // Le même classement, sans message : il suit chaque import, et un import réussi ne
     // doit pas échouer parce que le classement a manqué.
@@ -394,6 +397,7 @@ class Controller : public QObject {
     Q_INVOKABLE QString uiText(const QString &text) const { return translator_->display(text); }
     Q_INVOKABLE void startEngine();
     Q_INVOKABLE void toggleAnalysis();
+    Q_INVOKABLE void toggleThreat();
     Q_INVOKABLE void addEngineLine(int index);
     Q_INVOKABLE void playComputer(bool humanWhite);
     Q_INVOKABLE void stopPlaying();
@@ -644,6 +648,9 @@ class Controller : public QObject {
     QVariantList moveRows_, moveFlow_;
     QVariantList shownSquares_, shownOpenings_, shownBook_, shownTabs_;
     int heardNode_ = 0;
+    // La menace se demande pour une position : la quitter y met fin d'elle-même.
+    int threatNode_ = -1;
+    bool threatActive() const { return analysis_ && threatNode_ == node_; }
     QVariantMap shownPuzzles_;
     // Relève une seule fois les anciens réglages par défaut qui bridaient le moteur.
     void unleashEngineOnce();
