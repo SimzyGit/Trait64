@@ -119,6 +119,7 @@ TDialog {
                 CheckBox {text:qsTr("Flèches du moteur");checked:root.backend.preferences.engineArrows;onToggled:root.backend.setPreference("engineArrows",checked)}
                 CheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
                 CheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
+                CheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}
                 CheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Bande verticale contre l’échiquier : la part claire est l’avantage des Blancs.")}
             }

@@ -17,7 +17,7 @@ Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et A
 | Afficher la menace (coup nul) | ChessBase, Scid vs. PC | ✅ ajouté |
 | Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | ✅ ajouté |
 | Molette pour parcourir les coups | ChessBase, Scid vs. PC | ✅ ajouté, en option |
-| Deviner le coup, jouer à l’aveugle | ChessBase, Scid vs. PC | à faire |
+| Deviner le coup, jouer à l’aveugle | ChessBase, Scid vs. PC | à l’aveugle ✅ ; deviner le coup à faire |
 | Recherche par placement partiel de pièces | ChessBase, Scid vs. PC | ✅ ajouté, sans index : rejoue toutes les parties |
 | Import léger des très grosses bases (positions des 30–40 premiers demi-coups) | Scid vs. PC, En Croissant | à décider |
 
@@ -270,7 +270,7 @@ Ajouter :
 - [ ] Entraînement aux finales.
 - [ ] Entraînement au calcul.
 - [ ] Entraînement à la visualisation.
-- [ ] Échecs à l'aveugle.
+- [x] Échecs à l'aveugle. — pièces masquées sur l'échiquier d'analyse
 - [x] Exercices de coordonnées. — trente secondes, vu des Blancs ou des Noirs
 - [ ] Exercices personnalisés.
 - [x] Exercices extraits des parties personnelles.

@@ -62,7 +62,7 @@ Item {
             id: sliding
             property int from: 0
             property int to: 0
-            z: 2
+            z: 2; visible: !root.blind
             width: root.cell*.91; height: width
             pieceStyle: root.prefs.pieceStyle; customPath: root.prefs.customPiecePath
             x: root.place(from).x + (root.cell-width)/2
@@ -85,6 +85,9 @@ Item {
     property bool interactive: true
     // Premiers coups des lignes du moteur, « e2e4 d2d4 » : dessinés en flèches discrètes,
     // la meilleure plus marquée que les suivantes.
+    // À l'aveugle : l'échiquier principal garde ses cases, ses coups possibles et son
+    // dernier coup, mais plus aucune pièce. Les aperçus de parties ne sont pas concernés.
+    readonly property bool blind: !squares && !!prefs.blindfold
     property string hintMoves: ""
     // Les flèches montrent une menace : ce sont les coups de l'adversaire, en rouge.
     property bool hintThreat: false
@@ -125,7 +128,7 @@ Item {
                     code: tile.cellData.code || ""
                     pieceStyle:root.prefs.pieceStyle;customPath:root.prefs.customPiecePath
                     opacity: root.draggedFrom===tile.cellData.square ? 0.35 : 1
-                    visible: !root.hidden[tile.sqIndex]
+                    visible: !root.hidden[tile.sqIndex] && !root.blind
                 }
                 Rectangle {
                     anchors.centerIn: parent

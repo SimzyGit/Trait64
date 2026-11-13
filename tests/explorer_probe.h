@@ -336,6 +336,37 @@ int boardProbeMain(const QString &home) {
         controller.setPreference("wheelMoves", false);
     }
 
+    // 3 quater. À l'aveugle : plus une pièce à l'écran, et les coups se jouent toujours.
+    {
+        const auto shownPieces = [&] {
+            int count = 0;
+            std::function<void(QQuickItem *)> walk = [&](QQuickItem *item) {
+                if (QString(item->metaObject()->className()).startsWith("Piece") && item->isVisible() &&
+                    !item->property("code").toString().isEmpty())
+                    ++count;
+                for (auto *child : item->childItems())
+                    walk(child);
+            };
+            walk(board);
+            return count;
+        };
+        controller.navigate(0);
+        QTest::qWait(300);
+        const int visibleBefore = shownPieces();
+        controller.setPreference("blindfold", true);
+        QTest::qWait(100);
+        check(visibleBefore >= 32 && shownPieces() == 0, "Blindfold hides every piece of the main board");
+        const int nodeBefore = controller.state()["node"].toInt();
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, centre("g1"));
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, centre("f3"));
+        QTest::qWait(300);
+        check(controller.state()["node"].toInt() != nodeBefore && shownPieces() == 0,
+              "Moves are still played by clicking the squares, and stay hidden");
+        controller.setPreference("blindfold", false);
+        QTest::qWait(100);
+        check(shownPieces() >= 32, "Turning it off shows the pieces again");
+    }
+
     // 4. Ce que coûte un coup à l'écran : cent allers-retours dans la partie.
     controller.move("g1f3");
     controller.move("b8c6");

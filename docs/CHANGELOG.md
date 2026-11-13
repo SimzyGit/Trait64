@@ -1,5 +1,9 @@
 # Changements
 
+## Jouer à l'aveugle — 13 novembre 2026
+
+- Apparence → « À l'aveugle : pièces masquées » : l'échiquier d'analyse garde ses cases, les coups possibles et le dernier coup, mais n'affiche plus aucune pièce. Les coups se jouent toujours en cliquant les cases ; les aperçus de parties ne sont pas concernés.
+
 ## Supprimer des coups comme sur Lichess — 13 novembre 2026
 
 - **Clic droit sur un coup** de la notation : « Supprimer à partir d'ici » retire le coup et sa suite, « Promouvoir la variante » la fait passer en ligne principale. La touche **Suppr** fait la même suppression sur le coup courant. Pas de confirmation : Ctrl+Z annule.
