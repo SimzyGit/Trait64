@@ -1,5 +1,11 @@
 # Changements
 
+## Les sons partout, sans Qt Multimedia — 14 novembre 2026
+
+- **Les sons des coups marchent aussi dans l'AppImage, sous Windows et sous macOS**, plus seulement dans le paquet .deb.
+- Ils passent par ce que chaque système fournit : PlaySound sous Windows, AudioToolbox sous macOS, le client PulseAudio sous Linux (que PipeWire sert aussi). Qt Multimedia est retiré : il aurait fait entrer FFmpeg et GStreamer dans l'AppImage (237 Mo décompressés au lieu de 132) pour trois bruits de bois.
+- Sous Linux, le client audio vit dans un petit module à part : un système qui ne l'a pas démarre quand même, muet.
+
 ## Deviner le coup — 13 novembre 2026
 
 - Entraînement → « Deviner les coups des Blancs » ou « des Noirs » : la partie ouverte est rejouée depuis le début et l'on cherche chaque coup du camp choisi. Un essai par coup ; trouvé ou non, c'est le coup de la partie qui est joué, puis la réponse adverse. Le bandeau tient le compte, « Montrer le coup » passe son tour, et quitter l'exercice rend l'étude intacte.

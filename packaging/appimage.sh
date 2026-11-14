@@ -32,10 +32,11 @@ if ! sha256sum --check SHA256SUMS; then
 fi
 chmod +x ./*.AppImage
 DESTDIR="${trait64_stage}/AppDir" cmake --install "${trait64_build}" --prefix /usr
-# Le module sonore reste hors de l'AppImage : il y ferait entrer Qt Multimedia, GStreamer
-# et PulseAudio, soit une pile audio entière à faire tourner sur douze distributions.
-# Les sons sont livrés par le paquet .deb, qui prend ces bibliothèques au système.
-rm -rf "${trait64_stage}/AppDir/usr/lib/trait64"
+# Le module sonore n'a qu'une dépendance, le client PulseAudio (que PipeWire sert aussi),
+# embarquée avec lui. linuxdeploy le dépose dans usr/lib, à côté de ses bibliothèques.
+trait64_sound="${trait64_stage}/t64sound.so"
+mv "${trait64_stage}/AppDir/usr/lib/trait64/t64sound.so" "${trait64_sound}"
+rmdir "${trait64_stage}/AppDir/usr/lib/trait64"
 export QMAKE=/usr/bin/qmake6
 export QML_SOURCES_PATHS="${trait64_root}/ui"
 export EXTRA_QT_MODULES='svg;sql'
@@ -48,7 +49,7 @@ mkdir -p "${trait64_stage}/AppDir/usr/share/doc/trait64/runtime-licenses"
 cp "${trait64_root}/packaging/APPIMAGE-NOTICE.md" "${trait64_stage}/AppDir/usr/share/doc/trait64/"
 # Le lanceur vérifie la glibc et les bibliothèques du système avant de démarrer, et dit
 # en clair ce qui manque : voir packaging/AppRun.
-./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --desktop-file "${trait64_root}/assets/trait64.desktop" --icon-file "${trait64_root}/assets/trait64.svg" --custom-apprun "${trait64_root}/packaging/AppRun" --plugin qt
+./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --library "${trait64_sound}" --desktop-file "${trait64_root}/assets/trait64.desktop" --icon-file "${trait64_root}/assets/trait64.svg" --custom-apprun "${trait64_root}/packaging/AppRun" --plugin qt
 python3 "${trait64_root}/packaging/runtime-sources.py" "${trait64_stage}/AppDir"
 ./linuxdeploy-x86_64.AppImage --appdir "${trait64_stage}/AppDir" --output appimage
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software "${OUTPUT}" --smoke-test

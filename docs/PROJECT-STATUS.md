@@ -15,7 +15,7 @@ Le lancement de l'AppImage est rejoué sur 12 distributions à chaque version ; 
 | Domaine | Capacités réellement développées |
 | --- | --- |
 | Interface | Navigation latérale, panneaux adaptables, clavier, thèmes, français/anglais |
-| Échiquier | Glisser ou clic-clic, pièces animées, sons (paquet .deb), flèches du moteur, menace, pièces prises et avance matérielle, lecture automatique, molette en option |
+| Échiquier | Glisser ou clic-clic, pièces animées, sons des coups, flèches du moteur, menace, pièces prises et avance matérielle, lecture automatique, molette en option |
 | Études | Variantes, Chess960, PGN annoté, onglets, explorateur de fichiers avec arbre, corbeille du système, export PGN, EPD et page HTML autonome |
 | Moteurs | UCI, détection des moteurs installés, catalogue téléchargeable, MultiPV, comparaison de 2 à 4 moteurs, recherche sans plafond de profondeur, de fils ni de mémoire autre que la machine |
 | Analyse | Graphique et bilan, file persistante, cache, précision ; explication de chaque coup avec sa raison tirée des deux suites du moteur |
@@ -34,7 +34,7 @@ Un million de parties de maîtres réelles : import en 85 minutes sur deux cœur
 
 - Les explications reposent sur les suites calculées par le moteur : un calcul plus long peut dire autre chose. Déviations, surcharges, structures de pions et plans ne sont pas reconnus.
 - L'import d'étude Lichess et les requêtes Lichess en ligne ne sont testés que par faux réseau.
-- Les sons ne sont livrés que dans le .deb, et n'ont pas été écoutés lors des tests.
+- Les sons ont été vérifiés sous Linux en enregistrant la sortie d'un serveur PulseAudio ; sous Windows et macOS ils sont seulement compilés.
 - Aucun essai sur le matériel réel de l'utilisateur (Voyager, Wayland, écran 120 Hz).
 - Formats SCID et ChessBase, tables Syzygy locales, recherche par placement partiel, OCR, échiquiers électroniques : non faits.
 - Le format `.t64` reste expérimental. Pas de version stable 1.0.

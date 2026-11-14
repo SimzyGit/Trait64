@@ -5,6 +5,7 @@ from pathlib import Path
 appdir=Path(sys.argv[1]);out=appdir/'usr/share/doc/trait64';licenses=out/'runtime-licenses';licenses.mkdir(exist_ok=True,parents=True)
 packages=set()
 for name in sorted({p.name for p in appdir.rglob('*') if p.is_file() and '.so' in p.name}):
+    if name=='t64sound.so':continue  # le module sonore de Trait64 lui-même, pas une bibliothèque du système
     query=subprocess.run(['dpkg-query','-S','*/'+name],capture_output=True,text=True)
     if query.returncode:raise SystemExit('Cannot identify bundled library source: '+name)
     for line in query.stdout.splitlines():

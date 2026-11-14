@@ -123,8 +123,9 @@ int main(int argc, char **argv) {
                   "Check and mate take precedence over the capture");
             check(!t64::playSound(BoardSound::Move),
                   "Without a screen nothing is played and nothing is loaded");
-            check(QFile::exists(QString(T64_TEST_DATA) + "/../assets/sounds/move.wav"),
-                  "The move sound ships");
+            check(QFile::exists(":/assets/sounds/move.wav") && QFile::exists(":/assets/sounds/capture.wav") &&
+                      QFile::exists(":/assets/sounds/check.wav"),
+                  "The three sounds are built into the program itself");
         }
         {
             // Trouver un moteur déjà installé : par son nom, dans les dossiers du système

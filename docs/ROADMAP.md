@@ -13,7 +13,7 @@ Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et A
 | Haut/bas pour changer de variante | Lichess, Scid vs. PC | ✅ ajouté |
 | Détection des moteurs installés | Arena, En Croissant (téléchargement) | ✅ ajouté |
 | Affichage d’un coup sous une image (16 ms) | — | ✅ 55 → 7 ms |
-| Sons des coups | Lichess, ChessBase, En Croissant | ✅ ajouté dans le .deb ; AppImage, Windows et macOS à faire |
+| Sons des coups | Lichess, ChessBase, En Croissant | ✅ ajouté : .deb, AppImage, Windows, macOS |
 | Afficher la menace (coup nul) | ChessBase, Scid vs. PC | ✅ ajouté |
 | Pièces prises et écart de matériel près de l’échiquier | Lichess, En Croissant | ✅ ajouté |
 | Molette pour parcourir les coups | ChessBase, Scid vs. PC | ✅ ajouté, en option |
