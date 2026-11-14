@@ -134,6 +134,7 @@ ApplicationWindow {
         Menu { title: qsTr("&Entraînement")
             MenuItem {text: qsTr("Puzzles tactiques…"); onTriggered: puzzlesDialog.open()}
             MenuItem {text: qsTr("Coordonnées…"); onTriggered: coordinatesDialog.open()}
+            MenuItem {text: qsTr("Finales à jouer…"); onTriggered: endgamesDialog.open()}
             MenuItem {text: qsTr("Deviner les coups des Blancs"); enabled: !controller.busy; onTriggered: controller.startGuessing(true)}
             MenuItem {text: qsTr("Deviner les coups des Noirs"); enabled: !controller.busy; onTriggered: controller.startGuessing(false)}
             MenuItem {text: qsTr("Réviser la prochaine carte"); enabled: (controller.stats.due||0) > 0; onTriggered: controller.nextDueCard()}
@@ -619,6 +620,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 Flow {Layout.fillWidth:true;spacing:8
                     TButton {objectName:"openPuzzles";text:qsTr("Puzzles");accent:true;onClicked:puzzlesDialog.open()}
                     TButton {objectName:"openCoordinates";text:qsTr("Coordonnées");onClicked:coordinatesDialog.open()}
+                    TButton {objectName:"openEndgames";text:qsTr("Finales");onClicked:endgamesDialog.open()}
                     TButton {text:qsTr("Réviser un répertoire");onClicked:repertoiresDialog.open()}
                     TButton {text:qsTr("Réviser la prochaine carte");accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
                     Label {text:qsTr("Aujourd’hui : ")+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+qsTr(" · Cette semaine : ")+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
@@ -853,6 +855,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Tournament {id:tournamentDialog;objectName:"tournamentDialog";backend:controller}
     Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
     Coordinates {id:coordinatesDialog;objectName:"coordinatesDialog"}
+    Endgames {id:endgamesDialog;objectName:"endgamesDialog";backend:controller}
     Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
@@ -957,6 +960,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Tournoi de moteurs"),run:function(){tournamentDialog.open()}},
             {title:qsTr("Puzzles tactiques"),run:function(){puzzlesDialog.open()}},
             {title:qsTr("Exercice de coordonnées"),run:function(){coordinatesDialog.open()}},
+            {title:qsTr("Finales à jouer"),run:function(){endgamesDialog.open()}},
             {title:qsTr("Deviner les coups des Blancs"),run:function(){controller.startGuessing(true)}},
             {title:qsTr("Deviner les coups des Noirs"),run:function(){controller.startGuessing(false)}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},

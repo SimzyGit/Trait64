@@ -92,6 +92,14 @@ class Database {
     void reviewRepertoire(qint64 id, const QString &fen, bool success);
     QVariantList repertoireWeaknesses(qint64 id) const;
     QVariantList repertoireGaps(qint64 id) const;
+    // La part des parties de la bibliothèque qui restent dans le répertoire, en suivant à
+    // chaque coup adverse les fréquences jouées et, pour soi, le premier coup préparé.
+    // `chances` donne, par « clé|coup », la part des parties qui sortent par ce coup-là.
+    struct Coverage {
+        double covered = 1;
+        QHash<QString, double> chances;
+    };
+    Coverage repertoireCoverage(qint64 id) const;
     // Deux répertoires position par position : combien de positions chacun a en propre,
     // combien ils partagent, et celles où ils ne préparent pas les mêmes coups.
     QVariantMap compareRepertoires(qint64 first, qint64 second) const;

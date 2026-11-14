@@ -4,6 +4,7 @@
 #include <QDate>
 #include <QFile>
 #include <QTemporaryDir>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
@@ -115,6 +116,35 @@ int main(int argc, char **argv) {
         check(gaps.size() == 1 && gaps.first().toMap()["uci"] == "c7c5" &&
                   gaps.first().toMap()["count"].toInt() == 1,
               "Coverage identifies an actual missing opponent reply in local reference games");
+        {
+            // Couverture : 1.e4 préparé, 1...e5 et 1...c5 dans la base, 1...e5 seul préparé.
+            t64::Database shelf(dir.path() + "/coverage.sqlite");
+            // Des joueurs différents : la même partie enregistrée deux fois serait un doublon.
+            const auto game = [](const QString &moves, int n) {
+                return t64::parsePgn(QString("[White \"Joueur %1\"]\n%2 *").arg(n).arg(moves).toStdString())
+                    .at(0);
+            };
+            for (int i = 0; i < 6; ++i)
+                shelf.save(game("1.e4 e5 2.Nf3", i));
+            for (int i = 0; i < 2; ++i)
+                shelf.save(game("1.e4 c5 2.Nf3", 10 + i));
+            const auto rep =
+                shelf.createRepertoire("Couverture", true, t64::parsePgn("1.e4 e5 2.Nf3 *").at(0));
+            const auto coverage = shelf.repertoireCoverage(rep);
+            check(std::abs(coverage.covered - 0.75) < 1e-9,
+                  "Coverage follows the replies' frequencies: 6 of 8 stay in");
+            const auto rows = shelf.repertoireGaps(rep);
+            check(rows.size() == 1 && rows[0].toMap()["san"] == "c5" &&
+                      std::abs(rows[0].toMap()["chance"].toDouble() - 0.25) < 1e-9,
+                  "The reply that leaves the repertoire carries its share of the games");
+            for (int i = 0; i < 4; ++i)
+                shelf.save(game("1.e4 e5 2.Nf3 Nc6", 20 + i));
+            check(std::abs(shelf.repertoireCoverage(rep).covered - 10.0 / 12) < 1e-9,
+                  "Replies after the end of the preparation do not count against it: 10 of 12 stay in");
+            const auto thin = shelf.createRepertoire("Peu de parties", true, t64::parsePgn("1.d4 *").at(0));
+            check(shelf.repertoireCoverage(thin).covered == 1.0,
+                  "A position with fewer than five games says nothing: nothing is counted as leaking");
+        }
         const auto beforeCancel = db.exportRepertoire(id).pgn();
         const auto reviewsBefore = db.repertoireWeaknesses(id);
         int calls = 0;

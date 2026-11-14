@@ -110,7 +110,8 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
                 }
             }
             ColumnLayout {
-                Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Réponses adverses présentes dans la bibliothèque mais absentes du répertoire, classées par fréquence (100 maximum). Une absence ne prouve pas une nouveauté théorique.")}
+                Label {objectName:"repertoireCoverage";Layout.fillWidth:true;wrapMode:Text.WordWrap;font.bold:true;visible:root.detail.coverage!==undefined&&!!root.detail.gapsLoaded;text:qsTr("Couverture estimée : %1 % des parties de la bibliothèque restent dans le répertoire jusqu’au bout de la préparation.").arg(Math.round((root.detail.coverage||0)*1000)/10)}
+                Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Réponses adverses présentes dans la bibliothèque mais absentes du répertoire, de celle qui fait le plus souvent sortir à la moins fréquente (100 maximum). Une absence ne prouve pas une nouveauté théorique.")}
                 ListView {
                     id:gaps;Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:170;clip:true;spacing:6;model:root.detail.gaps||[]
                     ScrollBar.vertical:ScrollBar {}
@@ -118,7 +119,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
                         required property var modelData;width:gaps.width;height:72;color:root.palette.alternateBase
                         RowLayout {anchors.fill:parent;anchors.margins:10
                             ColumnLayout {Layout.fillWidth:true
-                                Label {text:modelData.san+" · "+modelData.count+qsTr(" partie(s) dans la base");font.bold:true}
+                                Label {text:modelData.san+" · "+modelData.count+qsTr(" partie(s) dans la base")+(modelData.chance>0?" · "+qsTr("%1 % des parties sortent par là").arg(modelData.chance>=0.001?Math.round(modelData.chance*1000)/10:"< 0,1"):"");font.bold:true}
                                 Label {text:modelData.fen;Layout.fillWidth:true;elide:Text.ElideMiddle;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
                             }
                             TButton {text:qsTr("Préparer");enabled:root.editable;onClicked:{root.backend.openRepertoirePosition(root.selectedId,modelData.fen);root.close()}}

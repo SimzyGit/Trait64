@@ -1,5 +1,10 @@
 # Changements
 
+## Couverture d'un répertoire et finales à jouer — 14 novembre 2026
+
+- **Couverture estimée d'un répertoire** : la part des parties de votre bibliothèque qui restent dans le répertoire jusqu'au bout de la préparation, en suivant à chaque coup adverse les fréquences réellement jouées. Les réponses manquantes sont classées par la part des parties qui sortent par elles, et non plus par leur seul nombre : une réponse fréquente dans une position rare pèse moins qu'une réponse moyenne au troisième coup. Une position comptant moins de cinq parties n'est pas jugée.
+- **Finales à jouer** (Entraînement) : roi et dame, roi et tour, deux fous, fou et cavalier contre roi ; finales de pion à gagner ou à tenir ; positions de Lucena et de Philidor. La position s'installe dans un nouvel onglet et le moteur joue l'autre camp de toute sa force.
+
 ## Les sons partout, sans Qt Multimedia — 14 novembre 2026
 
 - **Les sons des coups marchent aussi dans l'AppImage, sous Windows et sous macOS**, plus seulement dans le paquet .deb.

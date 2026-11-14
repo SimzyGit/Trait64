@@ -229,7 +229,7 @@ Ajouter :
 - [x] Répertoires séparés pour les Blancs et les Noirs.
 - [x] Variantes principales et secondaires.
 - [x] Gestion des transpositions.
-- [ ] ◐ Couverture des réponses adverses — partiel : lacunes observées ; pas de couverture probabiliste.
+- [x] Couverture des réponses adverses — lacunes observées et couverture probabiliste d'après les fréquences de la bibliothèque
 - [x] Détection des trous dans les répertoires. — lacunes observées dans la bibliothèque
 - [x] Statistiques par position.
 - [x] Statistiques par plage de la moyenne des deux Elo connus.
@@ -267,7 +267,7 @@ Ajouter :
 
 - [x] Exercices tactiques par thème et difficulté. — puzzles Lichess, classement Elo, thèmes
 - [x] Entraînement aux ouvertures. — révision des positions de répertoire
-- [ ] Entraînement aux finales.
+- [x] Entraînement aux finales. — huit finales de référence jouées contre le moteur ; pas de suivi des réussites
 - [ ] Entraînement au calcul.
 - [ ] Entraînement à la visualisation.
 - [x] Échecs à l'aveugle. — pièces masquées sur l'échiquier d'analyse

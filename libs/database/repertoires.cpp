@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QUuid>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -283,6 +284,7 @@ QVariantMap Database::repertoireOverview(qint64 id, const std::shared_ptr<std::a
                 for (auto it = row.begin(); it != row.end(); ++it)
                     detail[it.key()] = it.value();
                 detail["gaps"] = repertoireGaps(id);
+                detail["coverage"] = repertoireCoverage(id).covered;
                 detail["weaknesses"] = repertoireWeaknesses(id);
                 detail["gapsLoaded"] = true;
                 break;
@@ -548,6 +550,77 @@ QVariantMap Database::compareRepertoires(qint64 first, qint64 second) const {
             {"differences", differences}};
 }
 
+Database::Coverage Database::repertoireCoverage(qint64 id) const {
+    Coverage result;
+    QSqlQuery rep(db_);
+    rep.prepare("SELECT root,white FROM repertoires WHERE id=?");
+    rep.addBindValue(id);
+    run(rep);
+    if (!rep.next())
+        return result;
+    const bool white = rep.value(1).toBool();
+    struct Position {
+        QString fen;
+        bool whiteToMove = true;
+        std::vector<std::pair<QString, QString>> moves; // coup, position d'arrivée ; préparés d'abord
+    };
+    QHash<QString, Position> positions;
+    QSqlQuery q(db_);
+    q.prepare("SELECT key,fen,white FROM repertoire_positions WHERE repertoire=?");
+    q.addBindValue(id);
+    run(q);
+    while (q.next())
+        positions.insert(q.value(0).toString(), {q.value(1).toString(), q.value(2).toBool(), {}});
+    q.prepare("SELECT key,uci,target FROM repertoire_moves WHERE repertoire=? ORDER BY priority,uci");
+    q.addBindValue(id);
+    run(q);
+    while (q.next())
+        if (auto found = positions.find(q.value(0).toString()); found != positions.end())
+            found->moves.emplace_back(q.value(1).toString(), q.value(2).toString());
+    QSqlQuery stats(db_);
+    stats.prepare("SELECT uci,count FROM opening_stats WHERE key=? AND count>0");
+    // Les chemins sont suivis un à un : une transposition atteinte par deux chemins reçoit
+    // la somme des deux. Un chemin trop rare pour peser (un dix-millième) ou trop long
+    // s'arrête, ce qui borne le parcours même dans un répertoire très ramifié.
+    std::function<void(const QString &, double, int)> walk = [&](const QString &key, double chance,
+                                                                 int depth) {
+        const auto found = positions.constFind(key);
+        if (found == positions.cend() || chance < 1e-4 || depth > 80)
+            return;
+        if (found->whiteToMove == white) {
+            // À nous de jouer : le premier coup préparé ; sans suite préparée, la ligne finit là.
+            if (!found->moves.empty())
+                walk(found->moves.front().second, chance, depth + 1);
+            return;
+        }
+        stats.bindValue(0, hashKey(found->fen.toStdString()));
+        run(stats);
+        std::vector<std::pair<QString, qint64>> replies;
+        qint64 total = 0;
+        while (stats.next()) {
+            replies.emplace_back(stats.value(0).toString(), stats.value(1).toLongLong());
+            total += replies.back().second;
+        }
+        // Moins de cinq parties ne disent rien de ce que l'adversaire jouera.
+        if (total < 5)
+            return;
+        for (const auto &[uci, count] : replies) {
+            const double share = chance * double(count) / double(total);
+            const auto prepared = std::find_if(found->moves.begin(), found->moves.end(),
+                                               [&](const auto &move) { return move.first == uci; });
+            if (prepared != found->moves.end())
+                walk(prepared->second, share, depth + 1);
+            else {
+                result.chances[key + "|" + uci] += share;
+                result.covered -= share;
+            }
+        }
+    };
+    walk(key(rep.value(0).toString()), 1.0, 0);
+    result.covered = std::clamp(result.covered, 0.0, 1.0);
+    return result;
+}
+
 QVariantList Database::repertoireGaps(qint64 id) const {
     // Only opponent turns. Statistics describe the local reference corpus, not theoretical truth.
     // Repertoires keep their text key; the opening statistics are keyed by position hash.
@@ -577,14 +650,22 @@ QVariantList Database::repertoireGaps(qint64 id) const {
                             stats.value(2).toLongLong(), stats.value(3).toLongLong(),
                             stats.value(4).toLongLong(), stats.value(5).toLongLong()});
     }
-    std::sort(gaps.begin(), gaps.end(), [](const Gap &a, const Gap &b) {
+    // D'abord ce qui fait le plus souvent sortir du répertoire, toutes positions confondues :
+    // une réponse jouée 50 fois dans une position que l'on atteint rarement pèse moins
+    // qu'une réponse jouée 20 fois au troisième coup.
+    const auto coverage = repertoireCoverage(id);
+    const auto chance = [&](const Gap &gap) { return coverage.chances.value(gap.key + "|" + gap.uci); };
+    std::sort(gaps.begin(), gaps.end(), [&](const Gap &a, const Gap &b) {
+        const double x = chance(a), y = chance(b);
+        if (x != y)
+            return x > y;
         return std::tie(b.count, a.key, a.uci) < std::tie(a.count, b.key, b.uci);
     });
     QVariantList rows;
     for (size_t i = 0; i < gaps.size() && i < 100; ++i)
-        rows << QVariantMap{{"fen", gaps[i].fen},     {"uci", gaps[i].uci},     {"san", gaps[i].san},
-                            {"count", gaps[i].count}, {"white", gaps[i].white}, {"draw", gaps[i].draw},
-                            {"black", gaps[i].black}};
+        rows << QVariantMap{{"fen", gaps[i].fen},     {"uci", gaps[i].uci},       {"san", gaps[i].san},
+                            {"count", gaps[i].count}, {"white", gaps[i].white},   {"draw", gaps[i].draw},
+                            {"black", gaps[i].black}, {"chance", chance(gaps[i])}};
     return rows;
 }
 } // namespace t64

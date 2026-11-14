@@ -1177,6 +1177,36 @@ int main(int argc, char **argv) {
                 QTest::qWait(80);
                 check(!c.reviewState()["running"].toBool() && c.review().empty(),
                       "Changing study cancels review and clears stale results");
+                {
+                    // Finales : chaque position est légale et s'installe pour le bon camp.
+                    auto *endgames = window->findChild<QObject *>("endgamesDialog");
+                    const auto list = endgames ? endgames->property("positions").toList() : QVariantList();
+                    bool legal = list.size() >= 8;
+                    for (const auto &value : list) {
+                        const auto entry = value.toMap();
+                        try {
+                            const auto board = t64::checkedBoard(entry["fen"].toString().toStdString());
+                            legal &= (board.sideToMove() == chess::Color::WHITE) == entry["white"].toBool() &&
+                                     !board.inCheck();
+                        } catch (const std::exception &) {
+                            legal = false;
+                        }
+                    }
+                    check(legal,
+                          "Every endgame is a legal position, with the player to move and not in check");
+                    const auto savedEngine = c.preferences()["enginePath"];
+                    c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                    if (!c.preferences()["enginePath"].toString().isEmpty()) {
+                        QMetaObject::invokeMethod(endgames, "start", Q_ARG(QVariant, 5));
+                        check(c.state()["playing"].toBool() && c.state()["flipped"].toBool() &&
+                                  c.state()["fen"].toString().startsWith("4k3/8/8/4P3/4K3/8/8/8 b"),
+                              "Starting an endgame sets the position and plays the engine, board turned for "
+                              "Black");
+                        c.stopPlaying();
+                        c.closeTab(c.tabs().size() - 1);
+                    }
+                    c.setPreference("enginePath", savedEngine);
+                }
                 c.move("e2e4");
                 c.move("e7e5");
                 c.navigate(1);
