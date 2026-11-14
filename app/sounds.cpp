@@ -8,8 +8,10 @@
 #include <QGuiApplication>
 #include <array>
 #ifdef Q_OS_WIN
-#include <mmsystem.h>
+// windows.h d'abord : mmsystem.h en dépend. La ligne vide garde cet ordre au formatage.
 #include <windows.h>
+
+#include <mmsystem.h>
 #elif defined(Q_OS_MACOS)
 #include <AudioToolbox/AudioToolbox.h>
 #include <QDir>
