@@ -2210,7 +2210,7 @@ int main(int argc, char **argv) {
                     QTest::qWait(20);
             };
             idleShelf();
-            QFile foreign(folder + "/Archive.si4");
+            QFile foreign(folder + "/Archive.cbh");
             check(foreign.open(QIODevice::WriteOnly) && foreign.write("x") == 1, "Write a foreign base");
             foreign.close();
             const auto view = shelf.browseStudies(folder);
@@ -2225,7 +2225,7 @@ int main(int argc, char **argv) {
                 const auto each = row.toMap();
                 if (each["name"] == "Blitz.pgn")
                     blitz = each;
-                if (each["name"] == "Archive.si4")
+                if (each["name"] == "Archive.cbh")
                     archive = each;
             }
             check(blitz["readable"].toBool() && blitz["sourceId"].toLongLong() > 0 &&
@@ -2235,7 +2235,7 @@ int main(int argc, char **argv) {
                   "A foreign base is shown as unreadable rather than hidden");
             {
                 QSignalSpy refused(&shelf, &Controller::message);
-                check(shelf.openStudyFile(folder + "/Archive.si4") == 0 && refused.size() == 1 &&
+                check(shelf.openStudyFile(folder + "/Archive.cbh") == 0 && refused.size() == 1 &&
                           refused.first().at(1).toBool(),
                       "Opening a foreign base says what to do instead of failing silently");
             }
@@ -2364,6 +2364,31 @@ int main(int argc, char **argv) {
                 check(QDir(home.path()).entryList({"croissant-*.pgn"}).isEmpty(),
                       "The intermediate PGN is removed once read");
                 QFile::remove(folder + "/Classiques/Essai.db3");
+            }
+            // Une base SCID aussi : seul son index est montré, ses deux compagnons non.
+            {
+                for (const auto *suffix : {".si4", ".sn4", ".sg4"})
+                    check(QFile::copy(QString(T64_TEST_DATA) + "/scid/essai" + suffix,
+                                      folder + "/Classiques/Scid" + suffix),
+                          "Copy the SCID fixture into the study folder");
+                const auto listed = shelf.browseStudies(folder + "/Classiques")["entries"].toList();
+                check(listed.size() == 1 && listed.first().toMap()["name"] == "Scid.si4" &&
+                          listed.first().toMap()["readable"].toBool(),
+                      "A SCID base is offered once, as readable");
+                idleShelf();
+                const int known = shelf.studyCollections().size();
+                shelf.openStudyFile(folder + "/Classiques/Scid.si4");
+                settle.restart();
+                while ((shelf.studyCollections().size() <= known || shelf.busy()) && settle.elapsed() < 60000)
+                    QTest::qWait(20);
+                idleShelf();
+                qint64 imported = 0;
+                for (const auto &row : shelf.studyCollections())
+                    if (row.toMap()["title"] == "Scid")
+                        imported = row.toMap()["games"].toLongLong();
+                check(imported == 4, "Its 4 games arrive in a collection of their own");
+                for (const auto *suffix : {".si4", ".sn4", ".sg4"})
+                    QFile::remove(folder + "/Classiques/Scid" + suffix);
             }
             check(shelf.browseStudies(folder + "/Classiques")["entries"].toList().isEmpty() &&
                       shelf.browseStudies(files.filePath("nowhere"))["path"].toString().isEmpty(),

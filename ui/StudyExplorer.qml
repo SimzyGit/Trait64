@@ -229,7 +229,7 @@ ColumnLayout {
                     Layout.preferredWidth: root.s(16); Layout.preferredHeight: root.s(16)
                     source: "qrc:/assets/icons/"
                             + (entry.modelData.folder ? (entry.modelData.expanded ? "folder-open" : "folder")
-                               : entry.modelData.name.toLowerCase().endsWith(".db3")
+                               : /\.(db3|si4)$/.test(entry.modelData.name.toLowerCase())
                                  || !entry.modelData.readable ? "base" : "file") + ".svg"
                     // La couleur dit l'état : accent pour ce qui est dans la base, estompé
                     // pour ce que Trait64 ne lit pas.

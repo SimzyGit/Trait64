@@ -1,5 +1,9 @@
 # Changements
 
+## Bases SCID — 15 novembre 2026
+
+- **Les bases SCID et Scid vs. PC au format 4** (`.si4`, `.sn4`, `.sg4`) s'importent comme un PGN, jusqu'à un million de parties : Fichier → Importer, ou depuis l'explorateur d'études, qui ne montre que l'index. Variantes, commentaires, NAG, positions de départ et Chess960 compris. Vérifié sur 116 811 parties relues à l'identique. Le format 5 (`.si5`) n'est pas lu.
+
 ## Guide de l'utilisateur — 15 novembre 2026
 
 - **Aide → Guide de l'utilisateur** : douze sections, de « Premiers pas » aux raccourcis, en français et en anglais selon la langue de l'interface. Il s'ouvre de lui-même au tout premier lancement, puis reste dans le menu Aide et la palette de commandes.

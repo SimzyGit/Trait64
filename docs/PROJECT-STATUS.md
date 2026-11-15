@@ -20,7 +20,7 @@ Le lancement de l'AppImage est rejoué sur 12 distributions à chaque version ; 
 | Moteurs | UCI, détection des moteurs installés, catalogue téléchargeable, MultiPV, comparaison de 2 à 4 moteurs, recherche sans plafond de profondeur, de fils ni de mémoire autre que la machine |
 | Analyse | Graphique et bilan, file persistante, cache, précision ; explication de chaque coup avec sa raison tirée des deux suites du moteur |
 | Motifs | Fourchette, clouage et enfilade au roi, échec à la découverte, échec double, pièce en prise, attaque à la découverte, menace de mat en un coup |
-| Bibliothèques | SQLite schéma 12, index allégé (positions sur 20 coups, signatures au-delà, recherche de position complète), import parallèle et reprenable, bases `.db3` d'En Croissant |
+| Bibliothèques | SQLite schéma 12, index allégé (positions sur 20 coups, signatures au-delà, recherche de position complète), import parallèle et reprenable, bases `.db3` d'En Croissant et `.si4` de SCID |
 | En ligne (facultatif) | Explorateur Lichess, base des maîtres, tables de finales, comptes Lichess et Chess.com, lien de partie ou d'étude Lichess |
 | Ouvertures et préparation | ECO, livres Polyglot, répertoires par position, dossier de position, préparation filtrée |
 | Entraînement | Puzzles classés, cartes issues des erreurs, répétition des répertoires, exercice de coordonnées |
@@ -36,7 +36,7 @@ Un million de parties de maîtres réelles : import en 85 minutes sur deux cœur
 - L'import d'étude Lichess et les requêtes Lichess en ligne ne sont testés que par faux réseau.
 - Les sons ont été vérifiés sous Linux en enregistrant la sortie d'un serveur PulseAudio ; sous Windows et macOS ils sont seulement compilés.
 - Aucun essai sur le matériel réel de l'utilisateur (Voyager, Wayland, écran 120 Hz).
-- Formats SCID et ChessBase, tables Syzygy locales, recherche par placement partiel, OCR, échiquiers électroniques : non faits.
+- Format SCID 5 et ChessBase, tables Syzygy locales, OCR, échiquiers électroniques : non faits.
 - Le format `.t64` reste expérimental. Pas de version stable 1.0.
 
 ## Historique des jalons vérifiés

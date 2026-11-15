@@ -11,16 +11,17 @@ const QStringList &readableStudySuffixes() {
     static const QStringList suffixes{".pgn", ".pgn.gz", ".pgn.zst", ".pgn.bz2", ".pgn.xz", ".pgn.zstd"};
     return suffixes;
 }
-// Un recueil accepte en plus les bases d'En Croissant. Un répertoire, non : neuf
+// Un recueil accepte en plus les bases d'En Croissant et de SCID. Un répertoire, non : neuf
 // millions de parties fondues dans un arbre de préparation n'en sont pas un.
 const QStringList &readableCollectionSuffixes() {
-    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3"};
+    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3", ".si4"};
     return suffixes;
 }
 // Les bases des autres logiciels : l'explorateur les montre pour dire pourquoi elles ne
-// s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide.
+// s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide. Les .sg4 et
+// .sn4 d'une base SCID n'y figurent pas : c'est son .si4 qui la représente.
 const QStringList &foreignBaseSuffixes() {
-    static const QStringList suffixes{".si4", ".si5", ".sg4", ".sn4", ".cbh", ".cbv", ".cbf", ".pdb"};
+    static const QStringList suffixes{".si5", ".cbh", ".cbv", ".cbf", ".pdb"};
     return suffixes;
 }
 bool endsWithAny(const QString &lowercaseName, const QStringList &suffixes) {
@@ -394,7 +395,8 @@ void Controller::importStudyCollection(const QString &url) {
         // d'être fondues dans un seul arbre de positions comme un répertoire. Le chemin
         // du fichier est gardé : c'est lui que l'explorateur reconnaît.
         const QVariantMap source{{"id", slug}, {"title", name}, {"kind", "study"}, {"source", path}};
-        if (path.endsWith(".pgn", Qt::CaseInsensitive) || path.endsWith(".db3", Qt::CaseInsensitive)) {
+        if (path.endsWith(".pgn", Qt::CaseInsensitive) || path.endsWith(".db3", Qt::CaseInsensitive) ||
+            path.endsWith(".si4", Qt::CaseInsensitive)) {
             importSourceFile(url, source);
             return;
         }

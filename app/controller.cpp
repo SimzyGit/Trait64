@@ -6,6 +6,7 @@
 #include "hardware.h"
 #include "html_export.h"
 #include "move_notation.h"
+#include "scid.h"
 #include "sounds.h"
 #include <QClipboard>
 #include <QDate>
@@ -866,6 +867,17 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
         // Une base d'En Croissant se relit en PGN, puis s'importe comme un PGN : elle
         // suit le même chemin, avec une étape de plus dans le fil de travail.
         const bool croissant = path.endsWith(".db3", Qt::CaseInsensitive);
+        // Une base SCID aussi : trois fichiers, dont on peut avoir choisi n'importe lequel.
+        const bool scidBase = !t64::scid::indexPath(path).isEmpty();
+        if (scidBase) {
+            require(
+                t64::scid::isScidBase(path),
+                "Base SCID incomplète ou d’un autre format : il faut les trois fichiers .si4, .sn4 et .sg4 "
+                "côte à côte (le format 5 de SCID, .si5, n’est pas lu).");
+            require(t64::scid::games(path) <= 1000000,
+                    "Cette base dépasse un million de parties : l’importer prendrait des heures et des "
+                    "dizaines de gigaoctets.");
+        }
         if (croissant) {
             require(t64::croissant::isCroissantBase(path),
                     "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.");
@@ -878,7 +890,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                     "dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne "
                     "depuis le dossier de la position.");
         }
-        if (croissant || path.endsWith(".pgn", Qt::CaseInsensitive)) {
+        if (croissant || scidBase || path.endsWith(".pgn", Qt::CaseInsensitive)) {
             require(QFileInfo(path).isFile(), "PGN introuvable.");
             if (trainingActive())
                 finishTraining();
@@ -891,7 +903,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             const auto canceled = cancelTask_;
             const auto progress = taskProgress_;
             importer_.setFuture(
-                QtConcurrent::run([databasePath, path, canceled, progress, source, croissant] {
+                QtConcurrent::run([databasePath, path, canceled, progress, source, croissant, scidBase] {
                     ImportResult r;
                     r.operation = source.isEmpty()                  ? "import"
                                   : source.value("online").toBool() ? "online"
@@ -902,12 +914,15 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                                            QUuid::createUuid().toString(QUuid::WithoutBraces) + ".pgn";
                     const auto cleanup = qScopeGuard([&] { QFile::remove(converted); });
                     try {
-                        if (croissant) {
+                        if (croissant || scidBase) {
                             QFile out(converted);
                             if (!out.open(QIODevice::WriteOnly))
                                 throw std::runtime_error(out.errorString().toStdString());
-                            t64::croissant::exportPgn(
-                                path, out, [&](int done, int) { progress->store(done); }, canceled);
+                            const auto report = [&](int done, int) { progress->store(done); };
+                            if (scidBase)
+                                t64::scid::exportPgn(path, out, report, canceled);
+                            else
+                                t64::croissant::exportPgn(path, out, report, canceled);
                             out.close();
                             if (canceled->load())
                                 throw std::runtime_error("Import annulé.");
@@ -915,7 +930,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                         }
                         t64::Database db(databasePath);
                         r.count = db.importPgnFile(
-                            croissant ? converted : path,
+                            croissant || scidBase ? converted : path,
                             [&](int n) {
                                 progress->store(n);
                                 return !canceled->load();

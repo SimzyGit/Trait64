@@ -48,7 +48,7 @@ La version 0.3 est une nouvelle étape de l’application locale. Elle n’achè
 | Apparence | 4 jeux SVG + Unicode, import SVG personnel, 9 palettes, couleurs des cases/fond/repères, préférences persistantes | Textures, animations avancées, logo final |
 | Échiquier | Chess960, 960 départs numérotés, éditeur graphique FEN, flèches/cercles persistants | Autres variantes |
 | Études | 16 onglets restaurables, annuler/rétablir, duplication, fusion d’arbres, diagramme PNG, étude PDF | Chapitres, références et documents attachés, mise en page avancée |
-| Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID, ChessBase, T64 compact Move16/TLV/BLAKE3 |
+| Fichiers | EPD classique, import PGN et export de bibliothèque par flux | Polyglot, SCID SI4, ChessBase, T64 compact Move16/TLV/BLAKE3 |
 | Bibliothèque | Schéma 7, import PGN parallèle (1–8 lecteurs) par lots reprenable et vérifié, bases nommées, historique PGN, FTS5, index variantes/matériel/Elo/joueurs, compteurs et arbres incrémentaux, filtres combinés, recherche annulable en arrière-plan, pagination par curseur, doublons, réindexation annulable | Qualification sur des corpus PGN réels de plusieurs millions de parties, modèles Qt incrémentaux, dédoublonnage avec choix de fusion, recherche structurelle fine |
 | Analyse | Bilan principal, graphe, pertes en centipions, annotations, profils avec options UCI validées, comparaison simultanée de 2 à 4 UCI, MultiPV, profondeur, Syzygy via UCI, file persistante avec variantes/pause/reprise, cache avec provenance et export annoté | Budgets adaptatifs, interface de tablebases dédiée |
 | Ouvertures | ECO CC0, classement automatique des parties sans balise, dossier d'une position (coups, score, tranches de force, parties modèles), écart entre un répertoire et les parties jouées, répertoires nommés Blancs/Noirs, transpositions, annotations/priorités, création/fusion/import PGN (compressés compris) et export annulables en arrière-plan, parties modèles, couverture locale asynchrone, analyse moteur de toutes les variantes via copie persistante | Couverture probabiliste globale, comparaison de deux répertoires entre eux, nouveautés théoriques, Polyglot |
@@ -200,7 +200,7 @@ Ajouter :
 - [x] Importation directe de parties Chess.com.
 - [x] Synchronisation facultative de ces sources. — seules les nouvelles parties sont téléchargées
 - [ ] Importation des formats ChessBase compatibles.
-- [ ] Importation des formats SCID SI4/SI5.
+- [x] Importation du format SCID SI4 (le SI5 reste à faire).
 - [x] Lecture et création de livres Polyglot. — lecture `.bin` et export depuis la bibliothèque
 - [x] Gestionnaire de bases téléchargeables. — 42 collections
 - [x] Gestionnaire de sources de données. — bases nommées, recueils qui suivent leur fichier

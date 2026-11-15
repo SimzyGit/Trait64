@@ -6,6 +6,7 @@
 #include "legacy_positions.h"
 #include "moveorder.h"
 #include "polyglot.h"
+#include "scid.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QDir>
@@ -1247,6 +1248,41 @@ int main(int argc, char **argv) {
             });
             check(t64::croissant::movetext({}, std::string(chess::constants::STARTPOS)).empty(),
                   "An empty game reads as no move, and broken ones are refused");
+        }
+        {
+            // Une base SCID écrite par SCID 4.7 à partir de tests/scid/essai.pgn :
+            // variantes imbriquées, commentaires, NAG, sous-promotion depuis une FEN,
+            // prise en passant, grands roques et dame qui part en diagonale.
+            const QString folder = QString(T64_TEST_DATA) + "/scid";
+            const auto base = folder + "/essai.si4";
+            check(t64::scid::indexPath(folder + "/essai.sg4") == base &&
+                      t64::scid::indexPath(base + ".txt").isEmpty(),
+                  "Any of the three SCID files leads to the index");
+            check(t64::scid::isScidBase(folder + "/essai.sn4") && t64::scid::games(base) == 4,
+                  "A SCID base is recognised and counted");
+            QTemporaryDir lone;
+            QFile::copy(base, lone.filePath("seul.si4"));
+            check(!t64::scid::isScidBase(lone.filePath("seul.si4")),
+                  "An index without its names and games is refused");
+            QBuffer pgn;
+            pgn.open(QIODevice::WriteOnly);
+            const auto outcome = t64::scid::exportPgn(base, pgn);
+            check(outcome.written == 4 && outcome.skipped == 0, "Every SCID game is read");
+            QFile source(folder + "/essai.pgn");
+            check(source.open(QIODevice::ReadOnly), "Open the SCID source PGN");
+            const auto mine = t64::parsePgn(pgn.data().toStdString());
+            const auto wanted = t64::parsePgn(source.readAll().toStdString());
+            check(mine.size() == wanted.size(), "As many games as in the source");
+            for (size_t i = 0; i < mine.size(); ++i) {
+                const auto &a = mine[i], &b = wanted[i];
+                bool same = a.tags == b.tags && a.nodes.size() == b.nodes.size();
+                for (size_t n = 0; same && n < a.nodes.size(); ++n)
+                    same = a.nodes[n].uci == b.nodes[n].uci && a.nodes[n].comment == b.nodes[n].comment &&
+                           a.nodes[n].nags == b.nodes[n].nags && a.nodes[n].children == b.nodes[n].children;
+                check(same,
+                      ("SCID game " + std::to_string(i + 1) + " matches its source, variations included")
+                          .c_str());
+            }
         }
         std::cout << checks << " storage checks passed\n";
         return 0;
