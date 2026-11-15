@@ -199,3 +199,14 @@ void Controller::restoreBackup(const QString &file) {
         fail(e);
     }
 }
+
+QString Controller::userGuide() const {
+    QFile file(translator_->english() ? ":/assets/guide/en.md" : ":/assets/guide/fr.md");
+    return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) : QString();
+}
+bool Controller::firstLaunch() {
+    if (settings_.value("guide/offered").toBool())
+        return false;
+    settings_.setValue("guide/offered", true);
+    return true;
+}

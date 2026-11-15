@@ -388,8 +388,8 @@ Poursuivre le support Linux, puis préparer :
 - [ ] Panneaux détachables si compatibles avec notre conception.
 - [ ] Dispositions de travail enregistrées.
 - [ ] Configuration de plusieurs espaces de travail.
-- [ ] Tutoriel de première utilisation.
-- [ ] ◐ Documentation utilisateur intégrée — partiel : aide et raccourcis ; pas de manuel.
+- [x] Tutoriel de première utilisation. — le guide s'ouvre sur « Premiers pas » au premier lancement
+- [x] Documentation utilisateur intégrée — guide de l'utilisateur en douze sections (Aide), français et anglais
 
 Conserve l'identité visuelle actuelle. L'esthétique n'est pas notre priorité immédiate : nous y reviendrons plus tard.
 

@@ -28,6 +28,7 @@ public:
         static const QMap<QString,QString> buttons{{"Close","Fermer"},{"Cancel","Annuler"},{"Save","Enregistrer"},{"Open","Ouvrir"},{"Yes","Oui"},{"No","Non"},{"Apply","Appliquer"},{"Reset","Réinitialiser"},{"Discard","Abandonner"},{"Restore Defaults","Rétablir les valeurs par défaut"}};
         return buttons.value(text);
     }
+    bool english() const { return useEnglish_; }
     QString display(const QString &text) const {
         auto translated = translate("Trait64",text.toUtf8().constData());
         return translated.isNull() ? text : translated;

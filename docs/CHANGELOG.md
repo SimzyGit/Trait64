@@ -1,5 +1,9 @@
 # Changements
 
+## Guide de l'utilisateur — 15 novembre 2026
+
+- **Aide → Guide de l'utilisateur** : douze sections, de « Premiers pas » aux raccourcis, en français et en anglais selon la langue de l'interface. Il s'ouvre de lui-même au tout premier lancement, puis reste dans le menu Aide et la palette de commandes.
+
 ## Restaurer une sauvegarde — 15 novembre 2026
 
 - Fichier → « Restaurer une sauvegarde… », ou le bouton « Restaurer… » à côté de « Sauvegarder » : la liste des sauvegardes faites par Trait64 — automatiques, avant une mise à jour, avant une restauration, avant une migration — avec leur date, leur nombre de parties et leur taille. Un bouton « Sauvegarder maintenant » en ajoute une.

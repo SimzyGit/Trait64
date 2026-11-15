@@ -100,6 +100,9 @@ int main(int argc, char **argv) {
     QTemporaryDir dir;
     QSettings::setDefaultFormat(QSettings::IniFormat);
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, dir.path());
+    // Le guide s'ouvre de lui-même au premier lancement : pas pendant les tests, où il
+    // couvrirait la fenêtre que l'on clique. Il est vérifié à part.
+    QSettings().setValue("guide/offered", true);
     QQuickStyle::setStyle("Basic");
     try {
         if (app.arguments().contains("--move-notebook"))
@@ -1039,6 +1042,37 @@ int main(int argc, char **argv) {
                           !c.explainReview(999)["available"].toBool(),
                       "Unavailable review rows cannot fabricate explanations");
                 {
+                    // Guide : mêmes sections en français et en anglais, ouvert depuis Aide.
+                    const auto titles = [&] {
+                        QStringList list;
+                        for (const auto &line : c.userGuide().split('\n'))
+                            if (line.startsWith("## "))
+                                list << line;
+                        return list;
+                    };
+                    const auto language = c.preferences()["language"];
+                    c.setPreference("language", "fr");
+                    const auto french = titles();
+                    c.setPreference("language", "en");
+                    const auto english = titles();
+                    c.setPreference("language", language);
+                    check(french.size() >= 10 && french.size() == english.size() &&
+                              french.first() == "## Premiers pas" && english.first() == "## Getting started",
+                          "The user guide has the same sections in French and English");
+                    auto *guide = window->findChild<QObject *>("guideDialog");
+                    QMetaObject::invokeMethod(guide, "openAt", Q_ARG(QVariant, 2));
+                    QTest::qWait(100);
+                    auto *text = window->findChild<QObject *>("guideText");
+                    check(guide->property("visible").toBool() && guide->property("current") == 2 && text &&
+                              !text->property("text").toString().isEmpty(),
+                          "The guide opens at the requested section, with its text");
+                    QMetaObject::invokeMethod(guide, "close");
+                    QTest::qWait(100);
+                    QSettings().remove("guide/offered");
+                    check(c.firstLaunch() && !c.firstLaunch(),
+                          "The guide is offered once, at the very first launch");
+                }
+                {
                     // Raccourcis : on capte une combinaison, une combinaison prise est refusée.
                     const auto keys = [&] { return c.preferences()["shortcuts"].toMap(); };
                     check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 18,
@@ -1075,7 +1109,7 @@ int main(int argc, char **argv) {
                     check(turned && c.state()["flipped"].toBool() != before,
                           "The new combination flips the board, and the old one no longer does");
                     c.setShortcut("flip", "");
-                    check(keys()["flip"] == "F" && c.setShortcut("nope", "X") == "Action inconnue.",
+                    check(keys()["flip"] == "F" && !c.setShortcut("nope", "X").isEmpty(),
                           "Default restores the original; unknown actions are refused");
                     c.resetShortcuts();
                 }

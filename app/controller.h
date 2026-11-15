@@ -402,6 +402,10 @@ class Controller : public QObject {
     Q_INVOKABLE void setPreference(const QString &key, const QVariant &value);
     Q_INVOKABLE void retranslateUi(QObject *window);
     Q_INVOKABLE QString uiText(const QString &text) const { return translator_->display(text); }
+    // Le guide de l'utilisateur, en Markdown, dans la langue de l'interface.
+    Q_INVOKABLE QString userGuide() const;
+    // Vrai une seule fois, au tout premier lancement : l'interface propose alors le guide.
+    Q_INVOKABLE bool firstLaunch();
     // Raccourcis clavier : le nom portable d'une touche pressée (« Ctrl+Shift+F »), vide pour
     // une touche de modification seule ; puis l'attribution, refusée si la combinaison sert
     // déjà ailleurs. Une combinaison vide rend celle d'origine.

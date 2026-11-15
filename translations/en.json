@@ -1458,5 +1458,6 @@
   "Attendez la fin des traitements en cours avant de restaurer.": "Wait for running tasks to finish before restoring.",
   "Seules les sauvegardes de la liste peuvent être restaurées.": "Only backups from the list can be restored.",
   "Cette sauvegarde est endommagée : rien n’a été changé.": "This backup is damaged: nothing was changed.",
-  "Restauration impossible : la bibliothèque d’avant est conservée.": "Restore failed: the previous library is kept."
+  "Restauration impossible : la bibliothèque d’avant est conservée.": "Restore failed: the previous library is kept.",
+  "Guide de l’utilisateur": "User guide"
 }

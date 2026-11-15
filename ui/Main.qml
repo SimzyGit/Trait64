@@ -151,6 +151,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Paramètres…"); onTriggered: settingsDialog.open()}
         }
         Menu { objectName:"helpMenu"; title: qsTr("&Aide")
+            MenuItem {text: qsTr("Guide de l’utilisateur"); onTriggered: guideDialog.openAt(0)}
             MenuItem {text: qsTr("Aide et raccourcis"); onTriggered: helpDialog.open()}
             MenuItem {text: qsTr("Mises à jour…"); onTriggered: updatesDialog.open()}
         }
@@ -860,6 +861,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Endgames {id:endgamesDialog;objectName:"endgamesDialog";backend:controller}
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
+    Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
+    // Au tout premier lancement, le guide s'ouvre sur « Premiers pas » ; ensuite il reste
+    // dans Aide. Les captures et tests (--smoke-test) ne le voient pas.
+    Timer {interval:900;running:!Qt.application.arguments.includes("--smoke-test");onTriggered:if(controller.firstLaunch())guideDialog.openAt(0)}
     Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
@@ -983,6 +988,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Ouvrir une base"),run:function(){openDatabaseDialog.open()}},
             {title:qsTr("Sauvegarde complète"),run:function(){backupDialog.open()}},
             {title:qsTr("Restaurer une sauvegarde"),run:function(){backupsDialog.open()}},
+            {title:qsTr("Guide de l’utilisateur"),run:function(){guideDialog.openAt(0)}},
             {title:qsTr("Exporter cette étude"),run:function(){win.openExport(false)}},
             {title:qsTr("Exporter le diagramme en PNG"),run:function(){diagramDialog.open()}},
             {title:qsTr("Exporter l’étude en PDF"),run:function(){pdfDialog.open()}},
