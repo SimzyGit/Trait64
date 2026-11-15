@@ -132,6 +132,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Bibliothèque"); onTriggered: win.page = 1}
             MenuItem {text: qsTr("Recherche avancée…"); onTriggered: {win.page = 1; advancedDialog.open()}}
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
+            MenuItem {text: qsTr("Tournois de la bibliothèque…"); onTriggered: tournamentFinder.open()}
             MenuItem {text: qsTr("Tournois en direct…"); onTriggered: liveDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Dossier de la position…"); onTriggered: openingReportDialog.open()}
@@ -922,6 +923,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
+    TournamentFinder {id:tournamentFinder;objectName:"tournamentFinder";backend:controller;crosstable:crosstableDialog}
     TDialog {id:saveSearchDialog;objectName:"saveSearchDialog";title:qsTr("Enregistrer cette recherche");anchors.centerIn:parent;modal:true;width:Math.min(440,win.width-32);standardButtons:Dialog.Ok|Dialog.Cancel
         onOpened:{searchName.text=searchField.text||"";searchName.forceActiveFocus()}
         onAccepted:controller.saveSearch(searchName.text,win.currentSearch())
@@ -1070,6 +1072,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},
             {title:qsTr("Tournois en direct"),run:function(){liveDialog.open()}},
+            {title:qsTr("Tournois de la bibliothèque"),run:function(){tournamentFinder.open()}},
             {title:qsTr("Apparence et langue"),run:function(){appearanceDialog.open()}},
             {title:qsTr("Raccourcis clavier"),run:function(){shortcutsDialog.open()}},
             {title:qsTr("Recherche avancée"),run:function(){advancedDialog.open()}},

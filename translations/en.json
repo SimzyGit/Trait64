@@ -1560,5 +1560,11 @@
   "Enregistrer cette recherche…": "Save this search…",
   "Enregistrer cette recherche": "Save this search",
   "Son nom, pour la retrouver dans le menu Recherches.": "Its name, to find it again in the Searches menu.",
-  "Recherche « %1 » enregistrée.": "Search “%1” saved."
+  "Recherche « %1 » enregistrée.": "Search “%1” saved.",
+  "Tournois de la bibliothèque": "Library tournaments",
+  "Tournois de la bibliothèque…": "Library tournaments…",
+  "Nom du tournoi…": "Tournament name…",
+  "%1 tournoi(s)": "%1 tournament(s)",
+  "Année": "Year",
+  "Elo moyen": "Average Elo"
 }

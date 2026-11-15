@@ -1322,6 +1322,22 @@ int main(int argc, char **argv) {
             const auto unknown = club.save(nameless);
             rejects([&] { club.tournament(unknown); });
             rejects([&] { club.tournament(lone); });
+            // Les tournois de la bibliothèque : l'édition 2026, celle de 2025 à part.
+            {
+                const auto all = club.tournaments();
+                QVariantMap edition;
+                for (const auto &row : all)
+                    if (row.toMap()["year"] == "2026")
+                        edition = row.toMap();
+                check(all.size() == 2 && all.first().toMap()["year"] == "2026" &&
+                          edition["games"].toInt() == 6 && edition["players"].toInt() == 4 &&
+                          edition["elo"].toInt() == 2412 &&
+                          club.tournament(edition["gameId"].toLongLong())["players"].toList().size() == 4,
+                      "Tournaments are listed by edition with games, players and average Elo, and open their "
+                      "table");
+                check(club.tournaments("CLUB").size() == 2 && club.tournaments("zzz").isEmpty(),
+                      "Tournament names are searched without case");
+            }
             // Recherche dans les commentaires et par symbole. Les parties du tournoi portent
             // un commentaire (« AB1 »…) ; on en annote deux de plus.
             t64::Game brilliant;

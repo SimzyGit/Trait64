@@ -193,3 +193,28 @@ void Controller::removeSearch(int index) {
     settings_.setValue("savedSearches", list);
     emit savedSearchesChanged();
 }
+
+void Controller::findTournaments(const QString &text) {
+    tournamentList_["text"] = text;
+    if (tournamentList_.value("running").toBool())
+        return; // la réponse en cours sera suivie d'une nouvelle, voir plus bas
+    tournamentList_["running"] = true;
+    emit tournamentListChanged();
+    auto *watcher = new QFutureWatcher<QVariantList>(this);
+    connect(watcher, &QFutureWatcher<QVariantList>::finished, this, [this, watcher, text] {
+        watcher->deleteLater();
+        tournamentList_["running"] = false;
+        tournamentList_["rows"] = watcher->result();
+        emit tournamentListChanged();
+        // On a tapé pendant le calcul : on refait avec le dernier texte.
+        if (tournamentList_["text"].toString() != text)
+            findTournaments(tournamentList_["text"].toString());
+    });
+    watcher->setFuture(QtConcurrent::run([path = db_->path(), text] {
+        try {
+            return t64::Database(path).tournaments(text);
+        } catch (const std::exception &) {
+            return QVariantList();
+        }
+    }));
+}

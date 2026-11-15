@@ -1083,6 +1083,19 @@ int main(int argc, char **argv) {
                 if (const auto shot = qEnvironmentVariable("T64_CROSSTABLE_SCREENSHOT"); !shot.isEmpty())
                     window->grabWindow().save(shot);
                 QMetaObject::invokeMethod(dialog, "close");
+                // Retrouvé depuis la liste des tournois.
+                auto *finder = window->findChild<QObject *>("tournamentFinder");
+                QMetaObject::invokeMethod(finder, "open");
+                settle.restart();
+                QTest::qWait(30);
+                while (c.tournamentList()["running"].toBool() && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                bool listed = false;
+                for (const auto &row : c.tournamentList()["rows"].toList())
+                    listed =
+                        listed || (row.toMap()["event"] == "Mémorial" && row.toMap()["players"].toInt() == 6);
+                check(listed, "The tournament finder lists the Mémorial with its six players");
+                QMetaObject::invokeMethod(finder, "close");
             }
             {
                 // Corriger les noms : le Mémorial a été saisi avec « Ding » ; on ajoute

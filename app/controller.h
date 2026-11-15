@@ -372,6 +372,10 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap nameVariants READ nameVariants NOTIFY nameVariantsChanged)
     QVariantMap nameVariants() const { return nameVariants_; }
     Q_INVOKABLE void findNameVariants(const QString &field);
+    // Recherche de tournois : {text, running, rows}.
+    Q_PROPERTY(QVariantMap tournamentList READ tournamentList NOTIFY tournamentListChanged)
+    QVariantMap tournamentList() const { return tournamentList_; }
+    Q_INVOKABLE void findTournaments(const QString &text);
     QVariantList savedSearches() const { return settings_.value("savedSearches").toList(); }
     // Un nom déjà pris remplace la recherche du même nom.
     Q_INVOKABLE void saveSearch(const QString &name, const QVariantMap &search);
@@ -490,6 +494,7 @@ class Controller : public QObject {
     void nameVariantsChanged();
     void liveChanged();
     void savedSearchesChanged();
+    void tournamentListChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -623,6 +628,7 @@ class Controller : public QObject {
     QVariantMap nameVariants_; // field, running, groups, error
     t64::Broadcasts *broadcasts_ = nullptr;
     QVariantMap live_;
+    QVariantMap tournamentList_;
     QTimer *liveTimer_ = nullptr;
     bool liveWatching_ = false; // le panneau est ouvert
     int livePendingGame_ = -1;  // partie à ouvrir à la réception du PGN

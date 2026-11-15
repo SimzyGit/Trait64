@@ -2,6 +2,7 @@
 
 ## Tournois en direct — 15 novembre 2026
 
+- **Tournois de la bibliothèque** (*Base → Tournois de la bibliothèque*) : chaque édition (événement et année) avec ses parties, ses joueurs et son Elo moyen, filtrable par nom ; un clic ouvre son tableau croisé.
 - **Recherches enregistrées** (bouton *Recherches* de la bibliothèque) : la recherche à l'écran — texte, résultat, pastilles, recherche avancée, tri — se garde sous un nom et se rappelle d'un clic.
 - **Meilleures parties d'une position** : au pied de l'onglet Arbre, la bibliothèque s'ouvre filtrée sur la position de l'échiquier, les parties les mieux classées d'abord.
 - **Ctrl + molette sur la notation ou la liste des parties** change la taille du texte (90 à 150 %), comme Ctrl + molette sur l'échiquier change sa taille. Le changement attend la fin de l'événement : fait pendant, il faisait planter Qt 6.4 dans un agencement en grille.

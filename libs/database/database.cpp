@@ -12,10 +12,12 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QSaveFile>
+#include <QSet>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 namespace t64 {
@@ -611,6 +613,59 @@ QVariantMap Database::tournament(qint64 gameId) const {
     table["event"] = event;
     table["year"] = dated ? year : QString();
     return table;
+}
+
+QVariantList Database::tournaments(const QString &text, int limit) const {
+    // Un seul passage sur les parties, agrégé ici : compter les joueurs par une sous-requête
+    // reparcourait toute la base pour chaque tournoi.
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare(
+        "SELECT event,substr(date,1,4),white,black,white_elo,black_elo,id FROM games WHERE deleted=0 AND "
+        "event NOT IN ('','?','Étude Trait64') AND (?='' OR event LIKE ?)");
+    const auto wanted = text.trimmed();
+    q.addBindValue(wanted);
+    q.addBindValue("%" + wanted + "%");
+    run(q);
+    struct Group {
+        QString event, year;
+        qint64 games = 0, firstId = 0, eloSum = 0, rated = 0;
+        QSet<QString> players;
+    };
+    QHash<QString, Group> groups;
+    while (q.next()) {
+        const auto event = q.value(0).toString(), year = q.value(1).toString();
+        auto &group = groups[event + '\x1f' + year];
+        if (group.games++ == 0) {
+            group.event = event;
+            group.year = year.contains('?') ? QString() : year;
+            group.firstId = q.value(6).toLongLong();
+        }
+        group.players << q.value(2).toString() << q.value(3).toString();
+        for (const int column : {4, 5})
+            if (const int elo = q.value(column).toInt(); elo > 0) {
+                group.eloSum += elo;
+                ++group.rated;
+            }
+    }
+    QList<Group *> ordered;
+    for (auto &group : groups)
+        ordered << &group;
+    std::sort(ordered.begin(), ordered.end(), [](const Group *a, const Group *b) {
+        return a->year != b->year ? a->year > b->year : a->event < b->event;
+    });
+    QVariantList rows;
+    for (const auto *group : ordered) {
+        if (rows.size() >= std::clamp(limit, 1, 5000))
+            break;
+        rows << QVariantMap{{"event", group->event},
+                            {"year", group->year},
+                            {"games", group->games},
+                            {"players", group->players.size()},
+                            {"elo", group->rated ? int(group->eloSum / group->rated) : 0},
+                            {"gameId", group->firstId}};
+    }
+    return rows;
 }
 
 QVariantMap Database::stats() const {

@@ -13,7 +13,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Correction des noms (orthographe des joueurs, tournois, sites) | ✅ | ✅ fichier d'orthographe | — | ✅ 15 nov., joueurs et tournois | **D1** |
 | Recherche dans les commentaires et par symbole (!!, ?, ±) | ✅ | ✅ | — | ✅ 15 nov., sans index | **D1** |
 | Meilleures parties d'une position (par Elo) depuis l'arbre local | ✅ | ✅ | ✅ | ✅ 15 nov. | **D2** |
-| Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✗ | D2 |
+| Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✅ 15 nov. : nom, année, joueurs, Elo moyen | D2 |
 | Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✅ 15 nov. | D2 |
 | Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✗ | D3 |
 | Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ✗ | B/D3 |
