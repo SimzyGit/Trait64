@@ -353,7 +353,7 @@ Ajouter ou vérifier :
 
 - [ ] Signatures cryptographiques indépendantes des publications.
 - [x] Vérification d'intégrité des téléchargements. — SHA-256
-- [ ] Restauration guidée après échec.
+- [x] Restauration guidée après échec. — liste des sauvegardes, restauration qui sauvegarde d'abord la bibliothèque remplacée
 - [x] Sauvegardes complètes avant migration.
 - [x] Installation asynchrone.
 - [ ] Gestion correcte des interruptions.

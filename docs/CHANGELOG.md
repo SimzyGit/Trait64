@@ -1,5 +1,10 @@
 # Changements
 
+## Restaurer une sauvegarde — 15 novembre 2026
+
+- Fichier → « Restaurer une sauvegarde… », ou le bouton « Restaurer… » à côté de « Sauvegarder » : la liste des sauvegardes faites par Trait64 — automatiques, avant une mise à jour, avant une restauration, avant une migration — avec leur date, leur nombre de parties et leur taille. Un bouton « Sauvegarder maintenant » en ajoute une.
+- **Restaurer remplace la bibliothèque, après l'avoir sauvegardée** : la bibliothèque remplacée apparaît en tête de la liste et se restaure à son tour. La sauvegarde choisie est copiée puis vérifiée avant de toucher à quoi que ce soit ; endommagée, rien ne change.
+
 ## Raccourcis clavier personnalisables — 15 novembre 2026
 
 - Affichage → « Raccourcis clavier… » (ou la palette de commandes) : les dix-huit raccourcis de l'analyse et des études se changent en cliquant « Changer » puis en pressant la combinaison voulue. Une combinaison déjà prise est refusée, avec le conflit nommé ; « Par défaut » rend celle d'origine, une par une ou toutes à la fois.

@@ -347,6 +347,12 @@ class Controller : public QObject {
     Q_INVOKABLE void exportFile(const QString &url, bool all = false);
     Q_INVOKABLE void backup(const QString &url);
     Q_INVOKABLE void openBackup(const QString &url);
+    // Les sauvegardes que Trait64 a faites lui-même, de la plus récente à la plus ancienne :
+    // automatiques, avant une mise à jour, avant une restauration, avant une migration.
+    Q_INVOKABLE QVariantList backups() const;
+    // Remplace la bibliothèque par une sauvegarde de la liste. La bibliothèque actuelle est
+    // d'abord sauvegardée à son tour : une restauration se défait comme elle se fait.
+    Q_INVOKABLE void restoreBackup(const QString &file);
     Q_INVOKABLE void clickSquare(const QString &square);
     Q_INVOKABLE void tryMove(const QString &from, const QString &to);
     Q_INVOKABLE void move(const QString &uci);

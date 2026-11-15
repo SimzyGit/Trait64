@@ -189,6 +189,52 @@ int main(int argc, char **argv) {
                           QFileInfo(second.preferences()["enginePath"].toString()).isExecutable(),
                       "Detecting replaces a path that no longer exists");
             }
+            {
+                // Restauration : une sauvegarde de la liste remplace la bibliothèque, et la
+                // bibliothèque remplacée devient elle-même une sauvegarde.
+                Controller vault(dir.path() + "/vault");
+                // Des coups différents : la même partie enregistrée deux fois serait un doublon.
+                const auto saveOne = [&](const char *white, const char *first) {
+                    vault.newGame();
+                    vault.setTags({{"White", white}});
+                    vault.move(first);
+                    vault.saveGame();
+                };
+                saveOne("Premier", "e2e4");
+                vault.automaticBackup(true);
+                // La liste des parties se recharge en arrière-plan : on attend le nombre voulu.
+                const auto settle = [&](qsizetype games) {
+                    QElapsedTimer wait;
+                    wait.start();
+                    while (vault.games().size() != games && wait.elapsed() < 10000)
+                        QTest::qWait(20);
+                    return vault.games().size();
+                };
+                QElapsedTimer wait;
+                wait.start();
+                while (vault.backups().isEmpty() && wait.elapsed() < 10000)
+                    QTest::qWait(20);
+                QTest::qWait(100);
+                saveOne("Deuxième", "d2d4");
+                saveOne("Troisième", "c2c4");
+                const auto list = vault.backups();
+                const auto saved = settle(3);
+                check(list.size() == 1 && list[0].toMap()["kind"] == "auto" &&
+                          list[0].toMap()["games"] == 1 && saved == 3,
+                      "The backup list shows the automatic backup and its game count");
+                const auto stray = dir.path() + "/stray.sqlite";
+                QFile::copy(list[0].toMap()["file"].toString(), stray);
+                vault.restoreBackup(stray);
+                check(settle(3) == 3, "A file outside the list is not restored");
+                vault.restoreBackup(list[0].toMap()["file"].toString());
+                const auto after = vault.backups();
+                check(settle(1) == 1, "Restoring brings the library back to the backup");
+                check(after.size() == 2 && after[0].toMap()["kind"] == "restore" &&
+                          after[0].toMap()["games"] == 3,
+                      "The replaced library is kept as a backup, newest first");
+                vault.restoreBackup(after[0].toMap()["file"].toString());
+                check(settle(3) == 3, "A restore can be undone by restoring the copy it made");
+            }
             // La barre d'évaluation retombait à l'équilibre à chaque coup : le moteur vide
             // ses lignes dès qu'il change de position, et rien ne gardait la dernière
             // évaluation reçue le temps que la suivante arrive.

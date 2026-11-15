@@ -88,6 +88,7 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem {text: qsTr("Ouvrir une bibliothèque…"); onTriggered: openDatabaseDialog.open()}
             MenuItem {text: qsTr("Sauvegarde complète…"); onTriggered: backupDialog.open()}
+            MenuItem {text: qsTr("Restaurer une sauvegarde…"); onTriggered: backupsDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Quitter"); onTriggered: win.close()}
         }
@@ -668,7 +669,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Label {text:qsTr("Sauvegarde complète");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Parties, favoris, collections et cartes dans un fichier SQLite.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
-                                Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Sauvegarder");onClicked:backupDialog.open()} TButton {text:qsTr("Ouvrir une base");onClicked:openDatabaseDialog.open()}}
+                                Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Sauvegarder");onClicked:backupDialog.open()} TButton {objectName:"openBackups";text:qsTr("Restaurer…");onClicked:backupsDialog.open()} TButton {text:qsTr("Ouvrir une base");onClicked:openDatabaseDialog.open()}}
                             }
                         }
                         Rectangle {Layout.fillWidth:true;implicitHeight:Math.max(192,children[0].implicitHeight+44);radius:8;color:win.panel;border.color:win.line
@@ -858,6 +859,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Coordinates {id:coordinatesDialog;objectName:"coordinatesDialog"}
     Endgames {id:endgamesDialog;objectName:"endgamesDialog";backend:controller}
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
+    Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
@@ -980,6 +982,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Jouer une partie"),run:function(){playDialog.open()}},
             {title:qsTr("Ouvrir une base"),run:function(){openDatabaseDialog.open()}},
             {title:qsTr("Sauvegarde complète"),run:function(){backupDialog.open()}},
+            {title:qsTr("Restaurer une sauvegarde"),run:function(){backupsDialog.open()}},
             {title:qsTr("Exporter cette étude"),run:function(){win.openExport(false)}},
             {title:qsTr("Exporter le diagramme en PNG"),run:function(){diagramDialog.open()}},
             {title:qsTr("Exporter l’étude en PDF"),run:function(){pdfDialog.open()}},
