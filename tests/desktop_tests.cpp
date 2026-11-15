@@ -913,6 +913,31 @@ int main(int argc, char **argv) {
             check(!engine.rootObjects().empty(), "Feature QML loaded");
             auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
             window->resize(1440, 940);
+            {
+                // Un clic sur l'en-tête Blancs trie de A à Z, un second de Z à A.
+                c.importText("[White \"Morphy\"]\n[Black \"X\"]\n\n1. e4 *\n\n"
+                             "[White \"Anand\"]\n[Black \"X\"]\n\n1. d4 *\n\n"
+                             "[White \"Tal\"]\n[Black \"X\"]\n\n1. c4 *\n");
+                const auto whites = [&c] {
+                    QStringList names;
+                    for (const auto &row : c.games())
+                        names << row.toMap()["white"].toString();
+                    return names;
+                };
+                const auto sortBy = [&](const char *key) {
+                    QMetaObject::invokeMethod(window, "sortLibrary", Q_ARG(QVariant, QString(key)));
+                    QElapsedTimer settle;
+                    settle.start();
+                    QTest::qWait(20);
+                    while (c.librarySearching() && settle.elapsed() < 10000)
+                        QTest::qWait(10);
+                };
+                sortBy("white");
+                check(whites() == QStringList{"Anand", "Morphy", "Tal"}, "A click on White sorts A to Z");
+                sortBy("white");
+                check(whites() == QStringList{"Tal", "Morphy", "Anand"}, "A second click reverses it");
+                sortBy("updated");
+            }
             window->setProperty("page", 2);
             QTest::qWait(50);
             for (const auto &pack : QStringList{"cburnett", "merida", "spatial", "pixel"}) {

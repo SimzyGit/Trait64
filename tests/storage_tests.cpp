@@ -1042,19 +1042,32 @@ int main(int argc, char **argv) {
                 writer.close();
             }
             QSqlDatabase::removeDatabase("nullable-sort-fixture");
-            for (const auto &sort : QStringList{"updated", "date", "players", "elo", "length"}) {
-                const auto expected = pages.search({}, {}, false, {}, false, {{"sort", sort}});
-                QVariantList actual;
-                QVariantMap filters{{"sort", sort}, {"limit", 3}};
-                for (int page = 0; page < 30; ++page) {
-                    auto rows = pages.search({}, {}, false, {}, false, filters);
-                    if (rows.empty())
-                        break;
-                    actual += rows;
-                    filters["cursor"] = rows.last().toMap();
+            for (const auto &sort : QStringList{"updated", "date", "players", "elo", "length", "white",
+                                                "black", "whiteElo", "blackElo", "result", "eco", "event"})
+                for (const bool reverse : {false, true}) {
+                    const auto expected =
+                        pages.search({}, {}, false, {}, false, {{"sort", sort}, {"reverse", reverse}});
+                    QVariantList actual;
+                    QVariantMap filters{{"sort", sort}, {"reverse", reverse}, {"limit", 3}};
+                    for (int page = 0; page < 30; ++page) {
+                        auto rows = pages.search({}, {}, false, {}, false, filters);
+                        if (rows.empty())
+                            break;
+                        actual += rows;
+                        filters["cursor"] = rows.last().toMap();
+                    }
+                    check(actual == expected && actual.size() == 47,
+                          "Cursor pages preserve every row, ties and nulls for every sort, both ways");
                 }
-                check(actual == expected && actual.size() == 47,
-                      "Cursor pages preserve every row, ties and nulls for every sort");
+            {
+                const auto byWhite = pages.search({}, {}, false, {}, false, {{"sort", "white"}});
+                const auto backwards =
+                    pages.search({}, {}, false, {}, false, {{"sort", "white"}, {"reverse", true}});
+                QVariantList flipped(backwards.crbegin(), backwards.crend());
+                check(byWhite.first().toMap()["white"].toString() <=
+                              byWhite.last().toMap()["white"].toString() &&
+                          flipped == byWhite,
+                      "Sorting by White goes A to Z, and the second click is its exact mirror");
             }
             rejects([&] { pages.search({}, {}, false, {}, false, {{"cursor", QVariantMap{{"id", 1}}}}); });
             auto canceled = std::make_shared<std::atomic_bool>(true);

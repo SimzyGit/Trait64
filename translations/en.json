@@ -1480,5 +1480,15 @@
   "%1 introuvable sur les miroirs : %2": "%1 not found on the mirrors: %2",
   "%1 est arrivé abîmé : relancez le téléchargement pour le reprendre.": "%1 arrived damaged: start the download again to fetch it anew.",
   "Impossible de nommer %1.": "Cannot name %1.",
-  "Téléchargement interrompu : il reprendra où il s’est arrêté.": "Download interrupted: it will resume where it stopped."
+  "Téléchargement interrompu : il reprendra où il s’est arrêté.": "Download interrupted: it will resume where it stopped.",
+  "%1 parties dans la bibliothèque": "%1 games in the library",
+  "Base  ▾": "Database  ▾",
+  "Comptes en ligne…": "Online accounts…",
+  "Exporter cette base…": "Export this database…",
+  "Imports reprenables…": "Resumable imports…",
+  "Mes compétences…": "My skills…",
+  "Page %1": "Page %1",
+  "Trier par %1": "Sort by %1",
+  "Téléchargements…": "Downloads…",
+  "Une partie dans la bibliothèque": "One game in the library"
 }

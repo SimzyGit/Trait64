@@ -1,5 +1,11 @@
 # Changements
 
+## Bibliothèque plus claire — 15 novembre 2026
+
+- **Un clic sur un titre de colonne trie la liste** (Blancs, Noirs, Elo, résultat, coups, ECO, événement, date), un second clic inverse l'ordre ; la flèche dit l'ordre en cours. Le tri suit les pages, sans en perdre ni en répéter une.
+- **Une seule rangée en haut** : la base, la recherche, le résultat, Recherche avancée et Importer. Exports, classements, comptes, téléchargements et doublons passent dans le menu « Base ».
+- Les filtres (Favoris, Position, Structure de pions, Corbeille) deviennent des pastilles ; la pagination se range en bas à droite, avec le nombre de parties à gauche.
+
 ## Tables Syzygy sur l'ordinateur — 15 novembre 2026
 
 - **Les finales se lisent sans réseau** quand les tables Syzygy sont posées sur l'ordinateur : l'onglet « Finales » de l'explorateur répond depuis le dossier choisi dans les paramètres (le même que reçoit le moteur), et ne demande à Lichess que ce que les tables ne couvrent pas — trop de pièces, roque encore permis, fichier manquant. Le dossier peut contenir les paquets de Lichess dans leurs sous-dossiers.

@@ -62,6 +62,7 @@ ApplicationWindow {
     property var advanced:({})
     function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;f.pawnStructure=positionCheck.checked&&pawnCheck.checked;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
     function filterLibrary() {applyAdvanced()}
+    function sortLibrary(key){var f=Object.assign({},advanced);f.reverse=(f.sort||"updated")===key?!f.reverse:false;f.sort=key;advanced=f;applyAdvanced()}
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
 
@@ -207,36 +208,40 @@ ApplicationWindow {
             // LIBRARY
             ScrollView {id:libraryViewport;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
             ColumnLayout {width:libraryViewport.availableWidth;height:Math.max(libraryViewport.availableHeight,implicitHeight);spacing:12
-                Label {text:(controller.stats.games||0)+qsTr(" parties · PGN, études et collections");color:win.muted;Layout.fillWidth:true;wrapMode:Text.WordWrap}
-                Flow {Layout.fillWidth:true;spacing:8
-                    TButton {text:qsTr("Téléchargements");onClicked:downloadsDialog.open()}
-                    TButton {text:qsTr("Exporter la bibliothèque");onClicked:win.openExport(true)}
-                    TButton {objectName:"exportPolyglot";text:qsTr("Exporter un livre Polyglot");onClicked:polyglotDialog.open()
-                        ToolTip.visible:hovered;ToolTip.text:qsTr("Un livre .bin des coups joués au moins deux fois dans la bibliothèque, pondérés par le nombre de parties.")}
+                // Une seule rangée : la base, la recherche, Importer. Le reste du travail sur
+                // la base (exports, classements, comptes, téléchargements) attend dans le menu
+                // « Base » : onze boutons sur deux rangées écrasaient la recherche.
+                RowLayout {Layout.fillWidth:true;spacing:8
+                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredHeight:30*controller.preferences.uiScale;Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    TextField {id:searchField;objectName:"librarySearch";Layout.preferredHeight:30*controller.preferences.uiScale;placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
+                    TComboBox {id:resultBox;Layout.preferredHeight:30*controller.preferences.uiScale;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:140*win.textScale}
+                    TButton {text:qsTr("Recherche avancée");onClicked:advancedDialog.open()}
                     TButton {text:qsTr("+  Importer");accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
+                    TButton {id:libraryMenuButton;objectName:"libraryMenuButton";text:qsTr("Base  ▾");onClicked:libraryMenu.popup(libraryMenuButton,0,libraryMenuButton.height)
+                        Menu {id:libraryMenu
+                            MenuItem {text:qsTr("Téléchargements…");onTriggered:downloadsDialog.open()}
+                            MenuItem {text:qsTr("Comptes en ligne…");objectName:"showAccounts";onTriggered:accountsDialog.open()}
+                            MenuItem {text:qsTr("Imports reprenables…");objectName:"showImports";onTriggered:importsDialog.open()}
+                            MenuSeparator {}
+                            MenuItem {text:qsTr("Exporter la bibliothèque…");onTriggered:win.openExport(true)}
+                            MenuItem {text:qsTr("Exporter cette base…");enabled:baseBox.currentIndex>0;onTriggered:sourceExportDialog.open()}
+                            MenuItem {objectName:"exportPolyglot";text:qsTr("Exporter un livre Polyglot…");onTriggered:polyglotDialog.open()}
+                            MenuSeparator {}
+                            MenuItem {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onTriggered:controller.classifyLibraryOpenings()}
+                            MenuItem {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onTriggered:controller.groupLibraryByOpening()}
+                            MenuItem {text:qsTr("Doublons de coups");onTriggered:controller.findDuplicates()}
+                            MenuSeparator {}
+                            MenuItem {text:qsTr("Mes compétences…");objectName:"showSkills";onTriggered:skillDialog.open()}
+                        }
+                    }
                 }
-                Flow {Layout.fillWidth:true;spacing:8
-                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";width:Math.min(parent.width,260*win.textScale);textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
-                    TButton {text:qsTr("Comptes en ligne");objectName:"showAccounts";onClicked:accountsDialog.open()}
-                    TButton {text:qsTr("Mes compétences");objectName:"showSkills";onClicked:skillDialog.open()}
-                    TButton {text:qsTr("Imports reprenables");objectName:"showImports";onClicked:importsDialog.open()}
-                    TButton {text:qsTr("Exporter cette base");enabled:baseBox.currentIndex>0;onClicked:sourceExportDialog.open()}
-                    TButton {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onClicked:controller.classifyLibraryOpenings()
-                        ToolTip.visible:hovered;ToolTip.text:qsTr("Donne son code ECO à chaque partie qui n’en porte pas, d’après les coups joués. La plupart des PGN n’en portent aucun, et la recherche par ouverture les ignorait alors.")}
-                    TButton {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onClicked:controller.groupLibraryByOpening()
-                        ToolTip.visible:hovered;ToolTip.text:qsTr("Donne à chaque partie la collection de sa famille d’ouverture, d’après son code ECO. Rien à télécharger ; les parties sans code ECO restent inchangées.")}
-                }
-                RowLayout {Layout.fillWidth:true;spacing:10
-                    TextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
-                    TComboBox {id:resultBox;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:155*win.textScale}
-                }
-                Flow {Layout.fillWidth:true;spacing:8
-                    CheckBox {id:favoriteCheck;text:qsTr("Favoris");onToggled:win.filterLibrary()}
-                    CheckBox {id:positionCheck;text:qsTr("Position de l’échiquier");onToggled:win.filterLibrary()}
-                    CheckBox {id:pawnCheck;objectName:"pawnStructureFilter";text:qsTr("Même structure de pions");visible:positionCheck.checked
+                Flow {Layout.fillWidth:true;spacing:6
+                    TChip {id:favoriteCheck;text:qsTr("Favoris");onToggled:win.filterLibrary()}
+                    TChip {id:positionCheck;text:qsTr("Position de l’échiquier");onToggled:win.filterLibrary()}
+                    TChip {id:pawnCheck;objectName:"pawnStructureFilter";text:qsTr("Même structure de pions");visible:positionCheck.checked
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Parties qui atteignent la structure de pions de l’échiquier, quelles que soient les autres pièces.")
                         onToggled:win.filterLibrary()}
-                    CheckBox {id:trashCheck;text:qsTr("Corbeille");onToggled:win.filterLibrary()}
+                    TChip {id:trashCheck;text:qsTr("Corbeille");onToggled:win.filterLibrary()}
                     TButton {text:qsTr("Annuler la recherche");visible:controller.librarySearching;onClicked:controller.cancelLibrarySearch()}
                 }
                 Label {text:controller.busy?qsTr("Traitement en cours…"):controller.librarySearchStatus;color:win.muted;font.pixelSize:Math.round(11*win.textScale);Layout.fillWidth:true;wrapMode:Text.WordWrap}
@@ -249,14 +254,25 @@ ApplicationWindow {
                         Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumWidth:360;spacing:0
                         Rectangle {Layout.fillWidth:true;implicitHeight:24*win.textScale;color:win.raised;border.color:win.line
                             RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
+                                // Un clic sur un titre trie sur sa colonne, un second l'inverse ; la
+                                // flèche dit l'ordre en cours. N° revient à l'ordre de modification.
                                 Repeater {
-                                    model:[{t:qsTr("N°"),w:libraryList.columns.number},{t:qsTr("Blancs"),w:-1},{t:"Elo",w:libraryList.columns.elo},
-                                           {t:qsTr("Noirs"),w:-1},{t:"Elo",w:libraryList.columns.elo},{t:qsTr("Résultat"),w:libraryList.columns.result},
-                                           {t:qsTr("Coups"),w:libraryList.columns.moves},{t:"ECO",w:libraryList.columns.eco},
-                                           {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0},{t:qsTr("Date"),w:libraryList.columns.date},
-                                           {t:"",w:libraryList.columns.actions}]
-                                    Label {required property var modelData;text:modelData.t;visible:modelData.w!==0;color:win.muted;elide:Text.ElideRight
-                                        Layout.fillWidth:modelData.w<0;Layout.preferredWidth:modelData.w<0?80:modelData.w;Layout.maximumWidth:modelData.w<0?100000:modelData.w;Layout.minimumWidth:0}
+                                    model:[{t:qsTr("N°"),w:libraryList.columns.number,k:"updated"},{t:qsTr("Blancs"),w:-1,k:"white"},{t:"Elo",w:libraryList.columns.elo,k:"whiteElo"},
+                                           {t:qsTr("Noirs"),w:-1,k:"black"},{t:"Elo",w:libraryList.columns.elo,k:"blackElo"},{t:qsTr("Résultat"),w:libraryList.columns.result,k:"result"},
+                                           {t:qsTr("Coups"),w:libraryList.columns.moves,k:"length"},{t:"ECO",w:libraryList.columns.eco,k:"eco"},
+                                           {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0,k:"event"},{t:qsTr("Date"),w:libraryList.columns.date,k:"date"},
+                                           {t:"",w:libraryList.columns.actions,k:""}]
+                                    Label {required property var modelData
+                                        readonly property bool active:modelData.k!==""&&(win.advanced.sort||"updated")===modelData.k
+                                        // Flèche vers le haut : de A à Z, du plus petit au plus grand.
+                                        readonly property bool rising:["updated","whiteElo","blackElo","date"].indexOf(modelData.k)<0!==!!win.advanced.reverse
+                                        text:modelData.t+(active?(rising?" ▲":" ▼"):"");visible:modelData.w!==0;elide:Text.ElideRight
+                                        color:active?win.fg:win.muted;font.weight:active?Font.DemiBold:Font.Normal
+                                        Layout.fillWidth:modelData.w<0;Layout.preferredWidth:modelData.w<0?80:modelData.w;Layout.maximumWidth:modelData.w<0?100000:modelData.w;Layout.minimumWidth:0
+                                        Accessible.role:modelData.k?Accessible.ColumnHeader:Accessible.StaticText;Accessible.name:modelData.k?qsTr("Trier par %1").arg(modelData.t):text
+                                        HoverHandler {enabled:modelData.k!=="";cursorShape:Qt.PointingHandCursor}
+                                        TapHandler {enabled:modelData.k!=="";onTapped:win.sortLibrary(modelData.k)}
+                                    }
                                 }
                             }
                         }
@@ -322,11 +338,11 @@ ApplicationWindow {
                         boardSide:Math.round(260*win.textScale)
                     }
                 }
-                Flow {Layout.fillWidth:true;spacing:8
-                    TButton {text:qsTr("Recherche avancée");onClicked:advancedDialog.open()}
-                    TButton {text:qsTr("Doublons de coups");onClicked:controller.findDuplicates()}
-                    TButton {text:qsTr("Page précédente");objectName:"previousLibraryPage";enabled:!controller.librarySearching&&controller.libraryPage>1;onClicked:controller.previousLibraryPage()}
-                    TButton {text:qsTr("Page suivante");objectName:"nextLibraryPage";enabled:!controller.librarySearching&&controller.libraryHasNext;onClicked:controller.nextLibraryPage()}
+                RowLayout {Layout.fillWidth:true;spacing:6
+                    Label {text:(controller.stats.games||0)===1?qsTr("Une partie dans la bibliothèque"):qsTr("%1 parties dans la bibliothèque").arg(controller.stats.games||0);color:win.muted;Layout.fillWidth:true;elide:Text.ElideRight}
+                    TButton {text:"‹";flat:true;objectName:"previousLibraryPage";Accessible.name:qsTr("Page précédente");enabled:!controller.librarySearching&&controller.libraryPage>1;onClicked:controller.previousLibraryPage()}
+                    Label {text:qsTr("Page %1").arg(controller.libraryPage);color:win.muted}
+                    TButton {text:"›";flat:true;objectName:"nextLibraryPage";Accessible.name:qsTr("Page suivante");enabled:!controller.librarySearching&&controller.libraryHasNext;onClicked:controller.nextLibraryPage()}
                 }
             }}
 
@@ -950,7 +966,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     }
     TDialog {id:advancedDialog;objectName:"advancedDialog";title:qsTr("Recherche avancée");anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         property var draft:({})
-        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=Math.max(0,["updated","date","players","elo","length"].indexOf(draft.sort||"updated"));colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""))}
+        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=["updated","date","players","elo","length"].indexOf(draft.sort||"updated");colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""))}
         ScrollView {id:advancedScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         GridLayout {width:advancedScroll.availableWidth;columns:2;columnSpacing:12;rowSpacing:10
             Repeater {model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"placement",label:qsTr("Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")}]
@@ -968,7 +984,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             TButton {text:qsTr("Effacer les filtres");onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
         }}
-        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];win.advanced=Object.assign({},draft);win.applyAdvanced()}
+        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];if(sortBy.currentIndex>=0&&["updated","date","players","elo","length"][sortBy.currentIndex]!==(draft.sort||"updated")){draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];draft.reverse=false}win.advanced=Object.assign({},draft);win.applyAdvanced()}
     }
     TDialog {id:commands;objectName:"commandsDialog";title:qsTr("Commandes rapides");anchors.centerIn:parent;width:Math.min(680,win.width-32);height:Math.min(620,win.height-32);modal:true;standardButtons:Dialog.Close
         readonly property var entries:[

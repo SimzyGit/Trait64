@@ -473,11 +473,21 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         order = {{"(g.white_elo+g.black_elo)", "rating", false}};
     else if (sort == "length")
         order = {{"g.plies", "plies", true}};
+    // Les colonnes de la liste : un clic sur leur en-tête trie sur elles.
+    else if (sort == "white" || sort == "black" || sort == "result" || sort == "eco" || sort == "event")
+        order = {{"g." + sort, sort, true}};
+    else if (sort == "whiteElo" || sort == "blackElo")
+        order = {{sort == "whiteElo" ? "g.white_elo" : "g.black_elo", sort, false}};
     else
         order = {{"g.updated", "updated", false}};
     order << SortField{"g.id", "id", false};
+    // Second clic sur le même en-tête : l'ordre inverse, départage compris.
+    const bool reversed = filters.value("reverse").toBool();
+    if (reversed)
+        for (auto &field : order)
+            field.ascending = !field.ascending;
     const auto cursor = filters.value("cursor").toMap();
-    const bool recentCursor = !cursor.isEmpty() && order[0].key == "updated";
+    const bool recentCursor = !cursor.isEmpty() && order[0].key == "updated" && !reversed;
     if (!cursor.isEmpty()) {
         for (const auto &field : order)
             check(cursor.contains(field.key), "Curseur de recherche incomplet.");
