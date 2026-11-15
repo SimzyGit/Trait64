@@ -150,7 +150,7 @@ Fonctionnalités :
 - [x] File de tâches d'analyse persistante.
 - [ ] Budgets de calcul adaptatifs.
 - [ ] ◐ Comparaison détaillée des conclusions de plusieurs moteurs — partiel : 2 à 4 profils côte à côte, sans synthèse.
-- [ ] ◐ Exploitation des tables de finales Syzygy — chemin transmis au moteur, tables à 7 pièces en ligne, lecture des tables locales dans l'explorateur ; reste le téléchargement guidé.
+- [ ] ◐ Exploitation des tables de finales Syzygy — chemin transmis au moteur, tables à 7 pièces en ligne, lecture des tables locales dans l'explorateur, téléchargement vérifié et reprenable des paquets 3-4-5 et 6 pièces.
 - [x] Conservation et réutilisation des évaluations précédentes.
 - [ ] ◐ Explications pédagogiques en français — partiel : suites légales et cinq motifs ; pas encore le « pourquoi ».
 
@@ -339,7 +339,7 @@ Ajouter des gestionnaires permettant à l'utilisateur :
 - [x] De télécharger des bases de parties.
 - [x] De consulter leur taille, source et licence.
 - [ ] De gérer les versions installées.
-- [ ] De télécharger des tables Syzygy adaptées à son stockage disponible.
+- [x] De télécharger des tables Syzygy adaptées à son stockage disponible.
 
 Respecter les licences et vérifier les téléchargements.
 

@@ -1466,5 +1466,19 @@
   "Aucune table Syzygy (.rtbw) dans ce dossier ni dans ses sous-dossiers.": "No Syzygy table (.rtbw) in this folder or its subfolders.",
   "%1 tables, jusqu’à %2 pièces : ces finales se lisent sans réseau, au-delà Lichess répond.": "%1 tables, up to %2 pieces: these endgames are read offline, Lichess answers beyond that.",
   " · tables de l’ordinateur": " · this computer's tables",
-  "Dossier des tables Syzygy": "Syzygy tables folder"
+  "Dossier des tables Syzygy": "Syzygy tables folder",
+  "Télécharger 3 à 5 pièces (939 Mio)": "Download 3 to 5 pieces (939 MiB)",
+  "6 pièces (149 Gio)": "6 pieces (149 GiB)",
+  "Plusieurs jours de téléchargement selon la connexion. Les 3 à 5 pièces suffisent à la plupart des finales.": "Several days of downloading depending on the connection. 3 to 5 pieces cover most endgames.",
+  "%1 Gio libres dans %2": "%1 GiB free in %2",
+  "%1 / %2 fichiers · %3 Mio reçus": "%1 / %2 files · %3 MiB received",
+  "Tables Syzygy installées : les finales se lisent sans réseau.": "Syzygy tables installed: endgames are read offline.",
+  "Paquet de tables inconnu.": "Unknown table pack.",
+  "Un téléchargement de tables est déjà en cours.": "A table download is already running.",
+  "Pas assez de place libre sur ce disque pour ces tables.": "Not enough free space on this disk for these tables.",
+  "Impossible de créer le dossier %1.": "Cannot create the folder %1.",
+  "%1 introuvable sur les miroirs : %2": "%1 not found on the mirrors: %2",
+  "%1 est arrivé abîmé : relancez le téléchargement pour le reprendre.": "%1 arrived damaged: start the download again to fetch it anew.",
+  "Impossible de nommer %1.": "Cannot name %1.",
+  "Téléchargement interrompu : il reprendra où il s’est arrêté.": "Download interrupted: it will resume where it stopped."
 }

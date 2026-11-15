@@ -61,7 +61,7 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 - The *Openings* page shows the move tree of your games, Polyglot books and each position's ECO name.
 - A **repertoire** gathers the lines you play. Its gaps tab gives the **estimated coverage** — the share of your library's games that stay within the repertoire — and the unprepared opponent replies, from most to least frequent.
 - *Compare…* puts two repertoires side by side.
-- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline.
+- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline. The settings can also download them: 3 to 5 pieces (939 MiB) cover most endgames.
 
 ## Training
 

@@ -2,9 +2,13 @@
 #include "controller.h"
 #include "hardware.h"
 #include "syzygy.h"
+#include "syzygy_download.h"
+#include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
+#include <QStorageInfo>
 
 void Controller::initContent() {
     content_ = std::make_unique<t64::Content>(dataPath_ + "/content");
@@ -131,4 +135,77 @@ QString Controller::syzygyStatus(const QString &folder) const {
     return tr("%1 tables, jusqu’à %2 pièces : ces finales se lisent sans réseau, au-delà Lichess répond.")
         .arg(tables.files)
         .arg(tables.largest);
+}
+
+namespace {
+void require(bool ok, const char *error) {
+    if (!ok)
+        throw std::runtime_error(error);
+}
+} // namespace
+
+// Le dossier choisi, sinon un dossier à Trait64 : les tables y arrivent, et il devient
+// celui des paramètres.
+QString Controller::syzygyFolder() const {
+    const auto chosen = settings_.value("syzygyPath").toString();
+    return chosen.isEmpty() ? dataPath_ + "/syzygy" : chosen;
+}
+
+QVariantMap Controller::syzygyPack(const QString &pack) const {
+    const auto folder = syzygyFolder();
+    qint64 present = 0;
+    for (QDirIterator it(QDir(folder).filePath(pack), {"*.rtbw", "*.rtbz"}, QDir::Files); it.hasNext();)
+        present += it.nextFileInfo().size();
+    QDir().mkpath(folder);
+    return {{"bytes", t64::syzygy::packBytes(pack)},
+            {"present", present},
+            {"free", QStorageInfo(folder).bytesAvailable()},
+            {"folder", QDir::toNativeSeparators(folder)}};
+}
+
+void Controller::downloadSyzygy(const QString &pack) {
+    try {
+        require(pack == "3-4-5" || pack == "6", "Paquet de tables inconnu.");
+        require(!syzygyLoader_ || !syzygyLoader_->busy(), "Un téléchargement de tables est déjà en cours.");
+        const auto sizes = syzygyPack(pack);
+        // Un peu de marge : le disque plein à ras ne laisse plus vivre la bibliothèque.
+        require(sizes["free"].toLongLong() + sizes["present"].toLongLong() >
+                    sizes["bytes"].toLongLong() + 512LL * 1024 * 1024,
+                "Pas assez de place libre sur ce disque pour ces tables.");
+        const auto folder = syzygyFolder();
+        if (settings_.value("syzygyPath").toString().isEmpty())
+            setPreference("syzygyPath", folder);
+        if (!syzygyLoader_) {
+            syzygyLoader_ = new t64::SyzygyDownload(this);
+            connect(syzygyLoader_, &t64::SyzygyDownload::progress, this,
+                    [this](int done, int total, qint64 received) {
+                        syzygyState_["done"] = done;
+                        syzygyState_["total"] = total;
+                        syzygyState_["received"] = received;
+                        emit syzygyDownloadChanged();
+                    });
+            connect(syzygyLoader_, &t64::SyzygyDownload::finished, this, [this](const QString &error) {
+                syzygyState_["running"] = false;
+                syzygyState_["error"] = error;
+                // Les tables ont changé : Fathom relit le dossier.
+                t64::syzygy::open({});
+                t64::syzygy::open(syzygyFolder());
+                emit syzygyDownloadChanged();
+                emit message(error.isEmpty()
+                                 ? tr("Tables Syzygy installées : les finales se lisent sans réseau.")
+                                 : error,
+                             !error.isEmpty());
+            });
+        }
+        syzygyState_ = {{"running", true}, {"pack", pack}, {"done", 0}, {"total", 0}, {"received", 0}};
+        emit syzygyDownloadChanged();
+        syzygyLoader_->start(folder, pack);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::cancelSyzygyDownload() {
+    if (syzygyLoader_)
+        syzygyLoader_->cancel();
 }

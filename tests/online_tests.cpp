@@ -4,6 +4,7 @@
 #include "online.h"
 #include "puzzles.h"
 #include "syzygy.h"
+#include "syzygy_download.h"
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
@@ -11,6 +12,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QProcess>
+#include <QSet>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -410,6 +412,90 @@ int main(int argc, char **argv) {
                 check(answered.size() == 1 && answered.first().first().toMap()["local"].toBool() &&
                           !offline.busy(),
                       "The explorer answers from the computer's tables without the network");
+                // Les noms des paquets : 145 tables jusqu'à cinq pièces, 365 à six, sans doublon,
+                // et ceux des fichiers de test en font partie.
+                QStringList upToFive;
+                for (const int n : {3, 4, 5})
+                    upToFive << t64::syzygy::tableNames(n);
+                const auto six = t64::syzygy::tableNames(6);
+                check(t64::syzygy::tableNames(3).size() == 5 && t64::syzygy::tableNames(4).size() == 30 &&
+                          upToFive.size() == 145 &&
+                          QSet<QString>(upToFive.cbegin(), upToFive.cend()).size() == 145 &&
+                          six.size() == 365 && upToFive.contains("KQvKQ") && upToFive.contains("KBNvK") &&
+                          upToFive.contains("KRPvKB") && !upToFive.contains("KBvKQ") &&
+                          six.contains("KQRvKQR"),
+                      "Table names follow Fathom's order, stronger side first");
+                // La somme de contrôle de fin de fichier.
+                const auto table = QString(T64_TEST_DATA) + "/syzygy/KQvK.rtbz";
+                QFile original(table);
+                original.open(QIODevice::ReadOnly);
+                const auto good = original.readAll();
+                auto broken = good;
+                broken[100] = char(broken[100] ^ 1);
+                const auto write = [](const QString &path, const QByteArray &bytes) {
+                    QFile out(path);
+                    return out.open(QIODevice::WriteOnly) && out.write(bytes) == bytes.size();
+                };
+                check(write(home.filePath("good.rtbz"), good) && write(home.filePath("bad.rtbz"), broken) &&
+                          write(home.filePath("short.rtbz"), good.left(good.size() - 10)),
+                      "Write checksum samples");
+                check(t64::syzygy::intact(home.filePath("good.rtbz")) &&
+                          !t64::syzygy::intact(home.filePath("bad.rtbz")) &&
+                          !t64::syzygy::intact(home.filePath("short.rtbz")),
+                      "A table checks its own checksum: one flipped bit or a cut file is seen");
+                check(t64::SyzygyDownload::candidates("6", "KQRvKQR.rtbz")
+                              .first()
+                              .endsWith("/6-dtz/KQRvKQR.rtbz") &&
+                          t64::SyzygyDownload::candidates("3-4-5", "KQvK.rtbw").size() == 3,
+                      "Each file has its mirrors");
+                // Un téléchargement : tout est là sauf trois fichiers. Le premier manque au
+                // premier miroir, le deuxième reprend une partie déjà reçue, le troisième
+                // arrive abîmé et s'arrête là.
+                QTemporaryDir store;
+                const auto pack = QDir(store.path()).filePath("3-4-5");
+                QDir().mkpath(pack);
+                QStringList wanted;
+                for (const auto &name : upToFive)
+                    wanted << name + ".rtbw" << name + ".rtbz";
+                const QStringList missing{"KQvK.rtbw", "KQvK.rtbz", "KRvK.rtbw"};
+                for (const auto &file : wanted)
+                    if (!missing.contains(file))
+                        write(QDir(pack).filePath(file), QByteArray(80, 'x'));
+                const auto fixture = [](const QString &name) {
+                    QFile in(QString(T64_TEST_DATA) + "/syzygy/" + name);
+                    in.open(QIODevice::ReadOnly);
+                    return in.readAll();
+                };
+                const auto queen = fixture("KQvK.rtbz"), rook = fixture("KRvK.rtbw");
+                write(QDir(pack).filePath("KQvK.rtbz.part"), queen.left(100));
+                auto damaged = rook;
+                damaged[50] = char(damaged[50] ^ 4);
+                Network mirrors;
+                mirrors.responses = {
+                    {404, {}}, {200, fixture("KQvK.rtbw")}, {206, queen.mid(100)}, {200, damaged}};
+                t64::SyzygyDownload download(nullptr, &mirrors);
+                QSignalSpy ended(&download, &t64::SyzygyDownload::finished);
+                download.start(store.path(), "3-4-5");
+                for (int i = 0; i < 400 && ended.isEmpty(); ++i)
+                    QTest::qWait(5);
+                check(ended.size() == 1 && ended.first().first().toString().contains("KRvK.rtbw") &&
+                          t64::syzygy::intact(QDir(pack).filePath("KQvK.rtbw")) &&
+                          t64::syzygy::intact(QDir(pack).filePath("KQvK.rtbz")) &&
+                          !QFile::exists(QDir(pack).filePath("KRvK.rtbw.part")) &&
+                          !QFile::exists(QDir(pack).filePath("KRvK.rtbw")),
+                      "Files arrive checked, a damaged one is thrown away and stops the download");
+                check(mirrors.requests.size() == 4 &&
+                          mirrors.requests[1].url().path().contains("3-4-5-wdl") &&
+                          mirrors.requests[2].rawHeader("Range") == "bytes=100-",
+                      "A missing file is asked of the next mirror, a partial one resumes");
+                mirrors.responses = {{200, rook}};
+                download.start(store.path(), "3-4-5");
+                for (int i = 0; i < 400 && ended.size() < 2; ++i)
+                    QTest::qWait(5);
+                check(ended.size() == 2 && ended.last().first().toString().isEmpty() &&
+                          t64::syzygy::intact(QDir(pack).filePath("KRvK.rtbw")) &&
+                          mirrors.requests.size() == 5,
+                      "Started again, only the missing file is fetched");
                 check(t64::syzygy::open({}).largest == 0 &&
                           t64::syzygy::probe("k7/8/1K6/8/8/8/8/7Q b - - 0 1").isEmpty(),
                       "Closing the tables leaves every ending to Lichess");

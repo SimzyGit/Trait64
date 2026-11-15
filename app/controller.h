@@ -8,6 +8,7 @@
 #include "online.h"
 #include "polyglot.h"
 #include "queue.h"
+#include "syzygy_download.h"
 #include "tournament.h"
 #include "uci.h"
 #include "ui_translator.h"
@@ -62,6 +63,8 @@ class Controller : public QObject {
     // parties modèles. Construit en arrière-plan, comme la préparation.
     Q_PROPERTY(QVariantMap openingReport READ openingReport NOTIFY reportChanged)
     Q_PROPERTY(QVariantMap onlineReport READ onlineReport NOTIFY onlineReportChanged)
+    // Le téléchargement des tables Syzygy : running, pack, done, total, received, error.
+    Q_PROPERTY(QVariantMap syzygyDownload READ syzygyDownload NOTIFY syzygyDownloadChanged)
     Q_PROPERTY(QVariantList bookMoves READ bookMoves NOTIFY bookMovesChanged)
     Q_PROPERTY(QVariantMap puzzles READ puzzles NOTIFY puzzlesChanged)
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
@@ -381,6 +384,11 @@ class Controller : public QObject {
     Q_INVOKABLE void buildOnlineReport(const QString &source, const QVariantMap &filters = {});
     Q_INVOKABLE void cancelOnlineReport();
     QVariantMap onlineReport() const { return onlineReport_; }
+    QVariantMap syzygyDownload() const { return syzygyState_; }
+    // « 3-4-5 » ou « 6 » : taille du paquet, place libre là où il irait, déjà présent.
+    Q_INVOKABLE QVariantMap syzygyPack(const QString &pack) const;
+    Q_INVOKABLE void downloadSyzygy(const QString &pack);
+    Q_INVOKABLE void cancelSyzygyDownload();
     // Rapatrie une partie de Lichess dans la bibliothèque, par son identifiant.
     // Les moteurs d'échecs installés sur la machine, Stockfish en tête.
     Q_INVOKABLE QStringList detectEngines() const;
@@ -450,6 +458,7 @@ class Controller : public QObject {
     void puzzlesChanged();
     void tabsChanged();
     void onlineReportChanged();
+    void syzygyDownloadChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -578,6 +587,9 @@ class Controller : public QObject {
     t64::OnlineGames *online_ = nullptr;
     t64::OpeningExplorer *explorer_ = nullptr;
     QVariantMap onlineReport_;
+    t64::SyzygyDownload *syzygyLoader_ = nullptr;
+    QVariantMap syzygyState_;
+    QString syzygyFolder() const;
     QString onlineSource_, onlineKey_;
     QHash<QString, QVariantMap> onlineCache_;
     t64::FideSync *fide_ = nullptr;

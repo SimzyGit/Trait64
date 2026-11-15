@@ -59,4 +59,4 @@ Import PGN depuis un fichier : pas de plafond global de 64 Mio, mais **64 Mio pa
 
 La recherche de positions inclut les variantes ; l’explorateur statistique utilise les lignes principales. Le bilan analyse la ligne principale, par défaut en deux passages (rapide du début à la fin, puis complet de la fin vers le début) : seuils fixes de 50/100/250 centipions pour imprécision/erreur/gaffe, dépendants du moteur et du budget choisi. La création de cartes depuis ce bilan concerne les échecs classiques et conserve une ligne de solution, sans reconnaître toutes les solutions équivalentes. Les résultats du bilan immédiat restent en mémoire ; **Annoter l’étude** enregistre les évaluations dans le PGN. La file d’analyses séparée conserve ses tâches et résultats en SQLite, peut analyser les variantes et reprendre après une interruption.
 
-Pas encore : Flatpak, pendules à plusieurs périodes, format SCID 5 et ChessBase, téléchargement guidé des tables Syzygy, plugins et format T64 compact final.
+Pas encore : Flatpak, pendules à plusieurs périodes, format SCID 5 et ChessBase, plugins et format T64 compact final.

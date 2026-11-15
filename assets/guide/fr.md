@@ -61,7 +61,7 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 - La page *Ouvertures* montre l'arbre des coups de vos parties, les livres Polyglot et le nom ECO de chaque position.
 - Un **répertoire** rassemble les lignes que vous jouez. Son onglet des lacunes donne la **couverture estimée** — la part des parties de votre bibliothèque qui restent dans le répertoire — et les réponses adverses non préparées, de la plus fréquente à la plus rare.
 - *Comparer…* met deux répertoires côte à côte.
-- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau.
+- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau. Les paramètres savent aussi les télécharger : 3 à 5 pièces (939 Mio) suffisent à la plupart des finales.
 
 ## S'entraîner
 

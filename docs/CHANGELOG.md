@@ -5,6 +5,7 @@
 - **Les finales se lisent sans réseau** quand les tables Syzygy sont posées sur l'ordinateur : l'onglet « Finales » de l'explorateur répond depuis le dossier choisi dans les paramètres (le même que reçoit le moteur), et ne demande à Lichess que ce que les tables ne couvrent pas — trop de pièces, roque encore permis, fichier manquant. Le dossier peut contenir les paquets de Lichess dans leurs sous-dossiers.
 - Les paramètres disent ce que contient le dossier (« 145 tables, jusqu'à 5 pièces ») et ont un bouton « Parcourir ».
 - Lecture par Fathom (MIT).
+- **Télécharger les tables depuis les paramètres** : 3 à 5 pièces (939 Mio) ou 6 pièces (149 Gio), avec la place libre affichée et refusée si elle manque. Chaque fichier est vérifié par la somme CityHash qu'il porte avant de prendre son nom ; un téléchargement interrompu reprend où il s'était arrêté, et un miroir qui n'a pas le fichier passe la main au suivant (Lichess, puis sesse.net).
 
 ## Bases SCID — 15 novembre 2026
 

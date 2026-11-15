@@ -36,7 +36,7 @@ Un million de parties de maîtres réelles : import en 85 minutes sur deux cœur
 - L'import d'étude Lichess et les requêtes Lichess en ligne ne sont testés que par faux réseau.
 - Les sons ont été vérifiés sous Linux en enregistrant la sortie d'un serveur PulseAudio ; sous Windows et macOS ils sont seulement compilés.
 - Aucun essai sur le matériel réel de l'utilisateur (Voyager, Wayland, écran 120 Hz).
-- Format SCID 5 et ChessBase, téléchargement guidé des tables Syzygy, OCR, échiquiers électroniques : non faits.
+- Format SCID 5 et ChessBase, OCR, échiquiers électroniques : non faits.
 - Le format `.t64` reste expérimental. Pas de version stable 1.0.
 
 ## Historique des jalons vérifiés

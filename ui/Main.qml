@@ -904,7 +904,22 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 TButton {text:qsTr("Parcourir");onClicked:syzygyFolder.open()}
                 Native.FolderDialog {id:syzygyFolder;title:qsTr("Dossier des tables Syzygy");onAccepted:controller.setPreference("syzygyPath",selectedFolder.toString())}
             }
-            Label {objectName:"syzygyStatus";Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:controller.syzygyStatus(controller.preferences.syzygyPath)}
+            Label {objectName:"syzygyStatus";Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:(controller.syzygyDownload.running,controller.syzygyStatus(controller.preferences.syzygyPath))}
+            // Télécharger les tables : chaque fichier est vérifié par la somme qu'il porte, et
+            // un téléchargement interrompu reprend où il s'était arrêté.
+            RowLayout {Layout.fillWidth:true;visible:!controller.syzygyDownload.running
+                readonly property var pack:(controller.syzygyDownload.running,controller.preferences.syzygyPath,controller.syzygyPack("3-4-5"))
+                TButton {objectName:"syzygySmall";text:qsTr("Télécharger 3 à 5 pièces (939 Mio)");onClicked:controller.downloadSyzygy("3-4-5")}
+                TButton {text:qsTr("6 pièces (149 Gio)");onClicked:controller.downloadSyzygy("6")
+                         ToolTip.visible:hovered;ToolTip.text:qsTr("Plusieurs jours de téléchargement selon la connexion. Les 3 à 5 pièces suffisent à la plupart des finales.")}
+                Label {Layout.fillWidth:true;elide:Text.ElideMiddle;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
+                       text:qsTr("%1 Gio libres dans %2").arg((parent.pack.free/1073741824).toFixed(1)).arg(parent.pack.folder)}
+            }
+            RowLayout {Layout.fillWidth:true;visible:!!controller.syzygyDownload.running
+                ProgressBar {Layout.fillWidth:true;from:0;to:Math.max(1,controller.syzygyDownload.total||0);value:controller.syzygyDownload.done||0}
+                Label {color:win.muted;text:qsTr("%1 / %2 fichiers · %3 Mio reçus").arg(controller.syzygyDownload.done||0).arg(controller.syzygyDownload.total||0).arg(Math.round((controller.syzygyDownload.received||0)/1048576))}
+                TButton {text:qsTr("Interrompre");onClicked:controller.cancelSyzygyDownload()}
+            }
             TextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
             RowLayout {Layout.fillWidth:true
                 TextField {id:profileName;Layout.fillWidth:true;placeholderText:qsTr("Nom du profil moteur")}
