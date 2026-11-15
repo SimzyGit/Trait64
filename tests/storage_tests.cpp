@@ -2,6 +2,7 @@
 #include "archive.h"
 #include "cancellation.h"
 #include "croissant.h"
+#include "crosstable.h"
 #include "database.h"
 #include "legacy_positions.h"
 #include "moveorder.h"
@@ -1261,6 +1262,65 @@ int main(int argc, char **argv) {
             });
             check(t64::croissant::movetext({}, std::string(chess::constants::STARTPOS)).empty(),
                   "An empty game reads as no move, and broken ones are refused");
+        }
+        {
+            // Tableau croisé d'un toutes-rondes à quatre, calculé à la main :
+            // A 2,5 · C 2 · B 1 · D ½ ; SB de A = 1 (B) + ½ × 2 (C) + ½ (D) = 2,5.
+            QTemporaryDir place;
+            t64::Database club(place.filePath("club.sqlite"));
+            const auto play = [&](const char *white, const char *black, const char *result, int round,
+                                  const char *date = "2026.01.10") {
+                t64::Game g;
+                g.tags["Event"] = "Open du club";
+                g.tags["Date"] = date;
+                g.tags["Round"] = std::to_string(round);
+                g.tags["White"] = white;
+                g.tags["Black"] = black;
+                g.tags["Result"] = result;
+                const std::map<std::string, int> elo{{"A", 2500}, {"B", 2400}, {"C", 2450}, {"D", 2300}};
+                g.tags["WhiteElo"] = std::to_string(elo.at(white));
+                g.tags["BlackElo"] = std::to_string(elo.at(black));
+                // Des coups différents, sinon les doublons se fondent.
+                g.play(0, round == 1 ? "e2e4" : round == 2 ? "d2d4" : "c2c4");
+                g.nodes[1].comment = std::string(white) + black + std::to_string(round);
+                return club.save(g);
+            };
+            const auto first = play("A", "B", "1-0", 1);
+            play("C", "D", "1/2-1/2", 1);
+            play("A", "C", "1/2-1/2", 2);
+            play("B", "D", "1-0", 2);
+            play("D", "A", "0-1", 3);
+            play("B", "C", "0-1", 3);
+            play("A", "D", "0-1", 1, "2025.01.10"); // l'édition précédente : à part
+            const auto table = club.tournament(first);
+            const auto rows = table["players"].toList();
+            QStringList order;
+            for (const auto &row : rows)
+                order << row.toMap()["name"].toString();
+            const auto a = rows.value(0).toMap();
+            check(order == QStringList{"A", "C", "B", "D"} && a["score"].toDouble() == 2.5 &&
+                      a["sonneborn"].toDouble() == 2.5 && a["games"].toInt() == 3 &&
+                      a["performance"].toInt() == 2650,
+                  "Crosstable ranks by points, Sonneborn-Berger and performance");
+            check(table["matrix"].toBool() && table["rounds"].toInt() == 3 &&
+                      a["cells"].toList() == QVariantList{"×", "½", "1", "1"} &&
+                      a["rounds"].toList() == QVariantList{"3○1", "2○½", "4●1"} &&
+                      a["cellGames"].toList().value(2).toList() == QVariantList{first} &&
+                      table["event"] == "Open du club" && table["year"] == "2026",
+                  "Crosstable cells, rounds and games, the same event in another year left out");
+            t64::Game nameless;
+            nameless.play(0, "g1f3");
+            const auto lone = club.save(nameless);
+            nameless.tags["Event"] = "?";
+            nameless.play(0, "b1c3");
+            const auto unknown = club.save(nameless);
+            rejects([&] { club.tournament(unknown); });
+            rejects([&] { club.tournament(lone); });
+            // Un open : trop peu de rencontres pour un tableau carré.
+            std::vector<t64::CrossGame> swiss;
+            for (int i = 0; i < 12; i += 2)
+                swiss.push_back({i, QString("P%1").arg(i), QString("P%1").arg(i + 1), "1-0", 0, 0, 1});
+            check(!t64::crosstable(swiss)["matrix"].toBool(), "An open with few pairings is shown by rounds");
         }
         {
             // Une base SCID écrite par SCID 4.7 à partir de tests/scid/essai.pgn :

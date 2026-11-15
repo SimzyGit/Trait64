@@ -1494,5 +1494,17 @@
   "Aucun coup légal ne s’écrit ainsi": "No legal move is written like this",
   "Coup…": "Move…",
   "Entrée : %1": "Enter: %1",
-  "Taper un coup": "Type a move"
+  "Taper un coup": "Type a move",
+  "Tableau du tournoi": "Tournament crosstable",
+  "%1 · %2": "%1 · %2",
+  "%1 joueurs · départage Sonneborn-Berger, puis victoires. Un clic sur un résultat ouvre la partie.": "%1 players · tie-break Sonneborn-Berger, then wins. Click a result to open the game.",
+  "%1 joueurs, %2 rondes · par ronde : rang de l’adversaire, ○ Blancs ● Noirs, résultat.": "%1 players, %2 rounds · per round: opponent's rank, ○ White ● Black, result.",
+  "Joueur": "Player",
+  "R%1": "R%1",
+  "Pts": "Pts",
+  "Perf.": "Perf.",
+  "Performance : Elo moyen des adversaires + 400 × (victoires − défaites) / parties, quand tous les adversaires sont classés.": "Performance: opponents' average Elo + 400 × (wins − losses) / games, when every opponent is rated.",
+  "Partie introuvable.": "Game not found.",
+  "Cette partie ne nomme pas son tournoi.": "This game does not name its tournament.",
+  "Plus de 3 000 parties sous ce nom : ce n'est pas un tournoi.": "More than 3,000 games under this name: this is not a tournament."
 }

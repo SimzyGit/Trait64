@@ -110,6 +110,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Bilan de la partie…"); enabled: !controller.state.training; onTriggered: reviewDialog.open()}
             MenuItem {text: qsTr("Chercher la nouveauté"); onTriggered: controller.findNovelty()}
             MenuItem {text: qsTr("Identifier l’ouverture"); onTriggered: controller.identifyOpening()}
+            MenuItem {text: qsTr("Tableau du tournoi"); enabled: controller.state.savedId > 0; onTriggered: crosstableDialog.show(controller.state.savedId)}
             MenuSeparator {}
             MenuItem {text: qsTr("Exporter le diagramme…"); onTriggered: diagramDialog.open()}
             MenuItem {text: qsTr("Exporter l’étude en PDF…"); onTriggered: pdfDialog.open()}
@@ -871,6 +872,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onAccepted:controller.deleteVariation()
     }
     Menu {id:gameMenu;x:win.width-width-40;y:220
+        MenuItem {text:qsTr("Tableau du tournoi");onTriggered:crosstableDialog.show(win.selectedGame)}
         MenuItem {text:qsTr("Fusionner dans l’étude courante");onTriggered:controller.mergeGame(win.selectedGame)}
         MenuItem {text:qsTr("Modifier la collection");onTriggered:collectionDialog.open()}
         MenuItem {text:trashCheck.checked?qsTr("Restaurer la partie"):qsTr("Mettre à la corbeille");onTriggered:controller.trash(win.selectedGame,!trashCheck.checked)}
@@ -889,6 +891,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Endgames {id:endgamesDialog;objectName:"endgamesDialog";backend:controller}
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
+    Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
     // Au tout premier lancement, le guide s'ouvre sur « Premiers pas » ; ensuite il reste
     // dans Aide. Les captures et tests (--smoke-test) ne le voient pas.

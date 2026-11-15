@@ -114,6 +114,10 @@ class Database {
                         const QString &position = {}, bool trash = false, const QVariantMap &filters = {},
                         const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantMap stats() const;
+    // Le tableau croisé du tournoi d'une partie : les parties du même événement, la même
+    // année quand la date la donne. Plus de 3 000 parties : refusé, ce n'est plus un
+    // tournoi (« Rated blitz game » de Lichess). Voir crosstable.h ; ajoute « event ».
+    QVariantMap tournament(qint64 gameId) const;
     QVariantList explorer(const QString &position) const;
     // Dossier d'une position : ce que la bibliothèque sait de ce qui s'y joue. Les coups
     // avec leur score, le même découpage par force des joueurs — un coup qui réussit chez

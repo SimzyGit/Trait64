@@ -46,7 +46,7 @@ These explanations come from the lines the engine computed: a longer calculation
 Every game you save (*Ctrl+S*) lives in the library.
 
 - **Search**: by player, event, date, result, rating, opening; by exact position; by material; by pawn structure; by pieces on squares (*Ke1 Pd4 pd5*, uppercase for White — this last search replays every game and can be slow).
-- **Import** large databases: importing is parallel, resumable and checks integrity. En Croissant `.db3` databases and SCID format 4 databases (`.si4`, with their `.sn4` and `.sg4` alongside) can be read too.
+- **Import** large databases: importing is parallel, resumable and checks integrity. The ⋮ menu of a game in the list opens the *Tournament crosstable*: standings, tie-breaks, performance, and a click on a result opens the game. En Croissant `.db3` databases and SCID format 4 databases (`.si4`, with their `.sn4` and `.sg4` alongside) can be read too.
 - **Duplicates**: *Database → Duplicate moves* finds games saved twice.
 - **Position dossier**: for the position shown, the moves played, results by level and the best games.
 

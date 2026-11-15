@@ -114,3 +114,12 @@ void Controller::previousLibraryPage() {
     searchCursor_ = searchCursors_.takeLast();
     requestLibrarySearch(false);
 }
+
+QVariantMap Controller::tournamentTable(qint64 gameId) {
+    try {
+        return db_->tournament(gameId);
+    } catch (const std::exception &e) {
+        fail(e);
+        return {};
+    }
+}

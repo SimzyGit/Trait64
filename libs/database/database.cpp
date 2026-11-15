@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "database.h"
 #include "cancellation.h"
+#include "crosstable.h"
 #include <QBuffer>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -559,6 +560,45 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     check(!canceled || !canceled->load(), "Recherche annulée.");
     return rows;
 }
+QVariantMap Database::tournament(qint64 gameId) const {
+    QSqlQuery q(db_);
+    q.prepare("SELECT event,date FROM games WHERE id=?");
+    q.addBindValue(gameId);
+    run(q);
+    check(q.next(), "Partie introuvable.");
+    const auto event = q.value(0).toString().trimmed(), date = q.value(1).toString();
+    // « Étude Trait64 » est le nom que porte toute étude nouvelle, pas un tournoi.
+    check(!event.isEmpty() && event != "?" && event != "Étude Trait64",
+          "Cette partie ne nomme pas son tournoi.");
+    const auto year = date.left(4);
+    const bool dated = year.size() == 4 && !year.contains('?');
+    QSqlQuery games(db_);
+    games.prepare(
+        QString(
+            "SELECT id,white,black,result,white_elo,black_elo,pgn FROM games WHERE deleted=0 AND event=?") +
+        (dated ? " AND substr(date,1,4)=?" : "") + " LIMIT 3001");
+    games.addBindValue(event);
+    if (dated)
+        games.addBindValue(year);
+    run(games);
+    static const QRegularExpression round(R"(\[Round\s+"(\d+))");
+    std::vector<CrossGame> found;
+    while (games.next()) {
+        // La ronde n'a pas de colonne : on la lit dans l'en-tête, avant le premier coup.
+        const auto pgn = games.value(6).toString();
+        const auto header = pgn.left(int(pgn.indexOf("\n\n")));
+        const auto match = round.match(header);
+        found.push_back({games.value(0).toLongLong(), games.value(1).toString(), games.value(2).toString(),
+                         games.value(3).toString(), games.value(4).toInt(), games.value(5).toInt(),
+                         match.hasMatch() ? match.captured(1).toInt() : 0});
+    }
+    check(found.size() <= 3000, "Plus de 3 000 parties sous ce nom : ce n'est pas un tournoi.");
+    auto table = crosstable(found);
+    table["event"] = event;
+    table["year"] = dated ? year : QString();
+    return table;
+}
+
 QVariantMap Database::stats() const {
     QVariantMap stats;
     for (const auto &[key, query] : std::vector<std::pair<QString, QString>>{

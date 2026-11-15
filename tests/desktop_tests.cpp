@@ -968,6 +968,46 @@ int main(int argc, char **argv) {
                 check(whites() == QStringList{"Tal", "Morphy", "Anand"}, "A second click reverses it");
                 sortBy("updated");
             }
+            {
+                // Le tableau du tournoi s'ouvre depuis une partie de la liste.
+                QString pgn;
+                const QStringList names{"Carlsen", "Caruana", "Ding", "Nepomniachtchi", "Gukesh", "Firouzja"};
+                int round = 0;
+                for (int i = 0; i < names.size(); ++i)
+                    for (int j = i + 1; j < names.size(); ++j) {
+                        ++round;
+                        const char *result = (i + j) % 3 == 0 ? "1/2-1/2" : (i + j) % 3 == 1 ? "1-0" : "0-1";
+                        pgn += QString("[Event \"Mémorial\"]\n[Date \"2026.03.%1\"]\n[Round \"%2\"]\n[White "
+                                       "\"%3\"]\n"
+                                       "[Black \"%4\"]\n[Result \"%5\"]\n[WhiteElo \"%6\"]\n[BlackElo "
+                                       "\"%7\"]\n\n1. e4 {%8} %5\n\n")
+                                   .arg(10 + round % 9)
+                                   .arg((round - 1) / 3 + 1)
+                                   .arg(names[i], names[j], result)
+                                   .arg(2800 - 15 * i)
+                                   .arg(2800 - 15 * j)
+                                   .arg(round);
+                    }
+                c.importText(pgn);
+                QElapsedTimer settle;
+                settle.start();
+                while ((c.busy() || c.librarySearching()) && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                qint64 memorial = 0;
+                for (const auto &row : c.games())
+                    if (row.toMap()["event"] == "Mémorial")
+                        memorial = row.toMap()["id"].toLongLong();
+                auto *dialog = window->findChild<QObject *>("crosstableDialog");
+                QMetaObject::invokeMethod(dialog, "show", Q_ARG(QVariant, memorial));
+                QTest::qWait(100);
+                check(memorial > 0 && dialog->property("visible").toBool() &&
+                          dialog->property("rows").toList().size() == 6 &&
+                          dialog->property("matrix").toBool(),
+                      "The crosstable opens from a game, six players in a square table");
+                if (const auto shot = qEnvironmentVariable("T64_CROSSTABLE_SCREENSHOT"); !shot.isEmpty())
+                    window->grabWindow().save(shot);
+                QMetaObject::invokeMethod(dialog, "close");
+            }
             window->setProperty("page", 2);
             QTest::qWait(50);
             for (const auto &pack : QStringList{"cburnett", "merida", "spatial", "pixel"}) {

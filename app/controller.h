@@ -363,6 +363,8 @@ class Controller : public QObject {
     // et le coup joué quand un seul y répond.
     Q_INVOKABLE QVariantList typedMoves(const QString &text) const;
     Q_INVOKABLE bool playTyped(const QString &text);
+    // Tableau croisé du tournoi de cette partie ; vide, avec un message, s'il ne se fait pas.
+    Q_INVOKABLE QVariantMap tournamentTable(qint64 gameId);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
     Q_INVOKABLE void stepVariation(int delta);

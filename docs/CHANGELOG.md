@@ -1,5 +1,9 @@
 # Changements
 
+## Tableau du tournoi — 15 novembre 2026
+
+- **Le tableau croisé d'un tournoi**, depuis le menu d'une partie de la bibliothèque ou *Partie → Tableau du tournoi* : classement aux points, départage Sonneborn-Berger puis victoires, performance (Elo moyen des adversaires + 400 × (V − D) / N). Tableau carré pour un toutes-rondes, une colonne par ronde pour un open (rang de l'adversaire, ○ Blancs ● Noirs, résultat). Un clic sur un résultat ouvre la partie. Le tournoi réunit les parties du même événement la même année.
+
 ## Bibliothèque plus claire — 15 novembre 2026
 
 - **Un clic sur un titre de colonne trie la liste** (Blancs, Noirs, Elo, résultat, coups, ECO, événement, date), un second clic inverse l'ordre ; la flèche dit l'ordre en cours. Le tri suit les pages, sans en perdre ni en répéter une.
