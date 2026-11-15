@@ -154,6 +154,7 @@ Item {
         Flickable {
             id: flowView
             objectName: "moveFlow"
+            TextZoom {}
             visible: root.flowMode
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -251,6 +252,7 @@ Item {
         ListView {
             id: moves
             objectName: "moveNotebook"
+            TextZoom {}
             visible: !root.flowMode
             Layout.fillWidth: true
             Layout.fillHeight: true

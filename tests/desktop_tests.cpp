@@ -24,6 +24,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QThreadPool>
+#include <QWheelEvent>
 #include <QXmlStreamReader>
 #include <QtConcurrent>
 #include <functional>
@@ -985,6 +986,32 @@ int main(int argc, char **argv) {
                 sortBy("white");
                 check(whites() == QStringList{"Tal", "Morphy", "Anand"}, "A second click reverses it");
                 sortBy("updated");
+            }
+            {
+                // Ctrl + molette sur la liste : la taille du texte, bornée.
+                window->setProperty("page", 1);
+                QTest::qWait(50);
+                auto *list = visualItem(window->contentItem(), "libraryResults");
+                check(list, "The library list is reachable");
+                const auto scale = c.preferences()["fontScale"].toDouble();
+                const auto wheel = [&](int delta, Qt::KeyboardModifiers modifiers) {
+                    const QPointF at = list->mapToScene(QPointF(list->width() / 2, list->height() / 2));
+                    QWheelEvent event(at, window->mapToGlobal(at.toPoint()), {}, {0, delta}, Qt::NoButton,
+                                      modifiers, Qt::NoScrollPhase, false);
+                    QCoreApplication::sendEvent(window, &event);
+                    QTest::qWait(10);
+                };
+                wheel(120, Qt::ControlModifier);
+                const auto bigger = c.preferences()["fontScale"].toDouble();
+                wheel(120, Qt::NoModifier);
+                check(list && std::abs(bigger - scale - .05) < 1e-6 &&
+                          c.preferences()["fontScale"].toDouble() == bigger,
+                      "Ctrl + wheel over a list enlarges the text, the wheel alone does not");
+                for (int i = 0; i < 30; ++i)
+                    wheel(-120, Qt::ControlModifier);
+                check(std::abs(c.preferences()["fontScale"].toDouble() - .9) < 1e-6,
+                      "The text never shrinks below 90 %");
+                c.setPreference("fontScale", scale);
             }
             {
                 // Le tableau du tournoi s'ouvre depuis une partie de la liste.

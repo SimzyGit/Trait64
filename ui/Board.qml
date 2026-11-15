@@ -232,8 +232,9 @@ Item {
         acceptedModifiers: Qt.ControlModifier
         onWheel: function(event) {
             const step = event.angleDelta.y > 0 ? .05 : -.05
-            root.backend.setPreference("boardScale",
-                                       Math.max(.5, Math.min(1, Number(root.prefs.boardScale) + step)))
+            // Après l'événement, comme TextZoom : la page se réagence sous lui sinon.
+            Qt.callLater(root.backend.setPreference, "boardScale",
+                         Math.max(.5, Math.min(1, Number(root.prefs.boardScale) + step)))
         }
     }
     // Réglage « Molette : parcourir les coups ». Sans lui la molette fait défiler le panneau.

@@ -281,7 +281,7 @@ ApplicationWindow {
                                 }
                             }
                         }
-                        ListView {id:libraryList;objectName:"libraryResults";Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
+                        ListView {id:libraryList;objectName:"libraryResults";TextZoom {}Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
                             // Les lignes sont recyclées plutôt que créées puis détruites : une
                             // bibliothèque de plusieurs centaines de parties défilait en
                             // reconstruisant chaque ligne, colonnes comprises.
