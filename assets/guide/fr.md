@@ -46,7 +46,7 @@ Ces explications viennent des suites calculées par le moteur : un calcul plus l
 Toutes vos parties enregistrées (*Ctrl+S*) vivent dans la bibliothèque.
 
 - **Rechercher** : par joueur, tournoi, date, résultat, Elo, ouverture ; par position exacte ; par matériel ; par structure de pions ; par pièces sur des cases (*Ke1 Pd4 pd5*, majuscule pour les Blancs — cette dernière recherche rejoue toutes les parties et peut être lente).
-- **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages, performance, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
+- **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. *Base → Tournois en direct* montre les retransmissions de Lichess : les échiquiers d'une ronde, et *Suivre* ouvre une partie dans l'analyse, où ses coups arrivent au fil du jeu. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages, performance, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
 - **Doublons** : *Base → Doublons de coups* repère les parties en double.
 - **Dossier de position** : pour la position affichée, les coups joués, les résultats par niveau et les meilleures parties.
 

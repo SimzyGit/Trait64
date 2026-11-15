@@ -128,6 +128,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Bibliothèque"); onTriggered: win.page = 1}
             MenuItem {text: qsTr("Recherche avancée…"); onTriggered: {win.page = 1; advancedDialog.open()}}
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
+            MenuItem {text: qsTr("Tournois en direct…"); onTriggered: liveDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Dossier de la position…"); onTriggered: openingReportDialog.open()}
             MenuItem {text: qsTr("Préparation par position…"); onTriggered: preparationDialog.open()}
@@ -896,6 +897,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
+    Live {id:liveDialog;objectName:"liveDialog";backend:controller}
     Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
     // Au tout premier lancement, le guide s'ouvre sur « Premiers pas » ; ensuite il reste
     // dans Aide. Les captures et tests (--smoke-test) ne le voient pas.
@@ -1035,6 +1037,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},
+            {title:qsTr("Tournois en direct"),run:function(){liveDialog.open()}},
             {title:qsTr("Apparence et langue"),run:function(){appearanceDialog.open()}},
             {title:qsTr("Raccourcis clavier"),run:function(){shortcutsDialog.open()}},
             {title:qsTr("Recherche avancée"),run:function(){advancedDialog.open()}},

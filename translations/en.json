@@ -1540,5 +1540,19 @@
   "Téléchargement…": "Downloading…",
   "Récupérer les parties de ce pseudo": "Fetch this username's games",
   "Ses 1 000 dernières parties, ajoutées à la bibliothèque ; le calcul suit.": "Their last 1,000 games, added to the library; the calculation follows.",
-  "Nom dans la base ou pseudo en ligne (vide : tous)": "Name in the database or online username (blank: all)"
+  "Nom dans la base ou pseudo en ligne (vide : tous)": "Name in the database or online username (blank: all)",
+  "Tournois en direct": "Live tournaments",
+  "Tournois en direct…": "Live tournaments…",
+  "Partie suivie dans l’analyse : %1. Ses coups y arrivent au fil de la ronde.": "Game followed in the analysis: %1. Its moves arrive there as the round goes on.",
+  "Retransmissions publiques de Lichess. Rien n’est demandé tant que ce panneau n’est pas ouvert.": "Public Lichess broadcasts. Nothing is requested until this panel is open.",
+  "Arrêter le suivi": "Stop following",
+  "Chargement…": "Loading…",
+  "Aucune retransmission.": "No broadcast.",
+  "Choisissez un tournoi à gauche.": "Pick a tournament on the left.",
+  "Suivre": "Follow",
+  "Partie introuvable dans le PGN de la ronde.": "Game not found in the round's PGN.",
+  "Lichess demande de ralentir. Le suivi reprendra dans un instant.": "Lichess asks to slow down. Following will resume shortly.",
+  "Retransmissions Lichess injoignables : ": "Lichess broadcasts unreachable: ",
+  "Ronde inconnue.": "Unknown round.",
+  "Réponse de Lichess illisible.": "Unreadable Lichess answer."
 }

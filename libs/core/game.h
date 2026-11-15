@@ -67,4 +67,9 @@ std::uint64_t positionHash(const std::string &fen);
 // Key of the pawn structure alone (both colours), for "same pawn structure" searches.
 std::uint64_t pawnKey(const std::string &fen);
 uint64_t perft(chess::Board &board, int depth);
+// Une partie suivie en direct reçoit ses nouveaux coups : ceux de `fresh` au-delà de la
+// ligne principale de `game`, commentaires ([%clk]) compris. Rend le dernier nœud de la
+// ligne principale, ou -1 si les deux lignes divergent (on ne touche alors à rien).
+// `added` dit si quelque chose a été ajouté.
+int extendMainline(Game &game, const Game &fresh, bool &added);
 } // namespace t64

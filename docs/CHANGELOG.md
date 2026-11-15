@@ -1,5 +1,9 @@
 # Changements
 
+## Tournois en direct — 15 novembre 2026
+
+- **Suivre les retransmissions de Lichess** (*Base → Tournois en direct*) : les tournois en cours puis les derniers terminés ; pour une ronde, tous ses échiquiers en vignette avec joueurs, titres, classements, pendules et résultat, rafraîchis toutes les vingt secondes. **Suivre** ouvre la partie dans un onglet de l'analyse : ses nouveaux coups et ses pendules y arrivent au fil de la ronde, et la vue suit si l'on était au dernier coup. Une variante ajoutée reste ; si la ligne principale a été modifiée, la partie n'est plus touchée. Rien n'est demandé à Lichess tant que le panneau n'est pas ouvert ou qu'aucune partie n'est suivie.
+
 ## Tableau du tournoi — 15 novembre 2026
 
 - **Corriger les noms** (*Base → Corriger les noms*) : les écritures d'un même joueur (« Carlsen, Magnus », « Carlsen,M. », « Magnus Carlsen ») ou d'un même tournoi sont regroupées, sans tenir compte des accents, de la casse ni de la ponctuation ; on choisit l'écriture à garder et les autres sont réécrites dans les parties et l'en-tête de leur PGN.

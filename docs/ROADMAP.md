@@ -60,7 +60,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 
 | Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
 |---|---|---|---|---|---|
-| Retransmissions en direct : échiquiers, barre d'éval par échiquier, classement | ✅ payant | — | ✅ | ✗ | **E1** |
+| Retransmissions en direct : échiquiers, barre d'éval par échiquier, classement | ✅ payant | — | ✅ | ◐ 15 nov. : échiquiers, pendules, suivi dans l'analyse ; pas de barre d'éval par échiquier | **E1** |
 | Calcul de variantes (exercice de Stoyko), mat en N | — | ✅ | — | ◐ puzzles | F2 |
 | Récolter du matériel d'entraînement d'une base entière | ✅ | — | — | ◐ depuis vos erreurs | F3 |
 | Correspondance (Xfcc) | ✅ | ✅ | — | ✗ | D3 |
@@ -396,7 +396,7 @@ Ajouter :
 
 Trois ajouts qui n'existent chez aucun concurrent libre, et que l'architecture locale de Trait64 rend possibles.
 
-- [ ] **Suivre les tournois en direct.** Lichess diffuse ses retransmissions en PGN par une API publique et gratuite. Suivre une partie coup par coup avec son propre moteur, et voir en direct quand elle entre dans son répertoire et où elle en sort. ChessBase fait payer cet usage.
+- [x] **Suivre les tournois en direct.** (15 novembre : échiquiers de la ronde et partie suivie dans l'analyse ; reste l'entrée et la sortie du répertoire signalées en direct.) Lichess diffuse ses retransmissions en PGN par une API publique et gratuite. Suivre une partie coup par coup avec son propre moteur, et voir en direct quand elle entre dans son répertoire et où elle en sort. ChessBase fait payer cet usage.
 - [x] **Partager sans serveur.** Exporter une étude ou un bilan en un fichier HTML autonome, échiquier et variantes compris. Cela règle la faiblesse du « tout local » sans renier la promesse : un fichier n'est pas un compte. — fait pour une étude (export HTML) ; pas pour un bilan
 - [ ] **Saisir une partie depuis une feuille de notation.** Photographier la feuille et en tirer le PGN. C'est le point de douleur du joueur de club, et personne ne le fait bien. Le plus coûteux des trois.
 - [ ] ◐ Rapports PDF avancés — partiel : étude en PDF avec diagramme et notation.

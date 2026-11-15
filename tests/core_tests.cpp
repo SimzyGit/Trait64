@@ -49,6 +49,27 @@ int main() {
         check(hanging("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
                       chess::Color::BLACK) == std::vector<std::string>{"e5"},
               "A pawn attacked by a knight and undefended is en prise for the side to move too");
+        {
+            // Suivi en direct : les nouveaux coups s'ajoutent au bout, une ligne divergente
+            // n'est pas touchée, une variante ajoutée par l'utilisateur reste.
+            t64::Game mine, fresh;
+            mine.play(mine.play(0, "e2e4"), "e7e5");
+            mine.play(1, "c7c5"); // variante à soi
+            int n = 0;
+            for (const char *uci : {"e2e4", "e7e5", "g1f3", "b8c6"})
+                n = fresh.play(n, uci);
+            fresh.nodes[n].comment = "[%clk 1:30:00]";
+            bool added = false;
+            const int end = t64::extendMainline(mine, fresh, added);
+            check(added && end > 0 && mine.nodes[end].uci == "b8c6" &&
+                      mine.nodes[end].comment == "[%clk 1:30:00]" && mine.nodes[1].children.size() == 2,
+                  "A followed game gets its new moves and clocks, the user's variation stays");
+            check(t64::extendMainline(mine, fresh, added) == end && !added, "Nothing new, nothing added");
+            t64::Game other;
+            other.play(0, "d2d4");
+            check(t64::extendMainline(mine, other, added) == -1 && !added,
+                  "A diverging main line is left alone");
+        }
         check(hanging(std::string(chess::constants::STARTPOS).c_str(), chess::Color::WHITE).empty() &&
                   hanging(std::string(chess::constants::STARTPOS).c_str(), chess::Color::BLACK).empty(),
               "Nothing is en prise at the start");

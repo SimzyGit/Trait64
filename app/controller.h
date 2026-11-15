@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
+#include "broadcasts.h"
 #include "comparison.h"
 #include "content.h"
 #include "database.h"
@@ -369,6 +370,16 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap nameVariants READ nameVariants NOTIFY nameVariantsChanged)
     QVariantMap nameVariants() const { return nameVariants_; }
     Q_INVOKABLE void findNameVariants(const QString &field);
+    // Retransmissions en direct (Lichess) : list, round, following, error, loading.
+    Q_PROPERTY(QVariantMap live READ live NOTIFY liveChanged)
+    QVariantMap live() const { return live_; }
+    Q_INVOKABLE void liveList();
+    Q_INVOKABLE void liveOpenRound(const QVariantMap &entry);
+    // Ouvre la partie dans un onglet et la tient à jour tant qu'on la suit.
+    Q_INVOKABLE void liveFollow(int gameIndex);
+    // Le panneau se ferme : on cesse d'interroger Lichess, sauf pour la partie suivie.
+    Q_INVOKABLE void liveClose();
+    Q_INVOKABLE void liveStopFollowing();
     Q_INVOKABLE void unifyNames(const QString &field, const QStringList &spellings, const QString &kept);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
@@ -471,6 +482,7 @@ class Controller : public QObject {
     void onlineReportChanged();
     void syzygyDownloadChanged();
     void nameVariantsChanged();
+    void liveChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -602,6 +614,15 @@ class Controller : public QObject {
     t64::SyzygyDownload *syzygyLoader_ = nullptr;
     QVariantMap syzygyState_;
     QVariantMap nameVariants_; // field, running, groups, error
+    t64::Broadcasts *broadcasts_ = nullptr;
+    QVariantMap live_;
+    QTimer *liveTimer_ = nullptr;
+    bool liveWatching_ = false; // le panneau est ouvert
+    int livePendingGame_ = -1;  // partie à ouvrir à la réception du PGN
+    QStringList liveFollowed_;  // White, Black, Event de la partie suivie
+    void ensureBroadcasts();
+    void liveTick();
+    void liveReceivedPgn(const QString &roundId, const QByteArray &pgn);
     QString syzygyFolder() const;
     QString onlineSource_, onlineKey_;
     QHash<QString, QVariantMap> onlineCache_;

@@ -556,6 +556,27 @@ std::uint64_t pawnKey(const std::string &fen) {
     }
     return key;
 }
+int extendMainline(Game &game, const Game &fresh, bool &added) {
+    added = false;
+    int mine = 0, theirs = 0;
+    while (!fresh.nodes[theirs].children.empty() && !game.nodes[mine].children.empty()) {
+        const int next = fresh.nodes[theirs].children[0], ours = game.nodes[mine].children[0];
+        if (game.nodes[ours].uci != fresh.nodes[next].uci)
+            return -1;
+        mine = ours;
+        theirs = next;
+    }
+    while (!fresh.nodes[theirs].children.empty()) {
+        theirs = fresh.nodes[theirs].children[0];
+        mine = game.play(mine, fresh.nodes[theirs].uci);
+        game.nodes[mine].comment = fresh.nodes[theirs].comment;
+        added = true;
+    }
+    // Ce que l'on suit va jusqu'au bout de sa propre ligne principale.
+    while (!game.nodes[mine].children.empty())
+        mine = game.nodes[mine].children[0];
+    return mine;
+}
 uint64_t perft(chess::Board &board, int depth) {
     if (depth <= 0)
         return 1;

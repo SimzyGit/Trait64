@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "broadcasts.h"
 #include "explorer.h"
 #include "fide.h"
 #include "online.h"
@@ -496,6 +497,54 @@ int main(int argc, char **argv) {
                           t64::syzygy::intact(QDir(pack).filePath("KRvK.rtbw")) &&
                           mirrors.requests.size() == 5,
                       "Started again, only the missing file is fetched");
+                // Retransmissions : la liste, une ronde, son PGN, sans réseau.
+                const QByteArray top =
+                    R"({"active":[{"tour":{"id":"t1","name":"Tata Steel Masters","slug":"tata-steel-masters","tier":5},
+                    "round":{"id":"abcdefgh","name":"Round 5","slug":"round-5","ongoing":true,"startsAt":1}}],
+                    "past":{"currentPageResults":[{"tour":{"name":"Bad","slug":"../x"},"round":{"id":"zz","name":"R","slug":"r"}},
+                    {"tour":{"name":"Old Open","slug":"old-open"},"round":{"id":"hgfedcba","name":"Round 9","slug":"round-9","finishedAt":5}}]}})";
+                const auto tours = t64::Broadcasts::parseTop(top);
+                check(tours.size() == 2 && tours[0].toMap()["ongoing"].toBool() &&
+                          tours[0].toMap()["roundId"] == "abcdefgh" && tours[1].toMap()["finished"].toBool(),
+                      "Broadcast list: live first, an unsafe slug is dropped");
+                const QByteArray roundJson =
+                    R"({"round":{"id":"abcdefgh","name":"Round 5","ongoing":true},"tour":{"name":"Tata Steel Masters"},
+                    "games":[{"id":"g1","name":"A - B","fen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1","lastMove":"e2e4",
+                    "status":"½-½","players":[{"name":"Gukesh D","title":"GM","rating":2783,"fed":"IND","clock":540000},
+                    {"name":"Abdusattorov, Nodirbek","title":"GM","rating":2766,"clock":12300}]}]})";
+                const auto parsed = t64::Broadcasts::parseRound(roundJson);
+                const auto board = parsed["games"].toList().value(0).toMap();
+                check(parsed["round"] == "Round 5" && board["status"] == "1/2-1/2" &&
+                          board["lastMove"] == "e2e4" && board["white"].toMap()["clock"].toInt() == 5400 &&
+                          board["black"].toMap()["name"] == "Abdusattorov, Nodirbek" &&
+                          t64::Broadcasts::parseRound("oops").contains("error"),
+                      "Broadcast round: players, clocks in seconds, ½-½ read as a draw");
+                {
+                    Network lichess;
+                    lichess.responses = {
+                        {200, top}, {200, roundJson}, {200, "[Event \"X\"]\n\n1. e4 *\n"}, {429, {}}};
+                    t64::Broadcasts feed(nullptr, &lichess);
+                    QSignalSpy listed(&feed, &t64::Broadcasts::listed),
+                        ready(&feed, &t64::Broadcasts::roundReady), pgn(&feed, &t64::Broadcasts::pgnReady),
+                        failed(&feed, &t64::Broadcasts::failed);
+                    feed.list();
+                    feed.round("tata-steel-masters", "round-5", "abcdefgh");
+                    feed.pgn("abcdefgh");
+                    feed.pgn("abcdefgh");
+                    feed.round("../etc", "x", "y");
+                    for (int i = 0; i < 200 && (listed.isEmpty() || ready.isEmpty() || pgn.isEmpty() ||
+                                                failed.size() < 2);
+                         ++i)
+                        QTest::qWait(5);
+                    check(listed.size() == 1 && ready.size() == 1 && pgn.size() == 1 && failed.size() == 2 &&
+                              lichess.requests.size() == 4 &&
+                              lichess.requests[1].url().path() ==
+                                  "/api/broadcast/tata-steel-masters/round-5/abcdefgh" &&
+                              lichess.requests[2].url().toString().endsWith(
+                                  "/api/broadcast/round/abcdefgh.pgn?clocks=true"),
+                          "Broadcasts ask Lichess the right addresses, refuse an unsafe one and report a "
+                          "slow-down");
+                }
                 check(t64::syzygy::open({}).largest == 0 &&
                           t64::syzygy::probe("k7/8/1K6/8/8/8/8/7Q b - - 0 1").isEmpty(),
                       "Closing the tables leaves every ending to Lichess");
