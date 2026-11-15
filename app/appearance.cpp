@@ -73,6 +73,8 @@ const QList<QPair<QString, QString>> &Controller::defaultShortcuts() {
                                                      {"flip", "F"},
                                                      {"threat", "M"},
                                                      {"typeMove", "Ctrl+L"},
+                                                     {"boardOnly", "Ctrl+B"},
+                                                     {"fullScreen", "F11"},
                                                      {"autoplay", "Space"},
                                                      {"deleteMove", "Del"},
                                                      {"undo", "Ctrl+Z"},

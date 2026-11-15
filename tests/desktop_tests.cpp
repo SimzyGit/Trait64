@@ -1129,6 +1129,23 @@ int main(int argc, char **argv) {
             }
             window->setProperty("page", 2);
             QTest::qWait(50);
+            {
+                // L'échiquier seul : le panneau d'analyse s'efface et l'échiquier grandit.
+                auto *board = visualItem(window->contentItem(), "chessboard");
+                auto *panel = visualItem(window->contentItem(), "boardPanel");
+                const auto before = panel->width();
+                window->setProperty("boardOnly", true);
+                QTest::qWait(80);
+                const auto centre = board->mapToScene(QPointF(board->width() / 2, 0)).x();
+                check(!visualItem(window->contentItem(), "analysisPanel")->isVisible() &&
+                          panel->width() > before &&
+                          std::abs(centre - window->width() / 2.0) < window->width() * .05,
+                      "Board only hides the analysis panel and centres the board in the whole width");
+                if (const auto shot = qEnvironmentVariable("T64_BOARDONLY_SCREENSHOT"); !shot.isEmpty())
+                    window->grabWindow().save(shot);
+                window->setProperty("boardOnly", false);
+                QTest::qWait(50);
+            }
             for (const auto &pack : QStringList{"cburnett", "merida", "spatial", "pixel"}) {
                 for (QChar color : QString("wb"))
                     for (QChar piece : QString("KQRBNP"))
@@ -1289,8 +1306,9 @@ int main(int argc, char **argv) {
                 {
                     // Raccourcis : on capte une combinaison, une combinaison prise est refusée.
                     const auto keys = [&] { return c.preferences()["shortcuts"].toMap(); };
-                    check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 19 &&
-                              keys()["typeMove"] == "Ctrl+L",
+                    check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 21 &&
+                              keys()["typeMove"] == "Ctrl+L" && keys()["boardOnly"] == "Ctrl+B" &&
+                              keys()["fullScreen"] == "F11",
                           "Every shortcut has its default");
                     check(c.keyName(Qt::Key_Shift, Qt::ShiftModifier).isEmpty() &&
                               c.keyName(Qt::Key_F, int(Qt::ControlModifier | Qt::ShiftModifier)) ==
@@ -1302,13 +1320,13 @@ int main(int argc, char **argv) {
                     dialog->setProperty("listening", "flip");
                     if (auto *catcher = window->findChild<QQuickItem *>("shortcutCatcher"))
                         catcher->forceActiveFocus();
-                    QTest::keyClick(window, Qt::Key_B, Qt::ControlModifier);
+                    QTest::keyClick(window, Qt::Key_J, Qt::ControlModifier);
                     QTest::qWait(50);
-                    check(keys()["flip"] == "Ctrl+B" && dialog->property("listening").toString().isEmpty(),
+                    check(keys()["flip"] == "Ctrl+J" && dialog->property("listening").toString().isEmpty(),
                           "Pressing a combination in the dialog assigns it");
                     QMetaObject::invokeMethod(dialog, "assign", Q_ARG(QVariant, "flip"),
                                               Q_ARG(QVariant, "Left"));
-                    check(keys()["flip"] == "Ctrl+B" &&
+                    check(keys()["flip"] == "Ctrl+J" &&
                               dialog->property("problem").toString().contains("Left"),
                           "A combination already used elsewhere is refused, and said so");
                     QMetaObject::invokeMethod(dialog, "close");
@@ -1316,7 +1334,7 @@ int main(int argc, char **argv) {
                     window->setProperty("page", 2);
                     QTest::qWait(50);
                     const bool before = c.state()["flipped"].toBool();
-                    QTest::keyClick(window, Qt::Key_B, Qt::ControlModifier);
+                    QTest::keyClick(window, Qt::Key_J, Qt::ControlModifier);
                     QTest::qWait(50);
                     const bool turned = c.state()["flipped"].toBool() != before;
                     QTest::keyClick(window, Qt::Key_F);

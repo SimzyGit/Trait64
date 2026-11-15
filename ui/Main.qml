@@ -62,6 +62,9 @@ ApplicationWindow {
     property var advanced:({})
     function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;f.pawnStructure=positionCheck.checked&&pawnCheck.checked;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
     function filterLibrary() {applyAdvanced()}
+    // L'échiquier seul : la notation et le moteur s'effacent, l'échiquier prend la place.
+    property bool boardOnly:false
+    function toggleFullScreen(){visibility=visibility===Window.FullScreen?Window.Windowed:Window.FullScreen}
     function bestGamesHere(){page=1;positionCheck.checked=true;pawnCheck.checked=false;trashCheck.checked=false;var f=Object.assign({},advanced);f.sort="elo";f.reverse=false;advanced=f;applyAdvanced()}
     // Une recherche enregistrée : tout ce que la bibliothèque filtre, sous un nom.
     function currentSearch(){return {text:searchField.text,result:resultBox.currentIndex,favorite:favoriteCheck.checked,position:positionCheck.checked,pawns:pawnCheck.checked,trash:trashCheck.checked,filters:Object.assign({},advanced)}}
@@ -153,6 +156,8 @@ ApplicationWindow {
         Menu { title: qsTr("&Affichage")
             MenuItem {text: win.light ? qsTr("Thème sombre") : qsTr("Thème clair"); onTriggered: {controller.setPreference("lightTheme", !win.light); controller.setPreference("backgroundColor", "")}}
             MenuItem {text: qsTr("Pièces, échiquier et couleurs…"); onTriggered: appearanceDialog.open()}
+            MenuItem {text: qsTr("Échiquier seul"); checkable: true; checked: win.boardOnly; onTriggered: {win.boardOnly = checked; win.page = 2}}
+            MenuItem {text: qsTr("Plein écran"); checkable: true; checked: win.visibility === Window.FullScreen; onTriggered: win.toggleFullScreen()}
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
@@ -422,7 +427,7 @@ objectName:"analysisSplit"
                     onResizingChanged:if(!resizing&&width>0)controller.setPreference("analysisPanelRatio",boardPanel.width/width)
                     handle:Rectangle {implicitWidth:5;color:SplitHandle.hovered||SplitHandle.pressed?win.line:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:win.line}}
                     ColumnLayout {
-                        id:boardPanel;SplitView.preferredWidth:analysisSplit.fittedBoardWidth;SplitView.minimumWidth:290;spacing:win.height<820?5:10
+                        id:boardPanel;objectName:"boardPanel";SplitView.preferredWidth:analysisSplit.fittedBoardWidth;SplitView.minimumWidth:290;spacing:win.height<820?5:10
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
                             Rectangle {Layout.preferredWidth:10;Layout.preferredHeight:10;Layout.alignment:Qt.AlignVCenter;radius:2;color:controller.state.flipped?"#ffffff":"#1d2125";border.color:"#1d2125"}
                             Label {Layout.fillWidth:true;elide:Text.ElideRight;text:controller.state.flipped?(controller.state.tags.White||qsTr("Blancs")):(controller.state.tags.Black||qsTr("Noirs"));font.weight:Font.DemiBold}
@@ -491,7 +496,7 @@ objectName:"analysisSplit"
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.
                     SplitView {
-                        objectName:"analysisPanel"
+                        objectName:"analysisPanel";visible:!win.boardOnly
                         SplitView.fillWidth:true;SplitView.minimumWidth:300;orientation:Qt.Vertical
                         handle:Rectangle {implicitHeight:5;color:SplitHandle.hovered||SplitHandle.pressed?win.line:"transparent";Rectangle {anchors.verticalCenter:parent.verticalCenter;height:1;width:parent.width;color:win.line}}
                         Rectangle {
@@ -1126,6 +1131,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     // et il vaut mieux le dire que laisser croire que personne n'a joué la suite.
     function pastOpeningIndex(){var f=(controller.state.fen||"").split(" ");return f.length>5&&(parseInt(f[5])-1)*2+(f[1]==="b"?1:0)>=40}
     function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
+    Shortcut {sequence:win.keyFor("boardOnly");onActivated:{win.boardOnly=!win.boardOnly;win.page=2}}
+    Shortcut {sequence:win.keyFor("fullScreen");onActivated:win.toggleFullScreen()}
     Shortcut {sequence:win.keyFor("typeMove");onActivated:{win.page=2;moveEntry.forceActiveFocus()}}
     Shortcut {sequence:win.keyFor("threat");enabled:win.navigationKeys();onActivated:controller.toggleThreat()}
     Shortcut {sequence:win.keyFor("autoplay");enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}

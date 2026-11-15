@@ -74,7 +74,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 - **J1 Accueil** : un second grand échiquier qui répète l'analyse. Le remplacer par un tableau de bord : dernières parties, révisions du jour, puzzle du jour, nouvelles parties des comptes synchronisés, reprise de l'étude en cours avec une vignette.
 - **J2** La barre de menus et la rangée d'onglets disent deux fois la même chose ; le titre de l'étude est répété en haut à droite. Une seule navigation (barre latérale à icônes, comme ChessBase 18 et En Croissant), libellés plus aérés.
 - **J2** Barre d'évaluation grise et muette sans moteur ; la nommer ou la replier.
-- **J2** Icônes cohérentes sur les boutons d'action (ChessBase 18 a refait les siennes) ; mode « échiquier seul » plein écran (le « Pro board » de chess.ceo).
+- **J2** Icônes cohérentes sur les boutons d'action (ChessBase 18 a refait les siennes) ; mode « échiquier seul » plein écran (le « Pro board » de chess.ceo) — ✅ 15 nov. (Ctrl+B, F11).
 
 Fait le 15 novembre : bibliothèque, saisie au clavier, tableau croisé, pièces en prise, recherche dans les commentaires, correction des noms, accueil.
 

@@ -96,6 +96,7 @@ Your data is in the folder shown in *Settings*; the library is `library.sqlite`.
 | Space | Automatic playback |
 | F | Flip the board |
 | M | Threat |
+| Ctrl+B / F11 | Board only / full screen |
 | Ctrl+L | Type a move (“Nf3”, “e4”, “O-O”, or “e2e4”) then Enter |
 | Delete | Delete the move and what follows |
 | Ctrl+Z / Ctrl+Shift+Z | Undo / redo |
