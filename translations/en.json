@@ -1522,5 +1522,18 @@
   "%1 · %2 partie(s)": "%1 · %2 game(s)",
   "Écriture à garder": "Spelling to keep",
   "Unifier": "Unify",
-  "%1 partie(s) corrigée(s) : « %2 ».": "%1 game(s) fixed: “%2”."
+  "%1 partie(s) corrigée(s) : « %2 ».": "%1 game(s) fixed: “%2”.",
+  "Reprendre l’analyse": "Resume the analysis",
+  "%1 carte(s) à réviser.": "%1 card(s) to review.",
+  "Aucune carte à réviser : tout est à jour.": "No card to review: everything is up to date.",
+  "Objectif du jour : %1 sur %2": "Daily goal: %1 of %2",
+  "S’entraîner": "Train",
+  "Dernières parties": "Recent games",
+  "%1 parties · %2 favorites": "%1 games · %2 favourites",
+  "jamais": "never",
+  "Ajouter un compte en ligne": "Add an online account",
+  "Ce qu’un adversaire joue dans une position, d’après votre bibliothèque et les parties en ligne.": "What an opponent plays in a position, from your library and online games.",
+  "Une partie": "One game",
+  "%1 parties": "%1 games",
+  "%1 favorite(s)": "%1 favourite(s)"
 }

@@ -61,10 +61,10 @@ int uiLayoutProbe(const QString &directory) {
                 check(pos.x()>=0 && pos.x()+board->width()<=window->width()+1, "Layout: board stays within horizontal viewport");
                 row["boardWidth"]=board->width();
                 if(page==0) {
-                    auto *card=visualItem(window->contentItem(),"homeBoardCard");
-                    auto *actions=visualItem(window->contentItem(),"homeBoardCommands");
-                    check(card&&actions,"Layout: home board card and controls exist");
-                    check(actions->mapToItem(card,QPointF(0,actions->height())).y()<=card->height()+1,"Layout: home board controls stay inside their card after resize");
+                    auto *card=visualItem(window->contentItem(),"homeStudyCard");
+                    check(card&&visualItem(window->contentItem(),"homeTodayCard"),"Layout: home study card and dashboard exist");
+                    check(board->mapToItem(card,QPointF(board->width(),board->height())).y()<=card->height()+1&&
+                          board->mapToItem(card,QPointF(board->width(),0)).x()<=card->width()+1,"Layout: home thumbnail stays inside its card after resize");
                 }
                 if(page==2) {
                     auto *save=visualItem(window->contentItem(),"saveStudy");check(save, "Layout: save action exists");

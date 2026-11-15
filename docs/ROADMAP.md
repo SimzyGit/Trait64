@@ -76,6 +76,8 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 - **J2** Barre d'évaluation grise et muette sans moteur ; la nommer ou la replier.
 - **J2** Icônes cohérentes sur les boutons d'action (ChessBase 18 a refait les siennes) ; mode « échiquier seul » plein écran (le « Pro board » de chess.ceo).
 
+Fait le 15 novembre : bibliothèque, saisie au clavier, tableau croisé, pièces en prise, recherche dans les commentaires, correction des noms, accueil.
+
 Ordre retenu pour coder : **J1 bibliothèque** (tri par en-tête, barre d'outils, filtres) → **J1 saisie au clavier** → **D1 tableau croisé** → **B1 relations d'attaque** → **D1 recherche dans les commentaires** → **D1 correction des noms** → **J1 accueil** → **E1 préparation d'un adversaire en ligne** → **E1 retransmissions en direct**.
 
 ## Ce que font les autres, relevé du 12 novembre 2026

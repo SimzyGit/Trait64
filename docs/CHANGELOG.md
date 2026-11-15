@@ -9,6 +9,7 @@
 
 ## Bibliothèque plus claire — 15 novembre 2026
 
+- **L'accueil devient un tableau de bord** : l'étude en cours en vignette (un clic la reprend), ce qui attend aujourd'hui (révisions, objectif du jour), les dernières parties avec leur résultat, la bibliothèque et les comptes en ligne avec leur dernière synchronisation, la préparation. Il répétait auparavant l'échiquier de l'analyse en grand.
 - **Un clic sur un titre de colonne trie la liste** (Blancs, Noirs, Elo, résultat, coups, ECO, événement, date), un second clic inverse l'ordre ; la flèche dit l'ordre en cours. Le tri suit les pages, sans en perdre ni en répéter une.
 - **Une seule rangée en haut** : la base, la recherche, le résultat, Recherche avancée et Importer. Exports, classements, comptes, téléchargements et doublons passent dans le menu « Base ».
 - **Taper un coup au clavier** : un champ sous l'échiquier (Ctrl+L) accepte « Cf3 » ou « Nf3 », « nf3 », « exd5 », « O-O » ou « 0-0 », « e8=D », et la forme « e2e4 ». Les candidats s'affichent pendant la frappe ; Entrée joue le coup dès qu'un seul répond.

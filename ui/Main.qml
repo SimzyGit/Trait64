@@ -205,6 +205,7 @@ ApplicationWindow {
                 onShowRepertoires: repertoiresDialog.open()
                 onShowPreparation: preparationDialog.open()
                 onShowEngines: settingsDialog.open()
+                onShowAccounts: accountsDialog.open()
             }
 
             // LIBRARY
