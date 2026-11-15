@@ -8,6 +8,7 @@
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QImageReader>
+#include <QKeySequence>
 #include <QQmlEngine>
 #include <QUuid>
 #include <algorithm>
@@ -56,6 +57,69 @@ void Controller::unleashEngineOnce() {
     settings_.setValue("engine/unleashed", true);
 }
 
+const QList<QPair<QString, QString>> &Controller::defaultShortcuts() {
+    static const QList<QPair<QString, QString>> list{{"newGame", "Ctrl+N"},
+                                                     {"open", "Ctrl+O"},
+                                                     {"save", "Ctrl+S"},
+                                                     {"commands", "Ctrl+K"},
+                                                     {"back", "Left"},
+                                                     {"forward", "Right"},
+                                                     {"start", "Home"},
+                                                     {"end", "End"},
+                                                     {"previousVariation", "Up"},
+                                                     {"nextVariation", "Down"},
+                                                     {"previousGame", "Alt+Left"},
+                                                     {"nextGame", "Alt+Right"},
+                                                     {"flip", "F"},
+                                                     {"threat", "M"},
+                                                     {"autoplay", "Space"},
+                                                     {"deleteMove", "Del"},
+                                                     {"undo", "Ctrl+Z"},
+                                                     {"redo", "Ctrl+Shift+Z"}};
+    return list;
+}
+QString Controller::keyName(int key, int modifiers) const {
+    switch (key) {
+    case Qt::Key_Shift:
+    case Qt::Key_Control:
+    case Qt::Key_Alt:
+    case Qt::Key_Meta:
+    case Qt::Key_AltGr:
+    case Qt::Key_unknown:
+        return {};
+    }
+    const auto keep = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
+    return QKeySequence(QKeyCombination(Qt::KeyboardModifiers(modifiers) & keep, Qt::Key(key)))
+        .toString(QKeySequence::PortableText);
+}
+QString Controller::setShortcut(const QString &action, const QString &sequence) {
+    const auto &defaults = defaultShortcuts();
+    const auto known =
+        std::find_if(defaults.begin(), defaults.end(), [&](const auto &d) { return d.first == action; });
+    if (known == defaults.end())
+        return tr("Action inconnue.");
+    auto chosen = settings_.value("shortcuts").toMap();
+    QString wanted = sequence.trimmed().isEmpty() ? known->second : sequence.trimmed();
+    const QKeySequence parsed(wanted, QKeySequence::PortableText);
+    if (parsed.isEmpty() || parsed.count() != 1)
+        return tr("Combinaison illisible : « %1 ».").arg(sequence);
+    wanted = parsed.toString(QKeySequence::PortableText);
+    // Une combinaison ne déclenche qu'une action : sinon aucune des deux ne répond.
+    for (const auto &[other, fallback] : defaults)
+        if (other != action && chosen.value(other, fallback).toString() == wanted)
+            return tr("« %1 » sert déjà ailleurs.").arg(wanted);
+    if (wanted == known->second)
+        chosen.remove(action);
+    else
+        chosen[action] = wanted;
+    settings_.setValue("shortcuts", chosen);
+    emit preferencesChanged();
+    return {};
+}
+void Controller::resetShortcuts() {
+    settings_.remove("shortcuts");
+    emit preferencesChanged();
+}
 QVariantMap Controller::preferences() const {
     QVariantMap defaults{{"enginePath", ""},
                          {"uciOptions", QVariantMap()},
@@ -169,6 +233,12 @@ QVariantMap Controller::preferences() const {
     }
     if (!settings_.contains("accentColor"))
         defaults["accentColor"] = light ? "#2f66ad" : "#6a9fdc"; // restrained blue, as in desktop chess tools
+    // Les raccourcis en vigueur : ceux d'origine, recouverts par ceux que l'on a choisis.
+    QVariantMap keys;
+    const auto chosen = settings_.value("shortcuts").toMap();
+    for (const auto &[action, fallback] : defaultShortcuts())
+        keys[action] = chosen.value(action, fallback);
+    defaults["shortcuts"] = keys;
     return defaults;
 }
 void Controller::setPreference(const QString &key, const QVariant &value) {

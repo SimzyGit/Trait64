@@ -1,5 +1,9 @@
 # Changements
 
+## Raccourcis clavier personnalisables — 15 novembre 2026
+
+- Affichage → « Raccourcis clavier… » (ou la palette de commandes) : les dix-huit raccourcis de l'analyse et des études se changent en cliquant « Changer » puis en pressant la combinaison voulue. Une combinaison déjà prise est refusée, avec le conflit nommé ; « Par défaut » rend celle d'origine, une par une ou toutes à la fois.
+
 ## Couverture d'un répertoire et finales à jouer — 14 novembre 2026
 
 - **Couverture estimée d'un répertoire** : la part des parties de votre bibliothèque qui restent dans le répertoire jusqu'au bout de la préparation, en suivant à chaque coup adverse les fréquences réellement jouées. Les réponses manquantes sont classées par la part des parties qui sortent par elles, et non plus par leur seul nombre : une réponse fréquente dans une position rare pèse moins qu'une réponse moyenne au troisième coup. Une position comptant moins de cinq parties n'est pas jugée.

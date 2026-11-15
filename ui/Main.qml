@@ -144,6 +144,7 @@ ApplicationWindow {
         Menu { title: qsTr("&Affichage")
             MenuItem {text: win.light ? qsTr("Thème sombre") : qsTr("Thème clair"); onTriggered: {controller.setPreference("lightTheme", !win.light); controller.setPreference("backgroundColor", "")}}
             MenuItem {text: qsTr("Pièces, échiquier et couleurs…"); onTriggered: appearanceDialog.open()}
+            MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Paramètres…"); onTriggered: settingsDialog.open()}
@@ -856,6 +857,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Puzzles {id:puzzlesDialog;objectName:"puzzlesDialog";backend:controller}
     Coordinates {id:coordinatesDialog;objectName:"coordinatesDialog"}
     Endgames {id:endgamesDialog;objectName:"endgamesDialog";backend:controller}
+    Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Accounts {id:accountsDialog;objectName:"accountsDialog";backend:controller}
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
@@ -968,6 +970,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},
             {title:qsTr("Téléchargements"),run:function(){downloadsDialog.open()}},
             {title:qsTr("Apparence et langue"),run:function(){appearanceDialog.open()}},
+            {title:qsTr("Raccourcis clavier"),run:function(){shortcutsDialog.open()}},
             {title:qsTr("Recherche avancée"),run:function(){advancedDialog.open()}},
             {title:qsTr("Éditer la position"),run:function(){positionEditor.open()}},
             {title:qsTr("Charger une FEN"),run:function(){fenDialog.open()}},
@@ -997,13 +1000,15 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         }
     }
 
-    Shortcut {sequence:"Ctrl+N";onActivated:controller.newGame()}
-    Shortcut {sequence:"Ctrl+O";onActivated:importDialog.open()}
-    Shortcut {sequence:"Ctrl+S";onActivated:controller.saveGame()}
-    Shortcut {sequence:"Ctrl+K";onActivated:commands.open()}
+    Shortcut {sequence:win.keyFor("newGame");onActivated:controller.newGame()}
+    Shortcut {sequence:win.keyFor("open");onActivated:importDialog.open()}
+    Shortcut {sequence:win.keyFor("save");onActivated:controller.saveGame()}
+    Shortcut {sequence:win.keyFor("commands");onActivated:commands.open()}
     // Ce qu'un camp a pris, puis son avance en points s'il en a une.
     function takenLine(white){var lead=(controller.state.materialLead||0)*(white?1:-1);return ((white?controller.state.takenByWhite:controller.state.takenByBlack)||"")+(lead>0?" +"+lead:"")}
-    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!preparationDialog.visible&&!repertoiresDialog.visible&&!importsDialog.visible&&!advancedDialog.visible&&!helpDialog.visible&&!pgnDialog.visible&&!collectionDialog.visible&&!promotionDialog.visible&&!chess960Dialog.visible&&!deleteCardDialog.visible&&!deleteVariationDialog.visible&&!analysisMenu.visible&&!positionMenu.visible}
+    // Les raccourcis viennent des réglages ; Raccourcis clavier… permet de les changer.
+    function keyFor(action){return (controller.preferences.shortcuts||{})[action]||""}
+    function navigationKeys(){var f=win.activeFocusItem;return win.page===2&&!(f && (f.cursorPosition!==undefined || f.editable===true))&&!downloadsDialog.visible&&!appearanceDialog.visible&&!shortcutsDialog.visible&&!positionEditor.visible&&!settingsDialog.visible&&!fenDialog.visible&&!tagsDialog.visible&&!cardDialog.visible&&!commands.visible&&!playDialog.visible&&!analysisQueueDialog.visible&&!reviewDialog.visible&&!compareDialog.visible&&!updatesDialog.visible&&!preparationDialog.visible&&!repertoiresDialog.visible&&!importsDialog.visible&&!advancedDialog.visible&&!helpDialog.visible&&!pgnDialog.visible&&!collectionDialog.visible&&!promotionDialog.visible&&!chess960Dialog.visible&&!deleteCardDialog.visible&&!deleteVariationDialog.visible&&!analysisMenu.visible&&!positionMenu.visible}
     // Lecture automatique : un coup toutes les secondes et demie, jusqu'au bout de la
     // variante ; quitter l'analyse ou reprendre la main l'arrête.
     Timer {
@@ -1015,21 +1020,21 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     // et il vaut mieux le dire que laisser croire que personne n'a joué la suite.
     function pastOpeningIndex(){var f=(controller.state.fen||"").split(" ");return f.length>5&&(parseInt(f[5])-1)*2+(f[1]==="b"?1:0)>=40}
     function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
-    Shortcut {sequence:"M";enabled:win.navigationKeys();onActivated:controller.toggleThreat()}
-    Shortcut {sequence:"Space";enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
+    Shortcut {sequence:win.keyFor("threat");enabled:win.navigationKeys();onActivated:controller.toggleThreat()}
+    Shortcut {sequence:win.keyFor("autoplay");enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
     // Haut et bas servent d'abord à la liste ou au menu déroulant qui a le focus.
     function verticalKeysFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&(f.currentIndex!==undefined||f.down!==undefined))}
-    Shortcut {sequence:"Up";enabled:win.verticalKeysFree();onActivated:controller.stepVariation(-1)}
-    Shortcut {sequence:"Down";enabled:win.verticalKeysFree();onActivated:controller.stepVariation(1)}
-    Shortcut {sequence:"Left";enabled:win.navigationKeys();onActivated:controller.step(-1)}
-    Shortcut {sequence:"Right";enabled:win.navigationKeys();onActivated:controller.step(1)}
+    Shortcut {sequence:win.keyFor("previousVariation");enabled:win.verticalKeysFree();onActivated:controller.stepVariation(-1)}
+    Shortcut {sequence:win.keyFor("nextVariation");enabled:win.verticalKeysFree();onActivated:controller.stepVariation(1)}
+    Shortcut {sequence:win.keyFor("back");enabled:win.navigationKeys();onActivated:controller.step(-1)}
+    Shortcut {sequence:win.keyFor("forward");enabled:win.navigationKeys();onActivated:controller.step(1)}
     // Les flèches parcourent les coups, Alt + flèche les parties de la liste.
-    Shortcut {sequence:"Alt+Left";enabled:win.navigationKeys();onActivated:controller.stepGame(-1)}
-    Shortcut {sequence:"Alt+Right";enabled:win.navigationKeys();onActivated:controller.stepGame(1)}
-    Shortcut {sequence:"Home";enabled:win.navigationKeys();onActivated:controller.step(-2)}
-    Shortcut {sequence:"End";enabled:win.navigationKeys();onActivated:controller.step(2)}
-    Shortcut {sequence:"F";enabled:win.navigationKeys();onActivated:controller.flip()}
-    Shortcut {sequence:"Ctrl+Z";enabled:win.navigationKeys()&&controller.state.canUndo;onActivated:controller.undo()}
-    Shortcut {sequence:"Delete";enabled:win.navigationKeys()&&controller.state.node>0&&!controller.state.training;onActivated:controller.deleteVariation()}
-    Shortcut {sequence:"Ctrl+Shift+Z";enabled:win.navigationKeys()&&controller.state.canRedo;onActivated:controller.redo()}
+    Shortcut {sequence:win.keyFor("previousGame");enabled:win.navigationKeys();onActivated:controller.stepGame(-1)}
+    Shortcut {sequence:win.keyFor("nextGame");enabled:win.navigationKeys();onActivated:controller.stepGame(1)}
+    Shortcut {sequence:win.keyFor("start");enabled:win.navigationKeys();onActivated:controller.step(-2)}
+    Shortcut {sequence:win.keyFor("end");enabled:win.navigationKeys();onActivated:controller.step(2)}
+    Shortcut {sequence:win.keyFor("flip");enabled:win.navigationKeys();onActivated:controller.flip()}
+    Shortcut {sequence:win.keyFor("undo");enabled:win.navigationKeys()&&controller.state.canUndo;onActivated:controller.undo()}
+    Shortcut {sequence:win.keyFor("deleteMove");enabled:win.navigationKeys()&&controller.state.node>0&&!controller.state.training;onActivated:controller.deleteVariation()}
+    Shortcut {sequence:win.keyFor("redo");enabled:win.navigationKeys()&&controller.state.canRedo;onActivated:controller.redo()}
 }

@@ -993,6 +993,47 @@ int main(int argc, char **argv) {
                           !c.explainReview(999)["available"].toBool(),
                       "Unavailable review rows cannot fabricate explanations");
                 {
+                    // Raccourcis : on capte une combinaison, une combinaison prise est refusée.
+                    const auto keys = [&] { return c.preferences()["shortcuts"].toMap(); };
+                    check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 18,
+                          "Every shortcut has its default");
+                    check(c.keyName(Qt::Key_Shift, Qt::ShiftModifier).isEmpty() &&
+                              c.keyName(Qt::Key_F, int(Qt::ControlModifier | Qt::ShiftModifier)) ==
+                                  "Ctrl+Shift+F",
+                          "A pressed key is named, a lone modifier is not");
+                    auto *dialog = window->findChild<QObject *>("shortcutsDialog");
+                    QMetaObject::invokeMethod(dialog, "open");
+                    QTest::qWait(150);
+                    dialog->setProperty("listening", "flip");
+                    if (auto *catcher = window->findChild<QQuickItem *>("shortcutCatcher"))
+                        catcher->forceActiveFocus();
+                    QTest::keyClick(window, Qt::Key_B, Qt::ControlModifier);
+                    QTest::qWait(50);
+                    check(keys()["flip"] == "Ctrl+B" && dialog->property("listening").toString().isEmpty(),
+                          "Pressing a combination in the dialog assigns it");
+                    QMetaObject::invokeMethod(dialog, "assign", Q_ARG(QVariant, "flip"),
+                                              Q_ARG(QVariant, "Left"));
+                    check(keys()["flip"] == "Ctrl+B" &&
+                              dialog->property("problem").toString().contains("Left"),
+                          "A combination already used elsewhere is refused, and said so");
+                    QMetaObject::invokeMethod(dialog, "close");
+                    QTest::qWait(150);
+                    window->setProperty("page", 2);
+                    QTest::qWait(50);
+                    const bool before = c.state()["flipped"].toBool();
+                    QTest::keyClick(window, Qt::Key_B, Qt::ControlModifier);
+                    QTest::qWait(50);
+                    const bool turned = c.state()["flipped"].toBool() != before;
+                    QTest::keyClick(window, Qt::Key_F);
+                    QTest::qWait(50);
+                    check(turned && c.state()["flipped"].toBool() != before,
+                          "The new combination flips the board, and the old one no longer does");
+                    c.setShortcut("flip", "");
+                    check(keys()["flip"] == "F" && c.setShortcut("nope", "X") == "Action inconnue.",
+                          "Default restores the original; unknown actions are refused");
+                    c.resetShortcuts();
+                }
+                {
                     auto *coordinates = window->findChild<QObject *>("coordinatesDialog");
                     check(coordinates && QMetaObject::invokeMethod(coordinates, "open") &&
                               QMetaObject::invokeMethod(coordinates, "start"),

@@ -396,6 +396,13 @@ class Controller : public QObject {
     Q_INVOKABLE void setPreference(const QString &key, const QVariant &value);
     Q_INVOKABLE void retranslateUi(QObject *window);
     Q_INVOKABLE QString uiText(const QString &text) const { return translator_->display(text); }
+    // Raccourcis clavier : le nom portable d'une touche pressée (« Ctrl+Shift+F »), vide pour
+    // une touche de modification seule ; puis l'attribution, refusée si la combinaison sert
+    // déjà ailleurs. Une combinaison vide rend celle d'origine.
+    Q_INVOKABLE QString keyName(int key, int modifiers) const;
+    Q_INVOKABLE QString setShortcut(const QString &action, const QString &sequence);
+    Q_INVOKABLE void resetShortcuts();
+    static const QList<QPair<QString, QString>> &defaultShortcuts();
     Q_INVOKABLE void startEngine();
     Q_INVOKABLE void toggleAnalysis();
     Q_INVOKABLE void toggleThreat();

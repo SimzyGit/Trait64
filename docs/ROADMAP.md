@@ -382,7 +382,7 @@ Poursuivre le support Linux, puis préparer :
 - [ ] Compléter les traductions des diagnostics C++ et descriptifs de catalogue.
 - [x] Navigation principale et palette de commandes au clavier.
 - [ ] Audit exhaustif du parcours clavier et des technologies d’assistance.
-- [ ] Raccourcis personnalisables.
+- [x] Raccourcis personnalisables. — les dix-huit raccourcis de l'analyse et des études
 - [ ] Améliorations d'accessibilité.
 - [x] Gestion des petites résolutions. — vérifiée à 960 × 640
 - [ ] Panneaux détachables si compatibles avec notre conception.
