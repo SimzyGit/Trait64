@@ -1512,5 +1512,15 @@
   "Texte dans les commentaires": "Text in the comments",
   "Symbole d’annotation": "Annotation symbol",
   "Aucun": "None",
-  "Parties commentées seulement": "Annotated games only"
+  "Parties commentées seulement": "Annotated games only",
+  "Corriger les noms": "Fix names",
+  "Corriger les noms…": "Fix names…",
+  "Tournois": "Tournaments",
+  "Recherche des écritures voisines…": "Looking for similar spellings…",
+  "%1 nom(s) écrits de plusieurs façons. Choisissez l’écriture à garder : les autres seront réécrites dans les parties et leur PGN.": "%1 name(s) written several ways. Choose the spelling to keep: the others will be rewritten in the games and their PGN.",
+  "Aucun nom écrit de plusieurs façons.": "No name written several ways.",
+  "%1 · %2 partie(s)": "%1 · %2 game(s)",
+  "Écriture à garder": "Spelling to keep",
+  "Unifier": "Unify",
+  "%1 partie(s) corrigée(s) : « %2 ».": "%1 game(s) fixed: “%2”."
 }

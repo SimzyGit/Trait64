@@ -6,6 +6,7 @@
 #include "database.h"
 #include "legacy_positions.h"
 #include "moveorder.h"
+#include "names.h"
 #include "polyglot.h"
 #include "scid.h"
 #include <QBuffer>
@@ -1338,6 +1339,46 @@ int main(int argc, char **argv) {
             check(count({{"nag", 3}}) == 1 && count({{"nag", 6}}) == 1 && count({{"nag", 30}}) == 1 &&
                       count({{"nag", 2}}) == 0 && count({{"annotated", true}}) == 8,
                   "Symbol search reads the NAG exactly ($3 is not $30), annotated games have a comment");
+            // Correction des noms.
+            check(t64::nameKey("Carlsen, Magnus", true) == "carlsen|m" &&
+                      t64::nameKey("Carlsen,M.", true) == "carlsen|m" &&
+                      t64::nameKey("Magnus  Carlsen", true) == "carlsen|m" &&
+                      t64::nameKey("Firouzja, Alireza", true) == t64::nameKey("FIROUZJA, Alirézâ", true) &&
+                      t64::nameKey("Carlsen, Magnus", true) != t64::nameKey("Carlsen, Henrik", true) &&
+                      t64::nameKey("Tata Steel-Masters", false) ==
+                          t64::nameKey("tata steel masters", false) &&
+                      t64::nameKey("  ", true).isEmpty(),
+                  "Name keys ignore accents, case, punctuation and order, and keep the first initial");
+            for (const auto *spelling : {"Carlsen, Magnus", "Carlsen,M.", "Magnus Carlsen"}) {
+                t64::Game g;
+                g.tags["White"] = spelling;
+                g.tags["Black"] = "Doe, \"Jo\"";
+                g.tags["Event"] = "Open du club";
+                g.play(0, "a2a3");
+                g.nodes[1].comment = spelling;
+                club.save(g);
+            }
+            const auto groups = club.nameVariants("player");
+            QVariantMap carlsen;
+            for (const auto &group : groups)
+                if (group.toMap()["names"].toList().size() == 3)
+                    carlsen = group.toMap();
+            check(carlsen["games"].toLongLong() == 3 && club.nameVariants("event").isEmpty(),
+                  "The three spellings of one player are grouped, a single event is not");
+            check(club.renameName("player", "Carlsen,M.", "Carlsen, Magnus") == 1 &&
+                      club.renameName("player", "Magnus Carlsen", "Carlsen, Magnus") == 1 &&
+                      club.renameName("player", "Carlsen, Magnus", "Carlsen, Magnus") == 0,
+                  "Renaming counts the games it rewrites");
+            const auto renamed = club.search("Carlsen, Magnus");
+            bool headers = renamed.size() == 3;
+            for (const auto &row : renamed)
+                headers = headers &&
+                          club.load(row.toMap()["id"].toLongLong()).tags.at("White") == "Carlsen, Magnus";
+            check(headers && club.search("Magnus Carlsen").isEmpty(),
+                  "The PGN header follows the column, and the old spelling is gone from search");
+            check(club.renameName("player", "Doe, \"Jo\"", "Doe, Jo") == 3 &&
+                      club.load(renamed.first().toMap()["id"].toLongLong()).tags.at("Black") == "Doe, Jo",
+                  "A name with quotes is matched in its escaped PGN form");
             // Un open : trop peu de rencontres pour un tableau carré.
             std::vector<t64::CrossGame> swiss;
             for (int i = 0; i < 12; i += 2)

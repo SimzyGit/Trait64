@@ -118,6 +118,11 @@ class Database {
     // année quand la date la donne. Plus de 3 000 parties : refusé, ce n'est plus un
     // tournoi (« Rated blitz game » de Lichess). Voir crosstable.h ; ajoute « event ».
     QVariantMap tournament(qint64 gameId) const;
+    // Les écritures d'un même joueur (field « player ») ou d'un même tournoi (« event »)
+    // regroupées : [{names : [{name, games}], games}], les plus jouées d'abord.
+    QVariantList nameVariants(const QString &field, int limit = 300) const;
+    // Réécrit `from` en `to` dans les colonnes et l'en-tête PGN ; rend le nombre de parties.
+    qint64 renameName(const QString &field, const QString &from, const QString &to);
     QVariantList explorer(const QString &position) const;
     // Dossier d'une position : ce que la bibliothèque sait de ce qui s'y joue. Les coups
     // avec leur score, le même découpage par force des joueurs — un coup qui réussit chez

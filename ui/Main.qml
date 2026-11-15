@@ -232,6 +232,7 @@ ApplicationWindow {
                             MenuItem {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onTriggered:controller.classifyLibraryOpenings()}
                             MenuItem {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onTriggered:controller.groupLibraryByOpening()}
                             MenuItem {text:qsTr("Doublons de coups");onTriggered:controller.findDuplicates()}
+                            MenuItem {text:qsTr("Corriger les noms…");objectName:"showNames";onTriggered:namesDialog.open()}
                             MenuSeparator {}
                             MenuItem {text:qsTr("Mes compétences…");objectName:"showSkills";onTriggered:skillDialog.open()}
                         }
@@ -893,6 +894,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
+    Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
     // Au tout premier lancement, le guide s'ouvre sur « Premiers pas » ; ensuite il reste
     // dans Aide. Les captures et tests (--smoke-test) ne le voient pas.

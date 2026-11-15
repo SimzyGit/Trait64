@@ -123,3 +123,40 @@ QVariantMap Controller::tournamentTable(qint64 gameId) {
         return {};
     }
 }
+
+void Controller::findNameVariants(const QString &field) {
+    if (nameVariants_.value("running").toBool())
+        return;
+    nameVariants_ = {{"field", field}, {"running", true}, {"groups", QVariantList()}};
+    emit nameVariantsChanged();
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher] {
+        watcher->deleteLater();
+        nameVariants_ = watcher->result();
+        emit nameVariantsChanged();
+    });
+    // Sur sa propre connexion : regrouper les noms d'un million de parties prend du temps.
+    watcher->setFuture(QtConcurrent::run([path = db_->path(), field] {
+        QVariantMap done{{"field", field}, {"running", false}};
+        try {
+            done["groups"] = t64::Database(path).nameVariants(field);
+        } catch (const std::exception &e) {
+            done["groups"] = QVariantList();
+            done["error"] = QString::fromUtf8(e.what());
+        }
+        return done;
+    }));
+}
+
+void Controller::unifyNames(const QString &field, const QStringList &spellings, const QString &kept) {
+    try {
+        qint64 changed = 0;
+        for (const auto &name : spellings)
+            changed += db_->renameName(field, name, kept);
+        emit message(tr("%1 partie(s) corrigée(s) : « %2 ».").arg(changed).arg(kept.trimmed()));
+        refreshLibrary();
+        findNameVariants(field);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}

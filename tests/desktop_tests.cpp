@@ -1026,6 +1026,36 @@ int main(int argc, char **argv) {
                     window->grabWindow().save(shot);
                 QMetaObject::invokeMethod(dialog, "close");
             }
+            {
+                // Corriger les noms : le Mémorial a été saisi avec « Ding » ; on ajoute
+                // « Ding, Liren » et « Liren Ding », et on unifie.
+                c.importText("[White \"Ding, Liren\"]\n[Black \"Y\"]\n\n1. h3 *\n\n"
+                             "[White \"Liren Ding\"]\n[Black \"Y\"]\n\n1. h4 *\n");
+                QElapsedTimer settle;
+                settle.start();
+                QTest::qWait(20);
+                while (c.busy() && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                auto *names = window->findChild<QObject *>("namesDialog");
+                QMetaObject::invokeMethod(names, "open");
+                QTest::qWait(20);
+                while (c.nameVariants()["running"].toBool() && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                QTest::qWait(50);
+                if (const auto shot = qEnvironmentVariable("T64_NAMES_SCREENSHOT"); !shot.isEmpty())
+                    window->grabWindow().save(shot);
+                const auto groups = c.nameVariants()["groups"].toList();
+                check(groups.size() == 1 && groups.first().toMap()["names"].toList().size() == 2,
+                      "Two spellings of Liren Ding are grouped, Ding alone has no initial");
+                c.unifyNames("player", {"Liren Ding"}, "Ding, Liren");
+                settle.restart();
+                QTest::qWait(20);
+                while ((c.nameVariants()["running"].toBool() || c.librarySearching()) &&
+                       settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(c.nameVariants()["groups"].toList().isEmpty(), "Once unified, nothing is left to fix");
+                QMetaObject::invokeMethod(names, "close");
+            }
             window->setProperty("page", 2);
             QTest::qWait(50);
             for (const auto &pack : QStringList{"cburnett", "merida", "spatial", "pixel"}) {

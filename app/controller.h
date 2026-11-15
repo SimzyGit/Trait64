@@ -365,6 +365,11 @@ class Controller : public QObject {
     Q_INVOKABLE bool playTyped(const QString &text);
     // Tableau croisé du tournoi de cette partie ; vide, avec un message, s'il ne se fait pas.
     Q_INVOKABLE QVariantMap tournamentTable(qint64 gameId);
+    // Correction des noms : les groupes d'écritures arrivent par nameVariantsChanged.
+    Q_PROPERTY(QVariantMap nameVariants READ nameVariants NOTIFY nameVariantsChanged)
+    QVariantMap nameVariants() const { return nameVariants_; }
+    Q_INVOKABLE void findNameVariants(const QString &field);
+    Q_INVOKABLE void unifyNames(const QString &field, const QStringList &spellings, const QString &kept);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
     Q_INVOKABLE void stepVariation(int delta);
@@ -465,6 +470,7 @@ class Controller : public QObject {
     void tabsChanged();
     void onlineReportChanged();
     void syzygyDownloadChanged();
+    void nameVariantsChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -595,6 +601,7 @@ class Controller : public QObject {
     QVariantMap onlineReport_;
     t64::SyzygyDownload *syzygyLoader_ = nullptr;
     QVariantMap syzygyState_;
+    QVariantMap nameVariants_; // field, running, groups, error
     QString syzygyFolder() const;
     QString onlineSource_, onlineKey_;
     QHash<QString, QVariantMap> onlineCache_;
