@@ -2,7 +2,7 @@
 
 ## Une seule navigation — 15 novembre 2026
 
-- **La barre latérale à icônes remplace la rangée d'onglets**, qui répétait la barre de menus : Accueil, Analyse, Bibliothèque, Ouvertures, Entraînement, Préparation, Moteurs, Joueurs, Profils, Études, Outils, Paramètres, chacun avec une infobulle qui dit ce qu'on y trouve. Elle se replie en icônes (bouton « en bas, ou d'elle-même sous 1 280 pixels). En haut ne restent que le nom de la page, l'étude en cours, Ctrl K et ⚙.
+- **La barre latérale à icônes remplace la rangée d'onglets**, qui répétait la barre de menus : Accueil, Analyse, Bibliothèque, Ouvertures, Entraînement, Préparation, Moteurs, Joueurs, Profils, Études, Outils, Paramètres, chacun avec une infobulle qui dit ce qu'on y trouve. Elle se replie en icônes (bouton » en bas, ou d'elle-même sous 1 280 pixels). En haut ne restent que le nom de la page, l'étude en cours, Ctrl K et ⚙.
 
 ## Tournois en direct — 15 novembre 2026
 
