@@ -50,6 +50,20 @@ int main() {
                       chess::Color::BLACK) == std::vector<std::string>{"e5"},
               "A pawn attacked by a knight and undefended is en prise for the side to move too");
         {
+            // Ce qu'un coup offre : rien pour 1.e4 ; un cavalier posé sous un pion et sans
+            // défense, 3 ; la tour qui prend un cavalier défendu par un pion, 2 (la
+            // qualité) ; un échange égal, 0.
+            const auto offered = [](const char *fen, const char *uci) {
+                const chess::Board board(fen);
+                return t64::offeredMaterial(board, chess::uci::uciToMove(board, uci));
+            };
+            check(offered(std::string(chess::constants::STARTPOS).c_str(), "e2e4") == 0 &&
+                      offered("rnbqkbnr/pp1ppppp/8/2p5/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 2", "f3d4") == 3 &&
+                      offered("4k3/8/5p2/6n1/8/8/8/4K1R1 w - - 0 1", "g1g5") == 2 &&
+                      offered("4k3/8/5p2/6b1/4N3/8/8/4K3 w - - 0 1", "e4g5") == 0,
+                  "What a move offers: a piece left en prise, a losing capture, nothing for an even trade");
+        }
+        {
             // Suivi en direct : les nouveaux coups s'ajoutent au bout, une ligne divergente
             // n'est pas touchée, une variante ajoutée par l'utilisateur reste.
             t64::Game mine, fresh;

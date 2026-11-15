@@ -733,6 +733,15 @@ void Controller::rebuildReview() {
         const bool playedBest = !previous["uci"].toString().isEmpty() &&
                                 previous["uci"].toString() == qs(reviewGame_.nodes[node].uci);
         const char *quality = t64::moveQuality(loss, lossKnown, playedBest);
+        // Un sacrifice : le coup offre au moins deux points, et l'évaluation ne baisse pas.
+        int offered = 0;
+        if (lossKnown && loss < 50) {
+            const auto before = reviewGame_.boardAt(parent);
+            offered =
+                t64::offeredMaterial(before, chess::uci::uciToMove(before, reviewGame_.nodes[node].uci));
+            if (offered >= 2)
+                label = "Sacrifice";
+        }
         QVariant mark;
         if (lossKnown) {
             // Les évaluations sont comptées du point de vue des Blancs : on les retourne
@@ -752,6 +761,7 @@ void Controller::rebuildReview() {
                                {"lossKnown", lossKnown},
                                {"scoreType", score["scoreType"]},
                                {"label", label},
+                               {"sacrifice", offered >= 2 ? offered : 0},
                                {"quality", QString::fromLatin1(quality)},
                                {"accuracy", mark},
                                {"best", previous["uci"]},
@@ -1054,10 +1064,11 @@ void Controller::annotateReview() {
         eval.replace("+M", "#");
         comment += " [%eval " + eval + "]";
         game_.nodes[node].comment = comment.trimmed().toStdString();
-        int nag = row["loss"].toInt() >= 250   ? 4
-                  : row["loss"].toInt() >= 100 ? 2
-                  : row["loss"].toInt() >= 50  ? 6
-                                               : 0;
+        int nag = row["loss"].toInt() >= 250     ? 4
+                  : row["loss"].toInt() >= 100   ? 2
+                  : row["loss"].toInt() >= 50    ? 6
+                  : row["sacrifice"].toInt() > 0 ? 1 // un sacrifice qui tient : !
+                                                 : 0;
         if (nag && game_.nodes[node].nags.empty())
             game_.nodes[node].nags.push_back(nag);
     }

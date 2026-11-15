@@ -40,6 +40,11 @@ int exchangeValue(const chess::Board &board, chess::Square from, chess::Square t
 // que ChessBase appelle les relations d'attaque, réduites à ce qui compte. Le camp au trait
 // n'importe pas : une pièce en prise l'est aussi pour celui qui doit jouer.
 std::vector<chess::Square> hangingPieces(const chess::Board &board, chess::Color side);
+// Ce que le coup offre, en points, échanges joués : la perte d'une prise qui coûte plus
+// qu'elle ne rapporte, ou ce que l'adversaire gagnerait en prenant la pièce qui vient de
+// se poser. Zéro si le coup n'offre rien. Avec une évaluation qui ne baisse pas, c'est un
+// sacrifice.
+int offeredMaterial(const chess::Board &before, const chess::Move &move);
 // La meilleure prise du camp au trait, zéro s'il n'en a aucune qui rapporte.
 int bestCaptureGain(const chess::Board &board);
 // PGN graphical annotations on the resulting position. No arrows through blockers.

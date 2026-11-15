@@ -186,6 +186,23 @@ std::vector<chess::Square> hangingPieces(const chess::Board &board, chess::Color
         squares.push_back(chess::Square(fact.targets.front().square));
     return squares;
 }
+int offeredMaterial(const chess::Board &before, const chess::Move &move) {
+    if (move.typeOf() == Move::CASTLING)
+        return 0;
+    const auto to = move.to();
+    if (before.at(to) != Piece::NONE)
+        return std::max(0, -exchangeValue(before, move.from(), to));
+    Board after = before;
+    after.makeMove(move);
+    int best = 0;
+    auto takers = attackersTo(after, to, after.occ()) & after.us(after.sideToMove());
+    while (takers) {
+        const Square from(takers.pop());
+        if (after.at(from).type() == PieceType::KING || captureKeepsKingSafe(after, from, to))
+            best = std::max(best, exchangeValue(after, from, to));
+    }
+    return best;
+}
 int bestCaptureGain(const chess::Board &board) {
     int best = 0;
     Movelist moves;

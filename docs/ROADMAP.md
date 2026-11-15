@@ -39,7 +39,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 |---|---|---|---|---|---|
 | Relations d'attaque : pièces en prise, attaquées, défendues | ✅ | — | — | ◐ pièces en prise ✅ 15 nov. ; pas les flèches d'attaque | **B1** |
 | Analyse assistée : couleur des cases selon la valeur du coup | ✅ | — | — | ✗ | B2 |
-| Détection des sacrifices | ✅ | — | — | ✗ | B2 |
+| Détection des sacrifices | ✅ | — | — | ✅ 15 nov., dans le bilan | B2 |
 | Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✗ | B3 |
 | Probabilités de finale, tendances | ✅ | — | — | ✗ | B3 |
 | Moteurs distants (nuage) | ✅ | — | ✅ payant | ✗ | K |
@@ -218,7 +218,7 @@ Fonctionnalités :
 - [x] Détection des enfilades du roi (autres enfilades à développer).
 - [ ] Détection des attaques à la découverte : échecs à la découverte et doubles échecs implémentés ; attaques sans échec à développer.
 - [ ] Détection des déviations et surcharges.
-- [ ] Détection des sacrifices tactiques justifiés.
+- [x] Détection des sacrifices tactiques justifiés (bilan : offre d'au moins deux points sans perte d'évaluation).
 - [x] Reconnaissance des menaces de mat. — mat en un coup si l'adversaire passait
 - [ ] Explication des séquences forcées.
 - [ ] Analyse des structures de pions. — commencé : ce qu'un coup change (isolé, doublés, passé) est dit dans l'explication ; pas d'analyse d'ensemble
