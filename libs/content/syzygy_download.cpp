@@ -138,7 +138,7 @@ void SyzygyDownload::fetch() {
         return;
     }
     const auto urls = candidates(pack_, files_[index_]);
-    QNetworkRequest request(QUrl(urls[mirror_ % urls.size()]));
+    QNetworkRequest request{QUrl(urls[mirror_ % urls.size()])};
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(60000);
     request.setRawHeader("User-Agent", "Trait64-syzygy/1.0");

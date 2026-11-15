@@ -46,7 +46,7 @@ SOFTWARE.
 ## CityHash
 
 - Source : portage C de CityHash (Google) inclus dans https://github.com/syzygy1/tb, révision `0bb8aeee525f364bb750f96df312a1a7c9b54398` (2025-10-04).
-- Fichiers : `third_party/cityhash/city-c.c`, `city-c.h`, `citycrc.h`, sans modification ; SHA-256 de `city-c.c` : `fcb2c167417a7dfd2c0660569ff44c6e0ceaf4c5739c629dc28c5f40f1213ebe`. `crc32c.c` (CRC-32C en logiciel) est écrit pour Trait64.
+- Fichiers : `third_party/cityhash/city-c.c`, `city-c.h`, `citycrc.h`, sans modification ; SHA-256 de `city-c.c` : `fcb2c167417a7dfd2c0660569ff44c6e0ceaf4c5739c629dc28c5f40f1213ebe`. `crc32c.c` (CRC-32C en logiciel) et `msvc_shim.h` sont écrits pour Trait64.
 - Utilisé pour vérifier la somme de contrôle que chaque fichier Syzygy porte à sa fin.
 - Licence MIT :
 
