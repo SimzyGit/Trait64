@@ -49,7 +49,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 
 | Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
 |---|---|---|---|---|---|
-| Saisir un coup au clavier (taper « Cf3 », « e4 ») | ✅ | ✅ | — | ✗ | **J1** |
+| Saisir un coup au clavier (taper « Cf3 », « e4 ») | ✅ | ✅ | — | ✅ 15 nov. | **J1** |
 | Ctrl + molette : taille du texte de la notation et des listes | ✅ | — | — | ✗ | J2 |
 | Diagrammes, titres et rubriques dans la notation | ✅ | — | — | ✗ | G |
 | Questions d'entraînement dans une partie (« trouvez le coup », points) | ✅ | — | — | ✗ | F2 |

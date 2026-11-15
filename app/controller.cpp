@@ -639,6 +639,25 @@ void Controller::openBook() {
         emit message(tr("Livre d'ouvertures illisible : ") + path, true);
     }
 }
+QVariantList Controller::typedMoves(const QString &text) const {
+    const auto board = game_.boardAt(node_);
+    QVariantList found;
+    for (const auto &uci : t64::typedMatches(board, text, frenchNotation())) {
+        const auto move = chess::uci::uciToMove(board, uci.toStdString());
+        found << QVariantMap{{"uci", uci},
+                             {"san", t64::displaySan(chess::uci::moveToSan(board, move), frenchNotation())}};
+    }
+    return found;
+}
+
+bool Controller::playTyped(const QString &text) {
+    const auto found = t64::typedMatches(game_.boardAt(node_), text, frenchNotation());
+    if (found.size() != 1)
+        return false;
+    move(found.first());
+    return true;
+}
+
 int Controller::frenchNotation() const {
     if (settings_.value("figurines", false).toBool())
         return t64::Figurines;

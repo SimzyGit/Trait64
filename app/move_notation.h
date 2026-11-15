@@ -24,6 +24,58 @@ inline QString displaySan(const std::string &san, int notation) {
     return text;
 }
 
+// Les coups légaux qui répondent à ce que l'on tape au clavier : « Nf3 » ou « Cf3 » selon
+// la notation, « nf3 », « exd5 » comme « ed5 », « O-O », « 0-0 » ou « oo », « e8=Q » comme
+// « e8q », ou la forme UCI « e2e4 ». Les coups qui correspondent exactement passent avant
+// ceux dont l'écriture commence par ce qui est tapé. Rendus en UCI.
+inline QStringList typedMatches(const chess::Board &board, const QString &typed, int notation) {
+    const auto plain = [](QString text) {
+        text.remove(QRegularExpression("[x+#=!?:\\-\\s]"));
+        text.replace('0', 'O');
+        return text;
+    };
+    QString wanted = plain(typed.trimmed());
+    if (wanted.isEmpty())
+        return {};
+    // « oo » et « ooo » : le roque, quelle que soit la casse.
+    if (wanted.compare("OO", Qt::CaseInsensitive) == 0 || wanted.compare("OOO", Qt::CaseInsensitive) == 0)
+        wanted = wanted.toUpper();
+    // Lettres des pièces en français (C, F, T, D, R) ramenées à l'anglais. En tête du coup,
+    // et en dernière place pour une promotion.
+    static const QString pieces = "NBRQK", french = "CFTDR";
+    // En tête, une minuscule qui est aussi une colonne (c, f, d) reste une colonne ; après
+    // la rangée de promotion, elle ne peut être qu'une pièce.
+    const auto translate = [&](int at, bool promotion) {
+        if (notation != EnglishLetters && at >= 0 && at < wanted.size()) {
+            const auto index = french.indexOf(wanted[at].toUpper());
+            if (index >= 0 && (promotion || wanted[at].isUpper() || !QStringLiteral("abcdefgh").contains(wanted[at])))
+                wanted[at] = pieces[index];
+        }
+    };
+    translate(0, false);
+    if (wanted.size() > 2 && wanted[wanted.size() - 2].isDigit() &&
+        !QRegularExpression("^[a-h][1-8][a-h][1-8]").match(wanted).hasMatch())
+        translate(int(wanted.size()) - 1, true);
+    // Une pièce tapée en minuscule (« nf3 ») : n, r, q, k ne sont pas des colonnes.
+    if (QStringLiteral("nrqk").contains(wanted[0]))
+        wanted[0] = wanted[0].toUpper();
+    if (wanted.size() > 2 && wanted.back().isLower() && wanted[wanted.size() - 2].isDigit() &&
+        QStringLiteral("nrqb").contains(wanted.back()) && !QRegularExpression("^[a-h][1-8][a-h][1-8]").match(wanted).hasMatch())
+        wanted.back() = wanted.back().toUpper();
+    chess::Movelist moves;
+    chess::movegen::legalmoves(moves, board);
+    QStringList exact, partial;
+    for (const auto &move : moves) {
+        const auto uci = QString::fromStdString(chess::uci::moveToUci(move));
+        const auto san = plain(QString::fromStdString(chess::uci::moveToSan(board, move)));
+        if (san == wanted || uci == typed.trimmed().toLower())
+            exact << uci;
+        else if (san.startsWith(wanted) || (wanted.size() >= 2 && uci.startsWith(typed.trimmed().toLower())))
+            partial << uci;
+    }
+    return exact.isEmpty() ? partial : exact;
+}
+
 // PGN command annotations ([%clk], [%eval], [%cal]…) are data, not prose: shown apart,
 // never edited. The stored comment keeps them so PGN exports stay lossless.
 struct CommentParts {

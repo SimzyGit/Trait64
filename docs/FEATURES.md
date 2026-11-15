@@ -35,6 +35,7 @@ Pour mémoriser une ligne, placez-vous **avant** son premier coup, puis **Créer
 | Ctrl O | Importer |
 | Ctrl S | Enregistrer dans la bibliothèque |
 | Ctrl K | Commandes rapides |
+| Ctrl L | Taper un coup (« Cf3 », « e4 », « O-O », « e2e4 »), Entrée le joue |
 | ← / → | Position précédente / suivante |
 | Début / Fin | Début / fin de la ligne |
 | F | Retourner l’échiquier |

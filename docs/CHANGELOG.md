@@ -4,6 +4,7 @@
 
 - **Un clic sur un titre de colonne trie la liste** (Blancs, Noirs, Elo, résultat, coups, ECO, événement, date), un second clic inverse l'ordre ; la flèche dit l'ordre en cours. Le tri suit les pages, sans en perdre ni en répéter une.
 - **Une seule rangée en haut** : la base, la recherche, le résultat, Recherche avancée et Importer. Exports, classements, comptes, téléchargements et doublons passent dans le menu « Base ».
+- **Taper un coup au clavier** : un champ sous l'échiquier (Ctrl+L) accepte « Cf3 » ou « Nf3 », « nf3 », « exd5 », « O-O » ou « 0-0 », « e8=D », et la forme « e2e4 ». Les candidats s'affichent pendant la frappe ; Entrée joue le coup dès qu'un seul répond.
 - Les filtres (Favoris, Position, Structure de pions, Corbeille) deviennent des pastilles ; la pagination se range en bas à droite, avec le nombre de parties à gauche.
 
 ## Tables Syzygy sur l'ordinateur — 15 novembre 2026

@@ -435,6 +435,18 @@ objectName:"analysisSplit"
                             TButton {objectName:"autoplay";visible:boardPanel.width>=450;text:autoplay.running?"❚❚":"▶▶";implicitWidth:38;padding:6;enabled:autoplay.running||(controller.state.canForward&&!controller.state.training);onClicked:autoplay.running=!autoplay.running;Accessible.name:autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:(autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie"))+" ("+qsTr("Espace")+")"}
                             TButton {text:"▶|";implicitWidth:38;padding:6;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2);Accessible.name:qsTr("Fin de la variante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Fin de la variante")}
                             TButton {text:"⇅";implicitWidth:38;onClicked:controller.flip();Accessible.name:qsTr("Retourner l’échiquier");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Retourner l’échiquier · F")}
+                            // Taper un coup plutôt que le jouer à la souris : « Cf3 », « e4 », « O-O ».
+                            // Entrée le joue dès qu'un seul coup répond ; les candidats s'affichent
+                            // pendant la frappe.
+                            TextField {id:moveEntry;objectName:"moveEntry";visible:!controller.state.training&&(boardPanel.width>=600||activeFocus);Layout.preferredWidth:84*controller.preferences.uiScale;Layout.preferredHeight:26*controller.preferences.uiScale
+                                placeholderText:qsTr("Coup…");selectByMouse:true;Accessible.name:qsTr("Taper un coup")
+                                readonly property var matches:text.length?controller.typedMoves(text):[]
+                                color:text.length&&!matches.length?"#c0392b":win.fg
+                                onAccepted:{if(controller.playTyped(text))text=""}
+                                Keys.onEscapePressed:{text="";focus=false}
+                                ToolTip.visible:activeFocus&&text.length>0
+                                ToolTip.text:matches.length===0?qsTr("Aucun coup légal ne s’écrit ainsi"):matches.length===1?qsTr("Entrée : %1").arg(matches[0].san)
+                                            :matches.slice(0,8).map(function(m){return m.san}).join(" · ")+(matches.length>8?" …":"")}
                             Item {Layout.fillWidth:true}
                             TButton {id:positionActions;objectName:"positionActions";text:analysisSplit.width>1000?qsTr("Position  ⋯"):"⋯";implicitWidth:analysisSplit.width>1000?110:38;visible:!controller.state.training;onClicked:positionMenu.open();Accessible.name:qsTr("Outils de la position")
                                 Menu {id:positionMenu;y:-height
@@ -1065,6 +1077,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     // et il vaut mieux le dire que laisser croire que personne n'a joué la suite.
     function pastOpeningIndex(){var f=(controller.state.fen||"").split(" ");return f.length>5&&(parseInt(f[5])-1)*2+(f[1]==="b"?1:0)>=40}
     function spaceIsFree(){var f=win.activeFocusItem;return win.navigationKeys()&&!(f&&f.down!==undefined)}
+    Shortcut {sequence:win.keyFor("typeMove");onActivated:{win.page=2;moveEntry.forceActiveFocus()}}
     Shortcut {sequence:win.keyFor("threat");enabled:win.navigationKeys();onActivated:controller.toggleThreat()}
     Shortcut {sequence:win.keyFor("autoplay");enabled:win.spaceIsFree();onActivated:autoplay.running=!autoplay.running}
     // Haut et bas servent d'abord à la liste ou au menu déroulant qui a le focus.

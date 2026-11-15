@@ -1490,5 +1490,9 @@
   "Page %1": "Page %1",
   "Trier par %1": "Sort by %1",
   "Téléchargements…": "Downloads…",
-  "Une partie dans la bibliothèque": "One game in the library"
+  "Une partie dans la bibliothèque": "One game in the library",
+  "Aucun coup légal ne s’écrit ainsi": "No legal move is written like this",
+  "Coup…": "Move…",
+  "Entrée : %1": "Enter: %1",
+  "Taper un coup": "Type a move"
 }

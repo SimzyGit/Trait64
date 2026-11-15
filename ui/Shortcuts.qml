@@ -17,7 +17,7 @@ TDialog {
         {id:"start",label:qsTr("Début de la partie")},{id:"end",label:qsTr("Fin de la variante")},
         {id:"previousVariation",label:qsTr("Variante précédente")},{id:"nextVariation",label:qsTr("Variante suivante")},
         {id:"previousGame",label:qsTr("Partie précédente de la liste")},{id:"nextGame",label:qsTr("Partie suivante de la liste")},
-        {id:"flip",label:qsTr("Retourner l’échiquier")},{id:"threat",label:qsTr("Montrer la menace")},
+        {id:"flip",label:qsTr("Retourner l’échiquier")},{id:"threat",label:qsTr("Montrer la menace")},{id:"typeMove",label:qsTr("Taper un coup")},
         {id:"autoplay",label:qsTr("Lecture automatique")},{id:"deleteMove",label:qsTr("Supprimer le coup et sa suite")},
         {id:"undo",label:qsTr("Défaire le dernier changement")},{id:"redo",label:qsTr("Rétablir")},
         {id:"newGame",label:qsTr("Nouvelle partie")},{id:"open",label:qsTr("Importer")},

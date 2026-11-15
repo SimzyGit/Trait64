@@ -359,6 +359,10 @@ class Controller : public QObject {
     Q_INVOKABLE void clickSquare(const QString &square);
     Q_INVOKABLE void tryMove(const QString &from, const QString &to);
     Q_INVOKABLE void move(const QString &uci);
+    // Saisie au clavier : les coups qui répondent à ce qui est tapé, en notation affichée,
+    // et le coup joué quand un seul y répond.
+    Q_INVOKABLE QVariantList typedMoves(const QString &text) const;
+    Q_INVOKABLE bool playTyped(const QString &text);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
     Q_INVOKABLE void stepVariation(int delta);

@@ -904,6 +904,36 @@ int main(int argc, char **argv) {
             check(restored.stats()["games"].toInt() == 1, "Switching study updates existing game");
         }
         {
+            // Saisie des coups au clavier.
+            Controller typed(dir.path() + "/typed");
+            const auto language = QSettings().value("language");
+            typed.setPreference("language", "en");
+            const auto sans = [&typed](const QString &text) {
+                QStringList found;
+                for (const auto &row : typed.typedMoves(text))
+                    found << row.toMap()["uci"].toString();
+                found.sort();
+                return found;
+            };
+            check(sans("Nf3") == QStringList{"g1f3"} && sans("nf3") == QStringList{"g1f3"} &&
+                      sans("e2e4") == QStringList{"e2e4"} &&
+                      sans("N") == QStringList{"b1a3", "b1c3", "g1f3", "g1h3"} && sans("Ke2").isEmpty() &&
+                      sans("").isEmpty(),
+                  "Typed moves: SAN, lowercase pieces, UCI, prefixes, and illegal ones refused");
+            check(!typed.playTyped("N") && typed.playTyped("e4") && typed.playTyped("e5") &&
+                      typed.playTyped("Nf3") && typed.playTyped("Nc6") && typed.playTyped("Bc4") &&
+                      typed.playTyped("Nf6") && typed.playTyped("0-0") && typed.state()["node"].toInt() == 7,
+                  "Enter plays a move only when one answers, castling written 0-0 included");
+            typed.setPreference("language", "fr");
+            check(sans("Cg4") == QStringList{"f6g4"} && sans("Fb4") == QStringList{"f8b4"} &&
+                      sans("Nh5") == QStringList{"f6h5"},
+                  "French letters: C for the knight, F for the bishop");
+            check(typed.playTyped("Cg4") && typed.playTyped("d4") && typed.playTyped("Cxf2") &&
+                      typed.playTyped("Txf2") && typed.playTyped("Fxf2") == false,
+                  "French captures, T for the rook; a bishop that cannot reach is refused");
+            typed.setPreference("language", language.isValid() ? language.toString() : QString("fr"));
+        }
+        {
             Controller c(dir.path() + "/features");
             QSignalSpy errors(&c, &Controller::message);
             QQmlApplicationEngine engine;
@@ -1100,7 +1130,8 @@ int main(int argc, char **argv) {
                 {
                     // Raccourcis : on capte une combinaison, une combinaison prise est refusée.
                     const auto keys = [&] { return c.preferences()["shortcuts"].toMap(); };
-                    check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 18,
+                    check(keys()["flip"] == "F" && keys()["back"] == "Left" && keys().size() == 19 &&
+                              keys()["typeMove"] == "Ctrl+L",
                           "Every shortcut has its default");
                     check(c.keyName(Qt::Key_Shift, Qt::ShiftModifier).isEmpty() &&
                               c.keyName(Qt::Key_F, int(Qt::ControlModifier | Qt::ShiftModifier)) ==

@@ -96,6 +96,7 @@ Vos données sont dans le dossier indiqué par *Paramètres* ; la bibliothèque 
 | Espace | Lecture automatique |
 | F | Retourner l'échiquier |
 | M | Menace |
+| Ctrl+L | Taper un coup (« Cf3 », « e4 », « O-O », ou « e2e4 ») puis Entrée |
 | Suppr | Supprimer le coup et sa suite |
 | Ctrl+Z / Ctrl+Maj+Z | Annuler / rétablir |
 | Ctrl+N / Ctrl+O / Ctrl+S | Nouvelle étude / importer / enregistrer |
