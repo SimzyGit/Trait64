@@ -934,6 +934,24 @@ int main(int argc, char **argv) {
             typed.setPreference("language", language.isValid() ? language.toString() : QString("fr"));
         }
         {
+            // Pièces en prise : marquées seulement si on le demande.
+            Controller hang(dir.path() + "/hanging");
+            hang.move("e2e4");
+            hang.move("d7d5");
+            const auto marked = [&hang] {
+                QStringList squares;
+                for (const auto &cell : hang.squares())
+                    if (cell.toMap()["hanging"].toBool())
+                        squares << cell.toMap()["square"].toString();
+                return squares;
+            };
+            check(marked().isEmpty(), "Hanging pieces are not shown by default");
+            hang.setPreference("showHanging", true);
+            check(marked() == QStringList{"e4"},
+                  "Shown, the undefended pawn is circled and the defended one is not");
+            hang.setPreference("showHanging", false);
+        }
+        {
             Controller c(dir.path() + "/features");
             QSignalSpy errors(&c, &Controller::message);
             QQmlApplicationEngine engine;

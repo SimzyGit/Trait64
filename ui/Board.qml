@@ -122,6 +122,12 @@ Item {
                 width: root.cell; height: root.cell
                 color: (Math.floor(index/8)+index%8)%2===0 ? root.prefs.boardLight : root.prefs.boardDark
                 Rectangle {anchors.fill:parent;color:tile.cellData.check ? "#d34545" : root.prefs.boardHighlight;opacity:tile.cellData.check?.78:root.backend.state.selected===tile.sqIndex?.85:.48;visible:!!tile.cellData.check || root.backend.state.selected===tile.sqIndex || (!!tile.cellData.last && root.prefs.lastMove)}
+                // Pièce en prise : un anneau rouge, sous la pièce, pour ne rien cacher d'elle.
+                Rectangle {
+                    anchors.centerIn:parent;width:root.cell*.9;height:width;radius:width/2
+                    color:"transparent";border.color:"#e0473b";border.width:Math.max(2,root.cell*.06);opacity:.85
+                    visible:!!tile.cellData.hanging && !root.blind
+                }
                 Piece {
                     anchors.centerIn: parent
                     width:root.cell*.91;height:width

@@ -117,6 +117,8 @@ TDialog {
                 CheckBox {text:qsTr("Coups possibles");checked:root.backend.preferences.legalMoves;onToggled:root.backend.setPreference("legalMoves",checked)}
                 CheckBox {text:qsTr("Dernier coup");checked:root.backend.preferences.lastMove;onToggled:root.backend.setPreference("lastMove",checked)}
                 CheckBox {text:qsTr("Flèches du moteur");checked:root.backend.preferences.engineArrows;onToggled:root.backend.setPreference("engineArrows",checked)}
+                CheckBox {text:qsTr("Pièces en prise");checked:root.backend.preferences.showHanging;onToggled:root.backend.setPreference("showHanging",checked)
+                    ToolTip.visible:hovered;ToolTip.text:qsTr("Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.")}
                 CheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
                 CheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
                 CheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}

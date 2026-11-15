@@ -16,7 +16,7 @@ Pages are chosen at the top: Home, Library, Analysis, Openings, Training, Tools,
 - **Annotate**: right-click and drag draws an arrow, right-click on a square draws a circle; Shift, Ctrl or Alt change the colour.
 - **Next to the players' names**, captured pieces and the material lead are shown.
 
-*View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys.
+*View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys. *View → Hanging pieces* circles in red what a capture would win.
 
 ## Notation and variations
 

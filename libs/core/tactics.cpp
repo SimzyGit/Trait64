@@ -180,6 +180,12 @@ int exchangeValue(const chess::Board &board, chess::Square from, chess::Square t
     }
     return gain[0];
 }
+std::vector<chess::Square> hangingPieces(const chess::Board &board, chess::Color side) {
+    std::vector<chess::Square> squares;
+    for (const auto &fact : liabilities(board, side))
+        squares.push_back(chess::Square(fact.targets.front().square));
+    return squares;
+}
 int bestCaptureGain(const chess::Board &board) {
     int best = 0;
     Movelist moves;

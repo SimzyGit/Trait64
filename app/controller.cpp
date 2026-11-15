@@ -8,6 +8,7 @@
 #include "move_notation.h"
 #include "scid.h"
 #include "sounds.h"
+#include "tactics.h"
 #include <QClipboard>
 #include <QDate>
 #include <QDateTime>
@@ -513,6 +514,12 @@ void Controller::refresh(bool content) {
                 targets.insert(squareIndex(u.mid(2, 2)));
         }
     squares_.clear();
+    // Pièces en prise des deux camps, si on les montre.
+    QSet<int> hanging;
+    if (settings_.value("showHanging", false).toBool())
+        for (const auto side : {chess::Color::WHITE, chess::Color::BLACK})
+            for (const auto square : t64::hangingPieces(board, side))
+                hanging.insert(square.index());
     for (int i = 0; i < 64; ++i) {
         const auto p = board.at(chess::Square(i));
         const bool occupied = p != chess::Piece::NONE;
@@ -529,7 +536,8 @@ void Controller::refresh(bool content) {
             {"legal", targets.contains(i)},
             {"last", current.uci.size() >= 4 && (s(current.uci).left(2) == squareName(i) ||
                                                  s(current.uci).mid(2, 2) == squareName(i))},
-            {"check", board.inCheck() && i == board.kingSq(board.sideToMove()).index()}};
+            {"check", board.inCheck() && i == board.kingSq(board.sideToMove()).index()},
+            {"hanging", hanging.contains(i)}};
     }
     notation_.clear();
     notation_ << QVariantMap{{"id", 0},

@@ -36,6 +36,10 @@ std::vector<TacticalFact> explainTactics(const chess::Board &before, const chess
 // camp reprenant par sa pièce la moins chère et s'arrêtant quand cela lui coûte. Les
 // pièces alignées derrière comptent ; les clouages sont ignorés.
 int exchangeValue(const chess::Board &board, chess::Square from, chess::Square target);
+// Les pièces de `side` (roi exclu) qu'une prise adverse gagnerait, échanges joués : ce
+// que ChessBase appelle les relations d'attaque, réduites à ce qui compte. Le camp au trait
+// n'importe pas : une pièce en prise l'est aussi pour celui qui doit jouer.
+std::vector<chess::Square> hangingPieces(const chess::Board &board, chess::Color side);
 // La meilleure prise du camp au trait, zéro s'il n'en a aucune qui rapporte.
 int bestCaptureGain(const chess::Board &board);
 // PGN graphical annotations on the resulting position. No arrows through blockers.

@@ -5,6 +5,7 @@
 #include "hardware.h"
 #include "html_export.h"
 #include "polyglot.h"
+#include "tactics.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -32,6 +33,26 @@ template <class F> void rejects(F f) {
 }
 #include "tactics_cases.h"
 int main() {
+    {
+        // Pièces en prise : après 1.e4 d5, le pion e4 n'est pas défendu ; d5 l'est par la
+        // dame, la prise ne gagne rien. Après 1.e4 e5 2.Nf3, le pion e5 tombe.
+        const auto hanging = [](const char *fen, chess::Color side) {
+            std::vector<std::string> squares;
+            for (const auto square : t64::hangingPieces(chess::Board(fen), side))
+                squares.push_back(std::string(square));
+            return squares;
+        };
+        const char *scandinavian = "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2";
+        check(hanging(scandinavian, chess::Color::WHITE) == std::vector<std::string>{"e4"} &&
+                  hanging(scandinavian, chess::Color::BLACK).empty(),
+              "An undefended pawn is en prise, a defended one is not");
+        check(hanging("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+                      chess::Color::BLACK) == std::vector<std::string>{"e5"},
+              "A pawn attacked by a knight and undefended is en prise for the side to move too");
+        check(hanging(std::string(chess::constants::STARTPOS).c_str(), chess::Color::WHITE).empty() &&
+                  hanging(std::string(chess::constants::STARTPOS).c_str(), chess::Color::BLACK).empty(),
+              "Nothing is en prise at the start");
+    }
     try {
         check(t64::gameResult(t64::checkedBoard("7k/5K2/6Q1/8/8/8/8/8 b - - 100 1")).first ==
                   chess::GameResultReason::STALEMATE,

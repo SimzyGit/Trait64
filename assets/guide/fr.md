@@ -16,7 +16,7 @@ Les pages se choisissent en haut : Accueil, Bibliothèque, Analyse, Ouvertures, 
 - **Annoter** : un clic droit glissé trace une flèche, un clic droit sur une case pose un cercle ; Maj, Ctrl ou Alt changent la couleur.
 - **À côté des noms** des joueurs s'affichent les pièces prises et l'avance matérielle.
 
-*Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches.
+*Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.
 
 ## La notation et les variantes
 

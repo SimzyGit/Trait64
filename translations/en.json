@@ -1506,5 +1506,7 @@
   "Performance : Elo moyen des adversaires + 400 × (victoires − défaites) / parties, quand tous les adversaires sont classés.": "Performance: opponents' average Elo + 400 × (wins − losses) / games, when every opponent is rated.",
   "Partie introuvable.": "Game not found.",
   "Cette partie ne nomme pas son tournoi.": "This game does not name its tournament.",
-  "Plus de 3 000 parties sous ce nom : ce n'est pas un tournoi.": "More than 3,000 games under this name: this is not a tournament."
+  "Plus de 3 000 parties sous ce nom : ce n'est pas un tournoi.": "More than 3,000 games under this name: this is not a tournament.",
+  "Pièces en prise": "Hanging pieces",
+  "Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.": "Circles in red the pieces, of both sides, that a capture would win once the exchanges are played."
 }

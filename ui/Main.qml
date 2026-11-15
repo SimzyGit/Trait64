@@ -147,6 +147,7 @@ ApplicationWindow {
         Menu { title: qsTr("&Affichage")
             MenuItem {text: win.light ? qsTr("Thème sombre") : qsTr("Thème clair"); onTriggered: {controller.setPreference("lightTheme", !win.light); controller.setPreference("backgroundColor", "")}}
             MenuItem {text: qsTr("Pièces, échiquier et couleurs…"); onTriggered: appearanceDialog.open()}
+            MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}

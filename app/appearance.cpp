@@ -167,6 +167,7 @@ QVariantMap Controller::preferences() const {
                          {"legalMoves", true},
                          {"lastMove", true},
                          {"engineArrows", true},
+                         {"showHanging", false},
                          {"sounds", true},
                          {"wheelMoves", false},
                          {"blindfold", false},
@@ -273,7 +274,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 return;
         } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
-                               "sounds", "wheelMoves", "blindfold", "autoBackup"}
+                               "showHanging", "sounds", "wheelMoves", "blindfold", "autoBackup"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
@@ -308,7 +309,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             translator_->setLanguage(clean.toString());
             refreshNotation();
         }
-        if (key == "figurines") {
+        if (key == "figurines" || key == "showHanging") {
             refresh();
         }
         if (key == "enginePath")

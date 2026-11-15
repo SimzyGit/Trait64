@@ -2,6 +2,7 @@
 
 ## Tableau du tournoi — 15 novembre 2026
 
+- **Pièces en prise** (*Affichage → Pièces en prise*, ou dans l'apparence) : un anneau rouge entoure les pièces, des deux camps, qu'une prise gagnerait une fois tous les échanges joués sur la case. Désactivé par défaut.
 - **Le tableau croisé d'un tournoi**, depuis le menu d'une partie de la bibliothèque ou *Partie → Tableau du tournoi* : classement aux points, départage Sonneborn-Berger puis victoires, performance (Elo moyen des adversaires + 400 × (V − D) / N). Tableau carré pour un toutes-rondes, une colonne par ronde pour un open (rang de l'adversaire, ○ Blancs ● Noirs, résultat). Un clic sur un résultat ouvre la partie. Le tournoi réunit les parties du même événement la même année.
 
 ## Bibliothèque plus claire — 15 novembre 2026
