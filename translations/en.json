@@ -1535,5 +1535,10 @@
   "Ce qu’un adversaire joue dans une position, d’après votre bibliothèque et les parties en ligne.": "What an opponent plays in a position, from your library and online games.",
   "Une partie": "One game",
   "%1 parties": "%1 games",
-  "%1 favorite(s)": "%1 favourite(s)"
+  "%1 favorite(s)": "%1 favourite(s)",
+  "Ses parties en ligne": "Their online games",
+  "Téléchargement…": "Downloading…",
+  "Récupérer les parties de ce pseudo": "Fetch this username's games",
+  "Ses 1 000 dernières parties, ajoutées à la bibliothèque ; le calcul suit.": "Their last 1,000 games, added to the library; the calculation follows.",
+  "Nom dans la base ou pseudo en ligne (vide : tous)": "Name in the database or online username (blank: all)"
 }

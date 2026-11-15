@@ -789,11 +789,13 @@ QVariantList Database::positionStatistics(const QString &fen, const QVariantMap 
     QVariantList args{hashKey(fen.toStdString())};
     const auto player = filters["player"].toString().trimmed();
     if (!player.isEmpty()) {
+        // Sans casse : un pseudo Lichess se tape rarement avec ses majuscules. La requête
+        // part de l'index des positions, la comparaison ne coûte rien.
         if (colour == "both") {
-            statement += " AND (g.white=? OR g.black=?)";
+            statement += " AND (g.white=? COLLATE NOCASE OR g.black=? COLLATE NOCASE)";
             args << player << player;
         } else {
-            statement += " AND g." + colour + "=?";
+            statement += " AND g." + colour + "=? COLLATE NOCASE";
             args << player;
         }
     }

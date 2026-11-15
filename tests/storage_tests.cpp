@@ -1148,6 +1148,11 @@ int main(int argc, char **argv) {
                 start, {{"player", "Rival"}, {"colour", "white"}, {"fromYear", 2023}, {"toYear", 2025}});
             check(white.size() == 1 && white.first().toMap()["averageElo"].toDouble() == 2000,
                   "Player, colour and period filters combine and exclude unknown years");
+            check(prep.positionStatistics(
+                      start,
+                      {{"player", "rIVAL"}, {"colour", "white"}, {"fromYear", 2023}, {"toYear", 2025}}) ==
+                      white,
+                  "An online username matches whatever its capitals");
             auto rated = prep.positionStatistics(start, {{"minElo", 2200}, {"maxElo", 2500}});
             check(rated.size() == 1 && rated.first().toMap()["count"].toInt() == 1 &&
                       rated.first().toMap()["averageElo"].toDouble() == 2400,

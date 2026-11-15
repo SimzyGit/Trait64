@@ -12,6 +12,10 @@ TDialog {
     width:Math.min(1030,parent.width-32);height:Math.min(760,parent.height-32)
     anchors.centerIn:parent;modal:true;standardButtons:Dialog.Close
     function usePlayer(name) {player.text=name;open()}
+    // Les parties en ligne de l'adversaire : on les rapatrie, puis on calcule dès que
+    // l'import est fini.
+    property bool fetching:false
+    Connections {target:root.backend;function onBusyChanged(){if(root.fetching&&!root.backend.busy){root.fetching=false;source.currentIndex=0;root.calculate()}}}
     function calculate() {
         backend.preparePosition({sourceId:source.currentIndex>0?source.currentValue:0,player:player.text,
             colour:["both","white","black"][colour.currentIndex],fromYear:fromYear.value,toYear:toYear.value,
@@ -28,7 +32,16 @@ ColumnLayout {width:preparationViewport.availableWidth;height:Math.max(preparati
             Label {text:qsTr("Couleur du joueur")}
             TComboBox {id:colour;model:["Les deux","Blancs","Noirs"];Layout.fillWidth:true}
             Label {text:qsTr("Joueur / adversaire")}
-            TextField {id:player;objectName:"preparationPlayer";placeholderText:qsTr("Nom exact dans la base (vide : tous)");Layout.fillWidth:true;Layout.columnSpan:parent.columns-1;maximumLength:300;onAccepted:root.calculate()}
+            TextField {id:player;objectName:"preparationPlayer";placeholderText:qsTr("Nom dans la base ou pseudo en ligne (vide : tous)");Layout.fillWidth:true;Layout.columnSpan:parent.columns-1;maximumLength:300;onAccepted:root.calculate()}
+            Label {text:qsTr("Ses parties en ligne")}
+            RowLayout {Layout.fillWidth:true;Layout.columnSpan:parent.columns-1
+                TComboBox {id:onlineSite;model:["Lichess","Chess.com"]}
+                TButton {objectName:"fetchOpponent";text:root.fetching?qsTr("Téléchargement…"):qsTr("Récupérer les parties de ce pseudo")
+                    enabled:!root.backend.busy&&/^[A-Za-z0-9_-]{2,30}$/.test(player.text.trim())
+                    onClicked:{root.fetching=true;root.backend.importOnline(onlineSite.currentIndex===0?"lichess":"chesscom",player.text.trim(),1000)}}
+                Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
+                    text:qsTr("Ses 1 000 dernières parties, ajoutées à la bibliothèque ; le calcul suit.")}
+            }
             Label {text:qsTr("Années (0 : sans limite)")}
             RowLayout {SpinBox {id:fromYear;from:0;to:9999;editable:true} Label {text:qsTr("à")} SpinBox {id:toYear;from:0;to:9999;editable:true}}
             Label {text:qsTr("Elo moyen des deux joueurs")}
