@@ -1,5 +1,11 @@
 # Changements
 
+## Tables Syzygy sur l'ordinateur — 15 novembre 2026
+
+- **Les finales se lisent sans réseau** quand les tables Syzygy sont posées sur l'ordinateur : l'onglet « Finales » de l'explorateur répond depuis le dossier choisi dans les paramètres (le même que reçoit le moteur), et ne demande à Lichess que ce que les tables ne couvrent pas — trop de pièces, roque encore permis, fichier manquant. Le dossier peut contenir les paquets de Lichess dans leurs sous-dossiers.
+- Les paramètres disent ce que contient le dossier (« 145 tables, jusqu'à 5 pièces ») et ont un bouton « Parcourir ».
+- Lecture par Fathom (MIT).
+
 ## Bases SCID — 15 novembre 2026
 
 - **Les bases SCID et Scid vs. PC au format 4** (`.si4`, `.sn4`, `.sg4`) s'importent comme un PGN, jusqu'à un million de parties : Fichier → Importer, ou depuis l'explorateur d'études, qui ne montre que l'index. Variantes, commentaires, NAG, positions de départ et Chess960 compris. Vérifié sur 116 811 parties relues à l'identique. Le format 5 (`.si5`) n'est pas lu.

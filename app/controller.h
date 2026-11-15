@@ -401,6 +401,8 @@ class Controller : public QObject {
     Q_INVOKABLE void copyText(const QString &what);
     Q_INVOKABLE void setPreference(const QString &key, const QVariant &value);
     Q_INVOKABLE void retranslateUi(QObject *window);
+    // Ce que contient le dossier des tables Syzygy, dit en une phrase pour les réglages.
+    Q_INVOKABLE QString syzygyStatus(const QString &folder) const;
     Q_INVOKABLE QString uiText(const QString &text) const { return translator_->display(text); }
     // Le guide de l'utilisateur, en Markdown, dans la langue de l'interface.
     Q_INVOKABLE QString userGuide() const;

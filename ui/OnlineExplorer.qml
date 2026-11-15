@@ -103,6 +103,7 @@ ColumnLayout {
         text: root.tables
               ? qsTr("Le camp au trait %1").arg(root.verdict(root.report.verdict || ""))
                 + (root.report.dtm !== undefined && root.report.dtm !== null ? qsTr(" · mat en %1 demi-coups").arg(root.report.dtm) : "")
+                + (root.report.local ? qsTr(" · tables de l’ordinateur") : "")
               : (root.report.name ? root.report.name + " · " : "") + qsTr("%1 partie(s)").arg(root.total)
     }
 

@@ -22,6 +22,9 @@ class OpeningExplorer : public QObject {
     // années « 1952 » pour masters).
     void query(const QString &source, const QString &fen, const QVariantMap &filters = {});
     void cancel();
+    // Le dossier des tables Syzygy de l'ordinateur : quand elles couvrent la position, les
+    // finales s'y lisent sans réseau. Vide : toujours Lichess.
+    void setLocalTables(const QString &folder) { localTables_ = folder; }
     bool busy() const { return !reply_.isNull(); }
     static bool knownSource(const QString &source);
     // Séparées de la requête pour s'éprouver sans réseau.
@@ -41,5 +44,6 @@ class OpeningExplorer : public QObject {
   private:
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
+    QString localTables_;
 };
 } // namespace t64

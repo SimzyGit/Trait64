@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "hardware.h"
+#include "syzygy.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
@@ -12,7 +13,8 @@ void Controller::initContent() {
             auto profiles = settings_.value("engineProfiles").toList();
             for (const auto &profile : profiles)
                 if (profile.toMap()["enginePath"] == path) {
-                    emit message(tr("Ce moteur possède déjà un profil. Vous pouvez en mémoriser d’autres dans les paramètres."));
+                    emit message(tr("Ce moteur possède déjà un profil. Vous pouvez en mémoriser d’autres "
+                                    "dans les paramètres."));
                     return;
                 }
             profiles << QVariantMap{{"name", item["title"].toString() + " " + item["version"].toString()},
@@ -83,8 +85,8 @@ QVariantMap Controller::openingFilters(const QVariantMap &filters) const {
                                          {"slave", "slav"}};
     bool wholeFamily = aliases.contains(name);
     for (const auto &english : aliases)
-        wholeFamily = wholeFamily || name == english || name == english + " defense" ||
-                      name == english + " defence";
+        wholeFamily =
+            wholeFamily || name == english || name == english + " defense" || name == english + " defence";
     name = aliases.value(name, name);
     QSet<QString> codes;
     // La variable de boucle s'appelait « family » comme le drapeau ci-dessus, qu'elle
@@ -118,4 +120,15 @@ void Controller::searchLibrary(const QString &query, const QString &result, bool
     trashFilter_ = trash;
     advancedFilters_ = openingFilters(filters);
     requestLibrarySearch();
+}
+
+QString Controller::syzygyStatus(const QString &folder) const {
+    if (folder.trimmed().isEmpty())
+        return tr("Sans tables, les finales sont demandées à Lichess.");
+    const auto tables = t64::syzygy::open(localPath(folder.trimmed()));
+    if (tables.files == 0)
+        return tr("Aucune table Syzygy (.rtbw) dans ce dossier ni dans ses sous-dossiers.");
+    return tr("%1 tables, jusqu’à %2 pièces : ces finales se lisent sans réseau, au-delà Lichess répond.")
+        .arg(tables.files)
+        .arg(tables.largest);
 }

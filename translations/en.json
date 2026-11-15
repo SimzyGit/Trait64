@@ -1461,5 +1461,10 @@
   "Seules les sauvegardes de la liste peuvent être restaurées.": "Only backups from the list can be restored.",
   "Cette sauvegarde est endommagée : rien n’a été changé.": "This backup is damaged: nothing was changed.",
   "Restauration impossible : la bibliothèque d’avant est conservée.": "Restore failed: the previous library is kept.",
-  "Guide de l’utilisateur": "User guide"
+  "Guide de l’utilisateur": "User guide",
+  "Sans tables, les finales sont demandées à Lichess.": "Without tables, endgames are asked of Lichess.",
+  "Aucune table Syzygy (.rtbw) dans ce dossier ni dans ses sous-dossiers.": "No Syzygy table (.rtbw) in this folder or its subfolders.",
+  "%1 tables, jusqu’à %2 pièces : ces finales se lisent sans réseau, au-delà Lichess répond.": "%1 tables, up to %2 pieces: these endgames are read offline, Lichess answers beyond that.",
+  " · tables de l’ordinateur": " · this computer's tables",
+  "Dossier des tables Syzygy": "Syzygy tables folder"
 }

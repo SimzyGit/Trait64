@@ -3,8 +3,10 @@
 #include "fide.h"
 #include "online.h"
 #include "puzzles.h"
+#include "syzygy.h"
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QDir>
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -367,6 +369,51 @@ int main(int argc, char **argv) {
                   "An answer already given from the mover's side is not turned over a second time");
             check(OpeningExplorer::parseTablebase("oops").contains("error"),
                   "A malformed tablebase answer is an error");
+            {
+                // Les tables de l'ordinateur, lues par Fathom : KQK, KRK, KPK, KBK, KNK et
+                // KQKQ, rangées dans un sous-dossier comme les paquets de Lichess.
+                QTemporaryDir home;
+                QDir().mkpath(home.filePath("3-4"));
+                for (const auto &name : QDir(QString(T64_TEST_DATA) + "/syzygy").entryList(QDir::Files))
+                    QFile::copy(QString(T64_TEST_DATA) + "/syzygy/" + name, home.filePath("3-4/" + name));
+                const auto tables = t64::syzygy::open(home.path());
+                check(tables.files == 6 && tables.largest == 4, "Tables in a subfolder are found and sized");
+                // Roi et pion contre roi : seuls les pas de roi de côté gagnent.
+                const auto pawn = t64::syzygy::probe("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1");
+                const auto rows = pawn["moves"].toList();
+                QStringList winning;
+                for (const auto &row : rows)
+                    if (row.toMap()["verdict"] == "win")
+                        winning << row.toMap()["san"].toString();
+                winning.sort();
+                check(pawn["local"].toBool() && pawn["verdict"] == "win" && rows.size() == 6 &&
+                          winning == QStringList{"Kd2", "Kf2"} && rows.last().toMap()["verdict"] == "draw",
+                      "King and pawn: the winning king steps come first, the pushes draw");
+                const auto defence = t64::syzygy::probe("4k3/8/8/8/8/8/4P3/4K3 b - - 0 1");
+                check(defence["verdict"] == "draw" &&
+                          defence["moves"].toList().last().toMap()["verdict"] == "loss",
+                      "Seen from the defender, the wrong king step loses");
+                const auto mate = t64::syzygy::probe("k7/8/1K6/8/8/8/8/7Q b - - 0 1");
+                check(mate["verdict"] == "loss" && mate["moves"].toList().size() == 1,
+                      "A lost king has its one move");
+                const auto mated = t64::syzygy::probe("8/8/8/8/8/1k6/1q6/K7 w - - 0 1");
+                check(mated["verdict"] == "loss" && mated["moves"].toList().isEmpty(),
+                      "A mated king has no move");
+                check(t64::syzygy::probe("8/8/8/4k3/8/8/2RP4/4K3 w - - 0 1").isEmpty() &&
+                          t64::syzygy::probe("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1").isEmpty() &&
+                          t64::syzygy::probe("not a fen").isEmpty(),
+                      "Five pieces, castling rights or nonsense are left to Lichess");
+                OpeningExplorer offline;
+                offline.setLocalTables(home.path());
+                QSignalSpy answered(&offline, &OpeningExplorer::ready);
+                offline.query("tablebase", "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1");
+                check(answered.size() == 1 && answered.first().first().toMap()["local"].toBool() &&
+                          !offline.busy(),
+                      "The explorer answers from the computer's tables without the network");
+                check(t64::syzygy::open({}).largest == 0 &&
+                          t64::syzygy::probe("k7/8/1K6/8/8/8/8/7Q b - - 0 1").isEmpty(),
+                      "Closing the tables leaves every ending to Lichess");
+            }
             Network network;
             OpeningExplorer explorer(nullptr, &network);
             QSignalSpy ready(&explorer, &OpeningExplorer::ready);

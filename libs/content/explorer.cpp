@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "explorer.h"
+#include "syzygy.h"
 #include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -178,6 +179,13 @@ QVariantMap OpeningExplorer::parse(const QByteArray &body) {
 
 void OpeningExplorer::query(const QString &source, const QString &fen, const QVariantMap &filters) {
     cancel();
+    if (source == "tablebase" && !localTables_.isEmpty()) {
+        syzygy::open(localTables_);
+        if (auto local = syzygy::probe(fen); !local.isEmpty()) {
+            emit ready(local);
+            return;
+        }
+    }
     const auto url = buildUrl(source, fen, filters);
     if (url.isEmpty()) {
         emit failed(source == "tablebase" && pieces(fen) > 7

@@ -150,7 +150,7 @@ Fonctionnalités :
 - [x] File de tâches d'analyse persistante.
 - [ ] Budgets de calcul adaptatifs.
 - [ ] ◐ Comparaison détaillée des conclusions de plusieurs moteurs — partiel : 2 à 4 profils côte à côte, sans synthèse.
-- [ ] ◐ Exploitation des tables de finales Syzygy — partiel : chemin transmis au moteur et tables à 7 pièces en ligne ; pas de gestionnaire local.
+- [ ] ◐ Exploitation des tables de finales Syzygy — chemin transmis au moteur, tables à 7 pièces en ligne, lecture des tables locales dans l'explorateur ; reste le téléchargement guidé.
 - [x] Conservation et réutilisation des évaluations précédentes.
 - [ ] ◐ Explications pédagogiques en français — partiel : suites légales et cinq motifs ; pas encore le « pourquoi ».
 

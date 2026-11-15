@@ -899,7 +899,12 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                         textFromValue:function(value){return value===0?qsTr("sans limite"):String(value)}
                         valueFromText:function(text){var n=parseInt(text);return isNaN(n)?0:n}
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Sans limite, le moteur approfondit tant que la position reste affichée. Une profondeur fixe l’arrête dès qu’elle est atteinte.")}}
-            TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
+            RowLayout {Layout.fillWidth:true
+                TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
+                TButton {text:qsTr("Parcourir");onClicked:syzygyFolder.open()}
+                Native.FolderDialog {id:syzygyFolder;title:qsTr("Dossier des tables Syzygy");onAccepted:controller.setPreference("syzygyPath",selectedFolder.toString())}
+            }
+            Label {objectName:"syzygyStatus";Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);text:controller.syzygyStatus(controller.preferences.syzygyPath)}
             TextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
             RowLayout {Layout.fillWidth:true
                 TextField {id:profileName;Layout.fillWidth:true;placeholderText:qsTr("Nom du profil moteur")}
