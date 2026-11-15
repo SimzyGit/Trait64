@@ -1554,5 +1554,6 @@
   "Lichess demande de ralentir. Le suivi reprendra dans un instant.": "Lichess asks to slow down. Following will resume shortly.",
   "Retransmissions Lichess injoignables : ": "Lichess broadcasts unreachable: ",
   "Ronde inconnue.": "Unknown round.",
-  "Réponse de Lichess illisible.": "Unreadable Lichess answer."
+  "Réponse de Lichess illisible.": "Unreadable Lichess answer.",
+  "Meilleures parties de cette position": "Best games from this position"
 }

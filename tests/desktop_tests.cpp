@@ -986,6 +986,20 @@ int main(int argc, char **argv) {
                 sortBy("white");
                 check(whites() == QStringList{"Tal", "Morphy", "Anand"}, "A second click reverses it");
                 sortBy("updated");
+                // Les meilleures parties d'une position : la bibliothèque filtrée et triée.
+                QMetaObject::invokeMethod(window, "bestGamesHere");
+                QElapsedTimer best;
+                best.start();
+                QTest::qWait(20);
+                while (c.librarySearching() && best.elapsed() < 10000)
+                    QTest::qWait(10);
+                const auto advanced = window->property("advanced").toMap();
+                check(window->property("page").toInt() == 1 && advanced["sort"] == "elo" &&
+                          !c.games().isEmpty(),
+                      "Best games of the position: the library, filtered on the board, by Elo");
+                if (auto *filter = visualItem(window->contentItem(), "positionFilter"))
+                    filter->setProperty("checked", false);
+                QMetaObject::invokeMethod(window, "sortLibrary", Q_ARG(QVariant, QString("updated")));
             }
             {
                 // Ctrl + molette sur la liste : la taille du texte, bornée.

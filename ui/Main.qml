@@ -62,6 +62,7 @@ ApplicationWindow {
     property var advanced:({})
     function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;f.pawnStructure=positionCheck.checked&&pawnCheck.checked;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
     function filterLibrary() {applyAdvanced()}
+    function bestGamesHere(){page=1;positionCheck.checked=true;pawnCheck.checked=false;trashCheck.checked=false;var f=Object.assign({},advanced);f.sort="elo";f.reverse=false;advanced=f;applyAdvanced()}
     function sortLibrary(key){var f=Object.assign({},advanced);f.reverse=(f.sort||"updated")===key?!f.reverse:false;f.sort=key;advanced=f;applyAdvanced()}
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
@@ -242,7 +243,7 @@ ApplicationWindow {
                 }
                 Flow {Layout.fillWidth:true;spacing:6
                     TChip {id:favoriteCheck;text:qsTr("Favoris");onToggled:win.filterLibrary()}
-                    TChip {id:positionCheck;text:qsTr("Position de l’échiquier");onToggled:win.filterLibrary()}
+                    TChip {id:positionCheck;objectName:"positionFilter";text:qsTr("Position de l’échiquier");onToggled:win.filterLibrary()}
                     TChip {id:pawnCheck;objectName:"pawnStructureFilter";text:qsTr("Même structure de pions");visible:positionCheck.checked
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Parties qui atteignent la structure de pions de l’échiquier, quelles que soient les autres pièces.")
                         onToggled:win.filterLibrary()}
@@ -268,7 +269,7 @@ ApplicationWindow {
                                            {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0,k:"event"},{t:qsTr("Date"),w:libraryList.columns.date,k:"date"},
                                            {t:"",w:libraryList.columns.actions,k:""}]
                                     Label {required property var modelData
-                                        readonly property bool active:modelData.k!==""&&(win.advanced.sort||"updated")===modelData.k
+                                        readonly property bool active:modelData.k!==""&&((win.advanced.sort||"updated")===modelData.k||(win.advanced.sort==="elo"&&modelData.k.indexOf("Elo")>0))
                                         // Flèche vers le haut : de A à Z, du plus petit au plus grand.
                                         readonly property bool rising:["updated","whiteElo","blackElo","date"].indexOf(modelData.k)<0!==!!win.advanced.reverse
                                         text:modelData.t+(active?(rising?" ▲":" ▼"):"");visible:modelData.w!==0;elide:Text.ElideRight
@@ -493,6 +494,9 @@ objectName:"analysisSplit"
                                     }
                                     // Opening tree: move, games, result bar (White / draws / Black), score.
                                     ListView {id:miniExplorer;objectName:"openingTree";model:controller.openings;clip:true;spacing:0
+                                        // Les parties qui passent par ici, les mieux classées d'abord : la
+                                        // bibliothèque filtrée sur la position, triée par Elo.
+                                        footer:TButton {objectName:"bestGamesHere";width:miniExplorer.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
                                         header:RowLayout {width:miniExplorer.width;spacing:8
                                             Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {text:qsTr("Parties");Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
