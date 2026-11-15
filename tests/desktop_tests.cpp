@@ -1137,9 +1137,9 @@ int main(int argc, char **argv) {
                 window->setProperty("boardOnly", true);
                 QTest::qWait(80);
                 const auto centre = board->mapToScene(QPointF(board->width() / 2, 0)).x();
+                const auto middle = panel->mapToScene(QPointF(panel->width() / 2, 0)).x();
                 check(!visualItem(window->contentItem(), "analysisPanel")->isVisible() &&
-                          panel->width() > before &&
-                          std::abs(centre - window->width() / 2.0) < window->width() * .05,
+                          panel->width() > before && std::abs(centre - middle) < panel->width() * .05,
                       "Board only hides the analysis panel and centres the board in the whole width");
                 if (const auto shot = qEnvironmentVariable("T64_BOARDONLY_SCREENSHOT"); !shot.isEmpty())
                     window->grabWindow().save(shot);

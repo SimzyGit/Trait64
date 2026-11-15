@@ -1568,5 +1568,7 @@
   "Année": "Year",
   "Elo moyen": "Average Elo",
   "Échiquier seul": "Board only",
-  "Plein écran": "Full screen"
+  "Plein écran": "Full screen",
+  "Déplier la barre latérale": "Expand the sidebar",
+  "Replier la barre latérale": "Collapse the sidebar"
 }

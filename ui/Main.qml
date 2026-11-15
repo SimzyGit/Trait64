@@ -170,33 +170,32 @@ ApplicationWindow {
             MenuItem {text: qsTr("Mises à jour…"); onTriggered: updatesDialog.open()}
         }
     }
-    ColumnLayout {
+    // Une seule navigation, à gauche, comme ChessBase 18 et En Croissant : la rangée
+    // d'onglets du haut répétait la barre de menus. Repliée en icônes si la fenêtre est
+    // étroite ou si on le demande.
+    RowLayout {
         anchors.fill: parent; spacing: 0
+        T64Sidebar {
+            id: sidebar; objectName: "workspaceTabs"
+            Layout.fillHeight: true; Layout.preferredWidth: implicitWidth
+            currentPage: win.page; preferences: controller.preferences
+            collapsed: !!controller.preferences.sidebarCompact || win.width < 1280
+            onPageRequested: function(index) { win.page = index }
+            onActionRequested: function(action) {
+                if (action === "preparationDialog") preparationDialog.open()
+                else if (action === "engineSettings" || action === "settingsDialog") settingsDialog.open()
+                else if (action === "collapse") controller.setPreference("sidebarCompact", !controller.preferences.sidebarCompact)
+            }
+        }
+    ColumnLayout {
+        Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
             Rectangle {
-                Layout.fillWidth: true; implicitHeight: spaces.implicitHeight + 4; color: win.bg
+                Layout.fillWidth: true; implicitHeight: 34 * controller.preferences.uiScale; color: win.bg
                 Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: win.line}
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 6; anchors.rightMargin: 6; anchors.topMargin: 4; spacing: 6
-                    TabBar {
-                        id: spaces; objectName: "workspaceTabs"; Layout.alignment: Qt.AlignBottom
-                        // Shrinks and scrolls in a narrow window instead of pushing the buttons out.
-                        Layout.fillWidth: true; Layout.minimumWidth: 0; clip: true
-                        background: Item {}
-                        currentIndex: win.page
-                        onCurrentIndexChanged: if (currentIndex !== win.page) win.page = currentIndex
-                        Repeater {
-                            // A count, not the translated labels: retranslating must not recreate the
-                            // tabs, which would reset the current workspace to the first one.
-                            model: win.nav.length
-                            TTabButton {
-                                required property int index
-                                objectName: "sectionNav" + index
-                                text: win.nav[index]; width: implicitWidth
-                                implicitWidth: contentItem.implicitWidth + 18
-                            }
-                        }
-                    }
-                    Label {text: controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.maximumWidth: 360; Layout.alignment: Qt.AlignVCenter; visible: win.width > 1200}
+                    Label {text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter; Layout.leftMargin: 6}
+                    Label {text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
                     TButton {objectName: "commandPaletteButton"; text: "Ctrl K"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Rechercher une commande"); onClicked: commands.open()}
                     TButton {id: appMenuButton; objectName: "appMenuButton"; text: "⚙"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Apparence et langue"); onClicked: appearanceDialog.open()}
                 }
@@ -766,6 +765,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             ProfilePage {objectName:"profilePage";backend:controller}
             StudiesPage {objectName:"studiesPage";backend:controller;onOpenDetails:repertoiresDialog.open()}
         }
+    }
     }
     footer:Rectangle {
         height:Math.max(32,32*win.textScale);color:win.bg

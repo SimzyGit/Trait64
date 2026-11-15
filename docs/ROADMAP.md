@@ -72,7 +72,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 
 - **J1 Bibliothèque** : onze boutons sur deux rangées (Téléchargements, Exporter, Polyglot, Importer, Comptes, Mes compétences, Imports reprenables, Exporter cette base, Classer, Ranger…) écrasent la recherche. Garder Importer et Rechercher, ranger le reste dans un menu « Base ». Filtres en pastilles au lieu de grandes cases vides ; liste sur toute la largeur avec l'aperçu dans un panneau redimensionnable ; en-têtes triables ; pagination discrète.
 - **J1 Accueil** : un second grand échiquier qui répète l'analyse. Le remplacer par un tableau de bord : dernières parties, révisions du jour, puzzle du jour, nouvelles parties des comptes synchronisés, reprise de l'étude en cours avec une vignette.
-- **J2** La barre de menus et la rangée d'onglets disent deux fois la même chose ; le titre de l'étude est répété en haut à droite. Une seule navigation (barre latérale à icônes, comme ChessBase 18 et En Croissant), libellés plus aérés.
+- **J2** La barre de menus et la rangée d'onglets disent deux fois la même chose. Une seule navigation (barre latérale à icônes, comme ChessBase 18 et En Croissant) — ✅ 15 nov.
 - **J2** Barre d'évaluation sans moteur : déjà estompée, avec une infobulle qui dit de lancer l'analyse (vérifié le 15 nov.).
 - **J2** Icônes cohérentes sur les boutons d'action (ChessBase 18 a refait les siennes) ; mode « échiquier seul » plein écran (le « Pro board » de chess.ceo) — ✅ 15 nov. (Ctrl+B, F11).
 

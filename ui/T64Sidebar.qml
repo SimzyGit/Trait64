@@ -10,7 +10,7 @@ Item {
     required property var preferences
     property bool collapsed: false
     property real expandedWidth: 224 * preferences.uiScale
-    property real compactWidth: 72 * preferences.uiScale
+    property real compactWidth: 44 * preferences.uiScale
     implicitWidth: collapsed ? compactWidth : expandedWidth
     implicitHeight: 640
     signal pageRequested(int index)
@@ -52,12 +52,12 @@ Item {
     }
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 20
-        anchors.bottomMargin: 14
-        spacing: 17
+        anchors.topMargin: root.collapsed ? 10 : 20
+        anchors.bottomMargin: root.collapsed ? 6 : 14
+        spacing: root.collapsed ? 8 : 17
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: root.collapsed ? 13 : 18
+            Layout.leftMargin: root.collapsed ? 10 : 18
             Layout.rightMargin: 13
             spacing: 8
             Label {
@@ -82,16 +82,22 @@ Item {
             Layout.fillWidth: true
             spacing: 4
             Repeater {
-                model: root.sections
+                // Un nombre, pas les libellés traduits : changer de langue ne doit pas
+                // recréer les boutons (ni perdre le focus ou une infobulle ouverte).
+                model: root.sections.length
                 delegate: Button {
                     id: navButton
-                    required property var modelData
+                    required property int index
+                    readonly property var modelData: root.sections[index]
                     property bool active: modelData.page !== undefined && root.currentPage === modelData.page
                     Layout.fillWidth: true
-                    Layout.leftMargin: 8
-                    Layout.rightMargin: 8
+                    Layout.leftMargin: root.collapsed ? 4 : 8
+                    Layout.rightMargin: root.collapsed ? 4 : 8
+                    // Jamais plus large que la barre : replié, le texte caché gardait sa place.
+                    Layout.minimumWidth: 0
+                    Layout.maximumWidth: navigation.width - Layout.leftMargin - Layout.rightMargin
                     objectName: modelData.page !== undefined ? "sectionNav" + modelData.page : "nav" + modelData.action
-                    implicitHeight: Math.max(44 * root.preferences.uiScale, 28 * root.preferences.fontScale * root.preferences.uiScale + 12)
+                    implicitHeight: root.collapsed ? 34 * root.preferences.uiScale : Math.max(44 * root.preferences.uiScale, 28 * root.preferences.fontScale * root.preferences.uiScale + 12)
                     hoverEnabled: true
                     Accessible.name: modelData.text
                     Accessible.role: modelData.page !== undefined ? Accessible.PageTab : Accessible.Button
@@ -162,6 +168,18 @@ Item {
             }
         }
         }
-
+        // Replier en icônes, ou déplier : on garde plus de place pour l'échiquier.
+        Button {
+            objectName: "sidebarToggle"
+            Layout.alignment: root.collapsed ? Qt.AlignHCenter : Qt.AlignRight
+            Layout.rightMargin: root.collapsed ? 0 : 10
+            flat: true
+            Layout.preferredWidth: 32 * root.preferences.uiScale
+            text: root.collapsed ? "»" : "«"
+            Accessible.name: root.collapsed ? qsTr("Déplier la barre latérale") : qsTr("Replier la barre latérale")
+            ToolTip.visible: hovered
+            ToolTip.text: Accessible.name
+            onClicked: root.actionRequested("collapse")
+        }
     }
 }
