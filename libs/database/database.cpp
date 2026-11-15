@@ -456,6 +456,20 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         collectPlacementMatches(placement, canceled);
         statement += " AND g.id IN(SELECT game_id FROM temp.placement_hits)";
     }
+    // Le texte des commentaires et les symboles d'annotation (!!, ?…) n'ont pas d'index : la
+    // recherche parcourt le PGN, en arrière-plan et annulable comme les autres.
+    if (const auto text = filters.value("comment").toString().trimmed(); !text.isEmpty()) {
+        auto escaped = text;
+        escaped.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        statement += " AND g.pgn LIKE ? ESCAPE '\\'";
+        args << "%{%" + escaped + "%}%";
+    }
+    if (const int nag = filters.value("nag").toInt(); nag > 0 && nag < 256) {
+        statement += " AND g.pgn GLOB ?";
+        args << "*$" + QString::number(nag) + "[^0-9]*";
+    }
+    if (filters.value("annotated").toBool())
+        statement += " AND instr(g.pgn,'{')>0";
     if (!filters.value("material").toString().isEmpty()) {
         statement += " AND g.id IN(SELECT game_id FROM game_material WHERE material=?)";
         args << materialCode(filters["material"].toString());

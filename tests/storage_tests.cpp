@@ -1316,6 +1316,28 @@ int main(int argc, char **argv) {
             const auto unknown = club.save(nameless);
             rejects([&] { club.tournament(unknown); });
             rejects([&] { club.tournament(lone); });
+            // Recherche dans les commentaires et par symbole. Les parties du tournoi portent
+            // un commentaire (« AB1 »…) ; on en annote deux de plus.
+            t64::Game brilliant;
+            brilliant.tags["White"] = "E";
+            brilliant.play(brilliant.play(0, "e2e4"), "e7e5");
+            brilliant.nodes[1].nags = {3};
+            brilliant.nodes[2].comment = "Une attaque du roi, gagnée à 50% des parties";
+            club.save(brilliant);
+            t64::Game dubious;
+            dubious.tags["White"] = "F";
+            dubious.play(0, "f2f3");
+            dubious.nodes[1].nags = {6, 30};
+            club.save(dubious);
+            const auto count = [&club](const QVariantMap &filters) {
+                return club.search({}, {}, false, {}, false, filters).size();
+            };
+            check(count({{"comment", "attaque du ROI"}}) == 1 && count({{"comment", "50%"}}) == 1 &&
+                      count({{"comment", "%"}}) == 1 && count({{"comment", "_"}}) == 0,
+                  "Comment search ignores case and treats % and _ literally");
+            check(count({{"nag", 3}}) == 1 && count({{"nag", 6}}) == 1 && count({{"nag", 30}}) == 1 &&
+                      count({{"nag", 2}}) == 0 && count({{"annotated", true}}) == 8,
+                  "Symbol search reads the NAG exactly ($3 is not $30), annotated games have a comment");
             // Un open : trop peu de rencontres pour un tableau carré.
             std::vector<t64::CrossGame> swiss;
             for (int i = 0; i < 12; i += 2)

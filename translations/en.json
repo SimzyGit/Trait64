@@ -1508,5 +1508,9 @@
   "Cette partie ne nomme pas son tournoi.": "This game does not name its tournament.",
   "Plus de 3 000 parties sous ce nom : ce n'est pas un tournoi.": "More than 3,000 games under this name: this is not a tournament.",
   "Pièces en prise": "Hanging pieces",
-  "Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.": "Circles in red the pieces, of both sides, that a capture would win once the exchanges are played."
+  "Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.": "Circles in red the pieces, of both sides, that a capture would win once the exchanges are played.",
+  "Texte dans les commentaires": "Text in the comments",
+  "Symbole d’annotation": "Annotation symbol",
+  "Aucun": "None",
+  "Parties commentées seulement": "Annotated games only"
 }

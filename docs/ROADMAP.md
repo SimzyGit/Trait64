@@ -11,7 +11,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Tri par clic sur l'en-tête des colonnes de la liste | ✅ | ✅ | — | ✅ 15 nov. | **J1** |
 | Tableau croisé d'un tournoi, avec départages | ✅ | ✅ | ◐ classement en direct | ✅ 15 nov. | **D1** |
 | Correction des noms (orthographe des joueurs, tournois, sites) | ✅ | ✅ fichier d'orthographe | — | ✗ | **D1** |
-| Recherche dans les commentaires et par symbole (!!, ?, ±) | ✅ | ✅ | — | ✗ (l'index FTS5 ne couvre que l'en-tête) | **D1** |
+| Recherche dans les commentaires et par symbole (!!, ?, ±) | ✅ | ✅ | — | ✅ 15 nov., sans index | **D1** |
 | Meilleures parties d'une position (par Elo) depuis l'arbre local | ✅ | ✅ | ✅ | ◐ par Lichess seulement | **D2** |
 | Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✗ | D2 |
 | Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✗ | D2 |
