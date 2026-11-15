@@ -80,6 +80,8 @@ class Controller : public QObject {
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
     Q_PROPERTY(QVariantList onlineAccounts READ onlineAccounts NOTIFY accountsChanged)
+    // Recherches enregistrées : [{name, text, result, favorite, position, trash, filters}].
+    Q_PROPERTY(QVariantList savedSearches READ savedSearches NOTIFY savedSearchesChanged)
     // Profils de joueur : un utilisateur rassemble ses comptes en ligne et son profil
     // FIDE sous un seul nom. Chaque profil porte la liste des comptes qui lui sont liés.
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY profilesChanged)
@@ -370,6 +372,10 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap nameVariants READ nameVariants NOTIFY nameVariantsChanged)
     QVariantMap nameVariants() const { return nameVariants_; }
     Q_INVOKABLE void findNameVariants(const QString &field);
+    QVariantList savedSearches() const { return settings_.value("savedSearches").toList(); }
+    // Un nom déjà pris remplace la recherche du même nom.
+    Q_INVOKABLE void saveSearch(const QString &name, const QVariantMap &search);
+    Q_INVOKABLE void removeSearch(int index);
     // Retransmissions en direct (Lichess) : list, round, following, error, loading.
     Q_PROPERTY(QVariantMap live READ live NOTIFY liveChanged)
     QVariantMap live() const { return live_; }
@@ -483,6 +489,7 @@ class Controller : public QObject {
     void syzygyDownloadChanged();
     void nameVariantsChanged();
     void liveChanged();
+    void savedSearchesChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();

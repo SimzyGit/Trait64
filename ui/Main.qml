@@ -63,6 +63,9 @@ ApplicationWindow {
     function applyAdvanced(){var f=Object.assign({},advanced);f.sourceId=selectedBaseId;f.pawnStructure=positionCheck.checked&&pawnCheck.checked;controller.searchLibrary(searchField.text,resultBox.currentIndex===0?"":resultBox.currentText,favoriteCheck.checked,positionCheck.checked,trashCheck.checked,f)}
     function filterLibrary() {applyAdvanced()}
     function bestGamesHere(){page=1;positionCheck.checked=true;pawnCheck.checked=false;trashCheck.checked=false;var f=Object.assign({},advanced);f.sort="elo";f.reverse=false;advanced=f;applyAdvanced()}
+    // Une recherche enregistrée : tout ce que la bibliothèque filtre, sous un nom.
+    function currentSearch(){return {text:searchField.text,result:resultBox.currentIndex,favorite:favoriteCheck.checked,position:positionCheck.checked,pawns:pawnCheck.checked,trash:trashCheck.checked,filters:Object.assign({},advanced)}}
+    function applySearch(s){page=1;searchField.text=s.text||"";resultBox.currentIndex=s.result||0;favoriteCheck.checked=!!s.favorite;positionCheck.checked=!!s.position;pawnCheck.checked=!!s.pawns;trashCheck.checked=!!s.trash;advanced=Object.assign({},s.filters||{});searchTimer.stop();applyAdvanced()}
     function sortLibrary(key){var f=Object.assign({},advanced);f.reverse=(f.sort||"updated")===key?!f.reverse:false;f.sort=key;advanced=f;applyAdvanced()}
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
@@ -221,6 +224,23 @@ ApplicationWindow {
                     TextField {id:searchField;objectName:"librarySearch";Layout.preferredHeight:30*controller.preferences.uiScale;placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
                     TComboBox {id:resultBox;Layout.preferredHeight:30*controller.preferences.uiScale;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:140*win.textScale}
                     TButton {text:qsTr("Recherche avancée");onClicked:advancedDialog.open()}
+                    // Les recherches enregistrées, et de quoi garder celle qui est à l'écran.
+                    TButton {id:savedButton;objectName:"savedSearches";text:qsTr("Recherches  ▾");onClicked:savedMenu.popup(savedButton,0,savedButton.height)
+                        Menu {id:savedMenu
+                            MenuItem {text:qsTr("Enregistrer cette recherche…");onTriggered:saveSearchDialog.open()}
+                            MenuSeparator {visible:controller.savedSearches.length>0}
+                            Instantiator {model:controller.savedSearches
+                                delegate:MenuItem {required property var modelData;text:modelData.name;onTriggered:win.applySearch(modelData)}
+                                onObjectAdded:function(index,object){savedMenu.insertItem(index+2,object)}
+                                onObjectRemoved:function(index,object){savedMenu.removeItem(object)}}
+                            MenuSeparator {visible:controller.savedSearches.length>0}
+                            Menu {id:deleteSearchMenu;title:qsTr("Supprimer");enabled:controller.savedSearches.length>0
+                                Instantiator {model:controller.savedSearches
+                                    delegate:MenuItem {required property var modelData;required property int index;text:modelData.name;onTriggered:controller.removeSearch(index)}
+                                    onObjectAdded:function(index,object){deleteSearchMenu.insertItem(index,object)}
+                                    onObjectRemoved:function(index,object){deleteSearchMenu.removeItem(object)}}}
+                        }
+                    }
                     TButton {text:qsTr("+  Importer");accent:true;enabled:!controller.busy;onClicked:importDialog.open()}
                     TButton {id:libraryMenuButton;objectName:"libraryMenuButton";text:qsTr("Base  ▾");onClicked:libraryMenu.popup(libraryMenuButton,0,libraryMenuButton.height)
                         Menu {id:libraryMenu
@@ -902,6 +922,14 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
+    TDialog {id:saveSearchDialog;objectName:"saveSearchDialog";title:qsTr("Enregistrer cette recherche");anchors.centerIn:parent;modal:true;width:Math.min(440,win.width-32);standardButtons:Dialog.Ok|Dialog.Cancel
+        onOpened:{searchName.text=searchField.text||"";searchName.forceActiveFocus()}
+        onAccepted:controller.saveSearch(searchName.text,win.currentSearch())
+        ColumnLayout {anchors.fill:parent
+            Label {text:qsTr("Son nom, pour la retrouver dans le menu Recherches.");wrapMode:Text.WordWrap;Layout.fillWidth:true}
+            TextField {id:searchName;objectName:"searchName";Layout.fillWidth:true;onAccepted:saveSearchDialog.accept()}
+        }
+    }
     Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
     // Au tout premier lancement, le guide s'ouvre sur « Premiers pas » ; ensuite il reste
     // dans Aide. Les captures et tests (--smoke-test) ne le voient pas.

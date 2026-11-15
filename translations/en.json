@@ -1555,5 +1555,10 @@
   "Retransmissions Lichess injoignables : ": "Lichess broadcasts unreachable: ",
   "Ronde inconnue.": "Unknown round.",
   "Réponse de Lichess illisible.": "Unreadable Lichess answer.",
-  "Meilleures parties de cette position": "Best games from this position"
+  "Meilleures parties de cette position": "Best games from this position",
+  "Recherches  ▾": "Searches  ▾",
+  "Enregistrer cette recherche…": "Save this search…",
+  "Enregistrer cette recherche": "Save this search",
+  "Son nom, pour la retrouver dans le menu Recherches.": "Its name, to find it again in the Searches menu.",
+  "Recherche « %1 » enregistrée.": "Search “%1” saved."
 }

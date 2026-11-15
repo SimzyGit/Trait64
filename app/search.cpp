@@ -160,3 +160,36 @@ void Controller::unifyNames(const QString &field, const QStringList &spellings, 
         fail(e);
     }
 }
+
+void Controller::saveSearch(const QString &name, const QVariantMap &search) {
+    const auto title = name.simplified().left(80);
+    if (title.isEmpty())
+        return;
+    auto list = savedSearches();
+    auto entry = search;
+    entry["name"] = title;
+    entry["filters"] = [filters = search.value("filters").toMap()]() mutable {
+        filters.remove("cursor"); // une page n'est pas une recherche
+        return filters;
+    }();
+    bool replaced = false;
+    for (auto &item : list)
+        if (item.toMap()["name"].toString() == title) {
+            item = entry;
+            replaced = true;
+        }
+    if (!replaced)
+        list << entry;
+    settings_.setValue("savedSearches", list);
+    emit savedSearchesChanged();
+    emit message(tr("Recherche « %1 » enregistrée.").arg(title));
+}
+
+void Controller::removeSearch(int index) {
+    auto list = savedSearches();
+    if (index < 0 || index >= list.size())
+        return;
+    list.removeAt(index);
+    settings_.setValue("savedSearches", list);
+    emit savedSearchesChanged();
+}

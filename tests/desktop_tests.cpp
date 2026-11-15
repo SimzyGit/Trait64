@@ -997,8 +997,25 @@ int main(int argc, char **argv) {
                 check(window->property("page").toInt() == 1 && advanced["sort"] == "elo" &&
                           !c.games().isEmpty(),
                       "Best games of the position: the library, filtered on the board, by Elo");
+                // Recherches enregistrées : celle à l'écran, sous un nom ; le même nom la remplace.
+                QVariant current;
+                QMetaObject::invokeMethod(window, "currentSearch", Q_RETURN_ARG(QVariant, current));
+                const auto saved = c.savedSearches().size();
+                c.saveSearch("  Par Elo ici  ", current.toMap());
+                c.saveSearch("Par Elo ici", current.toMap());
+                const auto entry = c.savedSearches().value(int(saved)).toMap();
+                check(c.savedSearches().size() == saved + 1 && entry["name"] == "Par Elo ici" &&
+                          entry["position"].toBool() && entry["filters"].toMap()["sort"] == "elo" &&
+                          !entry["filters"].toMap().contains("cursor"),
+                      "A search is saved under its name, the same name replaces it");
                 if (auto *filter = visualItem(window->contentItem(), "positionFilter"))
                     filter->setProperty("checked", false);
+                QMetaObject::invokeMethod(window, "applySearch", Q_ARG(QVariant, QVariant(entry)));
+                check(visualItem(window->contentItem(), "positionFilter")->property("checked").toBool() &&
+                          window->property("advanced").toMap()["sort"] == "elo",
+                      "Applying a saved search restores its filters");
+                c.removeSearch(int(saved));
+                check(c.savedSearches().size() == saved, "A saved search can be deleted");
                 QMetaObject::invokeMethod(window, "sortLibrary", Q_ARG(QVariant, QString("updated")));
             }
             {

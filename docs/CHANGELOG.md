@@ -2,6 +2,7 @@
 
 ## Tournois en direct — 15 novembre 2026
 
+- **Recherches enregistrées** (bouton *Recherches* de la bibliothèque) : la recherche à l'écran — texte, résultat, pastilles, recherche avancée, tri — se garde sous un nom et se rappelle d'un clic.
 - **Meilleures parties d'une position** : au pied de l'onglet Arbre, la bibliothèque s'ouvre filtrée sur la position de l'échiquier, les parties les mieux classées d'abord.
 - **Ctrl + molette sur la notation ou la liste des parties** change la taille du texte (90 à 150 %), comme Ctrl + molette sur l'échiquier change sa taille. Le changement attend la fin de l'événement : fait pendant, il faisait planter Qt 6.4 dans un agencement en grille.
 - **Suivre les retransmissions de Lichess** (*Base → Tournois en direct*) : les tournois en cours puis les derniers terminés ; pour une ronde, tous ses échiquiers en vignette avec joueurs, titres, classements, pendules et résultat, rafraîchis toutes les vingt secondes. **Suivre** ouvre la partie dans un onglet de l'analyse : ses nouveaux coups et ses pendules y arrivent au fil de la ronde, et la vue suit si l'on était au dernier coup. Une variante ajoutée reste ; si la ligne principale a été modifiée, la partie n'est plus touchée. Rien n'est demandé à Lichess tant que le panneau n'est pas ouvert ou qu'aucune partie n'est suivie.
