@@ -1,5 +1,83 @@
 # Périmètre livré et travaux restants
 
+## Comparatif du 15 novembre 2026 : ChessBase 18, Scid vs. PC, chess.ceo
+
+Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide de Scid vs. PC et la fiche de chess.ceo (application iPhone/iPad de CHESSGM, gratuite avec abonnement). Colonne Trait64 vérifiée dans le code ce jour : ✅ fait, ◐ partiel, ✗ absent. La lettre renvoie à la priorité plus bas (A performances … K avancé, J ergonomie).
+
+### Bases, recherche et maintenance
+
+| Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
+|---|---|---|---|---|---|
+| Tri par clic sur l'en-tête des colonnes de la liste | ✅ | ✅ | — | ◐ dans la recherche avancée seulement | **J1** |
+| Tableau croisé d'un tournoi, avec départages | ✅ | ✅ | ◐ classement en direct | ✗ | **D1** |
+| Correction des noms (orthographe des joueurs, tournois, sites) | ✅ | ✅ fichier d'orthographe | — | ✗ | **D1** |
+| Recherche dans les commentaires et par symbole (!!, ?, ±) | ✅ | ✅ | — | ✗ (l'index FTS5 ne couvre que l'en-tête) | **D1** |
+| Meilleures parties d'une position (par Elo) depuis l'arbre local | ✅ | ✅ | ✅ | ◐ par Lichess seulement | **D2** |
+| Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✗ | D2 |
+| Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✗ | D2 |
+| Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✗ | D3 |
+| Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ✗ | B/D3 |
+| Classement des finales et clés stratégiques/tactiques | ✅ | — | — | ✗ | D3 |
+| Langage de requêtes (CQL) | — | ✅ | — | ✗ | K |
+| Drapeaux multiples sur les parties, médailles | ✅ | ✅ | — | ◐ favoris et collections | D3 |
+| Graphes de la base (années, résultats, Elo du filtre) | ✅ | ✅ | — | ◐ statistiques d'ouverture | D3 |
+| Bases ChessBase, SCID 5 | ✅ | ✅ SCID | — | ✗ (SCID 4 ✅) | D |
+| Grande base de référence en ligne | ✅ 8 M | — | ✅ 14 M | ✅ maîtres et parties Lichess | — |
+
+### Joueurs et préparation
+
+| Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
+|---|---|---|---|---|---|
+| Préparer un adversaire depuis ses parties en ligne (pseudo Lichess/Chess.com) | ✅ | — | ✅ | ◐ vos propres comptes seulement | **E1** |
+| Fiche joueur : courbe Elo, ouvertures, liens FIDE/Lichess/Chess.com | ✅ photos | ✅ | ✅ | ◐ fiche et Elo FIDE, sans courbe | E2 |
+| Rapport de style (agressivité, risque) et rapport d'erreurs (« Elo des gaffes ») | ✅ | — | — | ◐ précision par phase | C2 |
+| Retrouver le compte en ligne d'un joueur anonyme | ✅ | — | — | ✗ écarté : vie privée | — |
+
+### Analyse et compréhension
+
+| Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
+|---|---|---|---|---|---|
+| Relations d'attaque : pièces en prise, attaquées, défendues | ✅ | — | — | ✗ | **B1** |
+| Analyse assistée : couleur des cases selon la valeur du coup | ✅ | — | — | ✗ | B2 |
+| Détection des sacrifices | ✅ | — | — | ✗ | B2 |
+| Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✗ | B3 |
+| Probabilités de finale, tendances | ✅ | — | — | ✗ | B3 |
+| Moteurs distants (nuage) | ✅ | — | ✅ payant | ✗ | K |
+| Gaviota | ✅ | ✅ | — | ✗ (Syzygy ✅) | — |
+
+### Saisie, notation, publication
+
+| Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
+|---|---|---|---|---|---|
+| Saisir un coup au clavier (taper « Cf3 », « e4 ») | ✅ | ✅ | — | ✗ | **J1** |
+| Ctrl + molette : taille du texte de la notation et des listes | ✅ | — | — | ✗ | J2 |
+| Diagrammes, titres et rubriques dans la notation | ✅ | — | — | ✗ | G |
+| Questions d'entraînement dans une partie (« trouvez le coup », points) | ✅ | — | — | ✗ | F2 |
+| Export HTML/JS jouable, QR code | ✅ | — | — | ✗ (PDF, PNG, SVG ✅) | G |
+| Lecture vocale des commentaires, saisie à la voix | ✅ | — | — | ✗ | J3 |
+
+### Entraînement, en ligne, matériel
+
+| Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
+|---|---|---|---|---|---|
+| Retransmissions en direct : échiquiers, barre d'éval par échiquier, classement | ✅ payant | — | ✅ | ✗ | **E1** |
+| Calcul de variantes (exercice de Stoyko), mat en N | — | ✅ | — | ◐ puzzles | F2 |
+| Récolter du matériel d'entraînement d'une base entière | ✅ | — | — | ◐ depuis vos erreurs | F3 |
+| Correspondance (Xfcc) | ✅ | ✅ | — | ✗ | D3 |
+| Échiquiers électroniques (DGT) | ✅ | ✅ | — | ✗ | K |
+| Synchronisation entre appareils, application mobile | ✅ | — | ✅ | ✗ | K |
+| Langues | 8+ | 10+ | 7 | 2 (français, anglais) | J3 |
+
+### Interface : ce qui rendrait Trait64 plus beau, vu sur les captures du jour
+
+- **J1 Bibliothèque** : onze boutons sur deux rangées (Téléchargements, Exporter, Polyglot, Importer, Comptes, Mes compétences, Imports reprenables, Exporter cette base, Classer, Ranger…) écrasent la recherche. Garder Importer et Rechercher, ranger le reste dans un menu « Base ». Filtres en pastilles au lieu de grandes cases vides ; liste sur toute la largeur avec l'aperçu dans un panneau redimensionnable ; en-têtes triables ; pagination discrète.
+- **J1 Accueil** : un second grand échiquier qui répète l'analyse. Le remplacer par un tableau de bord : dernières parties, révisions du jour, puzzle du jour, nouvelles parties des comptes synchronisés, reprise de l'étude en cours avec une vignette.
+- **J2** La barre de menus et la rangée d'onglets disent deux fois la même chose ; le titre de l'étude est répété en haut à droite. Une seule navigation (barre latérale à icônes, comme ChessBase 18 et En Croissant), libellés plus aérés.
+- **J2** Barre d'évaluation grise et muette sans moteur ; la nommer ou la replier.
+- **J2** Icônes cohérentes sur les boutons d'action (ChessBase 18 a refait les siennes) ; mode « échiquier seul » plein écran (le « Pro board » de chess.ceo).
+
+Ordre retenu pour coder : **J1 bibliothèque** (tri par en-tête, barre d'outils, filtres) → **J1 saisie au clavier** → **D1 tableau croisé** → **B1 relations d'attaque** → **D1 recherche dans les commentaires** → **D1 correction des noms** → **J1 accueil** → **E1 préparation d'un adversaire en ligne** → **E1 retransmissions en direct**.
+
 ## Ce que font les autres, relevé du 12 novembre 2026
 
 Passage en revue de ChessBase, Scid vs. PC, En Croissant, Lichess (analyse) et Arena, côté échiquier et analyse.
