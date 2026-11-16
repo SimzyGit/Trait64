@@ -66,7 +66,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Correspondance (Xfcc) | ✅ | ✅ | — | ✗ | D3 |
 | Échiquiers électroniques (DGT) | ✅ | ✅ | — | ✗ | K |
 | Synchronisation entre appareils, application mobile | ✅ | — | ✅ | ✗ | K |
-| Langues | 8+ | 10+ | 7 | 2 (français, anglais) | J3 |
+| Langues | 8+ | 10+ | 7 | 3 (français, anglais, espagnol ✅ 16 nov.) | J3 |
 
 ### Interface : ce qui rendrait Trait64 plus beau, vu sur les captures du jour
 

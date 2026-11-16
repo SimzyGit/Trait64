@@ -76,7 +76,7 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 - **Répertoires** — import d’un dossier entier venu d’En Croissant ou de Pawn Appétit, PGN compressés compris, et une comparaison avec vos propres parties : à quel coup vous quittez votre préparation, et ce qui était prévu à la place.
 - **Entraînement** — puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
 - **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs.
-- **Confort** — thème clair ou sombre, taille d’interface réglable, français et anglais, **Ctrl K** pour la palette de commandes.
+- **Confort** — thème clair ou sombre, taille d’interface réglable, français, anglais et espagnol, **Ctrl K** pour la palette de commandes.
 
 ![Bibliothèque de parties](docs/screenshots/library.png)
 

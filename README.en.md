@@ -65,7 +65,7 @@ The packages are unsigned: on first launch Windows (SmartScreen) and macOS (Gate
 - **Openings** — statistical tree of your own database, Polyglot books, repertoires with transpositions, novelty detection, a preparation file against a given opponent.
 - **Training** — rated puzzles (the free Lichess set and your own blunders), spaced-repetition cards, repertoire review.
 - **Playing** — against the engine at a chosen rating, two players with a clock, engine tournaments.
-- **Comfort** — light or dark theme, adjustable interface size, French and English, **Ctrl K** for the command palette.
+- **Comfort** — light or dark theme, adjustable interface size, French, English and Spanish, **Ctrl K** for the command palette.
 
 ![Game library](docs/screenshots/library.png)
 

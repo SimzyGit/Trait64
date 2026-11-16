@@ -201,7 +201,8 @@ void Controller::restoreBackup(const QString &file) {
 }
 
 QString Controller::userGuide() const {
-    QFile file(translator_->english() ? ":/assets/guide/en.md" : ":/assets/guide/fr.md");
+    // Le guide existe en français et en anglais ; les autres langues lisent l'anglais.
+    QFile file(translator_->language() == "fr" ? ":/assets/guide/fr.md" : ":/assets/guide/en.md");
     return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) : QString();
 }
 bool Controller::firstLaunch() {

@@ -6,35 +6,68 @@
 #include <QJsonObject>
 #include <QLocale>
 #include <QMap>
+#include <QReadWriteLock>
 #include <QTranslator>
-#include <atomic>
 namespace t64 {
-// Immutable offline catalogue. Only presentation strings are translated.
+// Immutable offline catalogue. Only presentation strings are translated. The software is
+// written in French; each other language has its catalogue in translations/<code>.json,
+// looked up by the French text. A phrase missing from a catalogue falls back to English,
+// then to French: never to nothing.
 class UiTranslator final : public QTranslator {
 public:
     UiTranslator() {
-        QFile file(":/translations/en.json");
-        if (file.open(QIODevice::ReadOnly)) english_ = QJsonDocument::fromJson(file.readAll()).object();
+        english_ = load("en");
         QCoreApplication::installTranslator(this);
     }
     ~UiTranslator() override { QCoreApplication::removeTranslator(this); }
+    // "fr", "en", "es", or "auto" (the system language when it is one of these, else English).
+    static QString resolve(const QString &language) {
+        if (language != "auto")
+            return language;
+        switch (QLocale::system().language()) {
+        case QLocale::French: return "fr";
+        case QLocale::Spanish: return "es";
+        default: return "en";
+        }
+    }
     void setLanguage(const QString &language) {
-        useEnglish_.store(language == "en" || (language == "auto" && QLocale::system().language() != QLocale::French));
+        const auto code = resolve(language);
+        QWriteLocker lock(&lock_);
+        language_ = code;
+        other_ = code == "en" || code == "fr" ? QJsonObject() : load(code);
     }
     bool isEmpty() const override { return false; }
     QString translate(const char *, const char *source, const char * = nullptr, int = -1) const override {
         const QString text = QString::fromUtf8(source);
-        if (useEnglish_.load()) return english_.value(text).toString();
-        static const QMap<QString,QString> buttons{{"Close","Fermer"},{"Cancel","Annuler"},{"Save","Enregistrer"},{"Open","Ouvrir"},{"Yes","Oui"},{"No","Non"},{"Apply","Appliquer"},{"Reset","Réinitialiser"},{"Discard","Abandonner"},{"Restore Defaults","Rétablir les valeurs par défaut"}};
-        return buttons.value(text);
+        QReadLocker lock(&lock_);
+        if (language_ == "en") return english_.value(text).toString();
+        if (language_ != "fr") {
+            const auto found = other_.value(text).toString();
+            if (!found.isEmpty()) return found;
+            // Qt's own standard buttons, then English for a phrase not translated yet.
+            const auto button = buttons(language_).value(text);
+            return button.isEmpty() ? english_.value(text).toString() : button;
+        }
+        return buttons("fr").value(text);
     }
-    bool english() const { return useEnglish_; }
+    bool english() const { QReadLocker lock(&lock_); return language_ == "en"; }
+    QString language() const { QReadLocker lock(&lock_); return language_; }
     QString display(const QString &text) const {
         auto translated = translate("Trait64",text.toUtf8().constData());
-        return translated.isNull() ? text : translated;
+        return translated.isNull() || translated.isEmpty() ? text : translated;
     }
 private:
-    QJsonObject english_;
-    std::atomic_bool useEnglish_{false};
+    static QJsonObject load(const QString &code) {
+        QFile file(":/translations/" + code + ".json");
+        return file.open(QIODevice::ReadOnly) ? QJsonDocument::fromJson(file.readAll()).object() : QJsonObject();
+    }
+    static QMap<QString,QString> buttons(const QString &code) {
+        if (code == "es")
+            return {{"Close","Cerrar"},{"Cancel","Cancelar"},{"Save","Guardar"},{"Open","Abrir"},{"Yes","Sí"},{"No","No"},{"Apply","Aplicar"},{"Reset","Restablecer"},{"Discard","Descartar"},{"Restore Defaults","Restaurar valores predeterminados"},{"OK","Aceptar"}};
+        return {{"Close","Fermer"},{"Cancel","Annuler"},{"Save","Enregistrer"},{"Open","Ouvrir"},{"Yes","Oui"},{"No","Non"},{"Apply","Appliquer"},{"Reset","Réinitialiser"},{"Discard","Abandonner"},{"Restore Defaults","Rétablir les valeurs par défaut"}};
+    }
+    QJsonObject english_, other_;
+    QString language_ = "fr";
+    mutable QReadWriteLock lock_;
 };
 }

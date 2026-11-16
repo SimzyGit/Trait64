@@ -1521,6 +1521,12 @@ int main(int argc, char **argv) {
                 c.setPreference("language", "en");
                 check(c.explainReview(0, false)["steps"].toList().value(0).toMap()["side"] == "White",
                       "Explanations follow the interface language");
+                // L'espagnol : son catalogue, les boutons standard de Qt, et le guide anglais.
+                c.setPreference("language", "es");
+                check(c.uiText("Bibliothèque") == "Biblioteca" && c.uiText("Close") == "Cerrar" &&
+                          c.explainReview(0, false)["steps"].toList().value(0).toMap()["side"] == "Blancas" &&
+                          c.userGuide().startsWith("## Getting started"),
+                      "Spanish: its catalogue, Qt's buttons, and the English guide");
                 c.setPreference("language", "auto");
                 window->resize(1440, 940);
                 c.annotateReview();

@@ -1,5 +1,9 @@
 # Changements
 
+## Trait64 en espagnol — 16 novembre 2026
+
+- **L'interface parle espagnol** (*Apparence → Langue → Español*, ou d'elle-même si le système est en espagnol) : les 1 572 phrases du catalogue, menus, messages et boutons standard compris. Le guide de l'utilisateur s'affiche alors en anglais. Une phrase qui manquerait au catalogue retombe sur l'anglais, jamais sur du vide ; le test de traduction vérifie désormais l'espagnol comme l'anglais, marques %1 comprises.
+
 ## Une seule navigation — 15 novembre 2026
 
 - **La barre latérale à icônes remplace la rangée d'onglets**, qui répétait la barre de menus : Accueil, Analyse, Bibliothèque, Ouvertures, Entraînement, Préparation, Moteurs, Joueurs, Profils, Études, Outils, Paramètres, chacun avec une infobulle qui dit ce qu'on y trouve. Elle se replie en icônes (bouton » en bas, ou d'elle-même sous 1 280 pixels). En haut ne restent que le nom de la page, l'étude en cours, Ctrl K et ⚙.

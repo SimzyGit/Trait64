@@ -42,11 +42,22 @@ def wanted():
                         yield path.relative_to(root), phrase
 
 
-missing = sorted({(str(path), phrase) for path, phrase in wanted() if phrase not in translations})
-if missing:
+# L'anglais, puis chaque autre langue : même liste de phrases, mêmes marques %1.
+catalogues = {"anglaise": translations,
+              "espagnole": json.loads((root / "translations" / "es.json").read_text(encoding="utf-8"))}
+failed = 0
+for name, catalogue in catalogues.items():
+    missing = sorted({(str(path), phrase) for path, phrase in wanted() if phrase not in catalogue})
     for path, phrase in missing:
-        print(f"{path}: pas de traduction pour {phrase!r}", file=sys.stderr)
-    print(f"\n{len(missing)} phrase(s) sans traduction anglaise.", file=sys.stderr)
+        print(f"{path}: pas de traduction {name} pour {phrase!r}", file=sys.stderr)
+    marks = [phrase for phrase, text in catalogue.items()
+             if sorted(re.findall(r"%\d", phrase)) != sorted(re.findall(r"%\d", text))]
+    for phrase in marks:
+        print(f"traduction {name} : les marques %n diffèrent pour {phrase!r}", file=sys.stderr)
+    if missing or marks:
+        print(f"\n{len(missing)} phrase(s) sans traduction {name}, {len(marks)} aux marques fausses.", file=sys.stderr)
+        failed += 1
+if failed:
     raise SystemExit(1)
 
-print(f"{len(set(p for _, p in wanted()))} phrases, toutes traduites")
+print(f"{len(set(p for _, p in wanted()))} phrases, toutes traduites en anglais et en espagnol")

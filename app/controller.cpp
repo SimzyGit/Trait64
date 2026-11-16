@@ -669,8 +669,9 @@ bool Controller::playTyped(const QString &text) {
 int Controller::frenchNotation() const {
     if (settings_.value("figurines", false).toBool())
         return t64::Figurines;
-    const auto language = settings_.value("language", "fr").toString();
-    return language == "fr" || (language == "auto" && QLocale::system().language() == QLocale::French)
+    // Les lettres françaises (C, F, T, D, R) en français seulement ; l'espagnol a les
+    // siennes, mais les lettres anglaises du PGN restent les plus lues.
+    return t64::UiTranslator::resolve(settings_.value("language", "fr").toString()) == "fr"
                ? t64::FrenchLetters
                : t64::EnglishLetters;
 }

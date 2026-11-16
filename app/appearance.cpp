@@ -272,7 +272,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!QStringList{"table", "flow"}.contains(value.toString()))
                 return;
         } else if (key == "language") {
-            if (!QStringList{"auto", "fr", "en"}.contains(value.toString()))
+            if (!QStringList{"auto", "fr", "en", "es"}.contains(value.toString()))
                 return;
         } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",

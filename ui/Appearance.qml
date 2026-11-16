@@ -28,7 +28,7 @@ TDialog {
             Label {text:qsTr("Interface");font.bold:true}
             GridLayout {columns:2;Layout.fillWidth:true;columnSpacing:16;rowSpacing:10
                 Label {text:qsTr("Langue")}
-                TComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English","Système"];property var values:["fr","en","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
+                TComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English","Español","Système · System"];property var values:["fr","en","es","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
                 Label {text:qsTr("Police")}
                 ComboBox {objectName:"fontSelector";Layout.fillWidth:true;model:root.backend.preferences.fontFamilies;currentIndex:model.indexOf(root.backend.preferences.fontFamily);onActivated:root.backend.setPreference("fontFamily",currentText)}
                 Label {text:qsTr("Taille du texte")}
