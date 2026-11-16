@@ -3,6 +3,7 @@
 // vingt secondes tant que le panneau est ouvert, et la partie que l'on suit reçoit ses
 // nouveaux coups dans son onglet, où le moteur peut l'analyser.
 #include "controller.h"
+#include <QFileInfo>
 #include <sstream>
 
 namespace {
@@ -22,18 +23,66 @@ void Controller::ensureBroadcasts() {
         live_.remove("error");
         emit liveChanged();
     });
-    connect(broadcasts_, &t64::Broadcasts::roundReady, this, [this](const QVariantMap &round) {
-        live_["round"] = round;
-        live_["loading"] = false;
-        live_.remove("error");
-        emit liveChanged();
-    });
+    connect(broadcasts_, &t64::Broadcasts::roundReady, this, &Controller::liveShowRound);
     connect(broadcasts_, &t64::Broadcasts::pgnReady, this, &Controller::liveReceivedPgn);
     connect(broadcasts_, &t64::Broadcasts::failed, this, [this](const QString &error) {
         live_["error"] = error;
         live_["loading"] = false;
         emit liveChanged();
     });
+}
+
+void Controller::liveShowRound(const QVariantMap &round) {
+    live_["round"] = round;
+    live_["loading"] = false;
+    live_.remove("error");
+    // Chaque échiquier reçoit l'évaluation du moteur local, à profondeur modeste et l'un
+    // après l'autre : une ronde de vingt parties coûte une seconde toutes les vingt.
+    // Seules les positions nouvelles repartent au moteur.
+    QVariantMap kept;
+    liveQueue_.clear();
+    for (const auto &game : round.value("games").toList()) {
+        const auto fen = game.toMap().value("fen").toString();
+        if (fen.isEmpty())
+            continue;
+        if (liveEvals_.contains(fen))
+            kept[fen] = liveEvals_[fen];
+        else if (fen != liveEvaluating_)
+            liveQueue_ << fen;
+    }
+    liveEvals_ = kept;
+    live_["evals"] = liveEvals_;
+    emit liveChanged();
+    const auto path = settings_.value("enginePath").toString();
+    if (liveQueue_.isEmpty() || !QFileInfo(path).isExecutable())
+        return;
+    if (!liveEngine_) {
+        liveEngine_ = new t64::Uci(this);
+        connect(liveEngine_, &t64::Uci::completed, this,
+                [this](const QString &fen, const QVariantList &lines) {
+                    if (!lines.isEmpty() && fen == liveEvaluating_) {
+                        const auto best = lines.first().toMap();
+                        liveEvals_[fen] = QVariantMap{{"score", best["score"]}, {"eval", best["eval"]}};
+                        live_["evals"] = liveEvals_;
+                        emit liveChanged();
+                    }
+                    liveEvaluating_.clear();
+                    liveNextEval();
+                });
+        connect(liveEngine_, &t64::Uci::failed, this, [this] {
+            liveQueue_.clear();
+            liveEvaluating_.clear();
+        });
+        liveEngine_->start(path, 1, 16, 1);
+    }
+    liveNextEval();
+}
+
+void Controller::liveNextEval() {
+    if (!liveEngine_ || !liveEvaluating_.isEmpty() || liveQueue_.isEmpty())
+        return;
+    liveEvaluating_ = liveQueue_.takeFirst();
+    liveEngine_->analyseToDepth(liveEvaluating_, "position fen " + liveEvaluating_, 14, 1500);
 }
 
 void Controller::liveList() {
@@ -78,6 +127,10 @@ void Controller::liveFollow(int gameIndex) {
 
 void Controller::liveClose() {
     liveWatching_ = false;
+    liveQueue_.clear();
+    liveEvaluating_.clear();
+    if (liveEngine_)
+        liveEngine_->stop();
     if (liveTimer_ && liveFollowed_.isEmpty())
         liveTimer_->stop();
 }

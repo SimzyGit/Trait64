@@ -1,8 +1,9 @@
 # Changements
 
-## Analyse assistée — 16 novembre 2026
+## Analyse assistée, évaluation en direct — 16 novembre 2026
 
 - **Analyse assistée** (*Affichage → Analyse assistée*, ou *Apparence*) : quand une pièce est choisie, chaque case d'arrivée prend la couleur du coup d'après les lignes du moteur — vert pour le meilleur, vert clair pour un coup à moins d'un demi-pion, rouge au-delà ; sans moteur, une case où la pièce serait prise pour rien passe au rouge.
+- **Tournois en direct : une barre d'évaluation par échiquier**, calculée par le moteur local (profondeur 14, une position après l'autre) ; seules les positions qui ont changé repartent au moteur à chaque actualisation.
 - **Double clic gauche** sur l'échiquier : efface toutes les flèches et tous les cercles (comme le double clic droit).
 
 ## Trait64 en espagnol — 16 novembre 2026

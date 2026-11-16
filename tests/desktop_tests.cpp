@@ -271,6 +271,28 @@ int main(int argc, char **argv) {
                 }
                 helped.setPreference("assistedAnalysis", false);
             }
+            {
+                // Les échiquiers d'une ronde en direct reçoivent chacun l'évaluation du
+                // moteur local, du point de vue des Blancs.
+                Controller watcher(dir.path() + "/live");
+                watcher.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                const QString up = "4k3/8/8/8/8/8/8/3QK3 w - - 0 1", down = "3qk3/8/8/8/8/8/8/4K3 w - - 0 1";
+                watcher.liveShowRound(
+                    {{"games", QVariantList{QVariantMap{{"fen", up}}, QVariantMap{{"fen", down}}}}});
+                QElapsedTimer wait;
+                wait.start();
+                while (watcher.live()["evals"].toMap().size() < 2 && wait.elapsed() < 20000)
+                    QTest::qWait(50);
+                const auto evals = watcher.live()["evals"].toMap();
+                check(evals[up].toMap()["score"].toDouble() > 5 &&
+                          evals[down].toMap()["score"].toDouble() < -5,
+                      "Each live board gets its own engine evaluation, from White's side");
+                watcher.liveShowRound({{"games", QVariantList{QVariantMap{{"fen", up}}}}});
+                check(watcher.live()["evals"].toMap().size() == 1 &&
+                          watcher.live()["evals"].toMap().contains(up),
+                      "A new round keeps the evaluations of unchanged boards and drops the others");
+                watcher.liveClose();
+            }
             // La barre d'évaluation retombait à l'équilibre à chaque coup : le moteur vide
             // ses lignes dès qu'il change de position, et rien ne gardait la dernière
             // évaluation reçue le temps que la suivante arrive.

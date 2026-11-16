@@ -390,6 +390,8 @@ class Controller : public QObject {
     // Le panneau se ferme : on cesse d'interroger Lichess, sauf pour la partie suivie.
     Q_INVOKABLE void liveClose();
     Q_INVOKABLE void liveStopFollowing();
+    // Affiche une ronde reçue de Lichess et lance l'évaluation de ses échiquiers.
+    void liveShowRound(const QVariantMap &round);
     Q_INVOKABLE void unifyNames(const QString &field, const QStringList &spellings, const QString &kept);
     Q_INVOKABLE void navigate(int node);
     Q_INVOKABLE void step(int direction);
@@ -636,6 +638,11 @@ class Controller : public QObject {
     QStringList liveFollowed_;  // White, Black, Event de la partie suivie
     void ensureBroadcasts();
     void liveTick();
+    t64::Uci *liveEngine_ = nullptr; // évalue les échiquiers de la ronde, un par un
+    QStringList liveQueue_;
+    QString liveEvaluating_;
+    QVariantMap liveEvals_; // FEN → {score, eval}
+    void liveNextEval();
     void liveReceivedPgn(const QString &roundId, const QByteArray &pgn);
     QString syzygyFolder() const;
     QString onlineSource_, onlineKey_;

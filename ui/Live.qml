@@ -19,6 +19,8 @@ TDialog {
     onClosed:backend.liveClose()
     function clock(seconds){if(seconds===undefined||seconds===null)return "";var h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=seconds%60
         return (h?h+":"+(m<10?"0":""):"")+m+":"+(s<10?"0":"")+s}
+    // Part des Blancs dans la barre, même courbe que la barre de l'analyse.
+    function whiteShare(e){return e?1/(1+Math.exp(-0.00368208*Math.max(-1500,Math.min(1500,Number(e.score)*100)))):.5}
     function who(p){return p&&p.name?((p.title?p.title+" ":"")+p.name+(p.rating?" ("+p.rating+")":"")):"?"}
     ColumnLayout {
         anchors.fill:parent;spacing:8
@@ -64,19 +66,30 @@ TDialog {
                     delegate:Item {
                         required property var modelData;required property int index
                         width:boards.cellWidth;height:boards.cellHeight
+                        readonly property var evaluation:(root.live.evals||{})[modelData.fen]
                         ColumnLayout {
                             anchors.horizontalCenter:parent.horizontalCenter;width:boards.side;spacing:2
                             RowLayout {Layout.fillWidth:true
                                 Label {text:root.who(modelData.black);elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*root.ui)}
                                 Label {text:root.clock(modelData.black.clock);font.pixelSize:Math.round(11*root.ui);opacity:.7}
                             }
-                            MiniBoard {Layout.preferredWidth:boards.side;Layout.preferredHeight:boards.side;fen:modelData.fen||"";lastMove:modelData.lastMove||""}
+                            MiniBoard {Layout.preferredWidth:boards.side;Layout.preferredHeight:boards.side;fen:modelData.fen||"";lastMove:modelData.lastMove||""
+                                // Barre d'évaluation du moteur local, collée à gauche de l'échiquier.
+                                Rectangle {
+                                    objectName:"liveEval"+index
+                                    width:Math.round(7*root.ui);height:parent.height;x:-width-3;radius:2;clip:true
+                                    color:"#1d2125";border.color:root.palette.mid;opacity:evaluation?1:.35
+                                    Rectangle {width:parent.width;anchors.bottom:parent.bottom;color:"#f4f6f8";height:parent.height*root.whiteShare(evaluation)
+                                        Behavior on height {NumberAnimation {duration:180}}}
+                                }
+                            }
                             RowLayout {Layout.fillWidth:true
                                 Label {text:root.who(modelData.white);elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*root.ui)}
                                 Label {text:root.clock(modelData.white.clock);font.pixelSize:Math.round(11*root.ui);opacity:.7}
                             }
                             RowLayout {Layout.fillWidth:true
                                 Label {text:modelData.status==="*"?qsTr("En cours"):modelData.status==="1/2-1/2"?"½-½":modelData.status;font.weight:Font.DemiBold;Layout.fillWidth:true}
+                                Label {text:evaluation?evaluation.eval:"";opacity:.75;font.pixelSize:Math.round(11*root.ui)}
                                 TButton {objectName:"follow"+index;text:qsTr("Suivre");onClicked:{root.backend.liveFollow(index);root.close()}}
                             }
                         }
