@@ -13,7 +13,7 @@ Les pages se choisissent en haut : Accueil, Bibliothèque, Analyse, Ouvertures, 
 - **Jouer un coup** : glissez la pièce, ou cliquez-la puis cliquez sa case d'arrivée. Les coups possibles sont marqués.
 - **Parcourir** : flèches gauche et droite, Début et Fin ; haut et bas passent d'une variante à l'autre. *Espace* lance la lecture automatique. La molette peut aussi parcourir les coups (réglage *Molette : parcourir les coups*).
 - **Retourner l'échiquier** : *F*.
-- **Annoter** : un clic droit glissé trace une flèche, un clic droit sur une case pose un cercle ; Maj, Ctrl ou Alt changent la couleur.
+- **Annoter** : un clic droit glissé trace une flèche, un clic droit sur une case pose un cercle ; Maj, Ctrl ou Alt changent la couleur. Un double clic, gauche ou droit, efface toutes les flèches et tous les cercles.
 - **À côté des noms** des joueurs s'affichent les pièces prises et l'avance matérielle.
 
 *Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.

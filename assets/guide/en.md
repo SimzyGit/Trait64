@@ -13,7 +13,7 @@ Pages are chosen at the top: Home, Library, Analysis, Openings, Training, Tools,
 - **Play a move**: drag the piece, or click it then its destination square. Possible moves are marked.
 - **Step through**: left and right arrows, Home and End; up and down switch between variations. *Space* starts automatic playback. The mouse wheel can also step through moves (setting *Mouse wheel: step through moves*).
 - **Flip the board**: *F*.
-- **Annotate**: right-click and drag draws an arrow, right-click on a square draws a circle; Shift, Ctrl or Alt change the colour.
+- **Annotate**: right-click and drag draws an arrow, right-click on a square draws a circle; Shift, Ctrl or Alt change the colour. A double click, left or right, clears every arrow and circle.
 - **Next to the players' names**, captured pieces and the material lead are shown.
 
 *View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys. *View → Hanging pieces* circles in red what a capture would win.

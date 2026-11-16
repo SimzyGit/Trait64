@@ -1146,6 +1146,27 @@ int main(int argc, char **argv) {
                 window->setProperty("boardOnly", false);
                 QTest::qWait(50);
             }
+            {
+                // Double clic gauche sur l'échiquier : flèches et cercles effacés, et la pièce
+                // du premier clic n'est pas restée sélectionnée.
+                c.toggleAnnotation("g1", "f3", "G");
+                c.toggleAnnotation("d4", "d4", "R");
+                auto *board = visualItem(window->contentItem(), "chessboard");
+                const auto flipped = c.state()["flipped"].toBool();
+                const double cell = board->width() / 8;
+                // e2, côté Blancs en bas.
+                const QPointF local(cell * (flipped ? 3.5 : 4.5), cell * (flipped ? 1.5 : 6.5));
+                const auto at = board->mapToScene(local).toPoint();
+                QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                QTest::qWait(30);
+                check(c.state()["arrows"].toList().isEmpty() && c.state()["selected"].toInt() < 0,
+                      "A left double click clears arrows and circles and selects nothing");
+                QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                QTest::qWait(30);
+                check(c.state()["selected"].toInt() == 12, "The same spot clicked once selects the pawn on e2");
+                QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                QTest::qWait(30);
+            }
             for (const auto &pack : QStringList{"cburnett", "merida", "spatial", "pixel"}) {
                 for (QChar color : QString("wb"))
                     for (QChar piece : QString("KQRBNP"))

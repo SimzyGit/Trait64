@@ -212,8 +212,11 @@ Item {
         // drapeau, celle-ci reposerait aussitôt l'annotation qu'on vient d'effacer.
         property bool cleared: false
         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+        // Double clic, gauche ou droit : flèches et cercles s'effacent tous. À gauche, la
+        // relâche suit son cours : sur la même case, elle annule la sélection du premier clic.
         onDoubleClicked: function(mouse) {
-            if(mouse.button===Qt.RightButton){root.backend.clearAnnotations();cleared=true}
+            root.backend.clearAnnotations()
+            if(mouse.button===Qt.RightButton)cleared=true
         }
         onPressed: function(mouse) {downX=mouse.x;downY=mouse.y;from=root.squareAt(mouse.x,mouse.y);moved=false;if(mouse.button===Qt.RightButton)root.arrowFrom=from}
         onPositionChanged: function(mouse) {if(pressed && pressedButtons===Qt.LeftButton && Math.abs(mouse.x-downX)+Math.abs(mouse.y-downY)>12){moved=true;root.draggedFrom=from}}
