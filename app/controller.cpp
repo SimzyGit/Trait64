@@ -507,6 +507,8 @@ void Controller::refresh(bool content) {
         {"guessing", guessing_},
         {"guessFound", guessFound_},
         {"guessAsked", guessAsked_},
+        {"questions", questions_},
+        {"question", QString::fromStdString(current.comment).contains("[%tqu")},
         {"trainingComplete", trainingComplete_},
         {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
         {"repertoireDue", repertoireState_.value("due", 0)},
@@ -1234,6 +1236,25 @@ void Controller::move(const QString &uci) {
             auto b = game_.boardAt(node_);
             require((b.sideToMove() == chess::Color::WHITE) == humanWhite_, "Le moteur réfléchit.");
         }
+        if (questions_) {
+            if (trainingComplete_ || solutionIndex_ >= solution_.size())
+                return;
+            const auto expected = solution_[solutionIndex_];
+            ++questionTries_;
+            if (uci != expected && questionTries_ < 3 && uci != "0000") {
+                emit message(tr("Ce n’est pas ce coup. Encore %n essai(s).", nullptr, 3 - questionTries_));
+                return;
+            }
+            const int points = uci == expected ? 4 - questionTries_ : 0;
+            guessFound_ += points;
+            guessAsked_ += 3;
+            if (!points)
+                emit message(
+                    tr("Le coup à trouver était %1.")
+                        .arg(s(beforeTraining_.nodes[beforeTraining_.mainline()[solutionIndex_ + 1]].san)));
+            advanceQuestions();
+            return;
+        }
         if (guessing_) {
             if (trainingComplete_ || solutionIndex_ >= solution_.size())
                 return;
@@ -1835,6 +1856,87 @@ void Controller::startGuessing(bool white) {
         fail(e);
     }
 }
+void Controller::toggleQuestion() {
+    if (trainingActive() || node_ == 0)
+        return;
+    remember();
+    static const QRegularExpression marker("\\s*\\[%tqu\\s+[^\\]]*\\]");
+    auto comment = s(game_.nodes[node_].comment);
+    if (comment.contains(marker))
+        comment.remove(marker);
+    else
+        comment += " [%tqu 1]";
+    game_.nodes[node_].comment = comment.trimmed().toStdString();
+    refresh(true);
+}
+// Joue le coup à trouver, puis ceux qui suivent jusqu'à la prochaine question, chacun avec
+// son commentaire : celui d'avant une question en est souvent l'énoncé.
+void Controller::advanceQuestions() {
+    const auto line = beforeTraining_.mainline();
+    const auto playNext = [&] {
+        node_ = game_.play(node_, solution_[solutionIndex_].toStdString());
+        const auto &original = beforeTraining_.nodes[line[solutionIndex_ + 1]];
+        static const QRegularExpression marker("\\s*\\[%tqu\\s+[^\\]]*\\]");
+        game_.nodes[node_].comment = s(original.comment).remove(marker).trimmed().toStdString();
+        game_.nodes[node_].nags = original.nags;
+        ++solutionIndex_;
+    };
+    const auto isQuestion = [&](int index) {
+        return s(beforeTraining_.nodes[line[index + 1]].comment).contains("[%tqu");
+    };
+    if (solutionIndex_ < solution_.size() && questionTries_ > 0)
+        playNext(); // le coup qui vient d'être cherché
+    questionTries_ = 0;
+    while (solutionIndex_ < solution_.size() && !isQuestion(solutionIndex_))
+        playNext();
+    trainingComplete_ = solutionIndex_ >= solution_.size();
+    if (!trainingComplete_)
+        flipped_ = game_.boardAt(node_).sideToMove() == chess::Color::BLACK;
+    selected_ = -1;
+    refresh();
+    if (trainingComplete_)
+        emit message(tr("Questions terminées : %1 point(s) sur %2.").arg(guessFound_).arg(guessAsked_));
+}
+void Controller::startQuestions() {
+    try {
+        require(!busy_, "Attendez la fin du traitement.");
+        if (trainingActive())
+            finishTraining();
+        QStringList line;
+        bool any = false;
+        for (int n = 0; !game_.nodes[n].children.empty();) {
+            n = game_.nodes[n].children.front();
+            line << s(game_.nodes[n].uci);
+            any = any || s(game_.nodes[n].comment).contains("[%tqu");
+        }
+        require(any, "Cette étude n’a pas de question d’entraînement : marquez d’abord un coup à trouver.");
+        checkpoint();
+        beforeTraining_ = game_;
+        beforeNode_ = node_;
+        beforeId_ = gameId_;
+        beforeDirty_ = dirty_;
+        beforeFlipped_ = flipped_;
+        cancelReview();
+        stopPlaying();
+        const auto tags = game_.tags;
+        game_ = t64::Game(game_.nodes[0].fen, game_.chess960);
+        game_.tags = tags;
+        game_.nodes[0].comment = beforeTraining_.nodes[0].comment;
+        node_ = 0;
+        solution_ = line;
+        solutionIndex_ = 0;
+        guessing_ = questions_ = true;
+        guessFound_ = guessAsked_ = 0;
+        questionTries_ = 0;
+        trainingComplete_ = trainingFailed_ = false;
+        forgetEngineLines();
+        emit engineChanged();
+        advanceQuestions();
+        emit showAnalysis();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::revealCard() {
     if (!trainingActive() || trainingComplete_)
         return;
@@ -1869,7 +1971,7 @@ void Controller::finishTraining() {
     dirty_ = beforeDirty_;
     flipped_ = beforeFlipped_;
     cardId_ = 0;
-    guessing_ = false;
+    guessing_ = questions_ = false;
     puzzleId_ = 0;
     puzzle_.clear();
     repertoireExercise_.clear();

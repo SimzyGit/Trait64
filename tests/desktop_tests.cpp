@@ -1000,6 +1000,32 @@ int main(int argc, char **argv) {
             typed.setPreference("language", language.isValid() ? language.toString() : QString("fr"));
         }
         {
+            // Questions d'entraînement : 2.Cf3 marqué à trouver ; un faux essai, puis le bon
+            // (deux points sur trois), le reste de la partie se joue seul.
+            Controller quiz(dir.path() + "/questions");
+            for (const auto *uci : {"e2e4", "e7e5", "g1f3", "b8c6", "f1b5"})
+                quiz.move(uci);
+            quiz.navigate(3);
+            quiz.toggleQuestion();
+            check(quiz.state()["question"].toBool(), "A move can be marked as a training question");
+            quiz.startQuestions();
+            check(quiz.state()["questions"].toBool() && quiz.state()["node"].toInt() == 2 &&
+                      !quiz.state()["trainingComplete"].toBool(),
+                  "The questions start right before the move to find");
+            quiz.move("d2d4");
+            check(quiz.state()["node"].toInt() == 2, "A wrong try leaves the position as it is");
+            quiz.move("g1f3");
+            check(quiz.state()["trainingComplete"].toBool() && quiz.state()["guessFound"].toInt() == 2 &&
+                      quiz.state()["guessAsked"].toInt() == 3 && quiz.state()["node"].toInt() == 5,
+                  "Found at the second try: two points of three, and the game plays on to its end");
+            quiz.finishTraining();
+            quiz.navigate(3);
+            check(quiz.state()["question"].toBool() && !quiz.state()["questions"].toBool(),
+                  "The study comes back with its question");
+            quiz.toggleQuestion();
+            check(!quiz.state()["question"].toBool(), "The mark comes off again");
+        }
+        {
             // Pièces en prise : marquées seulement si on le demande.
             Controller hang(dir.path() + "/hanging");
             hang.move("e2e4");

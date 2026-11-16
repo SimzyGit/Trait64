@@ -1602,5 +1602,12 @@
   "Personnelle": "Personal",
   "Médailles": "Medallas",
   "Médaille": "Medalla",
-  "Aucune": "Ninguna"
+  "Aucune": "Ninguna",
+  "Coup à trouver (question d’entraînement)": "Jugada a encontrar (pregunta de entrenamiento)",
+  "Répondre aux questions de l’étude": "Responder a las preguntas del estudio",
+  "Questions · %1 point(s) sur %2": "Preguntas · %1 punto(s) de %2",
+  "Ce n’est pas ce coup. Encore %n essai(s).": "No es esa jugada. Quedan %n intento(s).",
+  "Le coup à trouver était %1.": "La jugada a encontrar era %1.",
+  "Questions terminées : %1 point(s) sur %2.": "Preguntas terminadas: %1 punto(s) de %2.",
+  "Cette étude n’a pas de question d’entraînement : marquez d’abord un coup à trouver.": "Este estudio no tiene preguntas de entrenamiento: marque primero una jugada a encontrar."
 }

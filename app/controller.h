@@ -473,6 +473,11 @@ class Controller : public QObject {
     // Deviner le coup : la partie ouverte est rejouée depuis le début, et l'on cherche
     // chaque coup du camp choisi. Un essai par coup ; le coup de la partie est ensuite joué.
     Q_INVOKABLE void startGuessing(bool white);
+    // Questions d'entraînement, comme dans ChessBase : un coup de la ligne principale marqué
+    // « [%tqu …] » est à trouver, en trois essais (3, 2 puis 1 point) ; les autres coups
+    // se jouent d'eux-mêmes.
+    Q_INVOKABLE void toggleQuestion();
+    Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
     Q_INVOKABLE void finishTraining();
     Q_INVOKABLE void deleteCard(qint64 id);
@@ -610,7 +615,9 @@ class Controller : public QObject {
     qint64 gameId_ = 0, beforeId_ = 0, cardId_ = 0;
     QStringList solution_;
     int solutionIndex_ = 0;
-    bool guessing_ = false;
+    bool guessing_ = false, questions_ = false;
+    int questionTries_ = 0;
+    void advanceQuestions();
     int guessFound_ = 0, guessAsked_ = 0;
     bool trainingFailed_ = false, trainingComplete_ = false, beforeDirty_ = false;
     bool flipped_ = false, dirty_ = false, busy_ = false, analysis_ = false, playing_ = false,

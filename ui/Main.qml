@@ -157,6 +157,8 @@ ApplicationWindow {
             MenuItem {text: qsTr("Finales à jouer…"); onTriggered: endgamesDialog.open()}
             MenuItem {text: qsTr("Deviner les coups des Blancs"); enabled: !controller.busy; onTriggered: controller.startGuessing(true)}
             MenuItem {text: qsTr("Deviner les coups des Noirs"); enabled: !controller.busy; onTriggered: controller.startGuessing(false)}
+            MenuItem {text: qsTr("Coup à trouver (question d’entraînement)"); checkable: true; checked: !!controller.state.question; enabled: !controller.state.training && controller.state.node > 0; onTriggered: controller.toggleQuestion()}
+            MenuItem {text: qsTr("Répondre aux questions de l’étude"); enabled: !controller.busy; onTriggered: controller.startQuestions()}
             MenuItem {text: qsTr("Réviser la prochaine carte"); enabled: (controller.stats.due||0) > 0; onTriggered: controller.nextDueCard()}
             MenuItem {text: qsTr("Réviser un répertoire…"); onTriggered: repertoiresDialog.open()}
             MenuItem {text: qsTr("Tableau d’entraînement"); onTriggered: win.page = 4}
@@ -416,7 +418,7 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                                  Accessible.name:qsTr("Partie suivante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie suivante de la liste (Alt+→)")}
                     }
                     Label {visible:controller.state.training;Layout.maximumWidth:420;elide:Text.ElideRight;color:win.fg;font.weight:Font.DemiBold
-                        text:controller.puzzles.active?(controller.puzzles.current.review?qsTr("Révision d’un puzzle manqué · "):"")+qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.guessing?qsTr("Deviner le coup · %1 trouvé(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress)}
+                        text:controller.puzzles.active?(controller.puzzles.current.review?qsTr("Révision d’un puzzle manqué · "):"")+qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.questions?qsTr("Questions · %1 point(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):controller.state.guessing?qsTr("Deviner le coup · %1 trouvé(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress)}
                     TButton {objectName:"guessReveal";text:qsTr("Montrer le coup");visible:!!controller.state.guessing&&!controller.state.trainingComplete;onClicked:controller.revealCard()}
                     TButton {objectName:"puzzleHint";text:qsTr("Indice");visible:controller.puzzles.active&&!controller.state.trainingComplete;onClicked:controller.puzzleHint();ToolTip.visible:hovered;ToolTip.text:qsTr("Montre la pièce à jouer ; compte comme un échec.")}
                     TButton {objectName:"nextPuzzle";text:qsTr("Puzzle suivant");accent:true;visible:controller.puzzles.active&&controller.state.trainingComplete;onClicked:controller.nextPuzzle()}
@@ -1094,6 +1096,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Finales à jouer"),run:function(){endgamesDialog.open()}},
             {title:qsTr("Deviner les coups des Blancs"),run:function(){controller.startGuessing(true)}},
             {title:qsTr("Deviner les coups des Noirs"),run:function(){controller.startGuessing(false)}},
+            {title:qsTr("Répondre aux questions de l’étude"),run:function(){controller.startQuestions()}},
             {title:qsTr("File d’analyse"),run:function(){analysisQueueDialog.open()}},
             {title:qsTr("Imports PGN reprenables"),run:function(){importsDialog.open()}},
             {title:qsTr("Comptes Lichess et Chess.com"),run:function(){accountsDialog.open()}},

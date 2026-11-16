@@ -1,5 +1,9 @@
 # Changements
 
+## Questions d'entraînement — 16 novembre 2026
+
+- **Questions d'entraînement dans une étude** (*Entraînement → Coup à trouver*, puis *Répondre aux questions de l'étude*) : marquez les coups de la ligne principale à faire trouver ; la partie se rejoue seule, commentaires compris, et s'arrête avant chacun d'eux. Trois essais par question, pour 3, 2 puis 1 point ; « Montrer le coup » le donne pour zéro. La marque s'écrit `[%tqu 1]` dans le PGN, comme les questions de ChessBase.
+
 ## Relations d'attaque, fiche joueur, graphiques, manœuvres, médailles — 16 novembre 2026
 
 - **Médailles** (menu ⋮ d'une partie de la bibliothèque) : les seize de ChessBase — meilleure partie, nouveauté, sacrifice, finale, gaffe tactique… Un losange les signale dans la liste, la recherche avancée filtre sur l'une d'elles. La bibliothèque passe au schéma 13 (une colonne ajoutée, rien d'autre ne change).
