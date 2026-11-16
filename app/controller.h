@@ -629,6 +629,7 @@ class Controller : public QObject {
     t64::Broadcasts *broadcasts_ = nullptr;
     QVariantMap live_;
     QVariantMap tournamentList_;
+    QTimer assistRefresh_;
     QTimer *liveTimer_ = nullptr;
     bool liveWatching_ = false; // le panneau est ouvert
     int livePendingGame_ = -1;  // partie à ouvrir à la réception du PGN

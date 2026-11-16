@@ -138,11 +138,17 @@ Item {
                 }
                 Rectangle {
                     anchors.centerIn: parent
-                    width: tile.cellData.occupied ? root.cell*0.88 : root.cell*0.22
                     height: width
                     radius: width/2
-                    color: tile.cellData.occupied ? "transparent" : "#55596751"
-                    border.color: tile.cellData.occupied ? "#8a384e39" : "transparent"
+                    // Analyse assistée : vert pour le meilleur coup, vert clair pour un coup qui
+                    // le vaut presque, rouge pour un coup qui perd ; sinon la teinte habituelle.
+                    readonly property color assistColor: tile.cellData.assist === "best" ? "#2e9e5b"
+                                                       : tile.cellData.assist === "good" ? "#8bc34a"
+                                                       : tile.cellData.assist === "bad" ? "#e0473b" : "transparent"
+                    readonly property bool assisted: !!tile.cellData.assist
+                    width: tile.cellData.occupied ? root.cell*0.88 : root.cell*(assisted ? 0.3 : 0.22)
+                    color: tile.cellData.occupied ? "transparent" : assisted ? Qt.rgba(assistColor.r, assistColor.g, assistColor.b, .8) : "#55596751"
+                    border.color: tile.cellData.occupied ? (assisted ? assistColor : "#8a384e39") : "transparent"
                     border.width: tile.cellData.occupied ? 5 : 0
                     visible: root.prefs.legalMoves && !!tile.cellData.legal
                 }

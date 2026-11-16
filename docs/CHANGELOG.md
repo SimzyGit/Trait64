@@ -1,5 +1,10 @@
 # Changements
 
+## Analyse assistée — 16 novembre 2026
+
+- **Analyse assistée** (*Affichage → Analyse assistée*, ou *Apparence*) : quand une pièce est choisie, chaque case d'arrivée prend la couleur du coup d'après les lignes du moteur — vert pour le meilleur, vert clair pour un coup à moins d'un demi-pion, rouge au-delà ; sans moteur, une case où la pièce serait prise pour rien passe au rouge.
+- **Double clic gauche** sur l'échiquier : efface toutes les flèches et tous les cercles (comme le double clic droit).
+
 ## Trait64 en espagnol — 16 novembre 2026
 
 - **L'interface parle espagnol** (*Apparence → Langue → Español*, ou d'elle-même si le système est en espagnol) : les 1 572 phrases du catalogue, menus, messages et boutons standard compris. Le guide de l'utilisateur s'affiche alors en anglais. Une phrase qui manquerait au catalogue retombe sur l'anglais, jamais sur du vide ; le test de traduction vérifie désormais l'espagnol comme l'anglais, marques %1 comprises.

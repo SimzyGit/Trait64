@@ -239,6 +239,38 @@ int main(int argc, char **argv) {
                 vault.restoreBackup(after[0].toMap()["file"].toString());
                 check(settle(3) == 3, "A restore can be undone by restoring the copy it made");
             }
+            {
+                // Analyse assistée avec le moteur, des deux côtés : la dame en prise en d5 se
+                // prend, et la case de la prise devient « meilleur coup ».
+                Controller helped(dir.path() + "/assisted");
+                helped.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                helped.setPreference("hash", 16);
+                helped.setPreference("assistedAnalysis", true);
+                for (const auto &[fen, from] : {std::pair{"4k3/8/8/3q4/8/8/8/3QK3 w - - 0 1", "d1"},
+                                                std::pair{"3qk3/8/8/3Q4/8/8/8/4K3 b - - 0 1", "d8"}}) {
+                    // Une nouvelle position coupe l'analyse, comme tout changement de partie.
+                    helped.setFen(fen);
+                    helped.toggleAnalysis();
+                    helped.clickSquare(from);
+                    QElapsedTimer wait;
+                    wait.start();
+                    QString verdict;
+                    while (wait.elapsed() < 20000) {
+                        for (const auto &cell : helped.squares())
+                            if (cell.toMap()["square"] == "d5")
+                                verdict = cell.toMap()["assist"].toString();
+                        if (verdict == "best")
+                            break;
+                        QTest::qWait(50);
+                    }
+                    check(verdict == "best", ("Assisted analysis marks the engine's best move green, " +
+                                              std::string(from[1] == '1' ? "White" : "Black") + " to move")
+                                                 .c_str());
+                    helped.clickSquare(from);
+                    helped.toggleAnalysis();
+                }
+                helped.setPreference("assistedAnalysis", false);
+            }
             // La barre d'évaluation retombait à l'équilibre à chaque coup : le moteur vide
             // ses lignes dès qu'il change de position, et rien ne gardait la dernière
             // évaluation reçue le temps que la suivante arrive.
@@ -951,6 +983,27 @@ int main(int argc, char **argv) {
             check(marked() == QStringList{"e4"},
                   "Shown, the undefended pawn is circled and the defended one is not");
             hang.setPreference("showHanging", false);
+            // Analyse assistée, sans moteur : le matériel seul. Après 1.e4 e5 2.Cf3, la dame
+            // noire choisie en d8 : en g5 et h4 le cavalier la prend.
+            Controller assist(dir.path() + "/assist");
+            for (const auto *uci : {"e2e4", "e7e5", "g1f3"})
+                assist.move(uci);
+            assist.clickSquare("d8");
+            const auto colours = [&assist] {
+                QMap<QString, QString> found;
+                for (const auto &cell : assist.squares())
+                    if (cell.toMap()["legal"].toBool())
+                        found[cell.toMap()["square"].toString()] = cell.toMap()["assist"].toString();
+                return found;
+            };
+            check(colours().value("g5").isEmpty() && colours().contains("g5"),
+                  "Assisted analysis is off by default: targets are plain");
+            assist.setPreference("assistedAnalysis", true);
+            const auto on = colours();
+            check(on.value("g5") == "bad" && on.value("h4") == "bad" && on.value("f6").isEmpty() &&
+                      on.value("e7").isEmpty(),
+                  "Assisted analysis reddens the squares where the queen would be taken");
+            assist.setPreference("assistedAnalysis", false);
         }
         {
             Controller c(dir.path() + "/features");
@@ -1163,7 +1216,8 @@ int main(int argc, char **argv) {
                       "A left double click clears arrows and circles and selects nothing");
                 QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, at);
                 QTest::qWait(30);
-                check(c.state()["selected"].toInt() == 12, "The same spot clicked once selects the pawn on e2");
+                check(c.state()["selected"].toInt() == 12,
+                      "The same spot clicked once selects the pawn on e2");
                 QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, at);
                 QTest::qWait(30);
             }

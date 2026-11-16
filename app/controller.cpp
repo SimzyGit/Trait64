@@ -168,6 +168,12 @@ Controller::Controller(const QString &path, QObject *parent)
         engineStatus_ = v;
         emit engineChanged();
     });
+    assistRefresh_.setSingleShot(true);
+    assistRefresh_.setInterval(300);
+    connect(&assistRefresh_, &QTimer::timeout, this, [this] {
+        if (selected_ >= 0)
+            refresh();
+    });
     connect(&engine_, &t64::Uci::lines, this, [this](const QVariantList &lines) {
         engineLines_ = lines;
         // Une liste vide annonce un changement de position, pas une position sans
@@ -176,6 +182,11 @@ Controller::Controller(const QString &path, QObject *parent)
         if (!lines.isEmpty())
             heldEval_ = lines.first().toMap();
         emit engineChanged();
+        // L'analyse assistée colore les cases d'après ces lignes : on redessine, au plus
+        // trois fois par seconde, tant qu'une pièce est choisie.
+        if (selected_ >= 0 && settings_.value("assistedAnalysis", false).toBool() &&
+            !assistRefresh_.isActive())
+            assistRefresh_.start();
     });
     connect(&engine_, &t64::Uci::bestMove, this, [this](const QString &move, const QString &fen) {
         if (playing_ && fen == s(game_.nodes[node_].fen)) {
@@ -507,11 +518,38 @@ void Controller::refresh(bool content) {
     chess::Movelist legal;
     chess::movegen::legalmoves(legal, board);
     QSet<int> targets;
+    // Analyse assistée, comme dans ChessBase : chaque case où la pièce choisie peut aller
+    // dit ce que vaut le coup. Le moteur d'abord (meilleur coup, ou à moins d'un
+    // demi-pion de lui), puis le matériel : un coup qui l'offre, échanges joués, est rouge.
+    QHash<int, QString> assist;
+    const bool assisted = selected_ >= 0 && settings_.value("assistedAnalysis", false).toBool();
+    QHash<QString, double> engineScores;
+    double bestScore = -1e9;
+    if (assisted) {
+        const double side = board.sideToMove() == chess::Color::WHITE ? 1 : -1;
+        for (const auto &line : engineLines_) {
+            const auto map = line.toMap();
+            if (map["fen"].toString() != s(current.fen) || map["bound"].toBool())
+                continue;
+            const auto first = map["uci"].toString().section(' ', 0, 0);
+            const double score = map["score"].toDouble() * side;
+            engineScores[first] = score;
+            bestScore = std::max(bestScore, score);
+        }
+    }
     if (selected_ >= 0)
         for (auto m : legal) {
             auto u = s(chess::uci::moveToUci(m, game_.chess960));
-            if (u.left(2) == squareName(selected_))
-                targets.insert(squareIndex(u.mid(2, 2)));
+            if (u.left(2) != squareName(selected_))
+                continue;
+            const int to = squareIndex(u.mid(2, 2));
+            targets.insert(to);
+            if (!assisted)
+                continue;
+            if (const auto found = engineScores.find(u); found != engineScores.end())
+                assist[to] = bestScore - *found < .05 ? "best" : bestScore - *found <= .5 ? "good" : "bad";
+            else if (t64::offeredMaterial(board, m) >= 1)
+                assist[to] = "bad";
         }
     squares_.clear();
     // Pièces en prise des deux camps, si on les montre.
@@ -537,7 +575,8 @@ void Controller::refresh(bool content) {
             {"last", current.uci.size() >= 4 && (s(current.uci).left(2) == squareName(i) ||
                                                  s(current.uci).mid(2, 2) == squareName(i))},
             {"check", board.inCheck() && i == board.kingSq(board.sideToMove()).index()},
-            {"hanging", hanging.contains(i)}};
+            {"hanging", hanging.contains(i)},
+            {"assist", assist.value(i)}};
     }
     notation_.clear();
     notation_ << QVariantMap{{"id", 0},

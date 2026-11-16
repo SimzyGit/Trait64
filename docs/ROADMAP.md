@@ -38,7 +38,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
 |---|---|---|---|---|---|
 | Relations d'attaque : pièces en prise, attaquées, défendues | ✅ | — | — | ◐ pièces en prise ✅ 15 nov. ; pas les flèches d'attaque | **B1** |
-| Analyse assistée : couleur des cases selon la valeur du coup | ✅ | — | — | ✗ | B2 |
+| Analyse assistée : couleur des cases selon la valeur du coup | ✅ | — | — | ✅ 16 nov., option « Analyse assistée » (Affichage) | B2 |
 | Détection des sacrifices | ✅ | — | — | ✅ 15 nov., dans le bilan | B2 |
 | Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✗ | B3 |
 | Probabilités de finale, tendances | ✅ | — | — | ✗ | B3 |
