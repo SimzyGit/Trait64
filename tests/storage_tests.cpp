@@ -687,6 +687,18 @@ int main(int argc, char **argv) {
                       medalled.first().toMap()["medals"].toInt() == ((1 << 3) | (1 << 8)) &&
                       scout.search({}, {}, false, {}, false, {{"medal", 1}}).isEmpty(),
                   "Medals are kept per game and filter the library");
+            // Les finales atteintes : une finale de tours (pions compris), puis une tour
+            // contre un cavalier après l'échange d'une tour.
+            scout.save(t64::parsePgn("[White \"Fin\"]\n[Black \"Ale\"]\n[SetUp \"1\"]\n"
+                                     "[FEN \"r3k3/p7/8/8/8/8/8/R3K1N1 w - - 0 1\"]\n[Result \"*\"]\n\n"
+                                     "1. Rxa7 Rxa7 *")
+                           .front());
+            const auto endgame = [&](const QString &kind) {
+                return scout.search({}, {}, false, {}, false, {{"endgame", kind}}).size();
+            };
+            check(endgame("rookMinor") == 1 && endgame("rookMinorRook") == 1 && endgame("rooks") == 0 &&
+                      endgame("queens") == 0,
+                  "Endgames are classified by the material each side keeps, either way round");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

@@ -1612,5 +1612,18 @@
   "Cette étude n’a pas de question d’entraînement : marquez d’abord un coup à trouver.": "This study has no training question: mark a move to find first.",
   "Diagramme après ce coup": "Diagram after this move",
   "Style": "Style",
-  "%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties": "%1 % decisive games · %2 moves on average · %3 check(s) and %4 capture(s) per game · opposite castling in %5 % of games"
+  "%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties": "%1 % decisive games · %2 moves on average · %3 check(s) and %4 capture(s) per game · opposite castling in %5 % of games",
+  "Finale atteinte": "Endgame reached",
+  "Pions seuls": "Pawns only",
+  "Cavalier contre cavalier": "Knight vs knight",
+  "Fou contre fou": "Bishop vs bishop",
+  "Cavalier contre fou": "Knight vs bishop",
+  "Pièces mineures": "Minor pieces",
+  "Tour contre tour": "Rook vs rook",
+  "Tour contre pièce mineure": "Rook vs minor piece",
+  "Tour et pièce mineure contre tour": "Rook and minor vs rook",
+  "Deux tours contre deux tours": "Two rooks vs two rooks",
+  "Dame contre dame": "Queen vs queen",
+  "Dame contre tour": "Queen vs rook",
+  "Type de finale inconnu.": "Unknown endgame type."
 }

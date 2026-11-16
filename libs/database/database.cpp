@@ -499,6 +499,42 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     }
     if (filters.value("annotated").toBool())
         statement += " AND instr(g.pgn,'{')>0";
+    // Une finale atteinte au cours de la partie, d'après le matériel de ses positions : les
+    // pièces de chaque camp, pions à part, dans un sens ou dans l'autre.
+    if (const auto kind = filters.value("endgame").toString(); !kind.isEmpty()) {
+        static const QHash<QString, QStringList> kinds{{"pawns", {"/"}},
+                                                       {"knights", {"N/n"}},
+                                                       {"bishops", {"B/b"}},
+                                                       {"knightBishop", {"N/b"}},
+                                                       {"minor", {"N/n", "B/b", "N/b", "B/n"}},
+                                                       {"rooks", {"R/r"}},
+                                                       {"rookMinor", {"R/n", "R/b"}},
+                                                       {"rookMinorRook", {"RN/r", "RB/r"}},
+                                                       {"doubleRooks", {"RR/rr"}},
+                                                       {"queens", {"Q/q"}},
+                                                       {"queenRook", {"Q/r"}}};
+        const auto shapes = kinds.value(kind);
+        check(!shapes.isEmpty(), "Type de finale inconnu.");
+        // Les quatre bits de chaque sorte de pièce dans le code du matériel (voir
+        // materialCode) : P N B R Q pour les Blancs, puis p n b r q.
+        static const QString pieces = "NBRQnbrq";
+        static const int shifts[] = {32, 28, 24, 20, 12, 8, 4, 0};
+        QStringList any;
+        for (const auto &shape : shapes)
+            for (const bool flip : {false, true}) {
+                auto [white, black] = std::pair(shape.section('/', 0, 0), shape.section('/', 1, 1).toUpper());
+                if (flip)
+                    std::swap(white, black);
+                QStringList parts;
+                for (int i = 0; i < 8; ++i) {
+                    const auto &side = i < 4 ? white : black;
+                    parts << QString("(material>>%1&15)=%2").arg(shifts[i]).arg(side.count(pieces[i % 4]));
+                }
+                any << "(" + parts.join(" AND ") + ")";
+            }
+        any.removeDuplicates();
+        statement += " AND g.id IN(SELECT game_id FROM game_material WHERE " + any.join(" OR ") + ")";
+    }
     if (!filters.value("material").toString().isEmpty()) {
         statement += " AND g.id IN(SELECT game_id FROM game_material WHERE material=?)";
         args << materialCode(filters["material"].toString());

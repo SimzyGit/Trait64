@@ -17,7 +17,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✅ 15 nov. | D2 |
 | Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✅ 16 nov., ligne principale (recherche avancée) | D3 |
 | Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ◐ même structure de pions (filtre de position) ; pas de ressemblance approchée | B/D3 |
-| Classement des finales et clés stratégiques/tactiques | ✅ | — | — | ✗ | D3 |
+| Classement des finales et clés stratégiques/tactiques | ✅ | — | — | ◐ finales atteintes ✅ 16 nov. (onze types, recherche avancée) ; pas de clés stratégiques | D3 |
 | Langage de requêtes (CQL) | — | ✅ | — | ✗ | K |
 | Drapeaux multiples sur les parties, médailles | ✅ | ✅ | — | ✅ favoris, collections, les seize médailles de ChessBase 16 nov. | D3 |
 | Graphes de la base (années, résultats, Elo du filtre) | ✅ | ✅ | — | ✅ 16 nov. (*Base → Graphiques de la sélection*) | D3 |

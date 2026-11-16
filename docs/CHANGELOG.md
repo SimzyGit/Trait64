@@ -1,5 +1,9 @@
 # Changements
 
+## Finales — 16 novembre 2026
+
+- **Recherche par finale atteinte** (*Recherche avancée → Finale atteinte*) : pions seuls, cavalier contre fou, tour contre tour, tour et pièce mineure contre tour, dame contre tour… D'après le matériel de chaque camp au cours de la partie, pions à part, quelle que soit la couleur.
+
 ## Questions d'entraînement, diagrammes, style — 16 novembre 2026
 
 - **Style d'un joueur** (page Joueurs) : la part de parties décisives, la longueur moyenne, les échecs donnés et les prises par partie, les roques opposés — d'après la ligne principale de ses parties.
