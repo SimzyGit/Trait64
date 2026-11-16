@@ -390,16 +390,22 @@ Item {
                         color: root.muted; font.pixelSize: 10 * root.textScale
                     }
                 }
+                // Les diagrammes ne se créent que là où il y en a : une vignette par coup
+                // ralentissait toute la notation d'une longue partie.
                 Repeater {
                     model: row.modelData.initial ? [] : [row.modelData.white || ({}), row.modelData.black || ({})]
-                    Item {
+                    Loader {
                         required property var modelData
-                        visible: !!modelData.diagram
-                        width: row.width; height: visible ? diagramBoard.height + 8 : 0
-                        MiniBoard {
-                            id: diagramBoard; anchors.horizontalCenter: parent.horizontalCenter; y: 4
-                            width: Math.min(220 * root.textScale, row.width - 16); height: width
-                            fen: parent.modelData.diagram || ""; lastMove: parent.modelData.lastMove || ""
+                        active: !!modelData.diagram
+                        visible: active
+                        width: row.width
+                        sourceComponent: Item {
+                            height: diagramBoard.height + 8
+                            MiniBoard {
+                                id: diagramBoard; anchors.horizontalCenter: parent.horizontalCenter; y: 4
+                                width: Math.min(220 * root.textScale, row.width - 16); height: width
+                                fen: parent.parent.modelData.diagram || ""; lastMove: parent.parent.modelData.lastMove || ""
+                            }
                         }
                     }
                 }

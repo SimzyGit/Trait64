@@ -209,7 +209,14 @@ if(T64_BUILD_GUI)
     target_link_libraries(desktop_tests PRIVATE ${T64_SOUND_LIBRARIES} t64analysis t64storage t64engine t64updates t64content Qt6::Gui Qt6::Quick Qt6::QuickControls2 Qt6::Qml Qt6::Concurrent Qt6::Test)
     qt_add_resources(desktop_tests "test_resources" PREFIX "/" BASE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${T64_UI} ${T64_ASSETS} assets/trait64.svg assets/demo.pgn)
     add_test(NAME move_notebook COMMAND desktop_tests --move-notebook)
-    set_tests_properties(move_notebook PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 60)
+    # La notation d'une longue partie se reconstruit à chaque coup : sous ASan/UBSan,
+    # sans optimisation, le test frôlait la minute.
+    if(T64_SANITIZERS)
+      set(T64_NOTEBOOK_TIMEOUT 180)
+    else()
+      set(T64_NOTEBOOK_TIMEOUT 60)
+    endif()
+    set_tests_properties(move_notebook PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT ${T64_NOTEBOOK_TIMEOUT})
     add_test(NAME desktop_layout COMMAND desktop_tests --ui-layout)
     set_tests_properties(desktop_layout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
     # Le parcours des études à vrais clics : dossier, fichier, recueil, aperçu, dialogues.
