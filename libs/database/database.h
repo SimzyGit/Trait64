@@ -137,6 +137,9 @@ class Database {
     QVariantList positionStatistics(const QString &fen, const QVariantMap &filters = {},
                                     const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     void favorite(qint64 id, bool value);
+    // Les médailles d'une partie, comme dans ChessBase : un bit par médaille, voir
+    // Main.qml (meilleure partie, nouveauté, sacrifice…).
+    void setMedals(qint64 id, int medals);
     void trash(qint64 id, bool value);
     void collection(qint64 id, const QString &value);
     // Étiquette chaque partie avec le nom de famille de son ouverture, d'après la table
@@ -210,6 +213,7 @@ class Database {
     void upgradeV10(int originalVersion);
     void upgradeV11(int originalVersion);
     void upgradeV12(int originalVersion);
+    void upgradeV13(int originalVersion);
     // Schéma 12 : index allégé. Voir lightindex.cpp.
     bool light_ = false;
     void saveLegacyIndex(const Game &game, qint64 id);

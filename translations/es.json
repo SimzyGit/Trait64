@@ -1586,5 +1586,21 @@
   "Parties par année": "Partidas por año",
   "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 partida(s) sin Elo para uno de los jugadores.",
   "Manœuvre d’une pièce (ex. Cf3-d2-f1)": "Maniobra de una pieza (p. ej. Cf3-d2-f1)",
-  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Maniobra ilegible: escriba la pieza y luego las casillas, por ejemplo Cf3-d2-f1."
+  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Maniobra ilegible: escriba la pieza y luego las casillas, por ejemplo Cf3-d2-f1.",
+  "Meilleure partie": "Mejor partida",
+  "Décisive pour le tournoi": "Decisiva para el torneo",
+  "Modèle d’ouverture": "Modelo de apertura",
+  "Nouveauté": "Novedad",
+  "Structure de pions": "Estructura de peones",
+  "Stratégie": "Estrategia",
+  "Attaque": "Ataque",
+  "Défense": "Defensa",
+  "Matériel": "Material",
+  "Jeu des pièces": "Juego de piezas",
+  "Gaffe tactique": "Error táctico",
+  "Erreur stratégique": "Error estratégico",
+  "Personnelle": "Personal",
+  "Médailles": "Medallas",
+  "Médaille": "Medalla",
+  "Aucune": "Ninguna"
 }

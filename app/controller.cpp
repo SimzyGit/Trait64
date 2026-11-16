@@ -1452,6 +1452,15 @@ void Controller::favorite(qint64 id, bool value) {
         fail(e);
     }
 }
+void Controller::setMedals(qint64 id, int medals) {
+    try {
+        require(!busy_, "Traitement en cours.");
+        db_->setMedals(id, medals);
+        refreshLibrary();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::trash(qint64 id, bool value) {
     try {
         require(!busy_, "Traitement en cours.");

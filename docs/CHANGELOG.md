@@ -1,7 +1,8 @@
 # Changements
 
-## Relations d'attaque, fiche joueur, graphiques, manœuvres — 16 novembre 2026
+## Relations d'attaque, fiche joueur, graphiques, manœuvres, médailles — 16 novembre 2026
 
+- **Médailles** (menu ⋮ d'une partie de la bibliothèque) : les seize de ChessBase — meilleure partie, nouveauté, sacrifice, finale, gaffe tactique… Un losange les signale dans la liste, la recherche avancée filtre sur l'une d'elles. La bibliothèque passe au schéma 13 (une colonne ajoutée, rien d'autre ne change).
 - **Recherche de manœuvres** (*Recherche avancée → Manœuvre d'une pièce*) : « Cf3-d2-f1 » trouve les parties où ce cavalier passe par ces cases, coup après coup, d'autres coups pouvant s'intercaler ; lettres françaises ou anglaises selon la notation choisie, « P » pour un pion. La recherche porte sur la ligne principale.
 - **Graphiques de la sélection** (*Base → Graphiques de la sélection*) : les parties de la liste filtrée par année (par décennie sur une longue période), leurs résultats et l'Elo moyen des deux joueurs, par tranches de cent.
 - **Fiche joueur : ses pages en ligne** — un lien vers son compte Lichess ou Chess.com quand il a joué sous ce pseudo sur ces sites, et vers sa fiche FIDE quand une partie en donne le numéro.

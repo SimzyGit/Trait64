@@ -1586,5 +1586,21 @@
   "Parties par année": "Games per year",
   "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 game(s) without an Elo for one of the players.",
   "Manœuvre d’une pièce (ex. Cf3-d2-f1)": "Piece manoeuvre (e.g. Nf3-d2-f1)",
-  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Unreadable manoeuvre: write the piece then the squares, for example Nf3-d2-f1."
+  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Unreadable manoeuvre: write the piece then the squares, for example Nf3-d2-f1.",
+  "Meilleure partie": "Best game",
+  "Décisive pour le tournoi": "Decided the tournament",
+  "Modèle d’ouverture": "Opening model",
+  "Nouveauté": "Novelty",
+  "Structure de pions": "Pawn structure",
+  "Stratégie": "Strategy",
+  "Attaque": "Attack",
+  "Défense": "Defence",
+  "Matériel": "Material",
+  "Jeu des pièces": "Piece play",
+  "Gaffe tactique": "Tactical blunder",
+  "Erreur stratégique": "Strategic error",
+  "Personnelle": "Personal",
+  "Médailles": "Medals",
+  "Médaille": "Medal",
+  "Aucune": "None"
 }

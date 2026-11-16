@@ -1214,6 +1214,18 @@ int main(int argc, char **argv) {
                           !summary["years"].toList().isEmpty(),
                       "The selection charts count every game once, by result and by year");
                 QMetaObject::invokeMethod(charts, "close");
+                // Une médaille sur la partie du Mémorial, retrouvée par le filtre.
+                check(window->findChild<QObject *>("medalMenu") != nullptr, "Games have a medal menu");
+                c.setMedals(memorial, 1 << 3);
+                c.searchLibrary({}, {}, false, false, false, {{"medal", 1 << 3}});
+                settle.restart();
+                QTest::qWait(30);
+                while ((c.busy() || c.librarySearching()) && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                check(c.games().size() == 1 && c.games().first().toMap()["medals"].toInt() == 1 << 3,
+                      "The novelty medal finds its game");
+                c.setMedals(memorial, 0);
+                c.searchLibrary({}, {}, false, false, false, {});
             }
             {
                 // Corriger les noms : le Mémorial a été saisi avec « Ding » ; on ajoute

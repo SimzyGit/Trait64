@@ -409,6 +409,7 @@ class Controller : public QObject {
     Q_INVOKABLE void search(const QString &query, const QString &result, bool favorite, bool position,
                             bool trash);
     Q_INVOKABLE void favorite(qint64 id, bool value);
+    Q_INVOKABLE void setMedals(qint64 id, int medals);
     Q_INVOKABLE void trash(qint64 id, bool value);
     Q_INVOKABLE void setCollection(qint64 id, const QString &collection);
     // Range toute la bibliothèque en collections par famille d'ouverture, sans rien

@@ -40,6 +40,13 @@ ApplicationWindow {
     property bool exportAll: false
     property string promotionPrefix: ""
     property int selectedGame: 0
+    property int selectedMedals: 0
+    // Les médailles de ChessBase, un bit chacune, dans son ordre.
+    readonly property var medalNames: [qsTr("Meilleure partie"), qsTr("Décisive pour le tournoi"), qsTr("Modèle d’ouverture"),
+        qsTr("Nouveauté"), qsTr("Structure de pions"), qsTr("Stratégie"), qsTr("Tactique"), qsTr("Attaque"),
+        qsTr("Sacrifice"), qsTr("Défense"), qsTr("Matériel"), qsTr("Jeu des pièces"), qsTr("Finale"),
+        qsTr("Gaffe tactique"), qsTr("Erreur stratégique"), qsTr("Personnelle")]
+    function medalList(mask) { return medalNames.filter(function(name, i) { return (mask & (1 << i)) !== 0 }).join(", ") }
     property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils"), qsTr("Études")]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
@@ -348,8 +355,10 @@ ApplicationWindow {
                                     Label {text:modelData.date && modelData.date.indexOf("?")<0 ? modelData.date : "—";Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}
                                     RowLayout {Layout.fillWidth:false;Layout.preferredWidth:libraryList.columns.actions;Layout.maximumWidth:libraryList.columns.actions;spacing:2
                                         TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
+                                        Label {objectName:"medalMark";visible:(modelData.medals||0)>0;text:"◆";color:controller.preferences.accentColor;Layout.preferredWidth:10
+                                            HoverHandler {id:medalHover} ToolTip.visible:medalHover.hovered;ToolTip.text:win.medalList(modelData.medals||0)}
                                         TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}
-                                        TButton {text:"⋮";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Actions de la partie");onClicked:{win.selectedGame=modelData.id;collectionField.text=modelData.collection||"";gameMenu.open()}}
+                                        TButton {text:"⋮";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Actions de la partie");onClicked:{win.selectedGame=modelData.id;win.selectedMedals=modelData.medals||0;collectionField.text=modelData.collection||"";gameMenu.open()}}
                                     }
                                 }
                                 // Un clic choisit la partie pour l'aperçu, un double-clic l'ouvre
@@ -912,6 +921,14 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Tableau du tournoi");onTriggered:crosstableDialog.show(win.selectedGame)}
         MenuItem {text:qsTr("Fusionner dans l’étude courante");onTriggered:controller.mergeGame(win.selectedGame)}
         MenuItem {text:qsTr("Modifier la collection");onTriggered:collectionDialog.open()}
+        Menu {id:medalMenu;objectName:"medalMenu";title:qsTr("Médailles")
+            Instantiator {model:win.medalNames.length
+                delegate:MenuItem {required property int index;text:win.medalNames[index];checkable:true;checked:(win.selectedMedals&(1<<index))!==0
+                    onTriggered:{win.selectedMedals^=(1<<index);controller.setMedals(win.selectedGame,win.selectedMedals)}}
+                onObjectAdded:function(index,object){medalMenu.insertItem(index,object)}
+                onObjectRemoved:function(index,object){medalMenu.removeItem(object)}
+            }
+        }
         MenuItem {text:trashCheck.checked?qsTr("Restaurer la partie"):qsTr("Mettre à la corbeille");onTriggered:controller.trash(win.selectedGame,!trashCheck.checked)}
     }
     TDialog {id:collectionDialog;objectName:"collectionDialog";title:qsTr("Collection de la partie");anchors.centerIn:parent;modal:true;width:440;standardButtons:Dialog.Ok|Dialog.Cancel
@@ -1030,7 +1047,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     }
     TDialog {id:advancedDialog;objectName:"advancedDialog";title:qsTr("Recherche avancée");anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         property var draft:({})
-        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=["updated","date","players","elo","length"].indexOf(draft.sort||"updated");colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""));nagFilter.currentIndex=Math.max(0,[0,3,1,5,6,2,4].indexOf(draft.nag||0))}
+        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=["updated","date","players","elo","length"].indexOf(draft.sort||"updated");colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""));nagFilter.currentIndex=Math.max(0,[0,3,1,5,6,2,4].indexOf(draft.nag||0));medalFilter.currentIndex=draft.medal?Math.round(Math.log2(draft.medal))+1:0}
         ScrollView {id:advancedScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         GridLayout {width:advancedScroll.availableWidth;columns:2;columnSpacing:12;rowSpacing:10
             Repeater {model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"placement",label:qsTr("Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")},{key:"comment",label:qsTr("Texte dans les commentaires")},{key:"maneuver",label:qsTr("Manœuvre d’une pièce (ex. Cf3-d2-f1)")}]
@@ -1042,6 +1059,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Couleur du joueur")} TComboBox {id:colourFilter;model:["Les deux couleurs","Blancs","Noirs"]}
             // Les six symboles courants, dans l'ordre du plus fort au plus faible ; la valeur
             // est le NAG du PGN ($3 pour !!).
+            Label {text:qsTr("Médaille")} TComboBox {id:medalFilter;objectName:"medalFilter";model:[qsTr("Aucune")].concat(win.medalNames)}
             Label {text:qsTr("Symbole d’annotation")} TComboBox {id:nagFilter;objectName:"nagFilter";model:[qsTr("Aucun"),"!!","!","!?","?!","?","??"]}
             CheckBox {text:qsTr("Parties commentées seulement");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.annotated||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.annotated=checked}
             Label {text:qsTr("Elo minimal des deux joueurs");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
@@ -1052,7 +1070,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             TButton {text:qsTr("Effacer les filtres");onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
         }}
-        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.nag=[0,3,1,5,6,2,4][nagFilter.currentIndex];if(sortBy.currentIndex>=0&&["updated","date","players","elo","length"][sortBy.currentIndex]!==(draft.sort||"updated")){draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];draft.reverse=false}win.advanced=Object.assign({},draft);win.applyAdvanced()}
+        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.nag=[0,3,1,5,6,2,4][nagFilter.currentIndex];draft.medal=medalFilter.currentIndex>0?1<<(medalFilter.currentIndex-1):0;if(sortBy.currentIndex>=0&&["updated","date","players","elo","length"][sortBy.currentIndex]!==(draft.sort||"updated")){draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];draft.reverse=false}win.advanced=Object.assign({},draft);win.applyAdvanced()}
     }
     TDialog {id:commands;objectName:"commandsDialog";title:qsTr("Commandes rapides");anchors.centerIn:parent;width:Math.min(680,win.width-32);height:Math.min(620,win.height-32);modal:true;standardButtons:Dialog.Close
         readonly property var entries:[

@@ -15,6 +15,7 @@
 #include <QSet>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QUuid>
 #include <algorithm>
 #include <cmath>
@@ -76,7 +77,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 12, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 13, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -151,6 +152,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV10(v);
         upgradeV11(v);
         upgradeV12(v);
+        upgradeV13(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
@@ -354,7 +356,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     const bool sparsePosition = exactPosition && collectPositionMatches(position, canceled) && !fullText;
     static const QString columns =
         "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,"
-        "g.favorite,g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo ";
+        "g.favorite,g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo,"
+        "g.medals ";
     QString statement = columns;
     QVariantList args;
     if (fullText) {
@@ -490,6 +493,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         }
         statement += " AND g.id IN(" + join + " WHERE " + where.join(" AND ") + ")";
     }
+    if (const int medal = filters.value("medal").toInt(); medal > 0) {
+        statement += " AND (g.medals&?)<>0";
+        args << medal;
+    }
     if (filters.value("annotated").toBool())
         statement += " AND instr(g.pgn,'{')>0";
     if (!filters.value("material").toString().isEmpty()) {
@@ -609,7 +616,7 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
                             {"event", q.value(3)},     {"date", q.value(4)},       {"result", q.value(5)},
                             {"eco", q.value(6)},       {"collection", q.value(7)}, {"favorite", q.value(8)},
                             {"updated", q.value(9)},   {"rating", q.value(10)},    {"plies", q.value(11)},
-                            {"whiteElo", q.value(12)}, {"blackElo", q.value(13)}};
+                            {"whiteElo", q.value(12)}, {"blackElo", q.value(13)},  {"medals", q.value(14)}};
     check(!q.lastError().isValid(), q.lastError().text());
     check(!canceled || !canceled->load(), "Recherche annulée.");
     return rows;
@@ -741,6 +748,30 @@ QVariantList Database::explorer(const QString &position) const {
         out << QVariantMap{{"uci", q.value(0)},   {"san", q.value(1)},  {"count", q.value(2)},
                            {"white", q.value(3)}, {"draw", q.value(4)}, {"black", q.value(5)}};
     return out;
+}
+void Database::setMedals(qint64 id, int medals) {
+    QSqlQuery q(db_);
+    q.prepare("UPDATE games SET medals=? WHERE id=?");
+    q.addBindValue(medals & 0xffff);
+    q.addBindValue(id);
+    run(q);
+}
+// Les médailles : une colonne de plus, ajoutée sans copie de sauvegarde puisque rien
+// d'existant ne change.
+void Database::upgradeV13(int originalVersion) {
+    if (originalVersion >= 13)
+        return;
+    sql("SAVEPOINT schema13");
+    try {
+        if (!db_.record("games").contains("medals"))
+            sql("ALTER TABLE games ADD COLUMN medals INTEGER NOT NULL DEFAULT 0");
+        sql("PRAGMA user_version=13");
+        sql("RELEASE schema13");
+    } catch (...) {
+        sql("ROLLBACK TO schema13");
+        sql("RELEASE schema13");
+        throw;
+    }
 }
 void Database::favorite(qint64 id, bool value) {
     QSqlQuery q(db_);

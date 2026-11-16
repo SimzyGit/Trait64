@@ -596,8 +596,8 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 12,
-                      "Schema version 12");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 13,
+                      "Schema version 13");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
                 check(q.exec("SELECT typeof(key) FROM positions LIMIT 1") && q.next() &&
@@ -673,6 +673,14 @@ int main(int argc, char **argv) {
             check(maneuver("N", {"f3", "d4", "e6"}) == 0 && maneuver("B", {"f3", "d4"}) == 0 &&
                       maneuver("P", {"d7", "d5"}) == 4 && maneuver("P", {"d2", "d4"}) == 5,
                   "The piece and every square must match, pawns included");
+            // Les médailles : un bit par médaille, filtrées comme le reste.
+            const auto manoeuvre = scout.search("Oeuvre").first().toMap()["id"].toLongLong();
+            scout.setMedals(manoeuvre, (1 << 3) | (1 << 8));
+            const auto medalled = scout.search({}, {}, false, {}, false, {{"medal", 1 << 8}});
+            check(medalled.size() == 1 &&
+                      medalled.first().toMap()["medals"].toInt() == ((1 << 3) | (1 << 8)) &&
+                      scout.search({}, {}, false, {}, false, {{"medal", 1}}).isEmpty(),
+                  "Medals are kept per game and filter the library");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,
