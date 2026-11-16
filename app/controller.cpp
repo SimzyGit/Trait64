@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "archive.h"
+#include "chessbase.h"
 #include "croissant.h"
 #include "discovery.h"
 #include "hardware.h"
@@ -945,6 +946,16 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                     "Cette base dépasse un million de parties : l’importer prendrait des heures et des "
                     "dizaines de gigaoctets.");
         }
+        // Une base ChessBase de même : le .cbh ou l'un de ses fichiers.
+        const bool chessBase = !scidBase && !t64::chessbase::indexPath(path).isEmpty();
+        if (chessBase) {
+            require(t64::chessbase::isChessBase(path),
+                    "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte "
+                    "à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).");
+            require(t64::chessbase::records(path) <= 1000000,
+                    "Cette base dépasse un million de parties : l’importer prendrait des heures et des "
+                    "dizaines de gigaoctets.");
+        }
         if (croissant) {
             require(t64::croissant::isCroissantBase(path),
                     "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.");
@@ -957,7 +968,8 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                     "dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne "
                     "depuis le dossier de la position.");
         }
-        if (croissant || scidBase || path.endsWith(".pgn", Qt::CaseInsensitive)) {
+        const bool foreign = croissant || scidBase || chessBase;
+        if (foreign || path.endsWith(".pgn", Qt::CaseInsensitive)) {
             require(QFileInfo(path).isFile(), "PGN introuvable.");
             if (trainingActive())
                 finishTraining();
@@ -969,8 +981,8 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
             const auto databasePath = db_->path();
             const auto canceled = cancelTask_;
             const auto progress = taskProgress_;
-            importer_.setFuture(
-                QtConcurrent::run([databasePath, path, canceled, progress, source, croissant, scidBase] {
+            importer_.setFuture(QtConcurrent::run(
+                [databasePath, path, canceled, progress, source, croissant, scidBase, chessBase] {
                     ImportResult r;
                     r.operation = source.isEmpty()                  ? "import"
                                   : source.value("online").toBool() ? "online"
@@ -981,13 +993,15 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                                            QUuid::createUuid().toString(QUuid::WithoutBraces) + ".pgn";
                     const auto cleanup = qScopeGuard([&] { QFile::remove(converted); });
                     try {
-                        if (croissant || scidBase) {
+                        if (croissant || scidBase || chessBase) {
                             QFile out(converted);
                             if (!out.open(QIODevice::WriteOnly))
                                 throw std::runtime_error(out.errorString().toStdString());
                             const auto report = [&](int done, int) { progress->store(done); };
                             if (scidBase)
                                 t64::scid::exportPgn(path, out, report, canceled);
+                            else if (chessBase)
+                                t64::chessbase::exportPgn(path, out, report, canceled);
                             else
                                 t64::croissant::exportPgn(path, out, report, canceled);
                             out.close();
@@ -997,7 +1011,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                         }
                         t64::Database db(databasePath);
                         r.count = db.importPgnFile(
-                            croissant || scidBase ? converted : path,
+                            croissant || scidBase || chessBase ? converted : path,
                             [&](int n) {
                                 progress->store(n);
                                 return !canceled->load();

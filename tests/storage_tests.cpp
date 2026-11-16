@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "archive.h"
 #include "cancellation.h"
+#include "chessbase.h"
 #include "croissant.h"
 #include "crosstable.h"
 #include "database.h"
@@ -24,6 +25,7 @@
 #include <QTemporaryDir>
 #include <cstring>
 #include <iostream>
+#include <random>
 #include <source_location>
 #include <sqlite3.h>
 #include <thread>
@@ -1440,6 +1442,64 @@ int main(int argc, char **argv) {
                       ("SCID game " + std::to_string(i + 1) + " matches its source, variations included")
                           .c_str());
             }
+        }
+        {
+            // Une base ChessBase écrite par l'encodeur de cbvault (tests/chessbase/README.md) :
+            // modes 0, 4 et 5, coups sur deux octets, positions de départ, troisième cavalier,
+            // variantes, commentaires, NAG, cases et flèches, une partie effacée et un texte.
+            const QString folder = QString(T64_TEST_DATA) + "/chessbase";
+            const auto base = folder + "/essai.cbh";
+            check(t64::chessbase::indexPath(folder + "/essai.cbg") == base &&
+                      t64::chessbase::indexPath(base + ".txt").isEmpty(),
+                  "Any file of a ChessBase base leads to its index");
+            check(t64::chessbase::isChessBase(folder + "/essai.cbp") && t64::chessbase::records(base) == 10,
+                  "A ChessBase base is recognised and its records counted");
+            QTemporaryDir lone;
+            QFile::copy(base, lone.filePath("seul.cbh"));
+            check(!t64::chessbase::isChessBase(lone.filePath("seul.cbh")),
+                  "An index without its moves and names is refused");
+            QBuffer pgn;
+            pgn.open(QIODevice::WriteOnly);
+            const auto outcome = t64::chessbase::exportPgn(base, pgn);
+            check(outcome.written == 8 && outcome.skipped == 0,
+                  "Every ChessBase game is read, the deleted one and the text left out");
+            QFile source(folder + "/essai.pgn");
+            check(source.open(QIODevice::ReadOnly), "Open the ChessBase reference PGN");
+            const auto mine = t64::parsePgn(pgn.data().toStdString());
+            const auto wanted = t64::parsePgn(source.readAll().toStdString());
+            check(mine.size() == wanted.size(), "As many ChessBase games as in the reference");
+            for (size_t i = 0; i < std::min(mine.size(), wanted.size()); ++i) {
+                const auto &a = mine[i], &b = wanted[i];
+                bool same = a.tags == b.tags && a.nodes.size() == b.nodes.size();
+                for (size_t n = 0; same && n < a.nodes.size(); ++n)
+                    same = a.nodes[n].uci == b.nodes[n].uci && a.nodes[n].comment == b.nodes[n].comment &&
+                           a.nodes[n].nags == b.nodes[n].nags && a.nodes[n].children == b.nodes[n].children;
+                check(same, ("ChessBase game " + std::to_string(i + 1) + " matches the reference").c_str());
+            }
+            // Des octets abîmés au hasard ne doivent jamais faire lire hors des fichiers : une
+            // partie illisible est comptée et passée.
+            std::mt19937 noise(64);
+            for (int round = 0; round < 300; ++round) {
+                QTemporaryDir damaged;
+                for (const auto *suffix : {".cbh", ".cbg", ".cba", ".cbp", ".cbt", ".cbc", ".cbs"}) {
+                    QFile in(folder + "/essai" + suffix);
+                    in.open(QIODevice::ReadOnly);
+                    auto bytes = in.readAll();
+                    const bool hit = noise() % 3 == 0;
+                    for (int n = 0; hit && n < 4; ++n)
+                        bytes[noise() % bytes.size()] = char(noise());
+                    QFile out(damaged.filePath(QString("essai") + suffix));
+                    out.open(QIODevice::WriteOnly);
+                    out.write(bytes);
+                }
+                QBuffer sink;
+                sink.open(QIODevice::WriteOnly);
+                try {
+                    t64::chessbase::exportPgn(damaged.filePath("essai.cbh"), sink);
+                } catch (const std::runtime_error &) {
+                }
+            }
+            check(true, "Damaged ChessBase files are read without crashing");
         }
         std::cout << checks << " storage checks passed\n";
         return 0;

@@ -2546,7 +2546,7 @@ int main(int argc, char **argv) {
                     QTest::qWait(20);
             };
             idleShelf();
-            QFile foreign(folder + "/Archive.cbh");
+            QFile foreign(folder + "/Archive.cbv");
             check(foreign.open(QIODevice::WriteOnly) && foreign.write("x") == 1, "Write a foreign base");
             foreign.close();
             const auto view = shelf.browseStudies(folder);
@@ -2561,7 +2561,7 @@ int main(int argc, char **argv) {
                 const auto each = row.toMap();
                 if (each["name"] == "Blitz.pgn")
                     blitz = each;
-                if (each["name"] == "Archive.cbh")
+                if (each["name"] == "Archive.cbv")
                     archive = each;
             }
             check(blitz["readable"].toBool() && blitz["sourceId"].toLongLong() > 0 &&
@@ -2571,7 +2571,7 @@ int main(int argc, char **argv) {
                   "A foreign base is shown as unreadable rather than hidden");
             {
                 QSignalSpy refused(&shelf, &Controller::message);
-                check(shelf.openStudyFile(folder + "/Archive.cbh") == 0 && refused.size() == 1 &&
+                check(shelf.openStudyFile(folder + "/Archive.cbv") == 0 && refused.size() == 1 &&
                           refused.first().at(1).toBool(),
                       "Opening a foreign base says what to do instead of failing silently");
             }
@@ -2725,6 +2725,32 @@ int main(int argc, char **argv) {
                 check(imported == 4, "Its 4 games arrive in a collection of their own");
                 for (const auto *suffix : {".si4", ".sn4", ".sg4"})
                     QFile::remove(folder + "/Classiques/Scid" + suffix);
+            }
+            // Une base ChessBase : son .cbh la représente, ses compagnons restent cachés.
+            {
+                static const char *const parts[] = {".cbh", ".cbg", ".cba", ".cbp", ".cbt", ".cbc", ".cbs"};
+                for (const auto *suffix : parts)
+                    check(QFile::copy(QString(T64_TEST_DATA) + "/chessbase/essai" + suffix,
+                                      folder + "/Classiques/Mega" + suffix),
+                          "Copy the ChessBase fixture into the study folder");
+                const auto listed = shelf.browseStudies(folder + "/Classiques")["entries"].toList();
+                check(listed.size() == 1 && listed.first().toMap()["name"] == "Mega.cbh" &&
+                          listed.first().toMap()["readable"].toBool(),
+                      "A ChessBase base is offered once, as readable");
+                idleShelf();
+                const int known = shelf.studyCollections().size();
+                shelf.openStudyFile(folder + "/Classiques/Mega.cbh");
+                settle.restart();
+                while ((shelf.studyCollections().size() <= known || shelf.busy()) && settle.elapsed() < 60000)
+                    QTest::qWait(20);
+                idleShelf();
+                qint64 imported = 0;
+                for (const auto &row : shelf.studyCollections())
+                    if (row.toMap()["title"] == "Mega")
+                        imported = row.toMap()["games"].toLongLong();
+                check(imported == 8, "Its 8 games arrive in a collection of their own");
+                for (const auto *suffix : parts)
+                    QFile::remove(folder + "/Classiques/Mega" + suffix);
             }
             check(shelf.browseStudies(folder + "/Classiques")["entries"].toList().isEmpty() &&
                       shelf.browseStudies(files.filePath("nowhere"))["path"].toString().isEmpty(),

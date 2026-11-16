@@ -191,7 +191,6 @@
   "Aide & raccourcis": "Help & shortcuts",
   "Exporter cette base en PGN": "Export this database as PGN",
   "Importer des parties": "Import games",
-  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4)",
   "Tous les fichiers (*)": "All files (*)",
   "Exporter en PGN ou archive T64 expérimentale": "Export as PGN or experimental T64 archive",
   "Position EPD (*.epd)": "EPD position (*.epd)",
@@ -1572,5 +1571,7 @@
   "Replier la barre latérale": "Collapse the sidebar",
   "• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic, gauche ou droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Clic droit sur un coup ou touche Suppr : le supprimer avec sa suite (Ctrl+Z pour annuler).\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.": "• Click a piece then its square, or drag it.\n• Go back into a game and play another move to start a variation.\n• Right-click drag: arrow; right-click a square: circle;\n  double click, left or right: clear every annotation.\n• Ctrl + wheel over the board: adjust its size.\n• Left/right arrows: moves; up/down: variations; Space: automatic playback.\n• Right-click a move or press Delete: remove it and what follows (Ctrl+Z to undo).\n• Save a study to add it to your library.\n• Import a PGN to feed the opening explorer.\n• Create cards from the lines you want to remember.",
   "Analyse assistée": "Assisted analysis",
-  "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "When a piece is chosen, its target squares are coloured: green for the engine's best move, light green within half a pawn, red for a move that loses material or that the engine rates poorly."
+  "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "When a piece is chosen, its target squares are coloured: green for the engine's best move, light green within half a pawn, red for a move that loses material or that the engine rates poorly.",
+  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
+  "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Incomplete ChessBase database: at least the files .cbh, .cbg, .cbp and .cbt must sit side by side (the 2CBH format of ChessBase 18 and .cbv archives are not read)."
 }

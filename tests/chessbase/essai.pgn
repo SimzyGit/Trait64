@@ -1,0 +1,89 @@
+[Event "Test variantes"]
+[Site "Paris"]
+[Date "2024.03.15"]
+[Round "2"]
+[White "Alpha, Ann"]
+[Black "Beta, Bob"]
+[Result "1-0"]
+[ECO "C88"]
+[WhiteElo "2410"]
+[BlackElo "2385"]
+
+{Avant le premier coup} 1. e4 {[%csl Gd5,Re5][%cal Yb5d5] centre} e5 (1... c5 {sicilienne} 2. Nf3 (2. c3 d5) 2... d6) (1... e6) 2. Nf3 $1 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3 d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 Bd6 13. Re1 Qh4 14. g3 Qh3 15. Be3 Bg4 16. Qd3 Rae8 17. Nd2 Re6 18. a4 Qh5 $2 19. axb5 axb5 20. Qf1 Bh3 21. Qe2 Bxg3 22. hxg3 1-0
+
+[Event "Promotions"]
+[Site "?"]
+[Date "2023.??.??"]
+[Round "?"]
+[White "Gamma"]
+[Black "Delta"]
+[Result "1-0"]
+[SetUp "1"]
+[FEN "8/1P4k1/8/8/8/8/6pK/8 w - - 0 1"]
+
+1. b8=N g1=Q+ 2. Kxg1 Kf6 3. Nc6 Ke6 1-0
+
+[Event "En passant et grand roque"]
+[Site "?"]
+[Date "2022.01.02"]
+[Round "?"]
+[White "Eps"]
+[Black "Ilon"]
+[Result "0-1"]
+
+1. d4 d5 2. Nc3 Nc6 3. Bf4 Bf5 4. Qd2 Qd7 5. O-O-O O-O-O 6. e4 dxe4 7. d5 e5 8. dxe6 Qxe6 0-1
+
+[Event "Dame en diagonale"]
+[Site "?"]
+[Date "2021.06.07"]
+[Round "?"]
+[White "Q"]
+[Black "R"]
+[Result "1/2-1/2"]
+
+1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1/2-1/2
+
+[Event "Mode quatre"]
+[Site "Lyon"]
+[Date "2020.05.06"]
+[Round "1"]
+[White "Quatre"]
+[Black "Mode"]
+[Result "0-1"]
+
+1. f3 e5 2. g4 Qh4# 0-1
+
+[Event "Mode cinq"]
+[Site "?"]
+[Date "2019.??.??"]
+[Round "?"]
+[White "Cinq"]
+[Black "Mode"]
+[Result "*"]
+
+1. d4 Nf6 (1... d5 2. c4) 2. c4 g6 3. Nc3 *
+
+[Event "Deux octets"]
+[Site "?"]
+[Date "2018.01.01"]
+[Round "3"]
+[White "Deux"]
+[Black "Octets"]
+[Result "1-0"]
+[SetUp "1"]
+[FEN "4k3/1P6/8/8/8/8/8/N3K2N w - - 0 1"]
+
+1. b8=N Kf7 2. Nc6 Ke6 3. Nb3 Kd5 4. Kd2 1-0
+
+[Event "Troisieme cavalier"]
+[Site "?"]
+[Date "2016.02.03"]
+[Round "?"]
+[White "Trois"]
+[Black "Cavaliers"]
+[Result "1/2-1/2"]
+[SetUp "1"]
+[FEN "6k1/1P6/8/8/8/8/8/N3K2N w - - 0 1"]
+
+1. b8=N Kf7 2. Nc6 Ke6 3. Nd4+ 1/2-1/2
+

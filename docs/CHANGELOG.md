@@ -1,5 +1,9 @@
 # Changements
 
+## Bases ChessBase — 16 novembre 2026
+
+- **Les bases ChessBase s'importent** (*Importer*, ou l'explorateur d'études, qui montre le `.cbh` d'une base) : parties, variantes, positions de départ, commentaires, signes, cases et flèches colorées, avec joueurs, tournoi, date, ronde, Elo, ECO et commentateur. Le format classique (`.cbh`, `.cbg`, `.cba`, `.cbp`, `.cbt`) est lu sur place, sans ChessBase ; les parties effacées et les textes sont laissés de côté, et une partie illisible est comptée sans arrêter le reste. Ni le format 2CBH de ChessBase 18, ni les archives `.cbv`, ni les parties Chess960 ne sont lus pour l'instant.
+
 ## Analyse assistée, évaluation en direct — 16 novembre 2026
 
 - **Analyse assistée** (*Affichage → Analyse assistée*, ou *Apparence*) : quand une pièce est choisie, chaque case d'arrivée prend la couleur du coup d'après les lignes du moteur — vert pour le meilleur, vert clair pour un coup à moins d'un demi-pion, rouge au-delà ; sans moteur, une case où la pièce serait prise pour rien passe au rouge.

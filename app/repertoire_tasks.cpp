@@ -11,17 +11,19 @@ const QStringList &readableStudySuffixes() {
     static const QStringList suffixes{".pgn", ".pgn.gz", ".pgn.zst", ".pgn.bz2", ".pgn.xz", ".pgn.zstd"};
     return suffixes;
 }
-// Un recueil accepte en plus les bases d'En Croissant et de SCID. Un répertoire, non : neuf
-// millions de parties fondues dans un arbre de préparation n'en sont pas un.
+// Un recueil accepte en plus les bases d'En Croissant, de SCID et de ChessBase. Un
+// répertoire, non : neuf millions de parties fondues dans un arbre de préparation n'en
+// sont pas un.
 const QStringList &readableCollectionSuffixes() {
-    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3", ".si4"};
+    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3", ".si4", ".cbh"};
     return suffixes;
 }
 // Les bases des autres logiciels : l'explorateur les montre pour dire pourquoi elles ne
 // s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide. Les .sg4 et
-// .sn4 d'une base SCID n'y figurent pas : c'est son .si4 qui la représente.
+// .sn4 d'une base SCID n'y figurent pas : c'est son .si4 qui la représente, comme le .cbh
+// une base ChessBase.
 const QStringList &foreignBaseSuffixes() {
-    static const QStringList suffixes{".si5", ".cbh", ".cbv", ".cbf", ".pdb"};
+    static const QStringList suffixes{".si5", ".2cbh", ".cbv", ".cbf", ".pdb"};
     return suffixes;
 }
 bool endsWithAny(const QString &lowercaseName, const QStringList &suffixes) {
@@ -396,7 +398,7 @@ void Controller::importStudyCollection(const QString &url) {
         // du fichier est gardé : c'est lui que l'explorateur reconnaît.
         const QVariantMap source{{"id", slug}, {"title", name}, {"kind", "study"}, {"source", path}};
         if (path.endsWith(".pgn", Qt::CaseInsensitive) || path.endsWith(".db3", Qt::CaseInsensitive) ||
-            path.endsWith(".si4", Qt::CaseInsensitive)) {
+            path.endsWith(".si4", Qt::CaseInsensitive) || path.endsWith(".cbh", Qt::CaseInsensitive)) {
             importSourceFile(url, source);
             return;
         }

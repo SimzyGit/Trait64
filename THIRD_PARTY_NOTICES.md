@@ -81,6 +81,37 @@ SOFTWARE.
 // compromising on hash quality.
 ```
 
+## Format ChessBase
+
+- Sources : https://github.com/itshak/cbvault (révision `ce5a582d98c3d0ac62dc10b965b4fb32d102da97`, 2026-11-10) et https://github.com/asdfjkl/cbh2pgn (révision `42b3592738062db1f768239e85df1b98cb1cead9`, 2024-08-18), toutes deux sous licence MIT.
+- Repris dans `libs/database/chessbase.cpp` : les trois tables de transcodage des coups (modes 0, 4 et 5), qui suivent la description publiée du format ; la disposition des fichiers suit `docs/format-spec.md` de cbvault. Le lecteur lui-même est écrit pour Trait64.
+- `tests/chessbase/` : base d'essai écrite par l'encodeur de fixtures de cbvault, avec l'exemple `source/t64.rs` qui s'appuie sur lui.
+- Licence MIT de cbvault :
+
+```
+MIT License
+
+Copyright (c) 2026 cbvault Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## Qt 6
 
 https://www.qt.io/ — modules Core, Gui, Qml, Quick, QuickControls2, Sql, Concurrent ; Test pour les tests. Bibliothèques système liées dynamiquement. Les licences des modules Qt distribués par Debian/Ubuntu s’appliquent (notamment LGPL-3.0/GPL-3.0 selon le module et sa distribution). Les sources et avis légaux Qt sont disponibles via le gestionnaire de paquets et https://code.qt.io/. Aucun fichier de Qt n’est incorporé dans les sources de Trait64.
