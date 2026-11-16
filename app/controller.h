@@ -477,6 +477,8 @@ class Controller : public QObject {
     // « [%tqu …] » est à trouver, en trois essais (3, 2 puis 1 point) ; les autres coups
     // se jouent d'eux-mêmes.
     Q_INVOKABLE void toggleQuestion();
+    // Un diagramme dans la notation après le coup courant (NAG 220).
+    Q_INVOKABLE void toggleDiagram();
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
     Q_INVOKABLE void finishTraining();

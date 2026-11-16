@@ -1024,6 +1024,20 @@ int main(int argc, char **argv) {
                   "The study comes back with its question");
             quiz.toggleQuestion();
             check(!quiz.state()["question"].toBool(), "The mark comes off again");
+            // Un diagramme après 2.Cf3 : dans la notation en table et en continu, et le
+            // symbole du coup peut changer sans l'emporter.
+            quiz.toggleDiagram();
+            quiz.setNag(1);
+            bool tableDiagram = false, flowDiagram = false;
+            for (const auto &row : quiz.moveRows())
+                tableDiagram = tableDiagram || !row.toMap()["white"].toMap()["diagram"].toString().isEmpty();
+            for (const auto &token : quiz.moveFlow())
+                flowDiagram = flowDiagram || token.toMap()["kind"] == "diagram";
+            check(quiz.state()["diagram"].toBool() && quiz.state()["nag"].toInt() == 1 && tableDiagram &&
+                      flowDiagram,
+                  "A diagram follows the move in both notations and survives a new symbol");
+            quiz.toggleDiagram();
+            check(!quiz.state()["diagram"].toBool(), "The diagram comes off again");
         }
         {
             // Pièces en prise : marquées seulement si on le demande.

@@ -508,6 +508,7 @@ void Controller::refresh(bool content) {
         {"guessFound", guessFound_},
         {"guessAsked", guessAsked_},
         {"questions", questions_},
+        {"diagram", t64::hasDiagram(current)},
         {"question", QString::fromStdString(current.comment).contains("[%tqu")},
         {"trainingComplete", trainingComplete_},
         {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
@@ -516,7 +517,7 @@ void Controller::refresh(bool content) {
                                  QString::number(repertoireExercise_.isEmpty() ? solution_.size() : 1)},
         {"canBack", node_ > 0},
         {"canForward", !current.children.empty()},
-        {"nag", current.nags.empty() ? 0 : current.nags[0]},
+        {"nag", current.nags.empty() || current.nags[0] == t64::diagramNag ? 0 : current.nags[0]},
         {"whiteTurn", board.sideToMove() == chess::Color::WHITE}};
     // Relations d'attaque de la pièce choisie, comme dans ChessBase : une flèche rouge
     // depuis chaque pièce adverse qui l'attaque, une verte depuis chaque pièce qui la
@@ -1403,9 +1404,14 @@ void Controller::setNag(int nag) {
     if (trainingActive())
         return;
     remember();
-    game_.nodes[node_].nags.clear();
-    if (nag > 0 && nag <= 255)
-        game_.nodes[node_].nags.push_back(nag);
+    // Le symbole du coup change ; un diagramme posé après lui reste.
+    auto &nags = game_.nodes[node_].nags;
+    const bool diagram = t64::hasDiagram(game_.nodes[node_]);
+    nags.clear();
+    if (nag > 0 && nag <= 255 && nag != t64::diagramNag)
+        nags.push_back(nag);
+    if (diagram)
+        nags.push_back(t64::diagramNag);
     refresh(true);
 }
 void Controller::setTags(const QVariantMap &tags) {
@@ -1855,6 +1861,17 @@ void Controller::startGuessing(bool white) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+void Controller::toggleDiagram() {
+    if (trainingActive() || node_ == 0)
+        return;
+    remember();
+    auto &nags = game_.nodes[node_].nags;
+    if (const auto found = std::find(nags.begin(), nags.end(), t64::diagramNag); found != nags.end())
+        nags.erase(found);
+    else
+        nags.push_back(t64::diagramNag);
+    refresh(true);
 }
 void Controller::toggleQuestion() {
     if (trainingActive() || node_ == 0)

@@ -3,6 +3,7 @@
 #include "game.h"
 #include <QRegularExpression>
 #include <QVariant>
+#include <algorithm>
 #include <functional>
 
 namespace t64 {
@@ -103,6 +104,12 @@ inline QStringList typedMatches(const chess::Board &board, const QString &typed,
     return exact.isEmpty() ? partial : exact;
 }
 
+// Un diagramme après un coup : le NAG 220 de ChessBase, que d'autres logiciels lisent aussi.
+constexpr int diagramNag = 220;
+inline bool hasDiagram(const Node &node) {
+    return std::find(node.nags.begin(), node.nags.end(), diagramNag) != node.nags.end();
+}
+
 // PGN command annotations ([%clk], [%eval], [%cal]…) are data, not prose: shown apart,
 // never edited. The stored comment keeps them so PGN exports stay lossless.
 struct CommentParts {
@@ -145,7 +152,8 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
         QString text = displaySan(node.san, french);
         static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
         for (int nag : node.nags)
-            text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
+            if (nag != diagramNag)
+                text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
         const auto parts = splitComment(node.comment);
         return QVariantMap{{"id", id},
                            {"parent", node.parent},
@@ -153,7 +161,9 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
                            {"active", current == id},
                            {"comment", parts.text},
                            {"clock", parts.clock},
-                           {"eval", parts.eval}};
+                           {"eval", parts.eval},
+                           {"diagram", hasDiagram(node) ? QString::fromStdString(node.fen) : QString()},
+                           {"lastMove", QString::fromStdString(node.uci)}};
     };
     int visited = 0;
     // Each recursive call owns one branch. Pair only its direct mainline child;
@@ -219,7 +229,8 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
             const bool white = board.sideToMove() == chess::Color::WHITE;
             QString text = displaySan(node.san, french);
             for (int nag : node.nags)
-                text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
+                if (nag != diagramNag)
+                    text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
             const QString number = white      ? QString::number(board.fullMoveNumber()) + "."
                                    : numbered ? QString::number(board.fullMoveNumber()) + "…"
                                               : QString();
@@ -228,6 +239,14 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
                                   {"number", number},     {"text", text},      {"active", current == id},
                                   {"clock", parts.clock}, {"eval", parts.eval}};
             numbered = comment(id, depth);
+            if (hasDiagram(node)) {
+                tokens << QVariantMap{{"kind", "diagram"},
+                                      {"id", id},
+                                      {"depth", depth},
+                                      {"fen", QString::fromStdString(node.fen)},
+                                      {"lastMove", QString::fromStdString(node.uci)}};
+                numbered = true;
+            }
             const auto &siblings = game.nodes[node.parent].children;
             if (depth < 128 && siblings.front() == id)
                 for (size_t k = 1; k < siblings.size(); ++k) {

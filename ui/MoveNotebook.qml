@@ -31,6 +31,7 @@ Item {
         id: moveMenu; objectName: "moveMenu"
         MenuItem { objectName: "deleteFromHere"; text: qsTr("Supprimer à partir d’ici"); onTriggered: root.backend.deleteVariation() }
         MenuItem { text: qsTr("Promouvoir la variante"); onTriggered: root.backend.promote() }
+        MenuItem { objectName: "diagramToggle"; text: qsTr("Diagramme après ce coup"); checkable: true; checked: !!root.backend.state.diagram; onTriggered: root.backend.toggleDiagram() }
     }
     property bool forceFollow: false
     function requestFollow(force) {
@@ -190,7 +191,8 @@ Item {
                         required property int index
                         readonly property var token: modelData
                         readonly property bool side: token.depth > 0
-                        sourceComponent: token.kind === "move" ? flowMove : token.kind === "comment" ? flowComment : flowParen
+                        sourceComponent: token.kind === "move" ? flowMove : token.kind === "comment" ? flowComment
+                                       : token.kind === "diagram" ? flowDiagram : flowParen
                     }
                 }
             }
@@ -237,6 +239,18 @@ Item {
                 Label {
                     text: parent.token.kind === "open" ? "(" : ")"
                     topPadding: 3; color: root.muted; font.pixelSize: 12 * root.textScale
+                }
+            }
+            // Un diagramme tient une ligne à lui seul, centré.
+            Component {
+                id: flowDiagram
+                Item {
+                    width: flow.width; height: board.height + 12 * root.textScale
+                    MiniBoard {
+                        id: board; anchors.centerIn: parent
+                        width: Math.min(220 * root.textScale, flow.width - 8); height: width
+                        fen: parent.parent.token.fen; lastMove: parent.parent.token.lastMove
+                    }
                 }
             }
             Component {
@@ -374,6 +388,19 @@ Item {
                         textFormat: Text.PlainText
                         wrapMode: Text.Wrap
                         color: root.muted; font.pixelSize: 10 * root.textScale
+                    }
+                }
+                Repeater {
+                    model: row.modelData.initial ? [] : [row.modelData.white || ({}), row.modelData.black || ({})]
+                    Item {
+                        required property var modelData
+                        visible: !!modelData.diagram
+                        width: row.width; height: visible ? diagramBoard.height + 8 : 0
+                        MiniBoard {
+                            id: diagramBoard; anchors.horizontalCenter: parent.horizontalCenter; y: 4
+                            width: Math.min(220 * root.textScale, row.width - 16); height: width
+                            fen: parent.modelData.diagram || ""; lastMove: parent.modelData.lastMove || ""
+                        }
                     }
                 }
                 Rectangle { width: row.width; height: 1; color: root.lineColor; opacity: .5 }
