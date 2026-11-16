@@ -2,6 +2,7 @@
 
 ## Finales — 16 novembre 2026
 
+- **Exercice de Stoyko** (*Entraînement → Vérifier mes variantes*) : écrivez toutes les variantes que vous calculez depuis une position, puis le moteur juge la fin de chacune — vert si elle tient l'évaluation de départ, orange à moins d'un pion, rouge au-delà — et montre ce qu'il joue lui-même.
 - **QR code de la position** (*Édition → Ouvrir sur un téléphone*, ou le menu de l'échiquier) : visé par l'appareil photo d'un téléphone, il ouvre la position sur l'échiquier d'analyse de Lichess ; le lien se copie aussi. La page HTML exportée porte de même le QR code de la position finale — un lien, rien n'est chargé.
 - **Mats de la bibliothèque** (*Puzzles → Tirer des mats de la bibliothèque*) : les mats en un, deux ou trois coups qui terminent vos parties deviennent des puzzles, quand chaque coup du vainqueur, sauf le dernier, était le seul à forcer le mat — un petit solveur le vérifie, sans moteur.
 - **Probabilités de finale** (onglet *Arbre*) : en finale, combien de parties de la bibliothèque ont atteint le même matériel et comment elles ont fini — Blancs, nulles, Noirs —, quelle que soit la place des pièces.

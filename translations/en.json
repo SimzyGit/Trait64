@@ -1634,5 +1634,17 @@
   "Ouvrir sur un téléphone": "Open on a phone",
   "Ouvrir sur un téléphone (QR)…": "Open on a phone (QR)…",
   "Visez ce code avec l’appareil photo du téléphone : la position s’ouvre sur l’échiquier d’analyse de Lichess.": "Point the phone’s camera at this code: the position opens on Lichess’s analysis board.",
-  "Copier le lien": "Copy the link"
+  "Copier le lien": "Copy the link",
+  "Vérifier mes variantes": "Check my lines",
+  "Vérifier mes variantes (exercice de Stoyko)…": "Check my lines (Stoyko exercise)…",
+  "Écrivez d’abord toutes les variantes que vous calculez depuis la position, sans moteur. Le moteur juge ensuite la fin de chacune : vert si elle tient l’évaluation de départ, orange à moins d’un pion, rouge au-delà.": "First write every line you calculate from the position, without an engine. The engine then judges where each one ends: green if it keeps the starting evaluation, orange within a pawn, red beyond.",
+  "Départ : %1 — le moteur joue %2": "Start: %1 — the engine plays %2",
+  "Le moteur évalue la position de départ…": "The engine is evaluating the starting position…",
+  "Analyse en cours…": "Analysing…",
+  "Relancer": "Run again",
+  "mat": "mate",
+  "pat": "stalemate",
+  "Terminez d’abord l’entraînement en cours.": "Finish the current training first.",
+  "Choisissez d’abord un moteur (Préférences → Moteurs).": "Choose an engine first (Preferences → Engines).",
+  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Write your lines from this position first, then run the check."
 }

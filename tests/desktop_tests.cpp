@@ -273,6 +273,35 @@ int main(int argc, char **argv) {
                 helped.setPreference("assistedAnalysis", false);
             }
             {
+                // L'exercice de Stoyko : deux variantes depuis la position, chacune jugée au
+                // bout par le moteur, et le départ avec le coup du moteur.
+                Controller trainee(dir.path() + "/stoyko");
+                trainee.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH"));
+                trainee.setFen("4k3/8/8/3q4/8/8/8/3QK3 w - - 0 1");
+                trainee.move("d1d5");
+                trainee.navigate(0);
+                trainee.move("d1d2");
+                trainee.navigate(0);
+                trainee.startStoyko();
+                QElapsedTimer wait;
+                wait.start();
+                while (trainee.stoyko()["running"].toBool() && wait.elapsed() < 30000)
+                    QTest::qWait(50);
+                const auto st = trainee.stoyko();
+                const auto evals = st["evals"].toMap();
+                double won = 0, lost = 0;
+                for (const auto &line : st["lines"].toList()) {
+                    const auto l = line.toMap();
+                    (l["text"].toString().contains("Qxd5") ? won : lost) =
+                        evals[l["fen"].toString()].toMap()["score"].toDouble();
+                }
+                check(st["lines"].toList().size() == 2 && evals.contains(st["start"].toString()) && won > 5 &&
+                          lost < won &&
+                          evals[st["start"].toString()].toMap()["best"].toString().contains("Qxd5"),
+                      "Each written line is judged at its end, and the engine's own move is shown");
+                trainee.stopStoyko();
+            }
+            {
                 // Les échiquiers d'une ronde en direct reçoivent chacun l'évaluation du
                 // moteur local, du point de vue des Blancs.
                 Controller watcher(dir.path() + "/live");

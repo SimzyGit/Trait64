@@ -1634,5 +1634,17 @@
   "Ouvrir sur un téléphone": "Abrir en un teléfono",
   "Ouvrir sur un téléphone (QR)…": "Abrir en un teléfono (QR)…",
   "Visez ce code avec l’appareil photo du téléphone : la position s’ouvre sur l’échiquier d’analyse de Lichess.": "Apunte la cámara del teléfono a este código: la posición se abre en el tablero de análisis de Lichess.",
-  "Copier le lien": "Copiar el enlace"
+  "Copier le lien": "Copiar el enlace",
+  "Vérifier mes variantes": "Comprobar mis variantes",
+  "Vérifier mes variantes (exercice de Stoyko)…": "Comprobar mis variantes (ejercicio de Stoyko)…",
+  "Écrivez d’abord toutes les variantes que vous calculez depuis la position, sans moteur. Le moteur juge ensuite la fin de chacune : vert si elle tient l’évaluation de départ, orange à moins d’un pion, rouge au-delà.": "Escriba primero todas las variantes que calcula desde la posición, sin motor. El motor juzga luego el final de cada una: verde si mantiene la evaluación inicial, naranja a menos de un peón, rojo más allá.",
+  "Départ : %1 — le moteur joue %2": "Inicio: %1 — el motor juega %2",
+  "Le moteur évalue la position de départ…": "El motor evalúa la posición inicial…",
+  "Analyse en cours…": "Analizando…",
+  "Relancer": "Volver a lanzar",
+  "mat": "mate",
+  "pat": "ahogado",
+  "Terminez d’abord l’entraînement en cours.": "Termine primero el entrenamiento en curso.",
+  "Choisissez d’abord un moteur (Préférences → Moteurs).": "Elija primero un motor (Preferencias → Motores).",
+  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Escriba primero sus variantes desde esta posición y luego lance la comprobación."
 }

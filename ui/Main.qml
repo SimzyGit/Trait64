@@ -160,6 +160,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Deviner les coups des Noirs"); enabled: !controller.busy; onTriggered: controller.startGuessing(false)}
             MenuItem {text: qsTr("Coup à trouver (question d’entraînement)"); checkable: true; checked: !!controller.state.question; enabled: !controller.state.training && controller.state.node > 0; onTriggered: controller.toggleQuestion()}
             MenuItem {text: qsTr("Répondre aux questions de l’étude"); enabled: !controller.busy; onTriggered: controller.startQuestions()}
+            MenuItem {text: qsTr("Vérifier mes variantes (exercice de Stoyko)…"); onTriggered: stoykoDialog.open()}
             MenuItem {text: qsTr("Réviser la prochaine carte"); enabled: (controller.stats.due||0) > 0; onTriggered: controller.nextDueCard()}
             MenuItem {text: qsTr("Réviser un répertoire…"); onTriggered: repertoiresDialog.open()}
             MenuItem {text: qsTr("Tableau d’entraînement"); onTriggered: win.page = 4}
@@ -962,6 +963,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
+    Stoyko {id:stoykoDialog;objectName:"stoykoDialog";backend:controller}
     PositionQr {id:positionQr;objectName:"positionQrDialog";backend:controller}
     LibraryCharts {id:libraryCharts;objectName:"libraryChartsDialog";backend:controller}
     TournamentFinder {id:tournamentFinder;objectName:"tournamentFinder";backend:controller;crosstable:crosstableDialog}

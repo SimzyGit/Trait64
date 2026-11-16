@@ -483,6 +483,12 @@ class Controller : public QObject {
     Q_INVOKABLE void toggleDiagram();
     // La position courante sur Lichess : son adresse et son QR code, en image SVG.
     Q_INVOKABLE QVariantMap positionQr() const;
+    // L'exercice de Stoyko : les variantes écrites depuis la position courante, la fin de
+    // chacune évaluée par le moteur, et ce que le moteur joue lui-même au départ.
+    Q_PROPERTY(QVariantMap stoyko READ stoyko NOTIFY stoykoChanged)
+    QVariantMap stoyko() const { return stoyko_; }
+    Q_INVOKABLE void startStoyko();
+    Q_INVOKABLE void stopStoyko();
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
     Q_INVOKABLE void finishTraining();
@@ -514,6 +520,7 @@ class Controller : public QObject {
     void savedSearchesChanged();
     void tournamentListChanged();
     void librarySummaryChanged();
+    void stoykoChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -660,6 +667,11 @@ class Controller : public QObject {
     void ensureBroadcasts();
     void liveTick();
     t64::Uci *liveEngine_ = nullptr; // évalue les échiquiers de la ronde, un par un
+    t64::Uci *stoykoEngine_ = nullptr;
+    QVariantMap stoyko_;
+    QStringList stoykoQueue_; // positions à évaluer, la première étant le départ
+    QString stoykoEvaluating_;
+    void stoykoNext();
     QStringList liveQueue_;
     QString liveEvaluating_;
     QVariantMap liveEvals_; // FEN → {score, eval}
