@@ -1584,5 +1584,7 @@
   "Résultats": "Results",
   "Blancs %1 · nulles %2 · Noirs %3 · inachevées %4": "White %1 · draws %2 · Black %3 · unfinished %4",
   "Parties par année": "Games per year",
-  "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 game(s) without an Elo for one of the players."
+  "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 game(s) without an Elo for one of the players.",
+  "Manœuvre d’une pièce (ex. Cf3-d2-f1)": "Piece manoeuvre (e.g. Nf3-d2-f1)",
+  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Unreadable manoeuvre: write the piece then the squares, for example Nf3-d2-f1."
 }

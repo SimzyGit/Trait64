@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "discovery.h"
+#include "move_notation.h"
 #include "sounds.h"
 #include <QDebug>
 #include <QDir>
@@ -986,6 +987,16 @@ int main(int argc, char **argv) {
             check(typed.playTyped("Cg4") && typed.playTyped("d4") && typed.playTyped("Cxf2") &&
                       typed.playTyped("Txf2") && typed.playTyped("Fxf2") == false,
                   "French captures, T for the rook; a bishop that cannot reach is refused");
+            // Une manœuvre se tape comme un coup : lettres françaises ou anglaises, tirets ou espaces.
+            const auto french = t64::parseManeuver("Cf3-d2-f1", t64::FrenchLetters),
+                       english = t64::parseManeuver("Rh1 h3 e3", t64::EnglishLetters),
+                       king = t64::parseManeuver("Re1-e2", t64::FrenchLetters);
+            check(french["piece"] == "N" &&
+                      french["squares"].toStringList() == QStringList{"f3", "d2", "f1"} &&
+                      english["piece"] == "R" && english["squares"].toStringList().size() == 3 &&
+                      king["piece"] == "K" && t64::parseManeuver("f3-d2", 0)["piece"] == "" &&
+                      t64::parseManeuver("Cf3", 1).isEmpty() && t64::parseManeuver("xyz", 0).isEmpty(),
+                  "A manoeuvre reads its piece in the chosen notation and needs two squares");
             typed.setPreference("language", language.isValid() ? language.toString() : QString("fr"));
         }
         {

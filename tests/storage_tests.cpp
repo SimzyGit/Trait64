@@ -659,6 +659,20 @@ int main(int argc, char **argv) {
             }
             check(counted == 6 && kimFirst == 4,
                   "A selection summary counts every matching game by year and result");
+            // Une manœuvre : le cavalier g1-f3-d4-f3, d'autres coups entre les siens.
+            scout.save(t64::parsePgn("[White \"Man\"]\n[Black \"Oeuvre\"]\n[Result \"*\"]\n\n"
+                                     "1. Nf3 d5 2. g3 e5 3. Nd4 e4 4. Nf3 *")
+                           .front());
+            const auto maneuver = [&](const QString &piece, const QStringList &squares) {
+                return scout
+                    .search({}, {}, false, {}, false, {{"maneuverPiece", piece}, {"maneuverSteps", squares}})
+                    .size();
+            };
+            check(maneuver("N", {"g1", "f3", "d4", "f3"}) == 1 && maneuver("", {"f3", "d4"}) == 1,
+                  "A knight manoeuvre is found across other moves");
+            check(maneuver("N", {"f3", "d4", "e6"}) == 0 && maneuver("B", {"f3", "d4"}) == 0 &&
+                      maneuver("P", {"d7", "d5"}) == 4 && maneuver("P", {"d2", "d4"}) == 5,
+                  "The piece and every square must match, pawns included");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

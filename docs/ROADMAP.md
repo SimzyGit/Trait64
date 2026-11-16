@@ -15,7 +15,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Meilleures parties d'une position (par Elo) depuis l'arbre local | ✅ | ✅ | ✅ | ✅ 15 nov. | **D2** |
 | Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✅ 15 nov. : nom, année, joueurs, Elo moyen | D2 |
 | Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✅ 15 nov. | D2 |
-| Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✗ | D3 |
+| Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✅ 16 nov., ligne principale (recherche avancée) | D3 |
 | Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ◐ même structure de pions (filtre de position) ; pas de ressemblance approchée | B/D3 |
 | Classement des finales et clés stratégiques/tactiques | ✅ | — | — | ✗ | D3 |
 | Langage de requêtes (CQL) | — | ✅ | — | ✗ | K |

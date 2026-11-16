@@ -11,17 +11,42 @@ namespace t64 {
 enum Notation { EnglishLetters = 0, FrenchLetters = 1, Figurines = 2 };
 inline QString displaySan(const std::string &san, int notation) {
     QString text = QString::fromStdString(san);
-    if (notation == EnglishLetters) return text;
+    if (notation == EnglishLetters)
+        return text;
     static const QString pieces = "NBRQK", french = "CFTDR";
     static const QStringList figurines{"♘", "♗", "♖", "♕", "♔"};
     for (int i = int(text.size()) - 1; i >= 0; --i) {
-        if (i != 0 && text[i - 1] != '=') continue;
+        if (i != 0 && text[i - 1] != '=')
+            continue;
         const auto piece = pieces.indexOf(text[i]);
-        if (piece < 0) continue;
-        if (notation == Figurines) text.replace(i, 1, figurines[piece]);
-        else text[i] = french[piece];
+        if (piece < 0)
+            continue;
+        if (notation == Figurines)
+            text.replace(i, 1, figurines[piece]);
+        else
+            text[i] = french[piece];
     }
     return text;
+}
+
+// Une manœuvre tapée dans la recherche : « Cf3-d2-f1 », « Nf3 d2 f1 », « f3-d2-f1 ». La
+// pièce, en lettre anglaise (« P » pour un pion, vide pour n'importe laquelle), puis les
+// cases traversées, deux au moins. Rien si le texte ne se lit pas ainsi.
+inline QVariantMap parseManeuver(const QString &typed, int notation) {
+    static const QRegularExpression shape(
+        "^([KQRBNPCFTDkqrbnp])?\\s*([a-h][1-8](?:[\\s,\\-–]*[a-h][1-8])+)$");
+    const auto found = shape.match(typed.trimmed());
+    if (!found.hasMatch())
+        return {};
+    QString piece = found.captured(1).toUpper();
+    static const QString pieces = "NBRQK", french = "CFTDR";
+    if (notation != EnglishLetters && french.contains(piece))
+        piece = pieces[french.indexOf(piece)];
+    QStringList squares;
+    static const QRegularExpression square("[a-h][1-8]");
+    for (auto it = square.globalMatch(found.captured(2)); it.hasNext();)
+        squares << it.next().captured();
+    return {{"piece", piece}, {"squares", squares}};
 }
 
 // Les coups légaux qui répondent à ce que l'on tape au clavier : « Nf3 » ou « Cf3 » selon
@@ -48,7 +73,8 @@ inline QStringList typedMatches(const chess::Board &board, const QString &typed,
     const auto translate = [&](int at, bool promotion) {
         if (notation != EnglishLetters && at >= 0 && at < wanted.size()) {
             const auto index = french.indexOf(wanted[at].toUpper());
-            if (index >= 0 && (promotion || wanted[at].isUpper() || !QStringLiteral("abcdefgh").contains(wanted[at])))
+            if (index >= 0 &&
+                (promotion || wanted[at].isUpper() || !QStringLiteral("abcdefgh").contains(wanted[at])))
                 wanted[at] = pieces[index];
         }
     };
@@ -60,7 +86,8 @@ inline QStringList typedMatches(const chess::Board &board, const QString &typed,
     if (QStringLiteral("nrqk").contains(wanted[0]))
         wanted[0] = wanted[0].toUpper();
     if (wanted.size() > 2 && wanted.back().isLower() && wanted[wanted.size() - 2].isDigit() &&
-        QStringLiteral("nrqb").contains(wanted.back()) && !QRegularExpression("^[a-h][1-8][a-h][1-8]").match(wanted).hasMatch())
+        QStringLiteral("nrqb").contains(wanted.back()) &&
+        !QRegularExpression("^[a-h][1-8][a-h][1-8]").match(wanted).hasMatch())
         wanted.back() = wanted.back().toUpper();
     chess::Movelist moves;
     chess::movegen::legalmoves(moves, board);
@@ -91,12 +118,15 @@ inline CommentParts splitComment(const std::string &raw) {
         if (name == "clk") {
             // 0:02:59.4 -> 2:59 ; 1:05:00 stays 1:05:00.
             auto clock = value.section('.', 0, 0);
-            while (clock.size() > 4 && (clock.startsWith('0') || clock.startsWith(':'))) clock.remove(0, 1);
+            while (clock.size() > 4 && (clock.startsWith('0') || clock.startsWith(':')))
+                clock.remove(0, 1);
             parts.clock = clock;
         } else if (name == "eval") {
             bool ok = false;
             const double pawns = value.toDouble(&ok);
-            parts.eval = value.startsWith('#') ? value : ok ? (pawns > 0 ? "+" : "") + QString::number(pawns, 'f', 2) : value;
+            parts.eval = value.startsWith('#') ? value
+                         : ok                  ? (pawns > 0 ? "+" : "") + QString::number(pawns, 'f', 2)
+                                               : value;
         }
     }
     text.remove(command);
@@ -106,7 +136,9 @@ inline CommentParts splitComment(const std::string &raw) {
 
 inline QVariantList moveRows(const Game &game, int current, int french) {
     QVariantList rows;
-    rows << QVariantMap{{"initial", true}, {"depth", 0}, {"active", current == 0},
+    rows << QVariantMap{{"initial", true},
+                        {"depth", 0},
+                        {"active", current == 0},
                         {"comment", splitComment(game.nodes[0].comment).text}};
     auto entry = [&](int id) {
         const auto &node = game.nodes[id];
@@ -115,14 +147,20 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
         for (int nag : node.nags)
             text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
         const auto parts = splitComment(node.comment);
-        return QVariantMap{{"id", id},         {"parent", node.parent}, {"text", text},       {"active", current == id},
-                           {"comment", parts.text}, {"clock", parts.clock}, {"eval", parts.eval}};
+        return QVariantMap{{"id", id},
+                           {"parent", node.parent},
+                           {"text", text},
+                           {"active", current == id},
+                           {"comment", parts.text},
+                           {"clock", parts.clock},
+                           {"eval", parts.eval}};
     };
     int visited = 0;
     // Each recursive call owns one branch. Pair only its direct mainline child;
     // siblings are emitted as separate blocks after the complete parent row.
     std::function<void(int, int)> line = [&](int id, int depth) {
-        if (depth > 128) return;
+        if (depth > 128)
+            return;
         bool start = true;
         while (id > 0 && visited < 10000) {
             const auto &node = game.nodes[id];
@@ -130,7 +168,7 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
             const int number = board.fullMoveNumber();
             const bool white = board.sideToMove() == chess::Color::WHITE;
             int last = id;
-            QVariantMap row{{"initial", false}, {"depth", depth}, {"number", number},
+            QVariantMap row{{"initial", false},       {"depth", depth},         {"number", number},
                             {"white", QVariantMap()}, {"black", QVariantMap()}, {"start", start}};
             start = false;
             row[white ? "white" : "black"] = entry(id);
@@ -144,15 +182,18 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
             auto variations = [&](int move) {
                 const auto &siblings = game.nodes[game.nodes[move].parent].children;
                 if (!siblings.empty() && siblings[0] == move)
-                    for (size_t k = 1; k < siblings.size(); ++k) line(siblings[k], depth + 1);
+                    for (size_t k = 1; k < siblings.size(); ++k)
+                        line(siblings[k], depth + 1);
             };
             variations(id);
-            if (last != id) variations(last);
+            if (last != id)
+                variations(last);
             const auto &children = game.nodes[last].children;
             id = children.empty() ? -1 : children[0];
         }
     };
-    if (!game.nodes[0].children.empty()) line(game.nodes[0].children[0], 0);
+    if (!game.nodes[0].children.empty())
+        line(game.nodes[0].children[0], 0);
     return rows;
 }
 
@@ -163,7 +204,8 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
     static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
     auto comment = [&](int id, int depth) {
         const auto text = splitComment(game.nodes[id].comment).text;
-        if (text.isEmpty()) return false;
+        if (text.isEmpty())
+            return false;
         tokens << QVariantMap{{"kind", "comment"}, {"id", id}, {"depth", depth}, {"text", text}};
         return true;
     };
@@ -178,11 +220,13 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
             QString text = displaySan(node.san, french);
             for (int nag : node.nags)
                 text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
-            const QString number = white ? QString::number(board.fullMoveNumber()) + "."
-                                   : numbered ? QString::number(board.fullMoveNumber()) + "…" : QString();
+            const QString number = white      ? QString::number(board.fullMoveNumber()) + "."
+                                   : numbered ? QString::number(board.fullMoveNumber()) + "…"
+                                              : QString();
             const auto parts = splitComment(node.comment);
-            tokens << QVariantMap{{"kind", "move"}, {"id", id},       {"depth", depth},          {"number", number},
-                                  {"text", text},   {"active", current == id}, {"clock", parts.clock}, {"eval", parts.eval}};
+            tokens << QVariantMap{{"kind", "move"},       {"id", id},          {"depth", depth},
+                                  {"number", number},     {"text", text},      {"active", current == id},
+                                  {"clock", parts.clock}, {"eval", parts.eval}};
             numbered = comment(id, depth);
             const auto &siblings = game.nodes[node.parent].children;
             if (depth < 128 && siblings.front() == id)
@@ -195,7 +239,8 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
             id = node.children.empty() ? -1 : node.children.front();
         }
     };
-    if (!game.nodes[0].children.empty()) line(game.nodes[0].children.front(), 0);
+    if (!game.nodes[0].children.empty())
+        line(game.nodes[0].children.front(), 0);
     return tokens;
 }
 } // namespace t64

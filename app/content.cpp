@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "hardware.h"
+#include "move_notation.h"
 #include "syzygy.h"
 #include "syzygy_download.h"
 #include <QDir>
@@ -123,6 +124,18 @@ void Controller::searchLibrary(const QString &query, const QString &result, bool
     positionFilter_ = position;
     trashFilter_ = trash;
     advancedFilters_ = openingFilters(filters);
+    // La manœuvre se lit ici, où l'on sait si « C » et « R » sont des lettres françaises.
+    advancedFilters_.remove("maneuverSteps");
+    if (const auto text = filters.value("maneuver").toString().trimmed(); !text.isEmpty()) {
+        const auto parsed = t64::parseManeuver(text, frenchNotation());
+        if (parsed.isEmpty()) {
+            emit message(tr("Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1."),
+                         true);
+            return;
+        }
+        advancedFilters_["maneuverPiece"] = parsed["piece"];
+        advancedFilters_["maneuverSteps"] = parsed["squares"];
+    }
     requestLibrarySearch();
 }
 

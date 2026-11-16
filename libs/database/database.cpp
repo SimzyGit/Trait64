@@ -472,6 +472,24 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         statement += " AND g.pgn GLOB ?";
         args << "*$" + QString::number(nag) + "[^0-9]*";
     }
+    // Une manœuvre : la même pièce passe par chaque case, coup après coup du même camp,
+    // dans la ligne principale (d'autres coups peuvent s'intercaler).
+    if (const auto steps = filters.value("maneuverSteps").toStringList();
+        steps.size() >= 2 && steps.size() <= 8) {
+        const auto piece = filters.value("maneuverPiece").toString();
+        const QString san = piece.isEmpty() ? QString("*") : piece == "P" ? QString("[a-h]*") : piece + "*";
+        QString join = "SELECT p0.game_id FROM positions p0";
+        QStringList where;
+        for (int i = 0; i + 1 < steps.size(); ++i) {
+            const auto p = "p" + QString::number(i);
+            if (i > 0)
+                join += " JOIN positions " + p + " ON " + p + ".game_id=p0.game_id AND " + p + ".ply>p" +
+                        QString::number(i - 1) + ".ply AND (" + p + ".ply-p0.ply)%2=0";
+            where << p + ".uci GLOB ?" << p + ".san GLOB ?";
+            args << steps[i] + steps[i + 1] + "*" << san;
+        }
+        statement += " AND g.id IN(" + join + " WHERE " + where.join(" AND ") + ")";
+    }
     if (filters.value("annotated").toBool())
         statement += " AND instr(g.pgn,'{')>0";
     if (!filters.value("material").toString().isEmpty()) {

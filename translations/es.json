@@ -1584,5 +1584,7 @@
   "Résultats": "Resultados",
   "Blancs %1 · nulles %2 · Noirs %3 · inachevées %4": "Blancas %1 · tablas %2 · Negras %3 · sin terminar %4",
   "Parties par année": "Partidas por año",
-  "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 partida(s) sin Elo para uno de los jugadores."
+  "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 partida(s) sin Elo para uno de los jugadores.",
+  "Manœuvre d’une pièce (ex. Cf3-d2-f1)": "Maniobra de una pieza (p. ej. Cf3-d2-f1)",
+  "Manœuvre illisible : écrivez la pièce puis les cases, par exemple Cf3-d2-f1.": "Maniobra ilegible: escriba la pieza y luego las casillas, por ejemplo Cf3-d2-f1."
 }
