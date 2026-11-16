@@ -140,6 +140,8 @@ class Database {
     // Les médailles d'une partie, comme dans ChessBase : un bit par médaille, voir
     // Main.qml (meilleure partie, nouveauté, sacrifice…).
     void setMedals(qint64 id, int medals);
+    // Les parties qui ont atteint ce matériel, par résultat : les probabilités de finale.
+    QVariantMap materialResults(qint64 code);
     void trash(qint64 id, bool value);
     void collection(qint64 id, const QString &value);
     // Étiquette chaque partie avec le nom de famille de son ouverture, d'après la table

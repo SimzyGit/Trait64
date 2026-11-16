@@ -785,6 +785,22 @@ QVariantList Database::explorer(const QString &position) const {
                            {"white", q.value(3)}, {"draw", q.value(4)}, {"black", q.value(5)}};
     return out;
 }
+QVariantMap Database::materialResults(qint64 code) {
+    QSqlQuery q(db_);
+    q.prepare(
+        "SELECT g.result,COUNT(*) FROM game_material m JOIN games g ON g.id=m.game_id WHERE m.material=? "
+        "AND g.deleted=0 GROUP BY g.result");
+    q.addBindValue(code);
+    run(q);
+    qint64 white = 0, draws = 0, black = 0;
+    while (q.next()) {
+        const auto result = q.value(0).toString();
+        (result == "1-0"   ? white
+         : result == "0-1" ? black
+                           : draws) += result == "*" ? 0 : q.value(1).toLongLong();
+    }
+    return {{"games", white + draws + black}, {"white", white}, {"draws", draws}, {"black", black}};
+}
 void Database::setMedals(qint64 id, int medals) {
     QSqlQuery q(db_);
     q.prepare("UPDATE games SET medals=? WHERE id=?");

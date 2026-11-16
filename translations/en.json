@@ -1625,5 +1625,6 @@
   "Deux tours contre deux tours": "Two rooks vs two rooks",
   "Dame contre dame": "Queen vs queen",
   "Dame contre tour": "Queen vs rook",
-  "Type de finale inconnu.": "Unknown endgame type."
+  "Type de finale inconnu.": "Unknown endgame type.",
+  "Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %": "This material in the library: %1 game(s) · White %2 % · draws %3 % · Black %4 %"
 }

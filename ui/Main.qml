@@ -535,7 +535,17 @@ objectName:"analysisSplit"
                                     ListView {id:miniExplorer;objectName:"openingTree";model:controller.openings;clip:true;spacing:0
                                         // Les parties qui passent par ici, les mieux classées d'abord : la
                                         // bibliothèque filtrée sur la position, triée par Elo.
-                                        footer:TButton {objectName:"bestGamesHere";width:miniExplorer.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
+                                        // En finale, le score de ce matériel dans la bibliothèque, quelle
+                                        // que soit la place des pièces.
+                                        footer:Column {width:miniExplorer.width
+                                            Label {objectName:"endgameOdds";width:parent.width;padding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var odds:controller.state.endgame||({})
+                                                visible:(odds.games||0)>0
+                                                text:qsTr("Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %").arg(odds.games||0)
+                                                    .arg(Math.round(100*(odds.white||0)/Math.max(1,odds.games||0))).arg(Math.round(100*(odds.draws||0)/Math.max(1,odds.games||0)))
+                                                    .arg(Math.round(100*(odds.black||0)/Math.max(1,odds.games||0)))}
+                                            TButton {objectName:"bestGamesHere";width:parent.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
+                                        }
                                         header:RowLayout {width:miniExplorer.width;spacing:8
                                             Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {text:qsTr("Parties");Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}

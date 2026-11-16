@@ -31,6 +31,7 @@
 #include <QtConcurrent>
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <functional>
 #include <thread>
 
@@ -630,6 +631,13 @@ void Controller::refresh(bool content) {
         visit(game_.nodes[0].children[0], 0);
     try {
         openings_ = db_->explorer(s(current.fen));
+        // En finale, ce qu'est devenu ce même matériel dans la bibliothèque. Au-delà de six
+        // pièces hors pions et rois, ce n'est plus une finale et la requête serait vaine.
+        const auto placement = current.fen.substr(0, current.fen.find(' '));
+        const auto pieces = std::count_if(placement.begin(), placement.end(),
+                                          [](char c) { return std::strchr("NBRQnbrq", c) && c; });
+        if (pieces <= 6)
+            state_["endgame"] = db_->materialResults(t64::Database::materialCode(current.fen));
     } catch (const std::exception &e) {
         fail(e);
     }
