@@ -34,6 +34,27 @@ template <class F> void rejects(F f) {
 #include "tactics_cases.h"
 int main() {
     {
+        // Mats forcés : la tour mate en un, le roi et la tour en deux de deux façons ; un
+        // budget trop court ne conclut rien.
+        const auto mates = [](const char *fen, int moves, long budget = 400000) {
+            std::vector<std::string> found;
+            const auto list = t64::forcedMates(chess::Board(fen), moves, budget);
+            if (!list)
+                return std::vector<std::string>{"?"};
+            for (const auto &move : *list)
+                found.push_back(chess::uci::moveToUci(move));
+            std::sort(found.begin(), found.end());
+            return found;
+        };
+        check(mates("k7/8/1K6/8/8/8/8/6R1 w - - 0 1", 1) == std::vector<std::string>{"g1g8"},
+              "The rook mates in one");
+        check(mates("k7/8/2K5/8/8/8/8/7R w - - 0 1", 1).empty() &&
+                  mates("k7/8/2K5/8/8/8/8/7R w - - 0 1", 2) == std::vector<std::string>{"c6b6", "c6c7"},
+              "King and rook mate in two by either king move, not in one");
+        check(mates("k7/8/2K5/8/8/8/8/7R w - - 0 1", 2, 10) == std::vector<std::string>{"?"},
+              "A search over its budget concludes nothing");
+    }
+    {
         // Pièces en prise : après 1.e4 d5, le pion e4 n'est pas défendu ; d5 l'est par la
         // dame, la prise ne gagne rien. Après 1.e4 e5 2.Nf3, le pion e5 tombe.
         const auto hanging = [](const char *fen, chess::Color side) {

@@ -1626,5 +1626,9 @@
   "Dame contre dame": "Dama contra dama",
   "Dame contre tour": "Dama contra torre",
   "Type de finale inconnu.": "Tipo de final desconocido.",
-  "Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %": "Este material en la biblioteca: %1 partida(s) · Blancas %2 % · tablas %3 % · Negras %4 %"
+  "Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %": "Este material en la biblioteca: %1 partida(s) · Blancas %2 % · tablas %3 % · Negras %4 %",
+  "Mats de la bibliothèque (%1)": "Mates de la biblioteca (%1)",
+  "Tirer des mats de la bibliothèque": "Extraer mates de la biblioteca",
+  "Les mats en un, deux ou trois coups qui terminent vos parties, quand chaque coup du vainqueur était le seul à forcer le mat.": "Los mates en una, dos o tres jugadas que terminan sus partidas, cuando cada jugada del ganador era la única que forzaba el mate.",
+  "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque ».": "Aún no hay mates extraídos de la biblioteca: use «Extraer mates de la biblioteca»."
 }

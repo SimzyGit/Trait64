@@ -209,6 +209,8 @@ class Controller : public QObject {
     Q_INVOKABLE void puzzleHint();
     Q_INVOKABLE void importPuzzles(const QString &url, int max, int minRating, int maxRating);
     Q_INVOKABLE void createMistakePuzzles();
+    // Des mats en un, deux ou trois coups tirés des fins de parties de la bibliothèque.
+    Q_INVOKABLE void harvestLibraryMates();
     QVariantList cards() const { return cards_; }
     QVariantList engineOptions() const {
         return settings_.value("enginePath").toString() == engine_.executable() ? engine_.options()

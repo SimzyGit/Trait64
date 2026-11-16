@@ -295,4 +295,57 @@ std::string tacticalAnnotations(const std::vector<TacticalFact> &facts) {
     const auto a = directive("cal", arrows), s = directive("csl", squares);
     return a + (!a.empty() && !s.empty() ? " " : "") + s;
 }
+namespace {
+// Vrai si, après le coup qui a mené à `board` (le défenseur au trait), toute défense
+// laisse un mat en `moves` coups au plus.
+bool mateAfter(chess::Board &board, int moves, long &budget);
+// Vrai si le camp au trait mate en `moves` coups au plus.
+bool mates(chess::Board &board, int moves, long &budget) {
+    chess::Movelist list;
+    chess::movegen::legalmoves(list, board);
+    for (const auto &move : list) {
+        board.makeMove(move);
+        const bool found = mateAfter(board, moves, budget);
+        board.unmakeMove(move);
+        if (found)
+            return true;
+        if (budget < 0)
+            return false;
+    }
+    return false;
+}
+bool mateAfter(chess::Board &board, int moves, long &budget) {
+    --budget;
+    chess::Movelist replies;
+    chess::movegen::legalmoves(replies, board);
+    if (replies.empty())
+        return board.inCheck(); // mat, ou pat
+    if (moves <= 1 || budget < 0)
+        return false;
+    for (const auto &reply : replies) {
+        board.makeMove(reply);
+        const bool still = mates(board, moves - 1, budget);
+        board.unmakeMove(reply);
+        if (!still)
+            return false;
+    }
+    return true;
+}
+} // namespace
+
+std::optional<std::vector<chess::Move>> forcedMates(const chess::Board &start, int moves, long budget) {
+    auto board = start;
+    chess::Movelist list;
+    chess::movegen::legalmoves(list, board);
+    std::vector<chess::Move> found;
+    for (const auto &move : list) {
+        board.makeMove(move);
+        if (mateAfter(board, std::clamp(moves, 1, 3), budget))
+            found.push_back(move);
+        board.unmakeMove(move);
+        if (budget < 0)
+            return std::nullopt;
+    }
+    return found;
+}
 } // namespace t64

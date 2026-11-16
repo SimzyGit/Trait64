@@ -2,6 +2,7 @@
 // Puzzle training: bank import, selection near the player's rating, solving and rating.
 #include "puzzles.h"
 #include "controller.h"
+#include "tactics.h"
 #include <QCryptographicHash>
 #include <QtConcurrent>
 #include <cmath>
@@ -49,11 +50,13 @@ void Controller::startPuzzle(const QString &theme, const QString &source) {
         auto next = db_->duePuzzle(theme, source);
         if (next.isEmpty())
             next = db_->nextPuzzle(rating, 150, theme, source);
-        need(!next.isEmpty(), source == "mine"
-                                  ? "Aucun puzzle tiré de vos parties : analysez une partie (Bilan), "
-                                    "puis « Créer des puzzles depuis les erreurs »."
-                                  : "Aucun puzzle disponible : importez la base Lichess, ou élargissez "
-                                    "le thème.");
+        need(!next.isEmpty(),
+             source == "library"
+                 ? "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque »."
+             : source == "mine" ? "Aucun puzzle tiré de vos parties : analysez une partie (Bilan), "
+                                  "puis « Créer des puzzles depuis les erreurs »."
+                                : "Aucun puzzle disponible : importez la base Lichess, ou élargissez "
+                                  "le thème.");
         if (!puzzleId_) {
             beforeTraining_ = game_;
             beforeNode_ = node_;
@@ -77,7 +80,9 @@ void Controller::startPuzzle(const QString &theme, const QString &source) {
         selected_ = -1;
         flipped_ = game_.boardAt(0).sideToMove() == chess::Color::BLACK;
         game_.tags["White"] = QString("Puzzle %1").arg(next["rating"].toInt()).toStdString();
-        game_.tags["Black"] = next["source"] == "mine" ? "Mes erreurs" : "Lichess";
+        game_.tags["Black"] = next["source"] == "mine"      ? "Mes erreurs"
+                              : next["source"] == "library" ? "Bibliothèque"
+                                                            : "Lichess";
         forgetEngineLines();
         emit engineChanged();
         puzzleClock_.start();
@@ -180,6 +185,68 @@ void Controller::importPuzzles(const QString &url, int max, int minRating, int m
                 r.duplicates = read - r.count;
             } catch (const std::exception &e) {
                 r.canceled = canceled->load();
+                r.error = QString::fromUtf8(e.what());
+            }
+            return r;
+        }));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+// Les mats qui terminent les parties de la bibliothèque, en un, deux ou trois coups. Chaque
+// coup du vainqueur, sauf le dernier où tout mat est accepté, doit être le seul à forcer
+// le mat : un puzzle à deux solutions refuserait la bonne. Le solveur le vérifie.
+void Controller::harvestLibraryMates() {
+    try {
+        need(!busy_, "Un traitement est déjà en cours.");
+        busy_ = true;
+        cancelTask_->store(false);
+        taskProgress_->store(0);
+        taskPoll_.start();
+        emit busyChanged();
+        importer_.setFuture(QtConcurrent::run([databasePath = db_->path(), canceled = cancelTask_,
+                                               progress = taskProgress_] {
+            ImportResult r;
+            r.operation = "puzzles";
+            try {
+                t64::Database database(databasePath);
+                std::vector<t64::Puzzle> rows;
+                int read = 0;
+                for (const auto &game : database.gamesEndingInMate(20000)) {
+                    if (canceled->load() || rows.size() >= 2000)
+                        break;
+                    progress->store(++read);
+                    const auto line = game.mainline();
+                    for (int moves = 1; moves <= 3; ++moves) {
+                        const int plies = 2 * moves - 1, start = int(line.size()) - 1 - plies;
+                        if (start < 0)
+                            break;
+                        bool unique = true;
+                        for (int k = 0; k + 1 < plies && unique; k += 2) {
+                            const auto found = t64::forcedMates(game.boardOf(line[start + k]), moves - k / 2);
+                            unique = found && found->size() == 1 &&
+                                     chess::uci::moveToUci(found->front(), false) ==
+                                         game.nodes[line[start + k + 1]].uci;
+                        }
+                        if (!unique)
+                            continue;
+                        QStringList solution;
+                        for (int i = 1; i <= plies; ++i)
+                            solution << QString::fromStdString(game.nodes[line[start + i]].uci);
+                        const auto fen = QString::fromStdString(game.nodes[line[start]].fen);
+                        const auto ref =
+                            "library:" + QCryptographicHash::hash((fen + ' ' + solution.join(' ')).toUtf8(),
+                                                                  QCryptographicHash::Sha1)
+                                             .toHex();
+                        rows.push_back({ref, fen, solution.join(' '), QString("mate mateIn%1").arg(moves),
+                                        "library", 900 + 400 * (moves - 1), 0});
+                    }
+                }
+                r.count = database.addPuzzles(rows);
+                r.duplicates = int(rows.size()) - r.count;
+                r.canceled = canceled->load();
+            } catch (const std::exception &e) {
                 r.error = QString::fromUtf8(e.what());
             }
             return r;

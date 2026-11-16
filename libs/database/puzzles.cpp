@@ -152,6 +152,7 @@ void Database::recordPuzzle(qint64 id, bool success, double seconds, int ratingA
 QVariantMap Database::puzzleStats() const {
     QSqlQuery q(db_);
     q.prepare("SELECT (SELECT COUNT(*) FROM puzzles),(SELECT COUNT(*) FROM puzzles WHERE source='mine'),"
+              "(SELECT COUNT(*) FROM puzzles WHERE source='library'),"
               "(SELECT COUNT(DISTINCT puzzle) FROM puzzle_attempts WHERE success=1),"
               "(SELECT COUNT(*) FROM puzzle_attempts WHERE date(at,'localtime')=date('now','localtime')),"
               "(SELECT COALESCE(AVG(success),0) FROM (SELECT success FROM puzzle_attempts ORDER BY id DESC "
@@ -174,12 +175,9 @@ QVariantMap Database::puzzleStats() const {
     for (auto it = tally.cbegin(); it != tally.cend(); ++it)
         themes.append(QVariantMap{
             {"tag", it.key()}, {"attempts", it->first}, {"success", qRound(100.0 * it->second / it->first)}});
-    return {{"total", q.value(0)},
-            {"mine", q.value(1)},
-            {"solved", q.value(2)},
-            {"today", q.value(3)},
-            {"recentSuccess", qRound(q.value(4).toDouble() * 100)},
-            {"themes", themes},
-            {"due", duePuzzles()}};
+    return {{"total", q.value(0)},   {"mine", q.value(1)},
+            {"library", q.value(2)}, {"solved", q.value(3)},
+            {"today", q.value(4)},   {"recentSuccess", qRound(q.value(5).toDouble() * 100)},
+            {"themes", themes},      {"due", duePuzzles()}};
 }
 } // namespace t64

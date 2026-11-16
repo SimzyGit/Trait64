@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "game.h"
+#include <optional>
 namespace t64 {
 enum class TacticalKind {
     Fork,
@@ -49,4 +50,9 @@ int offeredMaterial(const chess::Board &before, const chess::Move &move);
 int bestCaptureGain(const chess::Board &board);
 // PGN graphical annotations on the resulting position. No arrows through blockers.
 std::string tacticalAnnotations(const std::vector<TacticalFact> &facts);
+// Les coups du camp au trait qui forcent le mat en `moves` coups au plus (de 1 à 3), quelle
+// que soit la défense. `budget` borne le nombre de positions examinées : au-delà, rien
+// n'est sûr et la réponse est `std::nullopt`.
+std::optional<std::vector<chess::Move>> forcedMates(const chess::Board &board, int moves,
+                                                    long budget = 400000);
 } // namespace t64

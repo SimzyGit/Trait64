@@ -142,6 +142,8 @@ class Database {
     void setMedals(qint64 id, int medals);
     // Les parties qui ont atteint ce matériel, par résultat : les probabilités de finale.
     QVariantMap materialResults(qint64 code);
+    // Les dernières parties (au plus `limit`) dont la ligne principale finit sur un mat.
+    std::vector<Game> gamesEndingInMate(int limit) const;
     void trash(qint64 id, bool value);
     void collection(qint64 id, const QString &value);
     // Étiquette chaque partie avec le nom de famille de son ouverture, d'après la table

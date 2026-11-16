@@ -2,6 +2,7 @@
 
 ## Finales — 16 novembre 2026
 
+- **Mats de la bibliothèque** (*Puzzles → Tirer des mats de la bibliothèque*) : les mats en un, deux ou trois coups qui terminent vos parties deviennent des puzzles, quand chaque coup du vainqueur, sauf le dernier, était le seul à forcer le mat — un petit solveur le vérifie, sans moteur.
 - **Probabilités de finale** (onglet *Arbre*) : en finale, combien de parties de la bibliothèque ont atteint le même matériel et comment elles ont fini — Blancs, nulles, Noirs —, quelle que soit la place des pièces.
 - **Recherche par finale atteinte** (*Recherche avancée → Finale atteinte*) : pions seuls, cavalier contre fou, tour contre tour, tour et pièce mineure contre tour, dame contre tour… D'après le matériel de chaque camp au cours de la partie, pions à part, quelle que soit la couleur.
 

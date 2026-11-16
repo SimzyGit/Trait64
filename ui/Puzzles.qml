@@ -58,15 +58,22 @@ TDialog {
                 Label { text: qsTr("Origine") }
                 TComboBox {
                     id: source; objectName: "puzzleSource"; Layout.fillWidth: true
-                    model: [qsTr("Toutes"), qsTr("Base Lichess"), qsTr("Mes erreurs (%1)").arg(root.state.mine || 0)]
+                    model: [qsTr("Toutes"), qsTr("Base Lichess"), qsTr("Mes erreurs (%1)").arg(root.state.mine || 0),
+                            qsTr("Mats de la bibliothèque (%1)").arg(root.state.library || 0)]
                 }
             }
             TButton {
                 objectName: "startPuzzle"; text: qsTr("Commencer"); accent: true; enabled: !root.backend.busy
                 onClicked: {
-                    root.backend.startPuzzle(root.themes[theme.currentIndex].tag, ["", "lichess", "mine"][source.currentIndex])
+                    root.backend.startPuzzle(root.themes[theme.currentIndex].tag, ["", "lichess", "mine", "library"][source.currentIndex])
                     if (root.backend.puzzles.active) root.close()
                 }
+            }
+            TButton {
+                objectName: "harvestMates"; text: qsTr("Tirer des mats de la bibliothèque"); enabled: !root.backend.busy
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Les mats en un, deux ou trois coups qui terminent vos parties, quand chaque coup du vainqueur était le seul à forcer le mat.")
+                onClicked: root.backend.harvestLibraryMates()
             }
             Label {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText

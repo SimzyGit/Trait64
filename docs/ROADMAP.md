@@ -61,7 +61,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
 |---|---|---|---|---|---|
 | Retransmissions en direct : échiquiers, barre d'éval par échiquier, classement | ✅ payant | — | ✅ | ✅ 16 nov. : échiquiers, pendules, barre d’éval du moteur local par échiquier, suivi dans l’analyse | **E1** |
-| Calcul de variantes (exercice de Stoyko), mat en N | — | ✅ | — | ◐ puzzles | F2 |
+| Calcul de variantes (exercice de Stoyko), mat en N | — | ✅ | — | ◐ puzzles ; mats en 1, 2 et 3 tirés de la bibliothèque ✅ 16 nov. ; pas d'exercice de Stoyko | F2 |
 | Récolter du matériel d'entraînement d'une base entière | ✅ | — | — | ◐ depuis vos erreurs | F3 |
 | Correspondance (Xfcc) | ✅ | ✅ | — | ✗ | D3 |
 | Échiquiers électroniques (DGT) | ✅ | ✅ | — | ✗ | K |

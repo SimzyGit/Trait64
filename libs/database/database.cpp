@@ -337,6 +337,27 @@ int Database::importGames(const std::vector<Game> &games, const std::function<bo
     }
     return stats()["games"].toInt() - before;
 }
+std::vector<Game> Database::gamesEndingInMate(int limit) const {
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare("SELECT pgn FROM games WHERE deleted=0 AND pgn LIKE '%#%' ORDER BY id DESC LIMIT ?");
+    q.addBindValue(limit);
+    run(q);
+    std::vector<Game> found;
+    while (q.next()) {
+        try {
+            auto games = parsePgn(q.value(0).toString().toStdString());
+            if (games.size() != 1 || games.front().chess960)
+                continue;
+            const auto line = games.front().mainline();
+            const auto &san = games.front().nodes[line.back()].san;
+            if (line.size() > 1 && !san.empty() && san.back() == '#')
+                found.push_back(std::move(games.front()));
+        } catch (const std::exception &) {
+        }
+    }
+    return found;
+}
 Game Database::load(qint64 id) const {
     QSqlQuery q(db_);
     q.prepare("SELECT pgn FROM games WHERE id=?");

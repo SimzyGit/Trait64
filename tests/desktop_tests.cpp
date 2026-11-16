@@ -473,6 +473,25 @@ int main(int argc, char **argv) {
                   "Tournament test leaves no profile behind");
         }
         {
+            // Des mats tirés de la bibliothèque : le mat du berger en un coup ; 1...e5 n'est
+            // pas le seul coup qui mate en deux (1...e6 aussi), il n'en fait pas un.
+            Controller c(dir.path() + "/harvest");
+            for (const auto *uci : {"f2f3", "e7e5", "g2g4", "d8h4"})
+                c.move(uci);
+            c.saveGame();
+            c.harvestLibraryMates();
+            QElapsedTimer wait;
+            wait.start();
+            while (c.busy() && wait.elapsed() < 20000)
+                QTest::qWait(10);
+            check(c.puzzles()["library"].toInt() == 1, "The library's final mate becomes a single puzzle");
+            c.startPuzzle("mateIn1", "library");
+            check(c.puzzles()["active"].toBool(), "A library mate starts like any puzzle");
+            c.move("d8h4");
+            check(c.state()["trainingComplete"].toBool(), "Playing the mate solves it");
+            c.finishTraining();
+        }
+        {
             Controller c(dir.path() + "/puzzles");
             QFile csv(dir.path() + "/puzzles.csv");
             check(csv.open(QIODevice::WriteOnly), "Puzzle file written");
