@@ -6,6 +6,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 namespace t64 {
 namespace {
@@ -41,6 +42,7 @@ QVariantMap Database::player(const QString &name) const {
     run(q);
     int games = 0, wins = 0, draws = 0, losses = 0, unfinished = 0, whiteGames = 0, blackGames = 0,
         rating = 0;
+    qint64 totalPlies = 0;
     QMap<QString, QVariantMap> openings;
     QVariantList recent, eloHistory;
     QHash<qint64, bool> colourOf;   // game id -> played white
@@ -67,6 +69,7 @@ QVariantMap Database::player(const QString &name) const {
             ++unfinished;
         if (!rating)
             rating = q.value(white ? 5 : 6).toInt();
+        totalPlies += q.value(8).toInt();
         const qint64 id = q.value(7).toLongLong();
         colourOf.insert(id, white);
         const bool finished = won || lost || result == "1/2-1/2";
@@ -104,6 +107,47 @@ QVariantMap Database::player(const QString &name) const {
     });
     while (weakest.size() > 5)
         weakest.removeLast();
+    // Le style, d'après la ligne principale : parties décisives, longueur, échecs donnés et
+    // prises par partie, roques opposés. Des tendances à lire ensemble, pas un verdict.
+    QVariantMap style;
+    if (games) {
+        QSqlQuery traits(db_);
+        traits.prepare(
+            "SELECT p.game_id,p.ply%2,SUM(instr(p.san,'+')>0 OR instr(p.san,'#')>0),SUM(instr(p.san,"
+            "'x')>0),MAX(p.san GLOB 'O-O' OR p.san GLOB 'O-O[+#]'),MAX(p.san GLOB 'O-O-O*') FROM "
+            "positions p JOIN games g ON g.id=p.game_id WHERE g.deleted=0 AND (g.white=? OR g.black=?) "
+            "AND p.san<>'' GROUP BY p.game_id,p.ply%2");
+        traits.addBindValue(name);
+        traits.addBindValue(name);
+        run(traits);
+        struct Side {
+            int checks = 0, captures = 0;
+            bool shortCastle = false, longCastle = false;
+        };
+        QHash<qint64, std::array<Side, 2>> sides;
+        while (traits.next())
+            sides[traits.value(0).toLongLong()][traits.value(1).toInt()] = {
+                traits.value(2).toInt(), traits.value(3).toInt(), traits.value(4).toBool(),
+                traits.value(5).toBool()};
+        double checks = 0, captures = 0;
+        int opposite = 0, measured = 0;
+        for (auto it = sides.cbegin(); it != sides.cend(); ++it) {
+            if (!colourOf.contains(it.key()))
+                continue;
+            const auto &mine = it.value()[colourOf[it.key()] ? 0 : 1],
+                       &theirs = it.value()[colourOf[it.key()] ? 1 : 0];
+            ++measured;
+            checks += mine.checks;
+            captures += mine.captures;
+            opposite += (mine.shortCastle && theirs.longCastle) || (mine.longCastle && theirs.shortCastle);
+        }
+        const int finished = games - unfinished;
+        style = {{"decisive", finished ? qRound(100. * (wins + losses) / finished) : 0},
+                 {"averageMoves", qRound(double(totalPlies) / games / 2)},
+                 {"checks", measured ? qRound(10 * checks / measured) / 10. : 0},
+                 {"captures", measured ? qRound(10 * captures / measured) / 10. : 0},
+                 {"oppositeCastling", measured ? qRound(100. * opposite / measured) : 0}};
+    }
     // The first six plies of every game, grouped into the lines the player actually reaches.
     QHash<qint64, QStringList> starts;
     QSqlQuery moves(db_);
@@ -189,6 +233,7 @@ QVariantMap Database::player(const QString &name) const {
     }
     return {{"name", name},
             {"links", links},
+            {"style", style},
             {"games", games},
             {"wins", wins},
             {"draws", draws},

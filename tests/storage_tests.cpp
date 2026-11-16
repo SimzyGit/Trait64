@@ -649,6 +649,12 @@ int main(int argc, char **argv) {
             check(links["lichess"] == "https://lichess.org/@/Kim" && !links.contains("chesscom") &&
                       links["fide"] == "https://ratings.fide.com/profile/12345678",
                   "A Lichess game gives the account link, a FIDE number the FIDE profile");
+            // Le style de Kim : ses cinq parties finies sont décisives ; la seule prise (cxd4)
+            // est de l'adversaire, aucun roque.
+            const auto style = scout.player("Kim")["style"].toMap();
+            check(style["averageMoves"].toInt() > 0 && style["decisive"].toInt() == 100 &&
+                      style["captures"].toDouble() == 0 && style["oppositeCastling"].toInt() == 0,
+                  "A player's style counts decisive games and castling sides");
             // Le bilan d'une sélection : groupé par année, résultat et tranche d'Elo moyen.
             qint64 counted = 0, kimFirst = 0;
             for (const auto &row : scout.search("Kim", {}, false, {}, false, {{"summary", true}})) {

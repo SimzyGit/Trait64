@@ -1610,5 +1610,7 @@
   "Le coup à trouver était %1.": "The move to find was %1.",
   "Questions terminées : %1 point(s) sur %2.": "Questions finished: %1 point(s) out of %2.",
   "Cette étude n’a pas de question d’entraînement : marquez d’abord un coup à trouver.": "This study has no training question: mark a move to find first.",
-  "Diagramme après ce coup": "Diagram after this move"
+  "Diagramme après ce coup": "Diagram after this move",
+  "Style": "Style",
+  "%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties": "%1 % decisive games · %2 moves on average · %3 check(s) and %4 capture(s) per game · opposite castling in %5 % of games"
 }

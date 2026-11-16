@@ -1,7 +1,8 @@
 # Changements
 
-## Questions d'entraînement, diagrammes — 16 novembre 2026
+## Questions d'entraînement, diagrammes, style — 16 novembre 2026
 
+- **Style d'un joueur** (page Joueurs) : la part de parties décisives, la longueur moyenne, les échecs donnés et les prises par partie, les roques opposés — d'après la ligne principale de ses parties.
 - **Diagrammes dans la notation** (clic droit sur un coup → *Diagramme après ce coup*) : un échiquier en vignette s'insère après le coup, en table comme en notation continue. Il s'écrit `$220` dans le PGN, le signe de ChessBase, et reste quand on change le symbole du coup.
 - **Questions d'entraînement dans une étude** (*Entraînement → Coup à trouver*, puis *Répondre aux questions de l'étude*) : marquez les coups de la ligne principale à faire trouver ; la partie se rejoue seule, commentaires compris, et s'arrête avant chacun d'eux. Trois essais par question, pour 3, 2 puis 1 point ; « Montrer le coup » le donne pour zéro. La marque s'écrit `[%tqu 1]` dans le PGN, comme les questions de ChessBase.
 

@@ -44,6 +44,13 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                     }
                 }
                 Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+qsTr(" avec les Blancs · ")+(root.profile.blackGames||0)+qsTr(" avec les Noirs · ")+(root.profile.unfinished||0)+qsTr(" inachevées");wrapMode:Text.WordWrap;x:20;width:Math.max(1,profileBody.width-20);color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                // Le style en quelques chiffres, d'après la ligne principale de ses parties.
+                Label {text:qsTr("Style");visible:!!(root.profile.style||{}).averageMoves;x:20;font.bold:true}
+                Label {objectName:"playerStyle";visible:!!(root.profile.style||{}).averageMoves;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap;color:root.p.muted
+                    readonly property var st:root.profile.style||({})
+                    text:qsTr("%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties")
+                        .arg(st.decisive).arg(st.averageMoves).arg(Number(st.checks||0).toLocaleString(Qt.locale(),"f",1))
+                        .arg(Number(st.captures||0).toLocaleString(Qt.locale(),"f",1)).arg(st.oppositeCastling)}
                 Label {text:qsTr("Ouvertures jouées");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.openings||[]
                     delegate:Rectangle {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);height:Math.max(40,40*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:2

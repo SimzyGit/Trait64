@@ -1610,5 +1610,7 @@
   "Le coup à trouver était %1.": "La jugada a encontrar era %1.",
   "Questions terminées : %1 point(s) sur %2.": "Preguntas terminadas: %1 punto(s) de %2.",
   "Cette étude n’a pas de question d’entraînement : marquez d’abord un coup à trouver.": "Este estudio no tiene preguntas de entrenamiento: marque primero una jugada a encontrar.",
-  "Diagramme après ce coup": "Diagrama tras esta jugada"
+  "Diagramme après ce coup": "Diagrama tras esta jugada",
+  "Style": "Estilo",
+  "%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties": "%1 % de partidas decisivas · %2 jugadas de media · %3 jaque(s) y %4 captura(s) por partida · enroques opuestos en el %5 % de las partidas"
 }
