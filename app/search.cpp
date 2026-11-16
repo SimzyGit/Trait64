@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "move_notation.h"
 #include <QtConcurrent>
 
 void Controller::initLibrarySearch() {
@@ -290,6 +291,41 @@ void Controller::summarizeLibrary() {
                                           filters] {
         try {
             return summarize(t64::Database(path).search(query, result, favorite, position, trash, filters));
+        } catch (const std::exception &e) {
+            return QVariantMap{{"error", QString::fromUtf8(e.what())}};
+        }
+    }));
+}
+
+void Controller::explorePlans() {
+    const auto generation = ++plansGeneration_;
+    const auto fen = game_.nodes[node_].fen;
+    plans_ = {{"running", true}, {"fen", QString::fromStdString(fen)}};
+    emit plansChanged();
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, generation] {
+        watcher->deleteLater();
+        if (generation != plansGeneration_)
+            return;
+        plans_ = watcher->result();
+        emit plansChanged();
+    });
+    const int notation = frenchNotation();
+    watcher->setFuture(QtConcurrent::run([path = db_->path(), fen, notation] {
+        try {
+            auto found = t64::Database(path).plans(fen);
+            // Les coups dans la notation choisie : « Fd3 » en français.
+            for (const auto *side : {"white", "black"}) {
+                auto rows = found[side].toList();
+                for (auto &row : rows) {
+                    auto r = row.toMap();
+                    r["text"] = t64::displaySan(r["move"].toString().toStdString(), notation);
+                    row = r;
+                }
+                found[side] = rows;
+            }
+            found["fen"] = QString::fromStdString(fen);
+            return found;
         } catch (const std::exception &e) {
             return QVariantMap{{"error", QString::fromUtf8(e.what())}};
         }

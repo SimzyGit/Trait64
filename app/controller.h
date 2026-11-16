@@ -488,6 +488,10 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap stoyko READ stoyko NOTIFY stoykoChanged)
     QVariantMap stoyko() const { return stoyko_; }
     Q_INVOKABLE void startStoyko();
+    // L'explorateur de plans pour la structure de pions de l'échiquier, calculé à part.
+    Q_PROPERTY(QVariantMap plans READ plans NOTIFY plansChanged)
+    QVariantMap plans() const { return plans_; }
+    Q_INVOKABLE void explorePlans();
     Q_INVOKABLE void stopStoyko();
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
@@ -521,6 +525,7 @@ class Controller : public QObject {
     void tournamentListChanged();
     void librarySummaryChanged();
     void stoykoChanged();
+    void plansChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -669,6 +674,8 @@ class Controller : public QObject {
     t64::Uci *liveEngine_ = nullptr; // évalue les échiquiers de la ronde, un par un
     t64::Uci *stoykoEngine_ = nullptr;
     QVariantMap stoyko_;
+    QVariantMap plans_;
+    int plansGeneration_ = 0;
     QStringList stoykoQueue_; // positions à évaluer, la première étant le départ
     QString stoykoEvaluating_;
     void stoykoNext();

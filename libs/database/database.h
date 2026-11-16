@@ -183,6 +183,10 @@ class Database {
     void deleteCard(qint64 id);
     QVariantList players() const;
     QVariantMap player(const QString &name) const;
+    // L'explorateur de plans : manœuvres et ruptures jouées depuis cette structure de pions,
+    // dans les `limit` parties les mieux classées qui l'ont eue (plans.cpp).
+    QVariantMap plans(const std::string &fen, int limit = 400,
+                      const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantList duplicates() const;
     int rebuildIndexes(const std::function<bool(int)> &progress = {});
     QString path() const { return path_; }

@@ -704,6 +704,25 @@ int main(int argc, char **argv) {
                 t64::Database::materialCode(std::string_view("4k3/r7/8/8/8/8/8/4K1N1")));
             check(odds["games"].toInt() == 1 && odds["black"].toInt() == 1,
                   "The endgame odds count the games that reached this material, by result");
+            // L'explorateur de plans, sur la structure d4-d5 : les manœuvres de chaque camp tant
+            // qu'elle tient, puis la rupture qui la change (2.c4 dans trois parties, 3...e6 ici).
+            scout.save(t64::parsePgn("[White \"Pla\"]\n[Black \"Nes\"]\n[Result \"1-0\"]\n\n"
+                                     "1. d4 d5 2. Nf3 Nf6 3. Bf4 e6 4. e3 1-0")
+                           .front());
+            const auto plans = scout.plans("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+            const auto planWhite = plans["white"].toList(), planBlack = plans["black"].toList();
+            const auto row = [](const QVariantList &rows, const QString &move) {
+                for (const auto &r : rows)
+                    if (r.toMap()["move"] == move)
+                        return r.toMap();
+                return QVariantMap{};
+            };
+            check(
+                plans["games"].toInt() == 4 && planWhite.first().toMap()["move"] == "c4" &&
+                    planWhite.first().toMap()["rupture"].toBool() && row(planWhite, "Bf4")["games"].toInt() == 1 &&
+                    row(planWhite, "Bf4")["score"].toInt() == 100 && row(planBlack, "Nf6")["games"].toInt() == 1 &&
+                    row(planBlack, "e6")["rupture"].toBool() && row(planWhite, "e3").isEmpty(),
+                "The plan explorer counts each side's manoeuvres while the structure holds, then its break");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

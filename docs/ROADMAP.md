@@ -40,7 +40,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Relations d'attaque : pièces en prise, attaquées, défendues | ✅ | — | — | ✅ pièces en prise 15 nov., flèches d'attaque et de défense de la pièce choisie 16 nov. | **B1** |
 | Analyse assistée : couleur des cases selon la valeur du coup | ✅ | — | — | ✅ 16 nov., option « Analyse assistée » (Affichage) | B2 |
 | Détection des sacrifices | ✅ | — | — | ✅ 15 nov., dans le bilan | B2 |
-| Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✗ | B3 |
+| Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✅ 17 nov. (manœuvres et ruptures par camp, onglet Arbre) | B3 |
 | Probabilités de finale, tendances | ✅ | — | — | ◐ score du matériel en finale ✅ 16 nov. (onglet Arbre) ; pas de tendances | B3 |
 | Moteurs distants (nuage) | ✅ | — | ✅ payant | ✗ | K |
 | Gaviota | ✅ | ✅ | — | ✗ (Syzygy ✅) | — |

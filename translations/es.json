@@ -1646,5 +1646,13 @@
   "pat": "ahogado",
   "Terminez d’abord l’entraînement en cours.": "Termine primero el entrenamiento en curso.",
   "Choisissez d’abord un moteur (Préférences → Moteurs).": "Elija primero un motor (Preferencias → Motores).",
-  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Escriba primero sus variantes desde esta posición y luego lance la comprobación."
+  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Escriba primero sus variantes desde esta posición y luego lance la comprobación.",
+  "Plans de cette structure": "Planes de esta estructura",
+  "Ouvrir la partie la mieux classée où ce coup a été joué": "Abrir la partida mejor clasificada donde se jugó esta jugada",
+  "rupture": "ruptura",
+  "%1 % · score %2 %": "%1 % · resultado %2 %",
+  "Recherche des parties de cette structure…": "Buscando partidas con esta estructura…",
+  "Aucune partie de la bibliothèque n’a eu cette structure de pions.": "Ninguna partida de la biblioteca tuvo esta estructura de peones.",
+  "%1 partie(s) de la bibliothèque ont eu cette structure de pions (les mieux classées d’abord). Chaque manœuvre compte une fois par partie, tant que la structure tient ; la rupture est la poussée de pion qui la change.": "%1 partida(s) de la biblioteca tuvieron esta estructura de peones (las mejor clasificadas primero). Cada maniobra cuenta una vez por partida mientras la estructura se mantiene; la ruptura es el avance de peón que la cambia.",
+  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "Las partidas de la biblioteca con esta estructura terminan ahí: ninguna jugada la siguió."
 }

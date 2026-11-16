@@ -1646,5 +1646,13 @@
   "pat": "stalemate",
   "Terminez d’abord l’entraînement en cours.": "Finish the current training first.",
   "Choisissez d’abord un moteur (Préférences → Moteurs).": "Choose an engine first (Preferences → Engines).",
-  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Write your lines from this position first, then run the check."
+  "Écrivez d’abord vos variantes depuis cette position, puis lancez la vérification.": "Write your lines from this position first, then run the check.",
+  "Plans de cette structure": "Plans for this structure",
+  "Ouvrir la partie la mieux classée où ce coup a été joué": "Open the highest-rated game where this move was played",
+  "rupture": "break",
+  "%1 % · score %2 %": "%1 % · score %2 %",
+  "Recherche des parties de cette structure…": "Looking for games with this structure…",
+  "Aucune partie de la bibliothèque n’a eu cette structure de pions.": "No game in the library had this pawn structure.",
+  "%1 partie(s) de la bibliothèque ont eu cette structure de pions (les mieux classées d’abord). Chaque manœuvre compte une fois par partie, tant que la structure tient ; la rupture est la poussée de pion qui la change.": "%1 library game(s) had this pawn structure (highest rated first). Each manoeuvre counts once per game, while the structure holds; the break is the pawn move that changes it.",
+  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "The library games with this structure end there: no move followed it."
 }

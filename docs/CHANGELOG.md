@@ -1,5 +1,9 @@
 # Changements
 
+## Explorateur de plans — 17 novembre 2026
+
+- **Plans de cette structure** (onglet *Arbre*, ou la palette de commandes) : dans les parties de la bibliothèque qui ont eu la structure de pions de l'échiquier — les 400 mieux classées —, ce que chaque camp a fait de ses pièces tant qu'elle a tenu, et la poussée de pion qui l'a changée (la rupture), avec leur fréquence et leur score. Un clic ouvre la partie la mieux classée où le coup a été joué.
+
 ## Finales — 16 novembre 2026
 
 - **Exercice de Stoyko** (*Entraînement → Vérifier mes variantes*) : écrivez toutes les variantes que vous calculez depuis une position, puis le moteur juge la fin de chacune — vert si elle tient l'évaluation de départ, orange à moins d'un pion, rouge au-delà — et montre ce qu'il joue lui-même.

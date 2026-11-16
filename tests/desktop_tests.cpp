@@ -502,6 +502,24 @@ int main(int argc, char **argv) {
                   "Tournament test leaves no profile behind");
         }
         {
+            // L'explorateur de plans : une partie de la bibliothèque sur la structure d4-d5.
+            Controller planner(dir.path() + "/plans");
+            for (const auto *uci : {"d2d4", "d7d5", "g1f3", "g8f6", "c2c4"})
+                planner.move(uci);
+            planner.saveGame();
+            planner.navigate(2);
+            planner.explorePlans();
+            QElapsedTimer wait;
+            wait.start();
+            while (planner.plans()["running"].toBool() && wait.elapsed() < 20000)
+                QTest::qWait(10);
+            const auto rows = planner.plans()["white"].toList();
+            check(planner.plans()["games"].toInt() == 1 && rows.size() == 2 &&
+                      QStringList{"Nf3", "Cf3"}.contains(rows.first().toMap()["text"].toString()) &&
+                      rows.last().toMap()["rupture"].toBool(),
+                  "The plan explorer shows the knight's development, then the c4 break");
+        }
+        {
             // Des mats tirés de la bibliothèque : le mat du berger en un coup ; 1...e5 n'est
             // pas le seul coup qui mate en deux (1...e6 aussi), il n'en fait pas un.
             Controller c(dir.path() + "/harvest");
