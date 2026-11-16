@@ -121,6 +121,8 @@ TDialog {
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.")}
                 CheckBox {text:qsTr("Pièces en prise");checked:root.backend.preferences.showHanging;onToggled:root.backend.setPreference("showHanging",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.")}
+                CheckBox {text:qsTr("Relations d’attaque");checked:root.backend.preferences.showAttacks;onToggled:root.backend.setPreference("showAttacks",checked)
+                    ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.")}
                 CheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
                 CheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
                 CheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}

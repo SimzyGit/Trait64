@@ -1026,6 +1026,22 @@ int main(int argc, char **argv) {
                       on.value("e7").isEmpty(),
                   "Assisted analysis reddens the squares where the queen would be taken");
             assist.setPreference("assistedAnalysis", false);
+            // Relations d'attaque : le pion e5 attaqué par le cavalier f3, le cavalier b8
+            // défendu par la tour a8 (la dame, derrière le fou, ne le défend pas).
+            const auto relations = [&assist] {
+                QStringList found;
+                for (const auto &r : assist.state()["relations"].toList())
+                    found << r.toMap()["from"].toString() + (r.toMap()["defend"].toBool() ? "+" : "-");
+                found.sort();
+                return found;
+            };
+            assist.clickSquare("e5");
+            check(relations().isEmpty(), "Attack relations are not shown by default");
+            assist.setPreference("showAttacks", true);
+            check(relations() == QStringList{"f3-"}, "The attacked pawn gets a red arrow from its attacker");
+            assist.clickSquare("b8");
+            check(relations() == QStringList{"a8+"}, "The knight gets a green arrow from its defender");
+            assist.setPreference("showAttacks", false);
         }
         {
             Controller c(dir.path() + "/features");

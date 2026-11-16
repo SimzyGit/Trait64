@@ -7,6 +7,7 @@ Item {
     property bool coordinates: true
     property var prefs: backend.preferences
     property var arrows: backend.state.arrows || []
+    property var relations: backend.state.relations || []
     // L'échiquier sert aussi d'aperçu : il peut alors montrer une position qui n'est pas
     // celle de l'étude ouverte, et ne doit pas réagir aux clics.
     // Laissée vide, l'échiquier suit l'étude ouverte, case par case.
@@ -187,6 +188,16 @@ Item {
                 ctx.beginPath();ctx.moveTo(hx1,hy1);ctx.lineTo(hx2-hhead*0.45*Math.cos(hang),hy2-hhead*0.45*Math.sin(hang));ctx.stroke()
                 ctx.beginPath();ctx.moveTo(hx2,hy2);ctx.lineTo(hx2-hhead*Math.cos(hang-0.5),hy2-hhead*Math.sin(hang-0.5));ctx.lineTo(hx2-hhead*Math.cos(hang+0.5),hy2-hhead*Math.sin(hang+0.5));ctx.closePath();ctx.fill()
             }
+            // Relations d'attaque de la pièce choisie : fines, sous les flèches de l'étude.
+            var rel=root.relations
+            for(var r=0;r<rel.length&&!root.blind;r++) {
+                var ra=root.displayIndex(rel[r].from),rb=root.displayIndex(rel[r].to)
+                var rx1=(ra%8+0.5)*root.cell,ry1=(Math.floor(ra/8)+0.5)*root.cell,rx2=(rb%8+0.5)*root.cell,ry2=(Math.floor(rb/8)+0.5)*root.cell
+                var rang=Math.atan2(ry2-ry1,rx2-rx1),rhead=root.cell*0.22
+                ctx.strokeStyle=ctx.fillStyle=rel[r].defend?"#3f9a5a":"#d04a3c";ctx.globalAlpha=.7;ctx.lineWidth=root.cell*0.07;ctx.lineCap="round"
+                ctx.beginPath();ctx.moveTo(rx1,ry1);ctx.lineTo(rx2-rhead*0.45*Math.cos(rang),ry2-rhead*0.45*Math.sin(rang));ctx.stroke()
+                ctx.beginPath();ctx.moveTo(rx2,ry2);ctx.lineTo(rx2-rhead*Math.cos(rang-0.5),ry2-rhead*Math.sin(rang-0.5));ctx.lineTo(rx2-rhead*Math.cos(rang+0.5),ry2-rhead*Math.sin(rang+0.5));ctx.closePath();ctx.fill()
+            }
             for(var i=0;i<root.arrows.length;i++) {
                 var a=root.displayIndex(root.arrows[i].from),b=root.displayIndex(root.arrows[i].to)
                 var x1=(a%8+0.5)*root.cell,y1=(Math.floor(a/8)+0.5)*root.cell,x2=(b%8+0.5)*root.cell,y2=(Math.floor(b/8)+0.5)*root.cell
@@ -262,5 +273,6 @@ Item {
     }
     onFlippedChanged: drawing.requestPaint()
     onArrowsChanged: drawing.requestPaint()
+    onRelationsChanged: drawing.requestPaint()
     onWidthChanged: drawing.requestPaint()
 }

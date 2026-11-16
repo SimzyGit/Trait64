@@ -160,6 +160,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Plein écran"); checkable: true; checked: win.visibility === Window.FullScreen; onTriggered: win.toggleFullScreen()}
             MenuItem {text: qsTr("Analyse assistée"); checkable: true; checked: !!controller.preferences.assistedAnalysis; onTriggered: controller.setPreference("assistedAnalysis", checked)}
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
+            MenuItem {text: qsTr("Relations d’attaque"); checkable: true; checked: !!controller.preferences.showAttacks; onTriggered: controller.setPreference("showAttacks", checked)}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}

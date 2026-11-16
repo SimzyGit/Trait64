@@ -516,6 +516,21 @@ void Controller::refresh(bool content) {
         {"canForward", !current.children.empty()},
         {"nag", current.nags.empty() ? 0 : current.nags[0]},
         {"whiteTurn", board.sideToMove() == chess::Color::WHITE}};
+    // Relations d'attaque de la pièce choisie, comme dans ChessBase : une flèche rouge
+    // depuis chaque pièce adverse qui l'attaque, une verte depuis chaque pièce qui la
+    // défend.
+    if (selected_ >= 0 && settings_.value("showAttacks", false).toBool()) {
+        const chess::Square square(selected_);
+        const auto own = board.at(square).color();
+        QVariantList relations;
+        for (const auto side : {own, ~own}) {
+            auto from = chess::attacks::attackers(board, side, square);
+            while (from)
+                relations << QVariantMap{
+                    {"from", squareName(from.pop())}, {"to", squareName(selected_)}, {"defend", side == own}};
+        }
+        state_["relations"] = relations;
+    }
     chess::Movelist legal;
     chess::movegen::legalmoves(legal, board);
     QSet<int> targets;

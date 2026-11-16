@@ -1573,5 +1573,7 @@
   "Analyse assistée": "Análisis asistido",
   "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "Al elegir una pieza, sus casillas de destino se colorean: verde para la mejor jugada del motor, verde claro a menos de medio peón, rojo para una jugada que pierde material o que el motor considera mala.",
   "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Partidas, posiciones y bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
-  "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Base ChessBase incompleta: deben estar juntos al menos los archivos .cbh, .cbg, .cbp y .cbt (no se leen el formato 2CBH de ChessBase 18 ni los archivos .cbv)."
+  "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Base ChessBase incompleta: deben estar juntos al menos los archivos .cbh, .cbg, .cbp y .cbt (no se leen el formato 2CBH de ChessBase 18 ni los archivos .cbv).",
+  "Relations d’attaque": "Relaciones de ataque",
+  "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "Al elegir una pieza, una flecha roja sale de cada pieza que la ataca y una verde de cada pieza que la defiende."
 }

@@ -1573,5 +1573,7 @@
   "Analyse assistée": "Assisted analysis",
   "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "When a piece is chosen, its target squares are coloured: green for the engine's best move, light green within half a pawn, red for a move that loses material or that the engine rates poorly.",
   "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
-  "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Incomplete ChessBase database: at least the files .cbh, .cbg, .cbp and .cbt must sit side by side (the 2CBH format of ChessBase 18 and .cbv archives are not read)."
+  "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Incomplete ChessBase database: at least the files .cbh, .cbg, .cbp and .cbt must sit side by side (the 2CBH format of ChessBase 18 and .cbv archives are not read).",
+  "Relations d’attaque": "Attack relations",
+  "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "When a piece is selected, a red arrow comes from each piece attacking it and a green one from each piece defending it."
 }
