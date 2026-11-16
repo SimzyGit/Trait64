@@ -640,6 +640,15 @@ int main(int argc, char **argv) {
                 scout.save(game);
             }
             const auto kim = scout.player("Kim");
+            check(kim["links"].toMap().isEmpty(), "A player seen only in local games has no online links");
+            scout.save(
+                t64::parsePgn("[Site \"https://lichess.org/abcd1234\"]\n[White \"Kim\"]\n[Black \"F\"]\n"
+                              "[WhiteFideId \"12345678\"]\n[Result \"*\"]\n\n1. e4 *")
+                    .front());
+            const auto links = scout.player("Kim")["links"].toMap();
+            check(links["lichess"] == "https://lichess.org/@/Kim" && !links.contains("chesscom") &&
+                      links["fide"] == "https://ratings.fide.com/profile/12345678",
+                  "A Lichess game gives the account link, a FIDE number the FIDE profile");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

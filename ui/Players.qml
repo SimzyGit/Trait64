@@ -27,6 +27,15 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
             Column {id:profileBody;width:Math.max(1,profileScroll.availableWidth);spacing:18
                 Label {text:root.profile.name||qsTr("Sélectionnez un joueur");wrapMode:Text.WordWrap;font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;x:20;width:Math.max(1,profileBody.width-20)}
                 Label {text:root.profile.name?(root.profile.games+qsTr(" parties · Elo récent : ")+(root.profile.elo||qsTr("non renseigné"))):"";wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
+                // Ses pages en ligne : Lichess, Chess.com, FIDE, quand la bibliothèque les connaît.
+                Flow {objectName:"playerLinks";x:20;width:Math.max(1,profileBody.width-20);spacing:8
+                    visible:!!root.profile.name&&Object.keys(root.profile.links||{}).length>0
+                    Repeater {model:[{key:"lichess",label:"Lichess"},{key:"chesscom",label:"Chess.com"},{key:"fide",label:qsTr("Fiche FIDE")}]
+                        delegate:TButton {required property var modelData;visible:!!(root.profile.links||{})[modelData.key]
+                            text:modelData.label+"  ↗";flat:true;onClicked:Qt.openUrlExternally(root.profile.links[modelData.key])
+                            ToolTip.visible:hovered;ToolTip.text:(root.profile.links||{})[modelData.key]||""}
+                    }
+                }
                 Grid {id:profileStats;visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);columns:width>650*root.p.fontScale*root.p.uiScale?4:2;spacing:8
                     Repeater {model:[{label:"Victoires",key:"wins"},{label:"Nulles",key:"draws"},{label:"Défaites",key:"losses"},{label:"Score",key:"score"}]
                         delegate:Rectangle {required property var modelData;width:Math.max(1,(profileStats.width-(profileStats.columns-1)*8)/profileStats.columns);height:102*root.p.fontScale*root.p.uiScale;color:root.p.panel;radius:2

@@ -2,6 +2,7 @@
 #include "cancellation.h"
 #include "database.h"
 #include <QHash>
+#include <QRegularExpression>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <algorithm>
@@ -153,7 +154,41 @@ QVariantMap Database::player(const QString &name) const {
     std::sort(openingList.begin(), openingList.end(), [](const QVariant &a, const QVariant &b) {
         return a.toMap()["count"].toInt() > b.toMap()["count"].toInt();
     });
+    // Où le retrouver en ligne : son pseudo, s'il a joué sous ce nom sur Lichess ou
+    // Chess.com, et sa fiche FIDE si une partie en donne le numéro (les retransmissions
+    // l'écrivent). Rien n'est demandé au réseau : ce sont des liens.
+    QVariantMap links;
+    if (games) {
+        static const QRegularExpression handle("^[A-Za-z0-9_-]{2,30}$");
+        QSqlQuery sites(db_);
+        sites.prepare("SELECT SUM(pgn LIKE '%lichess.org/%'), SUM(pgn LIKE '%chess.com%') FROM games WHERE "
+                      "deleted=0 AND (white=? OR black=?)");
+        sites.addBindValue(name);
+        sites.addBindValue(name);
+        run(sites);
+        if (sites.next() && handle.match(name).hasMatch()) {
+            if (sites.value(0).toInt() > 0)
+                links["lichess"] = "https://lichess.org/@/" + name;
+            if (sites.value(1).toInt() > 0)
+                links["chesscom"] = "https://www.chess.com/member/" + name;
+        }
+        QSqlQuery fide(db_);
+        fide.prepare("SELECT white=?, pgn FROM games WHERE deleted=0 AND (white=? OR black=?) AND pgn LIKE "
+                     "'%FideId \"%' ORDER BY date DESC LIMIT 20");
+        fide.addBindValue(name);
+        fide.addBindValue(name);
+        fide.addBindValue(name);
+        run(fide);
+        while (fide.next() && !links.contains("fide")) {
+            static const QRegularExpression white(R"re(\[WhiteFideId "(\d{3,12})"\])re"),
+                black(R"re(\[BlackFideId "(\d{3,12})"\])re");
+            const auto found = (fide.value(0).toBool() ? white : black).match(fide.value(1).toString());
+            if (found.hasMatch())
+                links["fide"] = "https://ratings.fide.com/profile/" + found.captured(1);
+        }
+    }
     return {{"name", name},
+            {"links", links},
             {"games", games},
             {"wins", wins},
             {"draws", draws},

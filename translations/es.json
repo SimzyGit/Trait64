@@ -1575,5 +1575,6 @@
   "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Partidas, posiciones y bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
   "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Base ChessBase incompleta: deben estar juntos al menos los archivos .cbh, .cbg, .cbp y .cbt (no se leen el formato 2CBH de ChessBase 18 ni los archivos .cbv).",
   "Relations d’attaque": "Relaciones de ataque",
-  "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "Al elegir una pieza, una flecha roja sale de cada pieza que la ataca y una verde de cada pieza que la defiende."
+  "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "Al elegir una pieza, una flecha roja sale de cada pieza que la ataca y una verde de cada pieza que la defiende.",
+  "Fiche FIDE": "Ficha FIDE"
 }

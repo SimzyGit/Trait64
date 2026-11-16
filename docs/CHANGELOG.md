@@ -1,7 +1,8 @@
 # Changements
 
-## Relations d'attaque — 16 novembre 2026
+## Relations d'attaque, fiche joueur — 16 novembre 2026
 
+- **Fiche joueur : ses pages en ligne** — un lien vers son compte Lichess ou Chess.com quand il a joué sous ce pseudo sur ces sites, et vers sa fiche FIDE quand une partie en donne le numéro.
 - **Relations d'attaque** (*Affichage*, ou *Apparence*) : quand une pièce est choisie, une flèche rouge part de chaque pièce adverse qui l'attaque, une verte de chaque pièce qui la défend.
 
 ## Bases ChessBase — 16 novembre 2026

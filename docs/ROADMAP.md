@@ -29,7 +29,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Fonction | ChessBase | Scid vs. PC | chess.ceo | Trait64 | Prio. |
 |---|---|---|---|---|---|
 | Préparer un adversaire depuis ses parties en ligne (pseudo Lichess/Chess.com) | ✅ | — | ✅ | ✅ 15 nov. | **E1** |
-| Fiche joueur : courbe Elo, ouvertures, liens FIDE/Lichess/Chess.com | ✅ photos | ✅ | ✅ | ◐ fiche, courbe Elo, Elo FIDE ; pas de liens vers les comptes en ligne | E2 |
+| Fiche joueur : courbe Elo, ouvertures, liens FIDE/Lichess/Chess.com | ✅ photos | ✅ | ✅ | ✅ fiche, courbe Elo, Elo FIDE ; liens Lichess, Chess.com et fiche FIDE 16 nov. | E2 |
 | Rapport de style (agressivité, risque) et rapport d'erreurs (« Elo des gaffes ») | ✅ | — | — | ◐ précision par phase | C2 |
 | Retrouver le compte en ligne d'un joueur anonyme | ✅ | — | — | ✗ écarté : vie privée | — |
 
