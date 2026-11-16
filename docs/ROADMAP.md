@@ -16,11 +16,11 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Recherche de tournois (lieu, date, catégorie) | ✅ | ✅ | — | ✅ 15 nov. : nom, année, joueurs, Elo moyen | D2 |
 | Recherches enregistrées | ✅ | ✅ masques d'arbre | — | ✅ 15 nov. | D2 |
 | Recherche de manœuvres (Cf3-d2-f1) | ✅ | — | — | ✗ | D3 |
-| Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ✗ | B/D3 |
+| Positions semblables, même structure de pions | ✅ | ✅ motif de pions | — | ◐ même structure de pions (filtre de position) ; pas de ressemblance approchée | B/D3 |
 | Classement des finales et clés stratégiques/tactiques | ✅ | — | — | ✗ | D3 |
 | Langage de requêtes (CQL) | — | ✅ | — | ✗ | K |
 | Drapeaux multiples sur les parties, médailles | ✅ | ✅ | — | ◐ favoris et collections | D3 |
-| Graphes de la base (années, résultats, Elo du filtre) | ✅ | ✅ | — | ◐ statistiques d'ouverture | D3 |
+| Graphes de la base (années, résultats, Elo du filtre) | ✅ | ✅ | — | ✅ 16 nov. (*Base → Graphiques de la sélection*) | D3 |
 | Bases ChessBase, SCID 5 | ✅ | ✅ SCID | — | ◐ ChessBase classique (.cbh) ✅ 16 nov., SCID 4 ✅ ; ni 2CBH, ni .cbv, ni SCID 5 | D |
 | Grande base de référence en ligne | ✅ 8 M | — | ✅ 14 M | ✅ maîtres et parties Lichess | — |
 

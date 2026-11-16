@@ -649,6 +649,16 @@ int main(int argc, char **argv) {
             check(links["lichess"] == "https://lichess.org/@/Kim" && !links.contains("chesscom") &&
                       links["fide"] == "https://ratings.fide.com/profile/12345678",
                   "A Lichess game gives the account link, a FIDE number the FIDE profile");
+            // Le bilan d'une sélection : groupé par année, résultat et tranche d'Elo moyen.
+            qint64 counted = 0, kimFirst = 0;
+            for (const auto &row : scout.search("Kim", {}, false, {}, false, {{"summary", true}})) {
+                const auto r = row.toMap();
+                counted += r["count"].toLongLong();
+                if (r["year"] == "2026" && r["result"] == "1-0" && r["elo"].toInt() == 0)
+                    kimFirst += r["count"].toLongLong();
+            }
+            check(counted == 6 && kimFirst == 4,
+                  "A selection summary counts every matching game by year and result");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

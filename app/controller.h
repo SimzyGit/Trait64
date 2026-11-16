@@ -376,6 +376,10 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap tournamentList READ tournamentList NOTIFY tournamentListChanged)
     QVariantMap tournamentList() const { return tournamentList_; }
     Q_INVOKABLE void findTournaments(const QString &text);
+    // La sélection de la bibliothèque en chiffres : parties par année, résultats, Elo.
+    Q_PROPERTY(QVariantMap librarySummary READ librarySummary NOTIFY librarySummaryChanged)
+    QVariantMap librarySummary() const { return librarySummary_; }
+    Q_INVOKABLE void summarizeLibrary();
     QVariantList savedSearches() const { return settings_.value("savedSearches").toList(); }
     // Un nom déjà pris remplace la recherche du même nom.
     Q_INVOKABLE void saveSearch(const QString &name, const QVariantMap &search);
@@ -497,6 +501,7 @@ class Controller : public QObject {
     void liveChanged();
     void savedSearchesChanged();
     void tournamentListChanged();
+    void librarySummaryChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -631,6 +636,8 @@ class Controller : public QObject {
     t64::Broadcasts *broadcasts_ = nullptr;
     QVariantMap live_;
     QVariantMap tournamentList_;
+    QVariantMap librarySummary_;
+    int summaryGeneration_ = 0;
     QTimer assistRefresh_;
     QTimer *liveTimer_ = nullptr;
     bool liveWatching_ = false; // le panneau est ouvert

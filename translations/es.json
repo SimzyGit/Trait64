@@ -1576,5 +1576,13 @@
   "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Base ChessBase incompleta: deben estar juntos al menos los archivos .cbh, .cbg, .cbp y .cbt (no se leen el formato 2CBH de ChessBase 18 ni los archivos .cbv).",
   "Relations d’attaque": "Relaciones de ataque",
   "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "Al elegir una pieza, una flecha roja sale de cada pieza que la ataca y una verde de cada pieza que la defiende.",
-  "Fiche FIDE": "Ficha FIDE"
+  "Fiche FIDE": "Ficha FIDE",
+  "Graphiques de la sélection": "Gráficos de la selección",
+  "Graphiques de la sélection…": "Gráficos de la selección…",
+  "Calcul…": "Calculando…",
+  "%1 partie(s) dans la sélection · Elo moyen %2": "%1 partida(s) en la selección · Elo medio %2",
+  "Résultats": "Resultados",
+  "Blancs %1 · nulles %2 · Noirs %3 · inachevées %4": "Blancas %1 · tablas %2 · Negras %3 · sin terminar %4",
+  "Parties par année": "Partidas por año",
+  "%1 partie(s) sans Elo pour l’un des joueurs.": "%1 partida(s) sin Elo para uno de los jugadores."
 }

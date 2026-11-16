@@ -352,8 +352,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     const bool fullText = fts_ && query.size() >= 3 && !query.contains('%') && !query.contains('_');
     const bool exactPosition = !position.isEmpty() && !filters.value("pawnStructure").toBool();
     const bool sparsePosition = exactPosition && collectPositionMatches(position, canceled) && !fullText;
-    QString statement = "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,g.favorite,"
-                        "g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo ";
+    static const QString columns =
+        "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,"
+        "g.favorite,g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo ";
+    QString statement = columns;
     QVariantList args;
     if (fullText) {
         // FTS drives the lookup: ORDER BY must not make SQLite scan every recent game.
@@ -503,6 +505,24 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     if (reversed)
         for (auto &field : order)
             field.ascending = !field.ascending;
+    // Le bilan de la sélection entière : parties par année, par résultat et par tranche
+    // d'Elo moyen (de cent en cent, 0 si l'un des deux manque), sans ordre ni limite.
+    if (filters.value("summary").toBool()) {
+        statement = "SELECT substr(g.date,1,4),g.result,CASE WHEN g.white_elo>0 AND g.black_elo>0 THEN "
+                    "(g.white_elo+g.black_elo)/200*100 ELSE 0 END,COUNT(*) " +
+                    statement.mid(columns.size()) + " GROUP BY 1,2,3";
+        QSqlQuery q(db_);
+        q.prepare(statement);
+        for (const auto &a : args)
+            q.addBindValue(a);
+        run(q);
+        QVariantList rows;
+        while (q.next())
+            rows << QVariantMap{
+                {"year", q.value(0)}, {"result", q.value(1)}, {"elo", q.value(2)}, {"count", q.value(3)}};
+        check(!canceled || !canceled->load(), "Recherche annulée.");
+        return rows;
+    }
     const auto cursor = filters.value("cursor").toMap();
     const bool recentCursor = !cursor.isEmpty() && order[0].key == "updated" && !reversed;
     if (!cursor.isEmpty()) {

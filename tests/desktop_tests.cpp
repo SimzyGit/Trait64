@@ -1187,6 +1187,22 @@ int main(int argc, char **argv) {
                         listed || (row.toMap()["event"] == "Mémorial" && row.toMap()["players"].toInt() == 6);
                 check(listed, "The tournament finder lists the Mémorial with its six players");
                 QMetaObject::invokeMethod(finder, "close");
+                // Les graphiques de la sélection : le Mémorial et le reste de la bibliothèque.
+                auto *charts = window->findChild<QObject *>("libraryChartsDialog");
+                QMetaObject::invokeMethod(charts, "open");
+                settle.restart();
+                QTest::qWait(30);
+                while (c.librarySummary()["running"].toBool() && settle.elapsed() < 10000)
+                    QTest::qWait(10);
+                const auto summary = c.librarySummary();
+                const auto results = summary["results"].toMap();
+                check(summary["total"].toLongLong() > 0 &&
+                          results["white"].toLongLong() + results["draws"].toLongLong() +
+                                  results["black"].toLongLong() + results["unfinished"].toLongLong() ==
+                              summary["total"].toLongLong() &&
+                          !summary["years"].toList().isEmpty(),
+                      "The selection charts count every game once, by result and by year");
+                QMetaObject::invokeMethod(charts, "close");
             }
             {
                 // Corriger les noms : le Mémorial a été saisi avec « Ding » ; on ajoute

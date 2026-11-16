@@ -218,3 +218,80 @@ void Controller::findTournaments(const QString &text) {
         }
     }));
 }
+
+namespace {
+// Les lignes groupées par la recherche (année, résultat, tranche d'Elo, nombre) mises en
+// trois séries à dessiner. Plus de quarante ans d'écart : les années vont par décennies.
+QVariantMap summarize(const QVariantList &rows) {
+    QMap<int, qint64> years, elo;
+    qint64 total = 0, white = 0, draws = 0, black = 0, unfinished = 0, unknownElo = 0;
+    double eloSum = 0;
+    for (const auto &row : rows) {
+        const auto r = row.toMap();
+        const qint64 n = r["count"].toLongLong();
+        total += n;
+        if (const int year = r["year"].toInt(); year > 0)
+            years[year] += n;
+        const auto result = r["result"].toString();
+        (result == "1-0" ? white : result == "0-1" ? black : result == "1/2-1/2" ? draws : unfinished) += n;
+        if (const int band = r["elo"].toInt(); band > 0) {
+            elo[band] += n;
+            eloSum += (band + 50.) * double(n);
+        } else {
+            unknownElo += n;
+        }
+    }
+    const bool byDecade = !years.isEmpty() && years.lastKey() - years.firstKey() > 40;
+    if (byDecade) {
+        QMap<int, qint64> decades;
+        for (auto it = years.cbegin(); it != years.cend(); ++it)
+            decades[it.key() / 10 * 10] += it.value();
+        years = decades;
+    }
+    QVariantList yearList, eloList;
+    for (auto it = years.cbegin(); it != years.cend(); ++it)
+        yearList << QVariantMap{
+            {"label", byDecade ? QString::number(it.key()) + "–" + QString::number(it.key() + 9)
+                               : QString::number(it.key())},
+            {"count", it.value()}};
+    for (auto it = elo.cbegin(); it != elo.cend(); ++it)
+        eloList << QVariantMap{{"label", QString::number(it.key()) + "–" + QString::number(it.key() + 99)},
+                               {"count", it.value()}};
+    const qint64 rated = total - unknownElo;
+    return {{"total", total},
+            {"years", yearList},
+            {"elo", eloList},
+            {"unknownElo", unknownElo},
+            {"averageElo", rated ? qRound(eloSum / double(rated)) : 0},
+            {"results",
+             QVariantMap{{"white", white}, {"draws", draws}, {"black", black}, {"unfinished", unfinished}}}};
+}
+} // namespace
+
+void Controller::summarizeLibrary() {
+    const auto generation = ++summaryGeneration_;
+    librarySummary_ = {{"running", true}};
+    emit librarySummaryChanged();
+    auto filters = advancedFilters_;
+    filters.remove("offset");
+    filters.remove("cursor");
+    filters["summary"] = true;
+    const auto position = positionFilter_ ? QString::fromStdString(game_.nodes[node_].fen) : QString();
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, generation] {
+        watcher->deleteLater();
+        if (generation != summaryGeneration_)
+            return;
+        librarySummary_ = watcher->result();
+        emit librarySummaryChanged();
+    });
+    watcher->setFuture(QtConcurrent::run([path = db_->path(), query = query_, result = resultFilter_,
+                                          favorite = favoritesOnly_, trash = trashFilter_, position,
+                                          filters] {
+        try {
+            return summarize(t64::Database(path).search(query, result, favorite, position, trash, filters));
+        } catch (const std::exception &e) {
+            return QVariantMap{{"error", QString::fromUtf8(e.what())}};
+        }
+    }));
+}
