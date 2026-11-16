@@ -1630,5 +1630,9 @@
   "Mats de la bibliothèque (%1)": "Mates de la biblioteca (%1)",
   "Tirer des mats de la bibliothèque": "Extraer mates de la biblioteca",
   "Les mats en un, deux ou trois coups qui terminent vos parties, quand chaque coup du vainqueur était le seul à forcer le mat.": "Los mates en una, dos o tres jugadas que terminan sus partidas, cuando cada jugada del ganador era la única que forzaba el mate.",
-  "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque ».": "Aún no hay mates extraídos de la biblioteca: use «Extraer mates de la biblioteca»."
+  "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque ».": "Aún no hay mates extraídos de la biblioteca: use «Extraer mates de la biblioteca».",
+  "Ouvrir sur un téléphone": "Abrir en un teléfono",
+  "Ouvrir sur un téléphone (QR)…": "Abrir en un teléfono (QR)…",
+  "Visez ce code avec l’appareil photo du téléphone : la position s’ouvre sur l’échiquier d’analyse de Lichess.": "Apunte la cámara del teléfono a este código: la posición se abre en el tablero de análisis de Lichess.",
+  "Copier le lien": "Copiar el enlace"
 }

@@ -7,6 +7,7 @@
 #include "hardware.h"
 #include "html_export.h"
 #include "move_notation.h"
+#include "qr.h"
 #include "scid.h"
 #include "sounds.h"
 #include "tactics.h"
@@ -1869,6 +1870,12 @@ void Controller::startGuessing(bool white) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+QVariantMap Controller::positionQr() const {
+    const auto url = t64::lichessAnalysisUrl(game_.nodes[node_].fen, game_.chess960);
+    const auto svg = QByteArray::fromStdString(t64::qrSvg(url));
+    return {{"url", s(url)},
+            {"image", svg.isEmpty() ? QString() : "data:image/svg+xml;base64," + svg.toBase64()}};
 }
 void Controller::toggleDiagram() {
     if (trainingActive() || node_ == 0)

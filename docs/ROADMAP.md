@@ -53,7 +53,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Ctrl + molette : taille du texte de la notation et des listes | ✅ | — | — | ✅ 15 nov. | J2 |
 | Diagrammes, titres et rubriques dans la notation | ✅ | — | — | ◐ diagrammes ($220) ✅ 16 nov. ; pas de titres ni de rubriques | G |
 | Questions d'entraînement dans une partie (« trouvez le coup », points) | ✅ | — | — | ✅ 16 nov., trois essais, 3-2-1 points | F2 |
-| Export HTML/JS jouable, QR code | ✅ | — | — | ◐ page HTML autonome ✅, PDF, PNG, SVG ; pas de QR code | G |
+| Export HTML/JS jouable, QR code | ✅ | — | — | ✅ page HTML autonome, PDF, PNG, SVG ; QR code vers Lichess 16 nov. | G |
 | Lecture vocale des commentaires, saisie à la voix | ✅ | — | — | ✗ | J3 |
 
 ### Entraînement, en ligne, matériel

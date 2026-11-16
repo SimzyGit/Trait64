@@ -481,6 +481,8 @@ class Controller : public QObject {
     Q_INVOKABLE void toggleQuestion();
     // Un diagramme dans la notation après le coup courant (NAG 220).
     Q_INVOKABLE void toggleDiagram();
+    // La position courante sur Lichess : son adresse et son QR code, en image SVG.
+    Q_INVOKABLE QVariantMap positionQr() const;
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
     Q_INVOKABLE void finishTraining();

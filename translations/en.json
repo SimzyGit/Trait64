@@ -1630,5 +1630,9 @@
   "Mats de la bibliothèque (%1)": "Library mates (%1)",
   "Tirer des mats de la bibliothèque": "Collect mates from the library",
   "Les mats en un, deux ou trois coups qui terminent vos parties, quand chaque coup du vainqueur était le seul à forcer le mat.": "The mates in one, two or three moves that end your games, when each of the winner’s moves was the only one to force mate.",
-  "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque ».": "No mates collected from the library yet: use “Collect mates from the library”."
+  "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque ».": "No mates collected from the library yet: use “Collect mates from the library”.",
+  "Ouvrir sur un téléphone": "Open on a phone",
+  "Ouvrir sur un téléphone (QR)…": "Open on a phone (QR)…",
+  "Visez ce code avec l’appareil photo du téléphone : la position s’ouvre sur l’échiquier d’analyse de Lichess.": "Point the phone’s camera at this code: the position opens on Lichess’s analysis board.",
+  "Copier le lien": "Copy the link"
 }

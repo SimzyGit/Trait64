@@ -5,6 +5,7 @@
 #include "hardware.h"
 #include "html_export.h"
 #include "polyglot.h"
+#include "qr.h"
 #include "tactics.h"
 #include <algorithm>
 #include <cmath>
@@ -157,9 +158,21 @@ int main() {
                       page.find("Le centre \\u003c/script\\u003e") != std::string::npos &&
                       page.find("%cal") == std::string::npos,
                   "A comment cannot close the script, and PGN drawing directives are not shown as text");
-            check(page.find("http") == std::string::npos && page.find("src=") == std::string::npos &&
-                      page.find("@import") == std::string::npos,
-                  "The page refers to no outside address or file");
+            // Seul le lien du QR code mène dehors, et rien n'est chargé : ni source, ni import.
+            const auto lichess = t64::lichessAnalysisUrl(study.nodes[study.mainline().back()].fen);
+            auto stripped = page;
+            for (const std::string known : {lichess, std::string("http://www.w3.org/2000/svg")})
+                for (auto at = stripped.find(known); at != std::string::npos; at = stripped.find(known))
+                    stripped.erase(at, known.size());
+            check(stripped.find("http") == std::string::npos && page.find("src=") == std::string::npos &&
+                      page.find("@import") == std::string::npos &&
+                      page.find("<figure class=\"qr\"><svg") != std::string::npos,
+                  "The page loads nothing from outside; its QR code links the final position on Lichess");
+            check(lichess == "https://lichess.org/analysis/standard/rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/"
+                             "RNBQKB1R_b_KQkq_-_1_2" &&
+                      t64::qrSvg(std::string(3000, 'x')).empty(),
+                  "The Lichess link writes the FEN with underscores; a text too long for a QR code gives "
+                  "nothing");
             check(page.find("g:[1]") != std::string::npos, "Annotation symbols travel with their move");
         }
         const chess::Board initial;

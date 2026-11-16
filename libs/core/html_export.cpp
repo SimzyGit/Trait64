@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "html_export.h"
+#include "qr.h"
 #include <cstdio>
 namespace t64 {
 namespace {
@@ -58,6 +59,7 @@ h1{font-size:1.3rem;margin:0}.meta,.foot{opacity:.7;font-size:.85rem;margin:.2re
 #moves span{cursor:pointer;padding:1px 4px;border-radius:4px}#moves span.on{background:var(--mark);color:#111}
 #moves .v{opacity:.8;font-size:.92em}#note{min-height:3em;margin-top:.8rem;padding:.5rem .7rem;border-left:3px solid var(--mark)}
 button{font:inherit;padding:.25rem .7rem;margin:.6rem .3rem 0 0}
+.qr{margin:1.5rem 0 0;display:flex;gap:12px;align-items:center;font-size:.85rem;opacity:.85}.qr svg{width:120px;height:120px}
 </style>
 <div class="wrap"><div><div id="board"></div>
 <button id="first" aria-label="Début">⏮</button><button id="back" aria-label="Coup précédent">◀</button><button id="next" aria-label="Coup suivant">▶</button><button id="last" aria-label="Fin">⏭</button><button id="flip" aria-label="Retourner">⇅</button></div>
@@ -137,6 +139,14 @@ std::string studyHtml(const Game &game) {
             out += (k ? "," : "") + std::to_string(node.nags[k]);
         out += "]}";
     }
-    return out + "\n];</script>\n" + page + "</html>\n";
+    // La position finale en QR code : un téléphone l'ouvre sur l'échiquier d'analyse de
+    // Lichess. Rien n'est chargé par la page elle-même.
+    const auto &last = game.nodes[game.mainline().back()];
+    const auto url = lichessAnalysisUrl(last.fen, game.chess960);
+    std::string qr;
+    if (const auto svg = qrSvg(url); !svg.empty())
+        qr = "<figure class=\"qr\">" + svg + "<figcaption>Position finale sur Lichess — <a href=\"" +
+             html(url) + "\">ouvrir</a></figcaption></figure>\n";
+    return out + "\n];</script>\n" + page + qr + "</html>\n";
 }
 } // namespace t64

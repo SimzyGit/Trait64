@@ -1057,6 +1057,10 @@ int main(int argc, char **argv) {
                   "A diagram follows the move in both notations and survives a new symbol");
             quiz.toggleDiagram();
             check(!quiz.state()["diagram"].toBool(), "The diagram comes off again");
+            const auto qr = quiz.positionQr();
+            check(qr["url"].toString().startsWith("https://lichess.org/analysis/standard/") &&
+                      qr["image"].toString().startsWith("data:image/svg+xml;base64,"),
+                  "The current position has a Lichess link and its QR code");
         }
         {
             // Pièces en prise : marquées seulement si on le demande.

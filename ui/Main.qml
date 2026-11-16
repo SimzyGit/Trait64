@@ -112,6 +112,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Rétablir"); enabled: controller.state.canRedo; onTriggered: controller.redo()}
             MenuSeparator {}
             MenuItem {text: qsTr("Copier la FEN"); onTriggered: controller.copyText("fen")}
+            MenuItem {text: qsTr("Ouvrir sur un téléphone (QR)…"); onTriggered: positionQr.open()}
             MenuItem {text: qsTr("Copier le PGN"); onTriggered: controller.copyText("pgn")}
             MenuItem {text: qsTr("Charger une FEN…"); onTriggered: fenDialog.open()}
             MenuItem {text: qsTr("Éditer la position…"); onTriggered: positionEditor.open()}
@@ -497,6 +498,7 @@ objectName:"analysisSplit"
                                 Menu {id:positionMenu;y:-height
                                     MenuItem {text:qsTr("Éditer la position");onTriggered:positionEditor.open()}
                                     MenuItem {text:qsTr("Copier la FEN");onTriggered:controller.copyText("fen")}
+                                    MenuItem {text:qsTr("Ouvrir sur un téléphone (QR)…");onTriggered:positionQr.open()}
                                     MenuItem {text:qsTr("Charger une FEN");onTriggered:fenDialog.open()}
                                     MenuItem {text:qsTr("Exporter le diagramme");onTriggered:diagramDialog.open()}
                                     MenuSeparator {}
@@ -960,6 +962,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
+    PositionQr {id:positionQr;objectName:"positionQrDialog";backend:controller}
     LibraryCharts {id:libraryCharts;objectName:"libraryChartsDialog";backend:controller}
     TournamentFinder {id:tournamentFinder;objectName:"tournamentFinder";backend:controller;crosstable:crosstableDialog}
     TDialog {id:saveSearchDialog;objectName:"saveSearchDialog";title:qsTr("Enregistrer cette recherche");anchors.centerIn:parent;modal:true;width:Math.min(440,win.width-32);standardButtons:Dialog.Ok|Dialog.Cancel
