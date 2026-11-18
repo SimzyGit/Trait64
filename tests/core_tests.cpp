@@ -504,6 +504,24 @@ int main() {
             // arithmétique, qui vaudrait 92,5 ici.
             const double blundered = t64::aggregateAccuracy({100, 100, 100, 70});
             check(blundered < 92 && blundered > 60, "One blunder weighs on an otherwise clean set");
+            // L'« Elo des gaffes » : une droite tirée de la bibliothèque, et le silence tant
+            // qu'elle ne prouve rien.
+            {
+                std::vector<std::pair<double, double>> samples;
+                for (int i = 0; i < 40; ++i) // Elo = 20 × précision − 200, à ±50 près
+                    samples.emplace_back(60 + i % 30, 20 * (60 + i % 30) - 200 + (i % 2 ? 50 : -50));
+                const auto fit = t64::fitStrength(samples);
+                check(fit.ok && std::abs(fit.slope - 20) < 1 && fit.spread > 40 && fit.spread < 60,
+                      "The calibration line follows the library and reports its margin");
+                check(t64::estimateElo(fit, 80) == 1400, "An estimate reads off the line, to the ten");
+                check(t64::estimateElo(fit, 300) == 3200, "An estimate stays within the scale");
+                samples.resize(29);
+                check(!t64::fitStrength(samples).ok, "Too few games say nothing");
+                std::vector<std::pair<double, double>> flat;
+                for (int i = 0; i < 40; ++i)
+                    flat.emplace_back(60 + i, 1500 + i % 3);
+                check(!t64::fitStrength(flat).ok, "Ratings too close together say nothing about the slope");
+            }
             // Le point coloré de l'analyse : six catégories, et « bon » qui se mérite.
             check(std::string(t64::moveQuality(0, false, false)) == "mate",
                   "A mate in the count is its own category, not a centipawn loss");

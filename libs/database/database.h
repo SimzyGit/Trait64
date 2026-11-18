@@ -65,6 +65,9 @@ class Database {
     // Même bilan, découpé par mois, du plus récent au plus ancien. Sert à comparer le
     // joueur à sa propre progression plutôt qu'à une référence extérieure.
     QVariantList reviewHistory(const QStringList &names, int months = 12) const;
+    // L'étalonnage de la force estimée : chaque camp d'une partie passée en revue, avec
+    // son Elo et au moins quinze coups mesurés, donne un point (précision, Elo).
+    std::vector<std::pair<double, double>> accuracyEloSamples(int limit = 20000) const;
     QVariantList analysisJobs() const;
     QVariantMap analysisJob(qint64 id, bool includePgn = true) const;
     QVariantList analysisResults(qint64 id, int offset = 0, int limit = 200) const;

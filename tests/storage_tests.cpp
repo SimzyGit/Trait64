@@ -278,6 +278,8 @@ int main(int argc, char **argv) {
             check(board.reviewSummary({"alice"})["games"].toInt() == 2,
                   "Nicknames are matched without regard to case");
             check(board.reviewSummary({})["games"].toInt() == 0, "No nickname means nothing to measure");
+            check(board.accuracyEloSamples().empty(),
+                  "Games without ratings, or too short, do not calibrate the estimated strength");
             const auto history = board.reviewHistory({"Alice"}, 12);
             check(history.size() == 2 && history.first().toMap()["period"].toString() == "2026.10",
                   "History is grouped by month, most recent first");

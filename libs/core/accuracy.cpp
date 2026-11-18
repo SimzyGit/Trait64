@@ -117,4 +117,37 @@ Phase phaseOf(const chess::Board &board, int ply) {
     return Phase::Opening;
 }
 
+StrengthFit fitStrength(const std::vector<std::pair<double, double>> &accuracyElo) {
+    StrengthFit fit;
+    fit.samples = int(accuracyElo.size());
+    if (fit.samples < 30)
+        return fit;
+    double mx = 0, my = 0;
+    for (const auto &[x, y] : accuracyElo)
+        mx += x, my += y;
+    mx /= fit.samples, my /= fit.samples;
+    double sxx = 0, sxy = 0, syy = 0;
+    for (const auto &[x, y] : accuracyElo)
+        sxx += (x - mx) * (x - mx), sxy += (x - mx) * (y - my), syy += (y - my) * (y - my);
+    // Des Elo tous voisins (moins de cent points d'écart type) ou des précisions toutes
+    // égales ne disent rien de la pente : mieux vaut se taire que l'inventer.
+    if (sxx <= 0 || std::sqrt(syy / fit.samples) < 100)
+        return fit;
+    fit.slope = sxy / sxx;
+    fit.intercept = my - fit.slope * mx;
+    double residuals = 0;
+    for (const auto &[x, y] : accuracyElo) {
+        const double r = y - (fit.intercept + fit.slope * x);
+        residuals += r * r;
+    }
+    fit.spread = std::sqrt(residuals / (fit.samples - 2));
+    fit.ok = fit.slope > 0;
+    return fit;
+}
+
+int estimateElo(const StrengthFit &fit, double accuracy) {
+    const double elo = std::clamp(fit.intercept + fit.slope * accuracy, 400.0, 3200.0);
+    return int(std::lround(elo / 10)) * 10;
+}
+
 } // namespace t64

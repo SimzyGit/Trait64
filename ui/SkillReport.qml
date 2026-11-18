@@ -119,6 +119,22 @@ Item {
                                 HoverHandler { id: hovered }
                             }
                         }
+                        ColumnLayout {
+                            objectName: "estimatedStrength"
+                            spacing: 2
+                            readonly property var strength: root.report.strength || ({})
+                            Label { text: qsTr("Force estimée"); opacity: .7
+                                    font.pixelSize: Math.round(11 * root.uiZoom) }
+                            Label {
+                                text: parent.strength.elo ? "≈ " + parent.strength.elo + " ± " + parent.strength.spread : "—"
+                                font.bold: true; font.pixelSize: Math.round(20 * root.uiZoom)
+                                ToolTip.visible: strengthHover.hovered
+                                ToolTip.text: parent.strength.elo
+                                    ? qsTr("L’Elo qu’ont, dans votre bibliothèque, les joueurs aussi précis que vous (%1 camps de parties analysées). La marge est l’écart type autour de cette droite.").arg(parent.strength.samples)
+                                    : qsTr("Il faut au moins 30 camps de parties analysées avec un Elo connu, et des Elo assez variés, pour étalonner cette estimation (%1 pour l’instant).").arg(parent.strength.samples || 0)
+                                HoverHandler { id: strengthHover }
+                            }
+                        }
                         Item { Layout.fillWidth: true }
                         ColumnLayout {
                             spacing: 2

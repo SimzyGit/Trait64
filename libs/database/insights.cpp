@@ -419,6 +419,22 @@ QVariantList Database::reviewHistory(const QStringList &names, int months) const
     return rows;
 }
 
+std::vector<std::pair<double, double>> Database::accuracyEloSamples(int limit) const {
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare(
+        "SELECT r.white_all,g.white_elo FROM game_reviews r JOIN games g ON g.id=r.game WHERE g.deleted=0 "
+        "AND g.white_elo>0 AND r.white_all IS NOT NULL AND r.white_moves>=15 UNION ALL "
+        "SELECT r.black_all,g.black_elo FROM game_reviews r JOIN games g ON g.id=r.game WHERE g.deleted=0 "
+        "AND g.black_elo>0 AND r.black_all IS NOT NULL AND r.black_moves>=15 LIMIT ?");
+    q.addBindValue(std::max(limit, 1));
+    run(q);
+    std::vector<std::pair<double, double>> samples;
+    while (q.next())
+        samples.emplace_back(q.value(0).toDouble(), q.value(1).toDouble());
+    return samples;
+}
+
 QVariantList Database::duplicates() const {
     QSqlQuery q(db_);
     q.prepare("SELECT GROUP_CONCAT(id),COUNT(*),MIN(white),MIN(black) FROM games WHERE deleted=0 AND "

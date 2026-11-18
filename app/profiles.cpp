@@ -3,12 +3,14 @@
 // seul nom ses comptes Lichess et Chess.com et son profil FIDE. Les comptes continuent
 // d'être enregistrés comme avant et portent seulement le nom de leur profil : la
 // synchronisation existante n'en sait rien et n'a pas à changer.
+#include "accuracy.h"
 #include "controller.h"
 #include <QDateTime>
 #include <QDir>
 #include <QImageReader>
 #include <QUuid>
 #include <algorithm>
+#include <cmath>
 
 namespace {
 void require(bool ok, const QString &error) {
@@ -375,6 +377,15 @@ QVariantMap Controller::skillDashboard(int profileIndex) const {
         result["blunderRate"] = rate(summary["blunders"].toLongLong());
         result["mistakeRate"] = rate(summary["mistakes"].toLongLong());
         result["inaccuracyRate"] = rate(summary["inaccuracies"].toLongLong());
+        // L'« Elo des gaffes » : la précision du joueur ramenée à l'Elo qu'ont, dans la
+        // bibliothèque, les joueurs aussi précis. Sans étalonnage possible, rien.
+        const auto fit = t64::fitStrength(db_->accuracyEloSamples());
+        QVariantMap strength{{"samples", fit.samples}};
+        if (fit.ok && summary["all"].isValid()) {
+            strength["elo"] = t64::estimateElo(fit, summary["all"].toDouble());
+            strength["spread"] = int(std::lround(fit.spread / 10)) * 10;
+        }
+        result["strength"] = strength;
         // La tactique ne vient pas des parties mais des exercices résolus : c'est la
         // seule mesure directe d'une compétence, les parties n'en donnant que le reflet.
         result["tactics"] = db_->puzzleStats();

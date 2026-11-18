@@ -1673,5 +1673,8 @@
   "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "¿Eliminar este repertorio? Se eliminarán sus jugadas preparadas y sus repasos; las partidas de la biblioteca se conservan.",
   "Titre de rubrique…": "Título de sección…",
   "Titre de rubrique": "Título de sección",
-  "Ex. Le milieu de jeu, La finale…": "P. ej. El medio juego, El final…"
+  "Ex. Le milieu de jeu, La finale…": "P. ej. El medio juego, El final…",
+  "Force estimée": "Fuerza estimada",
+  "L’Elo qu’ont, dans votre bibliothèque, les joueurs aussi précis que vous (%1 camps de parties analysées). La marge est l’écart type autour de cette droite.": "El Elo que tienen, en su biblioteca, los jugadores tan precisos como usted (%1 bandos de partidas analizadas). El margen es la desviación típica alrededor de esa recta.",
+  "Il faut au moins 30 camps de parties analysées avec un Elo connu, et des Elo assez variés, pour étalonner cette estimation (%1 pour l’instant).": "Se necesitan al menos 30 bandos de partidas analizadas con Elo conocido, y Elo suficientemente variados, para calibrar esta estimación (%1 por ahora)."
 }

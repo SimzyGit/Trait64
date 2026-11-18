@@ -30,7 +30,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 |---|---|---|---|---|---|
 | Préparer un adversaire depuis ses parties en ligne (pseudo Lichess/Chess.com) | ✅ | — | ✅ | ✅ 15 nov. | **E1** |
 | Fiche joueur : courbe Elo, ouvertures, liens FIDE/Lichess/Chess.com | ✅ photos | ✅ | ✅ | ✅ fiche, courbe Elo, Elo FIDE ; liens Lichess, Chess.com et fiche FIDE 16 nov. | E2 |
-| Rapport de style (agressivité, risque) et rapport d'erreurs (« Elo des gaffes ») | ✅ | — | — | ◐ précision par phase ; style ✅ 16 nov. (décisives, longueur, échecs, prises, roques opposés) ; pas d'« Elo des gaffes » | C2 |
+| Rapport de style (agressivité, risque) et rapport d'erreurs (« Elo des gaffes ») | ✅ | — | — | ◐ précision par phase ; style ✅ 16 nov. (décisives, longueur, échecs, prises, roques opposés) ; « Elo des gaffes » ✅ 19 nov. (force estimée, étalonnée sur la bibliothèque) | C2 |
 | Retrouver le compte en ligne d'un joueur anonyme | ✅ | — | — | ✗ écarté : vie privée | — |
 
 ### Analyse et compréhension

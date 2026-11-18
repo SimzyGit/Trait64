@@ -6,6 +6,7 @@
 #pragma once
 #include "chess.hpp"
 #include "game.h"
+#include <utility>
 #include <vector>
 
 namespace t64 {
@@ -62,5 +63,21 @@ struct AccuracySummary {
 // que si les positions d'avant et d'après sont toutes deux évaluées.
 AccuracySummary summarize(const Game &game, const std::vector<int> &nodes,
                           const std::vector<NodeScore> &scores);
+
+// Force estimée d'après la précision (« Elo des gaffes »). Aucune formule universelle ne
+// relie l'une à l'autre : la précision dépend du moteur, de la profondeur et de la cadence.
+// On s'étalonne donc sur la bibliothèque elle-même, par une droite des moindres carrés
+// entre la précision de chaque camp et son Elo. `spread` est l'écart type des résidus :
+// la marge honnête autour d'une estimation. `ok` est faux tant que l'échantillon ne
+// permet pas de conclure (trop peu de parties, Elo trop resserrés, pente nulle ou
+// négative).
+struct StrengthFit {
+    bool ok = false;
+    int samples = 0;
+    double slope = 0, intercept = 0, spread = 0;
+};
+StrengthFit fitStrength(const std::vector<std::pair<double, double>> &accuracyElo);
+// Elo arrondi à la dizaine, borné à ce que l'échelle FIDE peut raisonnablement dire.
+int estimateElo(const StrengthFit &fit, double accuracy);
 
 } // namespace t64

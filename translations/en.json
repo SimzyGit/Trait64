@@ -1673,5 +1673,8 @@
   "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "Delete this repertoire? Its prepared moves and their reviews will be deleted; the library’s games are kept.",
   "Titre de rubrique…": "Section heading…",
   "Titre de rubrique": "Section heading",
-  "Ex. Le milieu de jeu, La finale…": "E.g. The middlegame, The endgame…"
+  "Ex. Le milieu de jeu, La finale…": "E.g. The middlegame, The endgame…",
+  "Force estimée": "Estimated strength",
+  "L’Elo qu’ont, dans votre bibliothèque, les joueurs aussi précis que vous (%1 camps de parties analysées). La marge est l’écart type autour de cette droite.": "The rating that players as accurate as you have in your library (%1 analysed game sides). The margin is the standard deviation around that line.",
+  "Il faut au moins 30 camps de parties analysées avec un Elo connu, et des Elo assez variés, pour étalonner cette estimation (%1 pour l’instant).": "At least 30 analysed game sides with a known rating, and varied enough ratings, are needed to calibrate this estimate (%1 so far)."
 }
