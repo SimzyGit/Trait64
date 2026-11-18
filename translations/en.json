@@ -1658,5 +1658,17 @@
   "Analyse dans le nuage": "Cloud analysis",
   "Nuage de Lichess · profondeur %1 · %2 millions de positions": "Lichess cloud · depth %1 · %2 million positions",
   "Position absente du nuage de Lichess : il ne garde que celles que ses joueurs ont déjà fait analyser.": "Position not in the Lichess cloud: it only keeps those its players have already had analysed.",
-  "Réponse illisible du nuage de Lichess.": "Unreadable answer from the Lichess cloud."
+  "Réponse illisible du nuage de Lichess.": "Unreadable answer from the Lichess cloud.",
+  "Étiquette": "Label",
+  "Ex. Tournoi de Paris 2026, Cours de finales…": "E.g. Paris tournament 2026, Endgame course…",
+  "Elle devient la collection de ces parties : la bibliothèque les retrouve par elle. Laissez-la vide pour importer sans étiquette.": "It becomes the collection of these games: the library finds them by it. Leave it empty to import without a label.",
+  "Ce sont des études ou des cours, pas des parties jouées": "These are studies or courses, not played games",
+  "Les noms qu’ils portent à la place des joueurs (chapitres, titres) n’entrent pas dans l’onglet Joueurs.": "The names they carry instead of players (chapters, titles) stay out of the Players tab.",
+  "Recueil retiré : %n partie(s) mise(s) à la corbeille de la bibliothèque.": "Collection removed: %n game(s) moved to the library’s trash.",
+  "Usage de recueil inconnu.": "Unknown collection use.",
+  "Supprimer…": "Delete…",
+  "Études ou cours : leurs noms restent hors de l’onglet Joueurs": "Studies or courses: their names stay out of the Players tab",
+  "Supprimer l’étude": "Delete the study",
+  "Retirer le recueil « %1 » ? Ses parties vont à la corbeille de la bibliothèque, d’où elles se restaurent ; le fichier reste sur le disque.": "Remove the collection “%1”? Its games go to the library’s trash, where they can be restored; the file stays on disk.",
+  "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "Delete this repertoire? Its prepared moves and their reviews will be deleted; the library’s games are kept."
 }

@@ -71,18 +71,80 @@ void Database::upgradeV11(int originalVersion) {
         throw;
     }
 }
+// L'usage d'un recueil, pour que les chapitres d'une étude ne passent plus pour des
+// joueurs. Les recueils venus de l'onglet Études sont des études jusqu'à preuve du
+// contraire ; le reste, des parties.
+void Database::upgradeV14(int originalVersion) {
+    if (originalVersion >= 14)
+        return;
+    sql("SAVEPOINT schema14");
+    try {
+        if (!db_.record("sources").contains("purpose")) {
+            sql("ALTER TABLE sources ADD COLUMN purpose TEXT NOT NULL DEFAULT 'games'");
+            sql("UPDATE sources SET purpose='study' WHERE kind='study'");
+        }
+        sql("PRAGMA user_version=14");
+        sql("RELEASE schema14");
+    } catch (...) {
+        sql("ROLLBACK TO schema14");
+        sql("RELEASE schema14");
+        throw;
+    }
+}
+void Database::setSourcePurpose(qint64 source, const QString &purpose) {
+    if (purpose != "games" && purpose != "study")
+        throw std::runtime_error("Usage de recueil inconnu.");
+    QSqlQuery q(db_);
+    q.prepare("UPDATE sources SET purpose=? WHERE id=?");
+    q.addBindValue(purpose);
+    q.addBindValue(source);
+    run(q);
+}
+int Database::removeSource(qint64 source) {
+    sql("SAVEPOINT remove_source");
+    try {
+        QSqlQuery q(db_);
+        q.prepare(
+            "UPDATE games SET deleted=1 WHERE deleted=0 AND id IN(SELECT game_id FROM source_games WHERE "
+            "source_id=?) AND id NOT IN(SELECT game_id FROM source_games WHERE source_id<>?)");
+        q.addBindValue(source);
+        q.addBindValue(source);
+        run(q);
+        const int trashed = q.numRowsAffected();
+        for (const auto *statement : {"DELETE FROM source_games WHERE source_id=?",
+                                      "UPDATE import_history SET source_id=NULL WHERE source_id=?",
+                                      "DELETE FROM sources WHERE id=?"}) {
+            QSqlQuery step(db_);
+            step.prepare(statement);
+            step.addBindValue(source);
+            run(step);
+        }
+        sql("RELEASE remove_source");
+        return trashed;
+    } catch (...) {
+        sql("ROLLBACK TO remove_source");
+        sql("RELEASE remove_source");
+        throw;
+    }
+}
 qint64 Database::registerSource(const QVariantMap &source) {
     if (source.value("id").toString().isEmpty())
         return 0;
     QSqlQuery q(db_);
-    q.prepare("INSERT INTO sources(slug,title,url,license,kind) VALUES(?,?,?,?,?) ON CONFLICT(slug) DO "
-              "UPDATE SET title=excluded.title,url=excluded.url,license=excluded.license,"
-              "kind=excluded.kind");
+    // L'usage choisi pour un recueil déjà connu reste le sien : relire le fichier ne le
+    // remet pas à sa valeur par défaut.
+    q.prepare(
+        "INSERT INTO sources(slug,title,url,license,kind,purpose) VALUES(?,?,?,?,?,?) ON CONFLICT(slug) "
+        "DO UPDATE SET title=excluded.title,url=excluded.url,license=excluded.license,"
+        "kind=excluded.kind");
     q.addBindValue(source["id"].toString().left(200));
     q.addBindValue(source["title"].toString().left(300));
     q.addBindValue(source.value("source", QString("")).toString().left(2048));
     q.addBindValue(source.value("license", QString("")).toString().left(1000));
     q.addBindValue(source.value("kind", QString("")).toString().left(40));
+    const auto purpose =
+        source.value("purpose", source.value("kind").toString() == "study" ? "study" : "games").toString();
+    q.addBindValue(purpose == "study" ? "study" : "games");
     run(q);
     q.prepare("SELECT id FROM sources WHERE slug=?");
     q.addBindValue(source["id"].toString().left(200));
@@ -127,13 +189,14 @@ void Database::recordImport(qint64 source, const QString &file, const QString &d
 }
 QVariantList Database::sources() const {
     QSqlQuery q(db_);
-    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games,s.kind FROM sources s ORDER BY s.title");
+    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games,s.kind,s.purpose FROM sources s ORDER BY "
+              "s.title");
     run(q);
     QVariantList rows;
     while (q.next())
         rows << QVariantMap{{"id", q.value(0)},     {"slug", q.value(1)},    {"title", q.value(2)},
                             {"source", q.value(3)}, {"license", q.value(4)}, {"games", q.value(5)},
-                            {"kind", q.value(6)}};
+                            {"kind", q.value(6)},   {"purpose", q.value(7)}};
     return rows;
 }
 QVariantList Database::importHistory() const {

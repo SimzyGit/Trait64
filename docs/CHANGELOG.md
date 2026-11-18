@@ -1,5 +1,11 @@
 # Changements
 
+## Études et joueurs — 18 novembre 2026
+
+- **Supprimer une étude** (onglet *Études* → *Supprimer…*) : un répertoire avec ses révisions, ou un recueil, dont les parties passent à la corbeille de la bibliothèque — d'où elles se restaurent ; le fichier PGN reste sur le disque.
+- **Une étiquette à l'import** (*Importer*, ou un PGN déposé sur la fenêtre) : elle devient la collection des parties importées et un recueil de l'onglet *Études*. Une case dit s'il s'agit d'études ou de cours plutôt que de parties jouées.
+- **L'onglet Joueurs ne montre plus de titres d'études** : les noms des parties d'un recueil d'études (chapitres, titres de cours) et les noms de remplissage (« ? », « Blancs », « Noirs »…) n'y entrent plus. Chaque recueil se dit *études* ou *parties jouées* dans l'onglet *Études* ; ceux déjà lus depuis cet onglet sont comptés comme études. La bibliothèque passe au schéma 14 (une colonne ajoutée).
+
 ## Explorateur de plans — 17 novembre 2026
 
 - **Analyse dans le nuage** (panneau Lichess de l'analyse → *Analyse dans le nuage*) : les trois meilleures lignes que Lichess a déjà calculées pour la position, avec leur évaluation et leur profondeur, sans moteur sur l'ordinateur. Un clic joue le premier coup ; une position absente du nuage le dit.

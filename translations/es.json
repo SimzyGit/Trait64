@@ -1658,5 +1658,17 @@
   "Analyse dans le nuage": "Análisis en la nube",
   "Nuage de Lichess · profondeur %1 · %2 millions de positions": "Nube de Lichess · profundidad %1 · %2 millones de posiciones",
   "Position absente du nuage de Lichess : il ne garde que celles que ses joueurs ont déjà fait analyser.": "Posición ausente de la nube de Lichess: solo guarda las que sus jugadores ya han hecho analizar.",
-  "Réponse illisible du nuage de Lichess.": "Respuesta ilegible de la nube de Lichess."
+  "Réponse illisible du nuage de Lichess.": "Respuesta ilegible de la nube de Lichess.",
+  "Étiquette": "Etiqueta",
+  "Ex. Tournoi de Paris 2026, Cours de finales…": "P. ej. Torneo de París 2026, Curso de finales…",
+  "Elle devient la collection de ces parties : la bibliothèque les retrouve par elle. Laissez-la vide pour importer sans étiquette.": "Se convierte en la colección de estas partidas: la biblioteca las encuentra por ella. Déjela vacía para importar sin etiqueta.",
+  "Ce sont des études ou des cours, pas des parties jouées": "Son estudios o cursos, no partidas jugadas",
+  "Les noms qu’ils portent à la place des joueurs (chapitres, titres) n’entrent pas dans l’onglet Joueurs.": "Los nombres que llevan en lugar de jugadores (capítulos, títulos) no entran en la pestaña Jugadores.",
+  "Recueil retiré : %n partie(s) mise(s) à la corbeille de la bibliothèque.": "Colección retirada: %n partida(s) enviada(s) a la papelera de la biblioteca.",
+  "Usage de recueil inconnu.": "Uso de colección desconocido.",
+  "Supprimer…": "Eliminar…",
+  "Études ou cours : leurs noms restent hors de l’onglet Joueurs": "Estudios o cursos: sus nombres quedan fuera de la pestaña Jugadores",
+  "Supprimer l’étude": "Eliminar el estudio",
+  "Retirer le recueil « %1 » ? Ses parties vont à la corbeille de la bibliothèque, d’où elles se restaurent ; le fichier reste sur le disque.": "¿Retirar la colección «%1»? Sus partidas van a la papelera de la biblioteca, desde donde se restauran; el archivo queda en el disco.",
+  "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "¿Eliminar este repertorio? Se eliminarán sus jugadas preparadas y sus repasos; las partidas de la biblioteca se conservan."
 }

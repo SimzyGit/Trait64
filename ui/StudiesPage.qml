@@ -34,7 +34,7 @@ ColumnLayout {
         var collections = backend.studyCollections
         for (var j = 0; j < collections.length; ++j) {
             var c = collections[j]
-            rows.push({kind: "collection", id: c.id, name: c.title, games: c.games})
+            rows.push({kind: "collection", id: c.id, name: c.title, games: c.games, purpose: c.purpose})
         }
         return rows
     }
@@ -71,6 +71,14 @@ ColumnLayout {
             ToolTip.text: qsTr("Reprend un dossier d’études tel qu’En Croissant ou Pawn Appétit le laisse : une étude par fichier PGN, sous-dossiers compris.")
         }
         Item { Layout.fillWidth: true }
+        // Supprimer l'étude choisie : un répertoire avec ses révisions, ou un recueil, dont
+        // les parties passent à la corbeille de la bibliothèque.
+        TButton {
+            objectName: "studiesDelete"
+            text: qsTr("Supprimer…")
+            enabled: root.editable && (!!root.collection || root.selectedId > 0)
+            onClicked: deleteDialog.open()
+        }
         TButton {
             text: qsTr("Détails…")
             enabled: root.selectedId > 0
@@ -293,6 +301,21 @@ ColumnLayout {
                                                * controller.preferences.uiScale)
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
+                }
+                // Études ou parties jouées : les premières n'entrent pas dans l'onglet Joueurs.
+                CheckBox {
+                    objectName: "collectionStudy"
+                    readonly property var current: {
+                        var rows = root.backend.studyCollections
+                        for (var i = 0; root.collection && i < rows.length; ++i)
+                            if (Number(rows[i].id) === Number(root.collection.id))
+                                return rows[i]
+                        return null
+                    }
+                    text: qsTr("Études ou cours : leurs noms restent hors de l’onglet Joueurs")
+                    checked: !!current && current.purpose === "study"
+                    enabled: root.editable && !!current
+                    onToggled: root.backend.setStudyPurpose(current.id, checked)
                 }
                 Label {
                     Layout.fillWidth: true
@@ -622,5 +645,29 @@ ColumnLayout {
         defaultSuffix: "pgn"
         nameFilters: ["PGN (*.pgn)"]
         onAccepted: root.backend.exportRepertoire(root.selectedId, selectedFile.toString())
+    }
+
+    TDialog {
+        id: deleteDialog
+        objectName: "studiesDeleteDialog"
+        title: qsTr("Supprimer l’étude")
+        anchors.centerIn: parent
+        modal: true
+        width: 460
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        Label {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: root.collection
+                  ? qsTr("Retirer le recueil « %1 » ? Ses parties vont à la corbeille de la bibliothèque, d’où elles se restaurent ; le fichier reste sur le disque.").arg(root.collection.name)
+                  : qsTr("Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.")
+        }
+        onAccepted: {
+            if (root.collection) {
+                root.backend.removeStudyCollection(root.collection.id)
+                root.collection = null
+            } else if (root.selectedId > 0)
+                root.backend.deleteRepertoire(root.selectedId)
+        }
     }
 }

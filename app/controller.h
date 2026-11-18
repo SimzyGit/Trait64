@@ -342,6 +342,14 @@ class Controller : public QObject {
     Q_INVOKABLE void setFen(const QString &fen);
     Q_INVOKABLE void importText(const QString &text);
     Q_INVOKABLE void importFile(const QString &url);
+    // Un PGN importé sous une étiquette : elle devient la collection de ses parties et un
+    // recueil de la bibliothèque. `study` : des études ou des cours, dont les noms
+    // n'entrent pas dans l'onglet Joueurs.
+    Q_INVOKABLE void importLabeled(const QString &url, const QString &label, bool study);
+    // Un recueil compté comme études (true) ou comme parties jouées.
+    Q_INVOKABLE void setStudyPurpose(qint64 source, bool study);
+    // Retire un recueil : ses parties vont à la corbeille, le fichier reste sur le disque.
+    Q_INVOKABLE void removeStudyCollection(qint64 source);
     // site: "lichess" or "chesscom". Lichess re-imports only games newer than the last import.
     Q_INVOKABLE void importOnline(const QString &site, const QString &user, int max);
     Q_INVOKABLE void cancelOnline();

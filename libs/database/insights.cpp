@@ -21,10 +21,21 @@ void check(bool ok, const QString &message) {
 } // namespace
 QVariantList Database::players() const {
     QSqlQuery q(db_);
+    // Les noms des parties d'études (chapitres, titres de cours) ne sont pas des joueurs,
+    // ni les noms de remplissage d'une étude neuve ou d'un PGN incomplet.
     q.prepare(
-        "SELECT pc.name,pc.games,MAX(COALESCE((SELECT MAX(white_elo) FROM games WHERE deleted=0 AND "
-        "white=pc.name),0),COALESCE((SELECT MAX(black_elo) FROM games WHERE deleted=0 AND black=pc.name),0)) "
-        "FROM player_counts pc WHERE games>0 ORDER BY pc.games DESC,pc.name LIMIT 1000");
+        "WITH study AS (SELECT name,COUNT(*) n FROM (SELECT g.white name FROM games g WHERE g.deleted=0 AND "
+        "g.id "
+        "IN(SELECT sg.game_id FROM source_games sg JOIN sources s ON s.id=sg.source_id WHERE "
+        "s.purpose='study') UNION ALL SELECT g.black FROM games g WHERE g.deleted=0 AND g.id IN(SELECT "
+        "sg.game_id FROM source_games sg JOIN sources s ON s.id=sg.source_id WHERE s.purpose='study')) GROUP "
+        "BY "
+        "name) "
+        "SELECT pc.name,pc.games-COALESCE(st.n,0) real,MAX(COALESCE((SELECT MAX(white_elo) FROM games WHERE "
+        "deleted=0 AND white=pc.name),0),COALESCE((SELECT MAX(black_elo) FROM games WHERE deleted=0 AND "
+        "black=pc.name),0)) FROM player_counts pc LEFT JOIN study st ON st.name=pc.name WHERE "
+        "pc.games-COALESCE(st.n,0)>0 AND trim(pc.name) NOT IN('','?','-','NN','N.N.','N.N','Blancs','Noirs',"
+        "'White','Black') ORDER BY real DESC,pc.name LIMIT 1000");
     run(q);
     QVariantList result;
     while (q.next())
@@ -463,7 +474,7 @@ int Database::importPgnFile(const QString &path, const std::function<bool(int)> 
         readPgn(input, [&](Game &&game) {
             if (progress && !progress(processed))
                 throw std::runtime_error("Import interrompu : aucune partie ajoutée.");
-            linkSource(sourceId, save(game));
+            linkSource(sourceId, save(game, 0, source.value("collection").toString()));
             ++processed;
         });
         if (!processed)

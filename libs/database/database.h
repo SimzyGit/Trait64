@@ -33,6 +33,13 @@ class Database {
     int importPgnFile(const QString &path, const std::function<bool(int)> &progress,
                       const QVariantMap &source = {});
     QVariantList sources() const;
+    // L'usage d'un recueil : « games » (des parties jouées, dont les joueurs entrent dans
+    // l'onglet Joueurs) ou « study » (études, cours, exercices : leurs « joueurs » sont des
+    // titres de chapitres).
+    void setSourcePurpose(qint64 source, const QString &purpose);
+    // Retire un recueil de la base : ses parties qui n'appartiennent à aucun autre recueil
+    // vont à la corbeille ; le fichier, s'il y en a un, reste sur le disque.
+    int removeSource(qint64 source);
     // Le fichier d'un recueil a changé de nom ou de dossier : son chemin suit.
     void moveSourcePath(const QString &from, const QString &to);
     QVariantList importHistory() const;
@@ -222,6 +229,7 @@ class Database {
     void upgradeV11(int originalVersion);
     void upgradeV12(int originalVersion);
     void upgradeV13(int originalVersion);
+    void upgradeV14(int originalVersion);
     // Schéma 12 : index allégé. Voir lightindex.cpp.
     bool light_ = false;
     void saveLegacyIndex(const Game &game, qint64 id);

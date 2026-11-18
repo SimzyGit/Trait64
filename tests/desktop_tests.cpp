@@ -502,6 +502,31 @@ int main(int argc, char **argv) {
                   "Tournament test leaves no profile behind");
         }
         {
+            // Un PGN d'études importé sous une étiquette : il devient un recueil de l'onglet
+            // Études, ses chapitres n'entrent pas dans les joueurs, et il se supprime.
+            Controller shelf(dir.path() + "/labels");
+            QFile course(dir.path() + "/cours.pgn");
+            check(course.open(QIODevice::WriteOnly), "Write the course PGN");
+            course.write("[White \"Chapitre 1\"]\n[Black \"Chapitre 2\"]\n1.e4 *\n");
+            course.close();
+            shelf.importLabeled(QUrl::fromLocalFile(course.fileName()).toString(), "Cours de finales", true);
+            QElapsedTimer wait;
+            wait.start();
+            while (shelf.busy() && wait.elapsed() < 20000)
+                QTest::qWait(10);
+            qint64 collection = 0;
+            for (const auto &row : shelf.studyCollections())
+                if (row.toMap()["title"] == "Cours de finales")
+                    collection = row.toMap()["id"].toLongLong();
+            check(collection > 0 && shelf.players().isEmpty(),
+                  "A labelled study becomes a collection, its chapter names stay out of the players");
+            shelf.setStudyPurpose(collection, false);
+            check(shelf.players().size() == 2, "Marked as played games, its names count as players");
+            shelf.removeStudyCollection(collection);
+            check(shelf.studyCollections().isEmpty() && shelf.stats()["games"].toInt() == 0,
+                  "The collection is removed and its game goes to the trash");
+        }
+        {
             // L'explorateur de plans : une partie de la bibliothèque sur la structure d4-d5.
             Controller planner(dir.path() + "/plans");
             for (const auto *uci : {"d2d4", "d7d5", "g1f3", "g8f6", "c2c4"})

@@ -596,8 +596,8 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 13,
-                      "Schema version 13");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 14,
+                      "Schema version 14");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
                 check(q.exec("SELECT typeof(key) FROM positions LIMIT 1") && q.next() &&
@@ -719,9 +719,11 @@ int main(int argc, char **argv) {
             };
             check(
                 plans["games"].toInt() == 4 && planWhite.first().toMap()["move"] == "c4" &&
-                    planWhite.first().toMap()["rupture"].toBool() && row(planWhite, "Bf4")["games"].toInt() == 1 &&
-                    row(planWhite, "Bf4")["score"].toInt() == 100 && row(planBlack, "Nf6")["games"].toInt() == 1 &&
-                    row(planBlack, "e6")["rupture"].toBool() && row(planWhite, "e3").isEmpty(),
+                    planWhite.first().toMap()["rupture"].toBool() &&
+                    row(planWhite, "Bf4")["games"].toInt() == 1 &&
+                    row(planWhite, "Bf4")["score"].toInt() == 100 &&
+                    row(planBlack, "Nf6")["games"].toInt() == 1 && row(planBlack, "e6")["rupture"].toBool() &&
+                    row(planWhite, "e3").isEmpty(),
                 "The plan explorer counts each side's manoeuvres while the structure holds, then its break");
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
@@ -1087,6 +1089,49 @@ int main(int argc, char **argv) {
             check(sources.sources()[0].toMap()["games"].toInt() == 0, "Trash updates base counts");
             sources.trash(rows[0].toMap()["id"].toLongLong(), false);
             check(sources.sources()[0].toMap()["games"].toInt() == 1, "Restoration updates base counts");
+            {
+                // Une étude importée sous une étiquette : ses « joueurs » (des chapitres)
+                // restent hors de l'onglet Joueurs, comme les noms de remplissage ; ses
+                // parties portent l'étiquette comme collection.
+                t64::Database shelf(dir.path() + "/labels.sqlite");
+                const auto course = dir.path() + "/course.pgn";
+                QFile lesson(course);
+                check(lesson.open(QIODevice::WriteOnly), "Course fixture");
+                lesson.write("[White \"Chapitre 1 : les finales\"]\n[Black \"?\"]\n1.e4 *\n\n"
+                             "[White \"Blancs\"]\n[Black \"Noirs\"]\n1.d4 *\n");
+                lesson.close();
+                QFile played(dir.path() + "/played.pgn");
+                check(played.open(QIODevice::WriteOnly), "Played fixture");
+                played.write("[White \"Carlsen, Magnus\"]\n[Black \"Chapitre 1 : les finales\"]\n1.c4 *\n");
+                played.close();
+                shelf.importPgnFile(course, [](int) { return true; },
+                                    {{"id", "import:cours"},
+                                     {"title", "Cours"},
+                                     {"kind", "import"},
+                                     {"purpose", "study"},
+                                     {"collection", "Cours"}});
+                shelf.importPgnFile(dir.path() + "/played.pgn", [](int) { return true; });
+                QStringList names;
+                for (const auto &p : shelf.players())
+                    names << p.toMap()["name"].toString() + "=" + p.toMap()["games"].toString();
+                names.sort();
+                check(names == QStringList{"Carlsen, Magnus=1", "Chapitre 1 : les finales=1"},
+                      "Study names and placeholders stay out of the players; a real game still counts");
+                check(shelf.search({}, {}, false, {}, false, {{"collection", "Cours"}}).size() == 2 ||
+                          shelf.search("Chapitre").first().toMap()["collection"] == "Cours",
+                      "Imported games carry their label as collection");
+                const auto courseId = shelf.sources().first().toMap()["id"].toLongLong();
+                check(shelf.sources().first().toMap()["purpose"] == "study", "The source keeps its purpose");
+                shelf.setSourcePurpose(courseId, "games");
+                bool counted = false;
+                for (const auto &p : shelf.players())
+                    counted =
+                        counted || p.toMap()["name"] == "Chapitre 1 : les finales" && p.toMap()["games"] == 2;
+                check(counted, "Marked as played games, the collection's names count again");
+                check(shelf.removeSource(courseId) == 2 && shelf.sources().isEmpty() &&
+                          shelf.stats()["games"].toInt() == 1,
+                      "Removing a collection trashes its own games and forgets it");
+            }
             QBuffer out;
             out.open(QIODevice::WriteOnly);
             sources.exportSource(out, sourceId);

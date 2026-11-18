@@ -955,6 +955,40 @@ void Controller::cancelOnline() {
 void Controller::importFile(const QString &url) {
     importSourceFile(url, {});
 }
+void Controller::importLabeled(const QString &url, const QString &label, bool study) {
+    const auto name = label.simplified().left(200);
+    if (name.isEmpty() && !study) {
+        importFile(url);
+        return;
+    }
+    // Sans étiquette, une étude prend le nom de son fichier.
+    const auto title = name.isEmpty() ? QFileInfo(localPath(url)).completeBaseName() : name;
+    importSourceFile(url, {{"id", "import:" + title.toLower()},
+                           {"title", title},
+                           {"kind", "import"},
+                           {"purpose", study ? "study" : "games"},
+                           {"collection", title}});
+}
+void Controller::setStudyPurpose(qint64 source, bool study) {
+    try {
+        require(!busy_, "Un traitement est déjà en cours.");
+        db_->setSourcePurpose(source, study ? "study" : "games");
+        refreshLibrary();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::removeStudyCollection(qint64 source) {
+    try {
+        require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
+        const int trashed = db_->removeSource(source);
+        refreshLibrary();
+        emit message(
+            tr("Recueil retiré : %n partie(s) mise(s) à la corbeille de la bibliothèque.", nullptr, trashed));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::importSourceFile(const QString &url, const QVariantMap &source) {
     try {
         require(!busy_, "Un traitement est déjà en cours.");

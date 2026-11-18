@@ -20,7 +20,7 @@ ApplicationWindow {
             var file = firstFile(drop.urls)
             if (file === "") return
             drop.acceptProposedAction()
-            controller.importFile(file)
+            labelImport.ask(file)
         }
         Rectangle {
             anchors.fill: parent; visible: fileDrop.containsDrag; color: Qt.rgba(0, 0, 0, .35)
@@ -836,7 +836,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Imports {id:importsDialog;objectName:"importsDialog";backend:controller}
     Downloads {id:downloadsDialog;objectName:"downloadsDialog";backend:controller;onConfigureEngines:settingsDialog.open()}
     Native.FileDialog {id:sourceExportDialog;title:qsTr("Exporter cette base en PGN");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
-    Native.FileDialog {id:importDialog;title:qsTr("Importer des parties");nameFilters:[qsTr("Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)"),qsTr("Tous les fichiers (*)")];onAccepted:controller.importFile(selectedFile.toString())}
+    Native.FileDialog {id:importDialog;title:qsTr("Importer des parties");nameFilters:[qsTr("Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)"),qsTr("Tous les fichiers (*)")];onAccepted:labelImport.ask(selectedFile.toString())}
     Native.FileDialog {id:exportDialog;title:qsTr("Exporter en PGN ou archive T64 expérimentale");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)",qsTr("Page HTML autonome, étude ouverte (*.html)"),qsTr("Position EPD (*.epd)"),qsTr("Archive T64 expérimentale (*.t64)")];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
     Native.FileDialog {id:backupDialog;title:qsTr("Créer une sauvegarde complète");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"sqlite";nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.backup(selectedFile.toString())}
     Native.FileDialog {id:openDatabaseDialog;title:qsTr("Ouvrir une bibliothèque Trait64");nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.openBackup(selectedFile.toString())}
@@ -946,6 +946,29 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             }
         }
         MenuItem {text:trashCheck.checked?qsTr("Restaurer la partie"):qsTr("Mettre à la corbeille");onTriggered:controller.trash(win.selectedGame,!trashCheck.checked)}
+    }
+    // Un PGN ou une base, avant l'import : son étiquette (la collection de ses parties, un
+    // recueil de la bibliothèque) et ce qu'il contient. Les positions et les archives
+    // Trait64 s'importent sans question.
+    TDialog {id:labelImport;objectName:"labelImportDialog";title:qsTr("Importer");anchors.centerIn:parent;modal:true;width:Math.min(520,win.width-32);standardButtons:Dialog.Ok|Dialog.Cancel
+        property string url:""
+        function ask(file) {
+            if (!/\.(pgn|db3|si4|sn4|sg4|cbh|cbg|cbp|cbt)$/i.test(file)) { controller.importFile(file); return }
+            url = file
+            var name = decodeURIComponent(file.substring(file.lastIndexOf("/") + 1))
+            labelField.text = name.substring(0, name.lastIndexOf(".")) || name
+            studyKind.checked = false
+            open()
+        }
+        ColumnLayout {anchors.fill:parent;spacing:8
+            Label {text:qsTr("Étiquette");font.weight:Font.DemiBold}
+            TextField {id:labelField;objectName:"labelImportField";Layout.fillWidth:true;placeholderText:qsTr("Ex. Tournoi de Paris 2026, Cours de finales…")}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
+                text:qsTr("Elle devient la collection de ces parties : la bibliothèque les retrouve par elle. Laissez-la vide pour importer sans étiquette.")}
+            CheckBox {id:studyKind;objectName:"labelImportStudy";text:qsTr("Ce sont des études ou des cours, pas des parties jouées")
+                ToolTip.visible:hovered;ToolTip.text:qsTr("Les noms qu’ils portent à la place des joueurs (chapitres, titres) n’entrent pas dans l’onglet Joueurs.")}
+        }
+        onAccepted:controller.importLabeled(url,labelField.text,studyKind.checked)
     }
     TDialog {id:collectionDialog;objectName:"collectionDialog";title:qsTr("Collection de la partie");anchors.centerIn:parent;modal:true;width:440;standardButtons:Dialog.Ok|Dialog.Cancel
         TextField {id:collectionField;anchors.fill:parent;placeholderText:qsTr("Ex. Préparation tournoi, Répertoire Blancs…")}

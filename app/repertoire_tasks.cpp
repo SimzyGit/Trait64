@@ -420,7 +420,9 @@ QVariantList Controller::studyCollections() const {
     QVariantList recueils;
     for (const auto &row : db_->sources()) {
         const auto source = row.toMap();
-        if (source["kind"].toString() == "study")
+        // Les recueils de l'onglet Études et les PGN importés sous une étiquette : les uns
+        // comme les autres se parcourent, se rangent et se suppriment ici.
+        if (source["kind"].toString() == "study" || source["kind"].toString() == "import")
             recueils.append(source);
     }
     return recueils;
