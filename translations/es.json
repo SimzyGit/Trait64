@@ -1654,5 +1654,9 @@
   "Recherche des parties de cette structure…": "Buscando partidas con esta estructura…",
   "Aucune partie de la bibliothèque n’a eu cette structure de pions.": "Ninguna partida de la biblioteca tuvo esta estructura de peones.",
   "%1 partie(s) de la bibliothèque ont eu cette structure de pions (les mieux classées d’abord). Chaque manœuvre compte une fois par partie, tant que la structure tient ; la rupture est la poussée de pion qui la change.": "%1 partida(s) de la biblioteca tuvieron esta estructura de peones (las mejor clasificadas primero). Cada maniobra cuenta una vez por partida mientras la estructura se mantiene; la ruptura es el avance de peón que la cambia.",
-  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "Las partidas de la biblioteca con esta estructura terminan ahí: ninguna jugada la siguió."
+  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "Las partidas de la biblioteca con esta estructura terminan ahí: ninguna jugada la siguió.",
+  "Analyse dans le nuage": "Análisis en la nube",
+  "Nuage de Lichess · profondeur %1 · %2 millions de positions": "Nube de Lichess · profundidad %1 · %2 millones de posiciones",
+  "Position absente du nuage de Lichess : il ne garde que celles que ses joueurs ont déjà fait analyser.": "Posición ausente de la nube de Lichess: solo guarda las que sus jugadores ya han hecho analizar.",
+  "Réponse illisible du nuage de Lichess.": "Respuesta ilegible de la nube de Lichess."
 }

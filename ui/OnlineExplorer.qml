@@ -14,8 +14,10 @@ ColumnLayout {
     readonly property var p: backend.preferences
     readonly property var report: backend.onlineReport || ({})
     readonly property real total: Number(report.total || 0)
-    readonly property string source: ["lichess", "masters", "tablebase"][base.currentIndex]
+    readonly property string source: ["lichess", "masters", "tablebase", "cloud"][base.currentIndex]
     readonly property bool tables: !!report.tablebase
+    // L'analyse dans le nuage de Lichess : des lignes évaluées, ni parties ni verdicts.
+    readonly property bool cloud: !!report.cloud
     // Le verdict des tables, dit du camp au trait.
     function verdict(category) {
         return category === "win" ? qsTr("gagne") : category === "loss" ? qsTr("perd")
@@ -62,7 +64,7 @@ ColumnLayout {
             id: base
             objectName: "onlineBase"
             width: root.s(150)
-            model: [qsTr("Lichess"), qsTr("Maîtres"), qsTr("Finales (7 pièces)")]
+            model: [qsTr("Lichess"), qsTr("Maîtres"), qsTr("Finales (7 pièces)"), qsTr("Analyse dans le nuage")]
             onActivated: root.ask()
         }
         TComboBox {
@@ -100,7 +102,10 @@ ColumnLayout {
         elide: Text.ElideRight
         color: root.p.muted
         font.pixelSize: root.s(11)
-        text: root.tables
+        text: root.cloud
+              ? qsTr("Nuage de Lichess · profondeur %1 · %2 millions de positions").arg(root.report.depth || 0)
+                    .arg(Math.round(Number(root.report.knodes || 0) / 1000))
+              : root.tables
               ? qsTr("Le camp au trait %1").arg(root.verdict(root.report.verdict || ""))
                 + (root.report.dtm !== undefined && root.report.dtm !== null ? qsTr(" · mat en %1 demi-coups").arg(root.report.dtm) : "")
                 + (root.report.local ? qsTr(" · tables de l’ordinateur") : "")
@@ -117,7 +122,7 @@ ColumnLayout {
         ScrollBar.vertical: ScrollBar {}
         header: RowLayout {
             width: list.width; spacing: 8
-            visible: root.total > 0 && !root.tables
+            visible: root.total > 0 && !root.tables && !root.cloud
             Label {text: qsTr("Coup"); Layout.preferredWidth: root.s(52); color: root.p.muted; font.pixelSize: root.s(11)}
             Label {text: qsTr("Parties"); Layout.preferredWidth: root.s(70); horizontalAlignment: Text.AlignRight
                    color: root.p.muted; font.pixelSize: root.s(11)}
@@ -132,11 +137,13 @@ ColumnLayout {
             readonly property real played: Math.max(1, Number(modelData.count || 0))
             width: list.width; padding: 3
             onClicked: root.backend.move(modelData.uci)
-            Accessible.name: root.tables ? modelData.san + ", " + root.verdict(modelData.verdict || "")
+            Accessible.name: root.cloud ? modelData.eval + ", " + modelData.line
+                             : root.tables ? modelData.san + ", " + root.verdict(modelData.verdict || "")
                                          : modelData.san + ", " + modelData.count + qsTr(" partie(s)")
             contentItem: RowLayout {
                 spacing: 8
-                Label {text: row.modelData.san; Layout.preferredWidth: root.s(52); font.weight: Font.DemiBold}
+                Label {text: root.cloud ? row.modelData.eval : row.modelData.san; Layout.preferredWidth: root.s(52); font.weight: Font.DemiBold}
+                Label {visible: root.cloud; Layout.fillWidth: true; elide: Text.ElideRight; text: root.cloud ? row.modelData.line : ""}
                 // Les tables de finales : un verdict et une distance, pas des parties.
                 Label {visible: root.tables; Layout.fillWidth: true; elide: Text.ElideRight
                        text: root.tables ? root.verdict(row.modelData.verdict || "") : ""
@@ -147,16 +154,16 @@ ColumnLayout {
                                ? qsTr("mat en %1").arg(row.modelData.dtm)
                              : row.modelData.dtz !== undefined && row.modelData.dtz !== null
                                ? qsTr("DTZ %1").arg(row.modelData.dtz) : ""}
-                Label {visible: !root.tables; text: row.modelData.count || ""; Layout.preferredWidth: root.s(70); horizontalAlignment: Text.AlignRight}
+                Label {visible: !root.tables && !root.cloud; text: row.modelData.count || ""; Layout.preferredWidth: root.s(70); horizontalAlignment: Text.AlignRight}
                 Row {
-                    visible: !root.tables
+                    visible: !root.tables && !root.cloud
                     Layout.fillWidth: true; height: 10; Layout.alignment: Qt.AlignVCenter
                     Rectangle {width: parent.width * row.modelData.white / row.played; height: 10
                                color: "#f4f4f1"; border.color: root.p.line}
                     Rectangle {width: parent.width * row.modelData.draw / row.played; height: 10; color: "#a3a8ad"}
                     Rectangle {width: parent.width * row.modelData.black / row.played; height: 10; color: "#2c3035"}
                 }
-                Label {visible: !root.tables; text: Number(row.modelData.rating || 0) > 0 ? row.modelData.rating : "—"
+                Label {visible: !root.tables && !root.cloud; text: Number(row.modelData.rating || 0) > 0 ? row.modelData.rating : "—"
                        Layout.preferredWidth: root.s(40); horizontalAlignment: Text.AlignRight; color: root.p.muted}
             }
         }
@@ -194,6 +201,7 @@ ColumnLayout {
             text: root.report.running ? qsTr("Interrogation de Lichess…")
                   : root.report.error ? root.backend.uiText(root.report.error)
                   : root.source === "tablebase" ? qsTr("Position terminée : rien à jouer.")
+                  : root.source === "cloud" ? qsTr("Position absente du nuage de Lichess : il ne garde que celles que ses joueurs ont déjà fait analyser.")
                   : qsTr("Aucune partie de cette base n’est passée par cette position.")
         }
     }

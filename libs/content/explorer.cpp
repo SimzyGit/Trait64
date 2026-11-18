@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "explorer.h"
+#include "game.h"
 #include "syzygy.h"
 #include <QHash>
 #include <QJsonArray>
@@ -8,6 +9,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUrlQuery>
+#include <algorithm>
 
 namespace t64 {
 namespace {
@@ -55,7 +57,7 @@ OpeningExplorer::OpeningExplorer(QObject *parent, QNetworkAccessManager *network
     : QObject(parent), network_(network ? network : new QNetworkAccessManager(this)) {}
 
 bool OpeningExplorer::knownSource(const QString &source) {
-    return source == "lichess" || source == "masters" || source == "tablebase";
+    return source == "lichess" || source == "masters" || source == "tablebase" || source == "cloud";
 }
 
 int OpeningExplorer::pieces(const QString &fen) {
@@ -63,6 +65,65 @@ int OpeningExplorer::pieces(const QString &fen) {
     for (const auto c : fen.section(' ', 0, 0))
         count += c.isLetter() ? 1 : 0;
     return count;
+}
+
+QVariantMap OpeningExplorer::parseCloud(const QByteArray &body, const QString &fen) {
+    const auto root = QJsonDocument::fromJson(body).object();
+    if (!root.contains("pvs"))
+        return {{"error", "Réponse illisible du nuage de Lichess."}};
+    QVariantList lines;
+    for (const auto &item : root["pvs"].toArray()) {
+        const auto pv = item.toObject();
+        const auto moves = pv["moves"].toString().split(' ', Qt::SkipEmptyParts);
+        if (moves.isEmpty())
+            continue;
+        // La ligne en notation, dix coups au plus : au-delà, on ne la lit plus.
+        QStringList words;
+        QString firstSan, firstUci;
+        try {
+            auto board = checkedBoard(fen.toStdString());
+            for (int i = 0; i < moves.size() && i < 10; ++i) {
+                // Lichess écrit le roque du roi vers sa tour (e1h1) : on accepte les deux formes.
+                chess::Movelist legal;
+                chess::movegen::legalmoves(legal, board);
+                const auto wanted = moves[i].toStdString();
+                const auto found = std::find_if(legal.begin(), legal.end(), [&](const chess::Move &m) {
+                    return chess::uci::moveToUci(m, false) == wanted ||
+                           chess::uci::moveToUci(m, true) == wanted;
+                });
+                if (found == legal.end())
+                    break;
+                const auto move = *found;
+                const bool white = board.sideToMove() == chess::Color::WHITE;
+                if (white || i == 0)
+                    words << QString::number(board.fullMoveNumber()) + (white ? "." : "…");
+                const auto san = QString::fromStdString(chess::uci::moveToSan(board, move));
+                if (i == 0) {
+                    firstSan = san;
+                    firstUci = QString::fromStdString(chess::uci::moveToUci(move, false));
+                }
+                words << san;
+                board.makeMove(move);
+            }
+        } catch (const std::exception &) {
+            continue;
+        }
+        if (firstSan.isEmpty())
+            continue;
+        const bool mate = pv.contains("mate");
+        const int value = mate ? pv["mate"].toInt() : pv["cp"].toInt();
+        lines << QVariantMap{{"uci", firstUci},
+                             {"san", firstSan},
+                             {"line", words.join(' ')},
+                             {"score", mate ? (value > 0 ? 100. : -100.) : value / 100.},
+                             {"eval", mate ? "#" + QString::number(value)
+                                           : (value > 0 ? "+" : "") + QString::number(value / 100., 'f', 2)}};
+    }
+    return {{"cloud", true},
+            {"total", lines.size()},
+            {"moves", lines},
+            {"depth", root["depth"].toInt()},
+            {"knodes", root["knodes"].toVariant()}};
 }
 
 QVariantMap OpeningExplorer::parseTablebase(const QByteArray &body) {
@@ -109,6 +170,11 @@ QVariantMap OpeningExplorer::parseTablebase(const QByteArray &body) {
 QUrl OpeningExplorer::buildUrl(const QString &source, const QString &fen, const QVariantMap &filters) {
     if (!knownSource(source) || fen.isEmpty())
         return {};
+    if (source == "cloud") {
+        QUrl cloud("https://lichess.org/api/cloud-eval");
+        cloud.setQuery(QUrlQuery{{"fen", fen}, {"multiPv", "3"}});
+        return cloud;
+    }
     if (source == "tablebase") {
         // Sept pièces au plus : au-delà, les tables n'existent pas et la question ne
         // part pas.
@@ -193,14 +259,14 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
                         : "Base en ligne inconnue.");
         return;
     }
-    const bool tables = source == "tablebase";
+    const bool tables = source == "tablebase", cloud = source == "cloud";
     QNetworkRequest request(url);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(20000);
     request.setRawHeader("Accept", "application/json");
     request.setRawHeader("User-Agent", "Trait64-explorer/1.0");
     reply_ = network_->get(request);
-    connect(reply_, &QNetworkReply::finished, this, [this, tables] {
+    connect(reply_, &QNetworkReply::finished, this, [this, tables, cloud, fen] {
         if (!reply_)
             return;
         std::unique_ptr<QNetworkReply> reply(reply_.data());
@@ -214,11 +280,18 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
             emit failed("L’explorateur Lichess demande de ralentir. Réessayez dans un instant.");
             return;
         }
+        // 404 : la position n'est pas dans le nuage, ce qui n'a rien d'une panne.
+        if (cloud && status == 404) {
+            emit ready({{"cloud", true}, {"total", 0}, {"moves", QVariantList{}}});
+            return;
+        }
         if (reply->error() != QNetworkReply::NoError || status != 200) {
             emit failed("Explorateur Lichess injoignable : " + reply->errorString());
             return;
         }
-        auto report = tables ? parseTablebase(reply->readAll()) : parse(reply->readAll());
+        auto report = cloud    ? parseCloud(reply->readAll(), fen)
+                      : tables ? parseTablebase(reply->readAll())
+                               : parse(reply->readAll());
         if (report.contains("error")) {
             emit failed(report["error"].toString());
             return;

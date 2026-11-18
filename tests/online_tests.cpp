@@ -372,6 +372,38 @@ int main(int argc, char **argv) {
                   "An answer already given from the mover's side is not turned over a second time");
             check(OpeningExplorer::parseTablebase("oops").contains("error"),
                   "A malformed tablebase answer is an error");
+            // Le nuage de Lichess : trois lignes au plus, évaluées du côté des Blancs, mises en
+            // notation ; un mat garde son nombre de coups.
+            const auto cloudUrl = OpeningExplorer::buildUrl("cloud", start, {});
+            check(cloudUrl.host() == "lichess.org" && cloudUrl.path() == "/api/cloud-eval" &&
+                      QUrlQuery(cloudUrl).queryItemValue("multiPv") == "3" &&
+                      QUrlQuery(cloudUrl).queryItemValue("fen", QUrl::FullyDecoded) == start,
+                  "The cloud evaluation asks Lichess for three lines");
+            const auto cloud = OpeningExplorer::parseCloud(
+                R"({"fen":"x","knodes":12000,"depth":40,"pvs":[{"moves":"e2e4 e7e5 g1f3","cp":31},
+                {"moves":"d2d4 d7d5","cp":-5},{"moves":"g1f3","mate":-3}]})",
+                start);
+            const auto cloudLines = cloud["moves"].toList();
+            check(cloud["cloud"].toBool() && cloud["depth"].toInt() == 40 && cloudLines.size() == 3 &&
+                      cloudLines[0].toMap()["san"] == "e4" &&
+                      cloudLines[0].toMap()["line"] == "1. e4 e5 2. Nf3" &&
+                      cloudLines[0].toMap()["eval"] == "+0.31" && cloudLines[1].toMap()["eval"] == "-0.05" &&
+                      cloudLines[2].toMap()["eval"] == "#-3" && cloudLines[2].toMap()["score"].toDouble() < 0,
+                  "Cloud lines read in notation, from White's side, mates kept as mates");
+            // L'exemple de la documentation de Lichess : roque écrit du roi vers la tour.
+            const auto spanish = OpeningExplorer::parseCloud(
+                R"({"fen":"r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3","knodes":203656,
+                "depth":60,"pvs":[{"moves":"g8f6 e1h1 f6e4 f1e1 e4d6 f3e5 c6e5 e1e5 f8e7 b5f1","cp":18},
+                {"moves":"a7a6 b5a4 g8f6 e1h1 f8e7 f1e1 b7b5 a4b3 e8h8 a2a4","cp":19}]})",
+                "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3");
+            const auto berlin = spanish["moves"].toList();
+            check(berlin.size() == 2 &&
+                      berlin[0].toMap()["line"].toString().startsWith("3… Nf6 4. O-O Nxe4 5. Re1") &&
+                      berlin[1].toMap()["line"].toString().contains("O-O") &&
+                      berlin[1].toMap()["line"].toString().split(' ').size() > 12,
+                  "Lichess's king-to-rook castling reads as O-O, to the end of the line");
+            check(OpeningExplorer::parseCloud("oops", start).contains("error"),
+                  "A malformed cloud answer is an error");
             {
                 // Les tables de l'ordinateur, lues par Fathom : KQK, KRK, KPK, KBK, KNK et
                 // KQKQ, rangées dans un sous-dossier comme les paquets de Lichess.

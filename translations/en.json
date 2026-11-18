@@ -1654,5 +1654,9 @@
   "Recherche des parties de cette structure…": "Looking for games with this structure…",
   "Aucune partie de la bibliothèque n’a eu cette structure de pions.": "No game in the library had this pawn structure.",
   "%1 partie(s) de la bibliothèque ont eu cette structure de pions (les mieux classées d’abord). Chaque manœuvre compte une fois par partie, tant que la structure tient ; la rupture est la poussée de pion qui la change.": "%1 library game(s) had this pawn structure (highest rated first). Each manoeuvre counts once per game, while the structure holds; the break is the pawn move that changes it.",
-  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "The library games with this structure end there: no move followed it."
+  "Les parties de la bibliothèque qui ont eu cette structure s’y arrêtent : aucun coup ne l’a suivie.": "The library games with this structure end there: no move followed it.",
+  "Analyse dans le nuage": "Cloud analysis",
+  "Nuage de Lichess · profondeur %1 · %2 millions de positions": "Lichess cloud · depth %1 · %2 million positions",
+  "Position absente du nuage de Lichess : il ne garde que celles que ses joueurs ont déjà fait analyser.": "Position not in the Lichess cloud: it only keeps those its players have already had analysed.",
+  "Réponse illisible du nuage de Lichess.": "Unreadable answer from the Lichess cloud."
 }

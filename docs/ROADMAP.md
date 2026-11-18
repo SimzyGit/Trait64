@@ -42,7 +42,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Détection des sacrifices | ✅ | — | — | ✅ 15 nov., dans le bilan | B2 |
 | Explorateur de plans (plans joués depuis une structure) | ✅ | — | — | ✅ 17 nov. (manœuvres et ruptures par camp, onglet Arbre) | B3 |
 | Probabilités de finale, tendances | ✅ | — | — | ◐ score du matériel en finale ✅ 16 nov. (onglet Arbre) ; pas de tendances | B3 |
-| Moteurs distants (nuage) | ✅ | — | ✅ payant | ✗ | K |
+| Moteurs distants (nuage) | ✅ | — | ✅ payant | ◐ analyse dans le nuage de Lichess ✅ 18 nov. (lignes déjà calculées) ; pas de moteur distant à soi | K |
 | Gaviota | ✅ | ✅ | — | ✗ (Syzygy ✅) | — |
 
 ### Saisie, notation, publication

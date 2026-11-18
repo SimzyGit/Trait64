@@ -35,6 +35,9 @@ class OpeningExplorer : public QObject {
     // Les tables de finales de Lichess (sept pièces au plus) : le verdict de la position
     // et celui de chaque coup, vus du camp au trait.
     static QVariantMap parseTablebase(const QByteArray &body);
+    // L'analyse dans le nuage de Lichess : les lignes que ses joueurs ont déjà fait
+    // calculer pour cette position (trois au plus), évaluées du point de vue des Blancs.
+    static QVariantMap parseCloud(const QByteArray &body, const QString &fen);
     static int pieces(const QString &fen);
 
   signals:

@@ -2,6 +2,7 @@
 
 ## Explorateur de plans — 17 novembre 2026
 
+- **Analyse dans le nuage** (panneau Lichess de l'analyse → *Analyse dans le nuage*) : les trois meilleures lignes que Lichess a déjà calculées pour la position, avec leur évaluation et leur profondeur, sans moteur sur l'ordinateur. Un clic joue le premier coup ; une position absente du nuage le dit.
 - **Plans de cette structure** (onglet *Arbre*, ou la palette de commandes) : dans les parties de la bibliothèque qui ont eu la structure de pions de l'échiquier — les 400 mieux classées —, ce que chaque camp a fait de ses pièces tant qu'elle a tenu, et la poussée de pion qui l'a changée (la rupture), avec leur fréquence et leur score. Un clic ouvre la partie la mieux classée où le coup a été joué.
 
 ## Finales — 16 novembre 2026
