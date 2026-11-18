@@ -40,8 +40,11 @@ ColumnLayout {
     }
     spacing: 10
 
-    RowLayout {
+    // Un Flow, et une largeur souhaitée nulle : en rangée, ces six boutons imposaient leur
+    // largeur à toute la fenêtre au plus gros texte. Ils passent à la ligne s'il le faut.
+    Flow {
         Layout.fillWidth: true
+        Layout.preferredWidth: 1
         spacing: 8
         TButton {
             objectName: "studiesCreate"
@@ -70,7 +73,6 @@ ColumnLayout {
             ToolTip.visible: hovered || visualFocus
             ToolTip.text: qsTr("Reprend un dossier d’études tel qu’En Croissant ou Pawn Appétit le laisse : une étude par fichier PGN, sous-dossiers compris.")
         }
-        Item { Layout.fillWidth: true }
         // Supprimer l'étude choisie : un répertoire avec ses révisions, ou un recueil, dont
         // les parties passent à la corbeille de la bibliothèque.
         TButton {
