@@ -1670,5 +1670,8 @@
   "Études ou cours : leurs noms restent hors de l’onglet Joueurs": "Studies or courses: their names stay out of the Players tab",
   "Supprimer l’étude": "Delete the study",
   "Retirer le recueil « %1 » ? Ses parties vont à la corbeille de la bibliothèque, d’où elles se restaurent ; le fichier reste sur le disque.": "Remove the collection “%1”? Its games go to the library’s trash, where they can be restored; the file stays on disk.",
-  "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "Delete this repertoire? Its prepared moves and their reviews will be deleted; the library’s games are kept."
+  "Supprimer ce répertoire ? Ses coups préparés et leurs révisions seront supprimés ; les parties de la bibliothèque sont conservées.": "Delete this repertoire? Its prepared moves and their reviews will be deleted; the library’s games are kept.",
+  "Titre de rubrique…": "Section heading…",
+  "Titre de rubrique": "Section heading",
+  "Ex. Le milieu de jeu, La finale…": "E.g. The middlegame, The endgame…"
 }

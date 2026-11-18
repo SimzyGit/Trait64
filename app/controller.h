@@ -489,6 +489,9 @@ class Controller : public QObject {
     Q_INVOKABLE void toggleQuestion();
     // Un diagramme dans la notation après le coup courant (NAG 220).
     Q_INVOKABLE void toggleDiagram();
+    // Un titre de rubrique avant le coup courant ([%title …] dans son commentaire) ; un
+    // texte vide le retire.
+    Q_INVOKABLE void setMoveTitle(const QString &title);
     // La position courante sur Lichess : son adresse et son QR code, en image SVG.
     Q_INVOKABLE QVariantMap positionQr() const;
     // L'exercice de Stoyko : les variantes écrites depuis la position courante, la fin de

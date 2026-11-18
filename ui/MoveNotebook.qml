@@ -31,7 +31,16 @@ Item {
         id: moveMenu; objectName: "moveMenu"
         MenuItem { objectName: "deleteFromHere"; text: qsTr("Supprimer à partir d’ici"); onTriggered: root.backend.deleteVariation() }
         MenuItem { text: qsTr("Promouvoir la variante"); onTriggered: root.backend.promote() }
+        MenuItem { objectName: "titleEdit"; text: qsTr("Titre de rubrique…"); onTriggered: { titleField.text = root.backend.state.moveTitle || ""; titleDialog.open() } }
         MenuItem { objectName: "diagramToggle"; text: qsTr("Diagramme après ce coup"); checkable: true; checked: !!root.backend.state.diagram; onTriggered: root.backend.toggleDiagram() }
+    }
+    // Un titre de rubrique avant le coup : vide, il s'efface.
+    TDialog {
+        id: titleDialog; objectName: "titleDialog"
+        title: qsTr("Titre de rubrique"); anchors.centerIn: Overlay.overlay; modal: true; width: 420
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        TextField { id: titleField; width: parent.width; placeholderText: qsTr("Ex. Le milieu de jeu, La finale…") }
+        onAccepted: root.backend.setMoveTitle(titleField.text)
     }
     property bool forceFollow: false
     function requestFollow(force) {
@@ -192,7 +201,7 @@ Item {
                         readonly property var token: modelData
                         readonly property bool side: token.depth > 0
                         sourceComponent: token.kind === "move" ? flowMove : token.kind === "comment" ? flowComment
-                                       : token.kind === "diagram" ? flowDiagram : flowParen
+                                       : token.kind === "diagram" ? flowDiagram : token.kind === "heading" ? flowHeading : flowParen
                     }
                 }
             }
@@ -241,6 +250,15 @@ Item {
                     topPadding: 3; color: root.muted; font.pixelSize: 12 * root.textScale
                 }
             }
+            // Un titre de rubrique tient sa ligne, en gras, avant le coup qu'il annonce.
+            Component {
+                id: flowHeading
+                Label {
+                    width: flow.width; topPadding: 6 * root.textScale; bottomPadding: 2 * root.textScale
+                    text: parent.token.text; wrapMode: Text.WordWrap
+                    font.weight: Font.DemiBold; font.pixelSize: 14 * root.textScale
+                }
+            }
             // Un diagramme tient une ligne à lui seul, centré.
             Component {
                 id: flowDiagram
@@ -286,6 +304,17 @@ Item {
                 spacing: 3
                 property real indent: Math.min(modelData.depth * 12, width * .16)
                 property real moveHeight: modelData.initial ? initialButton.height : cells.height + (branchLabel.visible ? branchLabel.implicitHeight + row.spacing : 0)
+                                                                                + (heading.visible ? heading.implicitHeight + row.spacing : 0)
+                Label {
+                    id: heading
+                    readonly property string titles: row.modelData.initial ? ""
+                        : [(row.modelData.white || {}).title, (row.modelData.black || {}).title].filter(function(t) { return !!t }).join(" · ")
+                    visible: titles.length > 0
+                    width: row.width - row.indent; x: row.indent
+                    topPadding: 6 * root.textScale
+                    text: titles; wrapMode: Text.WordWrap
+                    font.weight: Font.DemiBold; font.pixelSize: 14 * root.textScale
+                }
                 Label {
                     id: branchLabel
                     visible: !row.modelData.initial && row.modelData.depth > 0 && !!row.modelData.start

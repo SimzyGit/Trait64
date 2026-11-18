@@ -481,7 +481,7 @@ void Controller::refresh(bool content) {
         {"selected", selected_},
         {"flipped", flipped_},
         {"status", status},
-        {"comment", s(current.comment)},
+        {"comment", t64::withoutMarkers(s(current.comment))},
         {"title", s(game_.tags["White"]) + " — " + s(game_.tags["Black"])},
         {"tags", tags},
         {"dirty", dirty_},
@@ -511,6 +511,7 @@ void Controller::refresh(bool content) {
         {"guessAsked", guessAsked_},
         {"questions", questions_},
         {"diagram", t64::hasDiagram(current)},
+        {"moveTitle", t64::splitComment(current.comment).title},
         {"question", QString::fromStdString(current.comment).contains("[%tqu")},
         {"trainingComplete", trainingComplete_},
         {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
@@ -1433,14 +1434,17 @@ void Controller::flip() {
 void Controller::setComment(const QString &comment) {
     if (trainingActive())
         return;
-    if (game_.nodes[node_].comment == comment.toStdString())
+    // Les marques cachées à l'éditeur (titre, question) restent en tête du commentaire.
+    const auto markers = t64::commentMarkers(s(game_.nodes[node_].comment));
+    const auto full = markers.isEmpty() ? comment : markers + ' ' + comment;
+    if (game_.nodes[node_].comment == full.toStdString())
         return;
     if (commentNode_ != node_ || !commentEdit_.isValid() || commentEdit_.elapsed() > 1200) {
         remember();
         commentNode_ = node_;
     }
     commentEdit_.restart();
-    game_.nodes[node_].comment = comment.left(100000).toStdString();
+    game_.nodes[node_].comment = full.left(100000).trimmed().toStdString();
     refresh(true);
 }
 void Controller::setNag(int nag) {
@@ -1910,6 +1914,21 @@ QVariantMap Controller::positionQr() const {
     const auto svg = QByteArray::fromStdString(t64::qrSvg(url));
     return {{"url", s(url)},
             {"image", svg.isEmpty() ? QString() : "data:image/svg+xml;base64," + svg.toBase64()}};
+}
+void Controller::setMoveTitle(const QString &title) {
+    if (trainingActive() || node_ == 0)
+        return;
+    remember();
+    static const QRegularExpression marker("\\s*\\[%title\\s+[^\\]]*\\]");
+    auto comment = s(game_.nodes[node_].comment);
+    comment.remove(marker);
+    // Les crochets fermeraient la commande ou en ouvriraient une : ils deviennent des
+    // parenthèses.
+    const auto clean = QString(title).replace('[', '(').replace(']', ')').simplified().left(200);
+    if (!clean.isEmpty())
+        comment = "[%title " + clean + "] " + comment;
+    game_.nodes[node_].comment = comment.trimmed().toStdString();
+    refresh(true);
 }
 void Controller::toggleDiagram() {
     if (trainingActive() || node_ == 0)

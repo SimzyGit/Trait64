@@ -1,5 +1,9 @@
 # Changements
 
+## Titres de rubrique — 19 novembre 2026
+
+- **Titres de rubrique dans la notation** (clic droit sur un coup → *Titre de rubrique…*) : « Le milieu de jeu », « La finale »… s'affiche en gras avant le coup, en table comme en notation continue. Il s'écrit `[%title …]` dans le commentaire du coup ; la zone d'annotation ne le montre pas et le garde quand on y écrit, comme la marque des questions d'entraînement.
+
 ## Études et joueurs — 18 novembre 2026
 
 - **Supprimer une étude** (onglet *Études* → *Supprimer…*) : un répertoire avec ses révisions, ou un recueil, dont les parties passent à la corbeille de la bibliothèque — d'où elles se restaurent ; le fichier PGN reste sur le disque.

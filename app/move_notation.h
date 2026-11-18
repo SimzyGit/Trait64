@@ -112,8 +112,22 @@ inline bool hasDiagram(const Node &node) {
 
 // PGN command annotations ([%clk], [%eval], [%cal]…) are data, not prose: shown apart,
 // never edited. The stored comment keeps them so PGN exports stay lossless.
+// Les marques que Trait64 pose lui-même dans un commentaire — titre de rubrique, question
+// d'entraînement : la zone d'annotation ne les montre pas, et les garde quand on écrit.
+inline QString commentMarkers(const QString &comment) {
+    static const QRegularExpression marker("\\[%(title|tqu)\\s+[^\\]]*\\]");
+    QStringList found;
+    for (auto it = marker.globalMatch(comment); it.hasNext();)
+        found << it.next().captured();
+    return found.join(' ');
+}
+inline QString withoutMarkers(QString comment) {
+    static const QRegularExpression marker("\\s*\\[%(title|tqu)\\s+[^\\]]*\\]\\s?");
+    return comment.remove(marker);
+}
+
 struct CommentParts {
-    QString text, clock, eval;
+    QString text, clock, eval, title;
 };
 inline CommentParts splitComment(const std::string &raw) {
     static const QRegularExpression command("\\[%(\\w+)\\s+([^\\]]*)\\]");
@@ -128,6 +142,10 @@ inline CommentParts splitComment(const std::string &raw) {
             while (clock.size() > 4 && (clock.startsWith('0') || clock.startsWith(':')))
                 clock.remove(0, 1);
             parts.clock = clock;
+        } else if (name == "title") {
+            // Un titre de rubrique, comme ChessBase en pose dans ses notations : il ouvre
+            // une partie du commentaire de la partie (« Le milieu de jeu », « La finale »).
+            parts.title = value;
         } else if (name == "eval") {
             bool ok = false;
             const double pawns = value.toDouble(&ok);
@@ -163,6 +181,7 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
                            {"clock", parts.clock},
                            {"eval", parts.eval},
                            {"diagram", hasDiagram(node) ? QString::fromStdString(node.fen) : QString()},
+                           {"title", parts.title},
                            {"lastMove", QString::fromStdString(node.uci)}};
     };
     int visited = 0;
@@ -231,13 +250,19 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
             for (int nag : node.nags)
                 if (nag != diagramNag)
                     text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
-            const QString number = white      ? QString::number(board.fullMoveNumber()) + "."
-                                   : numbered ? QString::number(board.fullMoveNumber()) + "…"
-                                              : QString();
             const auto parts = splitComment(node.comment);
-            tokens << QVariantMap{{"kind", "move"},       {"id", id},          {"depth", depth},
-                                  {"number", number},     {"text", text},      {"active", current == id},
-                                  {"clock", parts.clock}, {"eval", parts.eval}};
+            // Le titre se lit avant le coup qu'il annonce, sur sa propre ligne.
+            if (!parts.title.isEmpty()) {
+                tokens << QVariantMap{
+                    {"kind", "heading"}, {"id", id}, {"depth", depth}, {"text", parts.title}};
+                numbered = true;
+            }
+            const QString shownNumber = white      ? QString::number(board.fullMoveNumber()) + "."
+                                        : numbered ? QString::number(board.fullMoveNumber()) + "…"
+                                                   : QString();
+            tokens << QVariantMap{{"kind", "move"},        {"id", id},          {"depth", depth},
+                                  {"number", shownNumber}, {"text", text},      {"active", current == id},
+                                  {"clock", parts.clock},  {"eval", parts.eval}};
             numbered = comment(id, depth);
             if (hasDiagram(node)) {
                 tokens << QVariantMap{{"kind", "diagram"},

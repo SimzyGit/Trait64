@@ -1129,6 +1129,28 @@ int main(int argc, char **argv) {
                   "A diagram follows the move in both notations and survives a new symbol");
             quiz.toggleDiagram();
             check(!quiz.state()["diagram"].toBool(), "The diagram comes off again");
+            // Un titre de rubrique avant 2.Cf3 : sur sa ligne dans les deux notations, gardé
+            // à part du commentaire, et retiré par un texte vide.
+            quiz.setMoveTitle("Le développement [rapide]");
+            bool tableTitle = false, flowTitle = false;
+            for (const auto &row : quiz.moveRows())
+                tableTitle =
+                    tableTitle || row.toMap()["white"].toMap()["title"] == "Le développement (rapide)";
+            for (const auto &token : quiz.moveFlow())
+                flowTitle = flowTitle || (token.toMap()["kind"] == "heading" &&
+                                          token.toMap()["text"] == "Le développement (rapide)");
+            check(tableTitle && flowTitle && quiz.state()["moveTitle"] == "Le développement (rapide)" &&
+                      quiz.state()["comment"].toString().isEmpty(),
+                  "A section heading shows before its move in both notations, apart from the comment");
+            quiz.setMoveTitle("");
+            check(quiz.state()["moveTitle"].toString().isEmpty(), "An empty heading removes it");
+            // Écrire une annotation garde le titre, que l'éditeur ne montre pas.
+            quiz.setMoveTitle("Rubrique");
+            quiz.setComment("Un plan");
+            check(quiz.state()["comment"] == "Un plan" && quiz.state()["moveTitle"] == "Rubrique",
+                  "Editing the annotation keeps the hidden heading");
+            quiz.setMoveTitle("");
+            quiz.setComment("");
             const auto qr = quiz.positionQr();
             check(qr["url"].toString().startsWith("https://lichess.org/analysis/standard/") &&
                       qr["image"].toString().startsWith("data:image/svg+xml;base64,"),
