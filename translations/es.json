@@ -1681,5 +1681,11 @@
   "Score des Blancs selon l’Elo : %1": "Puntuación de las blancas según el Elo: %1",
   "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "«Más fuertes»: al menos 100 puntos de Elo de ventaja. Las partidas sin Elo no cuentan aquí.",
   "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)": "Partidas, posiciones y bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)",
-  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Base SCID incompleta: sus tres archivos deben estar juntos (.si4, .sn4 y .sg4, o .si5, .sn5 y .sg5)."
+  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Base SCID incompleta: sus tres archivos deben estar juntos (.si4, .sn4 y .sg4, o .si5, .sn5 y .sg5).",
+  "Positions semblables": "Posiciones similares",
+  "Recherche des positions de même matériel…": "Buscando posiciones con el mismo material…",
+  "Aucune position de la bibliothèque n’a ce matériel avec le même camp au trait.": "Ninguna posición de la biblioteca tiene este material con el mismo bando al turno.",
+  "Même matériel, même camp au trait, une position par partie. L’écart compte les cases qui diffèrent, un pion comptant double.": "Mismo material, mismo bando al turno, una posición por partida. La diferencia cuenta las casillas distintas; un peón cuenta doble.",
+  "identique": "idéntica",
+  "écart %1": "diferencia %1"
 }

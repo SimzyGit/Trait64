@@ -543,6 +543,24 @@ int main(int argc, char **argv) {
                       QStringList{"Nf3", "Cf3"}.contains(rows.first().toMap()["text"].toString()) &&
                       rows.last().toMap()["rupture"].toBool(),
                   "The plan explorer shows the knight's development, then the c4 break");
+            // Les positions semblables, depuis 1.d4 d5 2.Nc3 au lieu de 2.Nf3 (b1, c3, g1, f3) : la partie
+            // enregistrée sort, et un clic l'ouvre sur sa position la plus proche.
+            planner.newGame();
+            for (const auto *uci : {"d2d4", "d7d5", "b1c3"})
+                planner.move(uci);
+            planner.findSimilar();
+            wait.restart();
+            while (planner.similar()["running"].toBool() && wait.elapsed() < 20000)
+                QTest::qWait(10);
+            const auto similar = planner.similar()["rows"].toList();
+            check(similar.size() == 1 && similar.first().toMap()["distance"].toInt() == 4,
+                  "Similar positions find the saved game, the other knight out (four squares)");
+            if (!similar.isEmpty()) {
+                const auto hit = similar.first().toMap();
+                planner.openSimilar(hit["id"].toLongLong(), hit["node"].toInt());
+                check(planner.state()["fen"].toString() == hit["fen"].toString(),
+                      "Opening a similar position lands on it in its game");
+            }
         }
         {
             // Des mats tirés de la bibliothèque : le mat du berger en un coup ; 1...e5 n'est

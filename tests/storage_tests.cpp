@@ -730,6 +730,22 @@ int main(int argc, char **argv) {
                     row(planBlack, "Nf6")["games"].toInt() == 1 && row(planBlack, "e6")["rupture"].toBool() &&
                     row(planWhite, "e3").isEmpty(),
                 "The plan explorer counts each side's manoeuvres while the structure holds, then its break");
+            // Les positions semblables : 3.Bg5 au lieu de 3.Bf4, un fou déplacé, soit deux cases.
+            {
+                const auto similar = scout.similarPositions(
+                    "rnbqkb1r/ppp1pppp/5n2/3p2B1/3P4/5N2/PPP1PPPP/RN1QKB1R b KQkq - 3 3");
+                bool near = false, sorted = true;
+                for (int i = 0; i < similar.size(); ++i) {
+                    const auto r = similar[i].toMap();
+                    near = near || (r["white"] == "Pla" && r["distance"].toInt() == 2 &&
+                                    r["fen"].toString().startsWith("rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/"));
+                    sorted = sorted &&
+                             (i == 0 || similar[i - 1].toMap()["distance"].toInt() <= r["distance"].toInt());
+                }
+                check(near && sorted, "Similar positions find the bishop on another square, closest first");
+                check(scout.similarPositions("4k3/8/8/8/8/8/8/4K2R w - - 0 1").isEmpty(),
+                      "A material no game reached finds nothing");
+            }
             const auto white = kim["whiteLines"].toList(), black = kim["blackLines"].toList();
             check(white.size() == 1 && white[0].toMap()["line"] == "1. e4 c5 2. Nf3 d6 3. d4 cxd4" &&
                       white[0].toMap()["count"] == 2 && white[0].toMap()["score"] == 50,

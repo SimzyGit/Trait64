@@ -558,6 +558,7 @@ objectName:"analysisSplit"
                                                 HoverHandler {id:trendHover}}
                                             TButton {objectName:"bestGamesHere";width:parent.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
                                             TButton {objectName:"plansHere";width:parent.width;flat:true;text:qsTr("Plans de cette structure")+"  →";onClicked:plansDialog.open()}
+                                            TButton {objectName:"similarHere";width:parent.width;flat:true;text:qsTr("Positions semblables")+"  →";onClicked:similarDialog.open()}
                                         }
                                         header:RowLayout {width:miniExplorer.width;spacing:8
                                             Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -997,6 +998,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
     Plans {id:plansDialog;objectName:"plansDialog";backend:controller}
+    Similar {id:similarDialog;objectName:"similarDialog";backend:controller}
     Stoyko {id:stoykoDialog;objectName:"stoykoDialog";backend:controller}
     PositionQr {id:positionQr;objectName:"positionQrDialog";backend:controller}
     LibraryCharts {id:libraryCharts;objectName:"libraryChartsDialog";backend:controller}
@@ -1158,6 +1160,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Tournois de la bibliothèque"),run:function(){tournamentFinder.open()}},
             {title:qsTr("Graphiques de la sélection"),run:function(){libraryCharts.open()}},
             {title:qsTr("Plans de cette structure"),run:function(){plansDialog.open()}},
+            {title:qsTr("Positions semblables"),run:function(){similarDialog.open()}},
             {title:qsTr("Apparence et langue"),run:function(){appearanceDialog.open()}},
             {title:qsTr("Raccourcis clavier"),run:function(){shortcutsDialog.open()}},
             {title:qsTr("Recherche avancée"),run:function(){advancedDialog.open()}},

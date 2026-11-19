@@ -197,6 +197,11 @@ class Database {
     // dans les `limit` parties les mieux classées qui l'ont eue (plans.cpp).
     QVariantMap plans(const std::string &fen, int limit = 400,
                       const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
+    // Les positions semblables : même matériel et même camp au trait, les plus proches case
+    // par case de `fen` (un pion déplacé compte double), une par partie, parmi les
+    // `candidates` parties les mieux classées où ce matériel a paru (plans.cpp).
+    QVariantList similarPositions(const std::string &fen, int limit = 30, int candidates = 1500,
+                                  const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantList duplicates() const;
     int rebuildIndexes(const std::function<bool(int)> &progress = {});
     QString path() const { return path_; }

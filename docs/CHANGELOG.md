@@ -2,6 +2,8 @@
 
 ## Bases SCID 5 — 19 novembre 2026
 
+- **Positions semblables** (onglet Arbre → *Positions semblables*, ou la palette de commandes) : les positions de la bibliothèque qui ont le même matériel et le même camp au trait, les plus proches d'abord, une par partie. L'écart compte les cases qui diffèrent, un pion comptant double puisque la structure décide du plan. Un clic ouvre la partie sur cette position. La recherche porte sur les 1 500 parties les mieux classées où ce matériel a paru.
+
 - **Les bases SCID 5 s'importent** (`.si5`, `.sn5`, `.sg5`, le format par défaut de SCID depuis la version 5) comme celles de SCID 4 : *Importer*, glisser-déposer ou onglet *Études*, en choisissant n'importe lequel des trois fichiers. Coups, variantes, commentaires, NAG, positions de départ et Elo sont repris ; les parties marquées pour suppression dans SCID sont laissées de côté. Vérifié sur une base écrite par le code de SCID lui-même (tests/scid/README.md) et sur 3 000 parties relues à l'identique.
 
 ## Titres de rubrique — 19 novembre 2026

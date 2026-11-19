@@ -2,7 +2,8 @@
 // L'explorateur de plans : dans les parties de la bibliothèque qui ont eu la structure de
 // pions de l'échiquier, ce que chaque camp a fait de ses pièces tant qu'elle a tenu, et la
 // poussée de pion qui l'a changée. Une manœuvre compte une fois par partie ; son score est
-// celui du camp qui l'a jouée.
+// celui du camp qui l'a jouée. Les positions semblables suivent : même matériel, et la
+// ressemblance mesurée case par case.
 #include "cancellation.h"
 #include "database.h"
 #include <QHash>
@@ -120,6 +121,104 @@ QVariantMap Database::plans(const std::string &fen, int limit,
         if (rows.size() > 12)
             rows.erase(rows.begin() + 12, rows.end());
         out[side == 0 ? "white" : "black"] = rows;
+    }
+    return out;
+}
+} // namespace t64
+
+namespace t64 {
+namespace {
+// L'échiquier d'une FEN, case par case (a8 d'abord), pour comparer deux positions.
+std::array<char, 64> squares(const std::string &fen) {
+    std::array<char, 64> out;
+    out.fill('.');
+    int at = 0;
+    for (const char c : fen) {
+        if (c == ' ' || at >= 64)
+            break;
+        if (c == '/')
+            continue;
+        if (c >= '1' && c <= '8')
+            at += c - '0';
+        else
+            out[size_t(at++)] = c;
+    }
+    return out;
+}
+} // namespace
+
+QVariantList Database::similarPositions(const std::string &fen, int limit, int candidates,
+                                        const std::shared_ptr<std::atomic_bool> &canceled) const {
+    // Le même matériel, puis la ressemblance case par case : une pièce absente ou déplacée
+    // compte un, un pion compte double (la structure décide du plan plus qu'une pièce).
+    // L'index ne donne que les parties où ce matériel a été sur l'échiquier ; on les rejoue
+    // et l'on garde, pour chacune, sa position la plus proche.
+    const auto target = squares(fen);
+    const auto code = materialCode(std::string_view(fen));
+    const bool whiteToMove = fen.find(" b ") == std::string::npos;
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    q.prepare("SELECT g.id,g.pgn,g.white,g.black,g.result,g.date,g.white_elo,g.black_elo FROM games g WHERE "
+              "g.deleted=0 AND g.id IN(SELECT game_id FROM game_material WHERE material=?) ORDER BY "
+              "g.white_elo+g.black_elo DESC,g.id DESC LIMIT ?");
+    q.addBindValue(code);
+    q.addBindValue(std::max(candidates, 1));
+    if (!q.exec())
+        throw std::runtime_error(q.lastError().text().toStdString());
+    struct Hit {
+        int distance;
+        QVariantMap row;
+    };
+    std::vector<Hit> hits;
+    while (q.next()) {
+        if (canceled && canceled->load())
+            throw std::runtime_error("Recherche annulée.");
+        std::vector<Game> parsed;
+        try {
+            parsed = parsePgn(q.value(1).toString().toStdString());
+        } catch (const std::exception &) {
+            continue;
+        }
+        if (parsed.size() != 1)
+            continue;
+        const auto &game = parsed.front();
+        int best = 13, bestNode = -1;
+        for (const int n : game.mainline()) {
+            const auto &position = game.nodes[n].fen;
+            if ((position.find(" b ") == std::string::npos) != whiteToMove ||
+                materialCode(std::string_view(position)) != code)
+                continue;
+            const auto here = squares(position);
+            int distance = 0;
+            for (size_t i = 0; i < 64 && distance < best; ++i)
+                if (here[i] != target[i])
+                    distance +=
+                        (here[i] == 'P' || here[i] == 'p' || target[i] == 'P' || target[i] == 'p') ? 2 : 1;
+            if (distance < best)
+                best = distance, bestNode = n;
+        }
+        if (bestNode < 0)
+            continue;
+        hits.push_back({best,
+                        {{"id", q.value(0)},
+                         {"node", bestNode},
+                         {"fen", QString::fromStdString(game.nodes[bestNode].fen)},
+                         {"distance", best},
+                         {"white", q.value(2)},
+                         {"black", q.value(3)},
+                         {"result", q.value(4)},
+                         {"date", q.value(5)},
+                         {"whiteElo", q.value(6)},
+                         {"blackElo", q.value(7)}}});
+    }
+    // Les plus proches d'abord ; à égalité, l'ordre de la requête (les mieux classées).
+    std::stable_sort(hits.begin(), hits.end(),
+                     [](const Hit &a, const Hit &b) { return a.distance < b.distance; });
+    QVariantList out;
+    for (const auto &hit : hits) {
+        if (out.size() >= limit)
+            break;
+        out << hit.row;
     }
     return out;
 }

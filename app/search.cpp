@@ -297,6 +297,39 @@ void Controller::summarizeLibrary() {
     }));
 }
 
+void Controller::findSimilar() {
+    const auto generation = ++similarGeneration_;
+    const auto fen = game_.nodes[node_].fen;
+    similar_ = {{"running", true}, {"fen", QString::fromStdString(fen)}};
+    emit similarChanged();
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, generation] {
+        watcher->deleteLater();
+        if (generation != similarGeneration_)
+            return;
+        similar_ = watcher->result();
+        emit similarChanged();
+    });
+    // La partie ouverte se trouverait elle-même : elle est laissée de côté.
+    watcher->setFuture(QtConcurrent::run([path = db_->path(), fen, self = gameId_] {
+        try {
+            QVariantList rows;
+            for (const auto &row : t64::Database(path).similarPositions(fen, 31))
+                if (row.toMap()["id"].toLongLong() != self && rows.size() < 30)
+                    rows << row;
+            return QVariantMap{{"fen", QString::fromStdString(fen)}, {"rows", rows}};
+        } catch (const std::exception &e) {
+            return QVariantMap{{"error", QString::fromUtf8(e.what())}};
+        }
+    }));
+}
+
+void Controller::openSimilar(qint64 id, int node) {
+    loadGame(id);
+    if (gameId_ == id && node > 0 && node < int(game_.nodes.size()))
+        navigate(node);
+}
+
 void Controller::explorePlans() {
     const auto generation = ++plansGeneration_;
     const auto fen = game_.nodes[node_].fen;

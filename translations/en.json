@@ -1681,5 +1681,11 @@
   "Score des Blancs selon l’Elo : %1": "White's score by rating: %1",
   "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "“Stronger”: at least 100 rating points ahead. Games without ratings are not counted here.",
   "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)",
-  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Incomplete SCID database: its three files must sit side by side (.si4, .sn4 and .sg4, or .si5, .sn5 and .sg5)."
+  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Incomplete SCID database: its three files must sit side by side (.si4, .sn4 and .sg4, or .si5, .sn5 and .sg5).",
+  "Positions semblables": "Similar positions",
+  "Recherche des positions de même matériel…": "Searching positions with the same material…",
+  "Aucune position de la bibliothèque n’a ce matériel avec le même camp au trait.": "No position in the library has this material with the same side to move.",
+  "Même matériel, même camp au trait, une position par partie. L’écart compte les cases qui diffèrent, un pion comptant double.": "Same material, same side to move, one position per game. The gap counts the squares that differ, a pawn counting double.",
+  "identique": "identical",
+  "écart %1": "gap %1"
 }

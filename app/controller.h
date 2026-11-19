@@ -502,6 +502,12 @@ class Controller : public QObject {
     // L'explorateur de plans pour la structure de pions de l'échiquier, calculé à part.
     Q_PROPERTY(QVariantMap plans READ plans NOTIFY plansChanged)
     QVariantMap plans() const { return plans_; }
+    // Les positions semblables à celle de l'échiquier, cherchées à part.
+    Q_PROPERTY(QVariantMap similar READ similar NOTIFY similarChanged)
+    QVariantMap similar() const { return similar_; }
+    Q_INVOKABLE void findSimilar();
+    // Ouvre la partie et se place sur la position trouvée.
+    Q_INVOKABLE void openSimilar(qint64 id, int node);
     Q_INVOKABLE void explorePlans();
     Q_INVOKABLE void stopStoyko();
     Q_INVOKABLE void startQuestions();
@@ -537,6 +543,7 @@ class Controller : public QObject {
     void librarySummaryChanged();
     void stoykoChanged();
     void plansChanged();
+    void similarChanged();
     void searchChanged();
     void libraryOpened();
     void engineChanged();
@@ -687,6 +694,8 @@ class Controller : public QObject {
     QVariantMap stoyko_;
     QVariantMap plans_;
     int plansGeneration_ = 0;
+    QVariantMap similar_;
+    int similarGeneration_ = 0;
     QStringList stoykoQueue_; // positions à évaluer, la première étant le départ
     QString stoykoEvaluating_;
     void stoykoNext();
