@@ -101,7 +101,9 @@ jobs:
         run: |
           case "${{ matrix.family }}" in
             debian)
-              apt-get update
+              # Un dépôt propre à la distribution (celui de Mint, déjà) peut tomber : les
+              # paquets voulus viennent des autres, et l'installation dira s'il en manque.
+              apt-get update || apt-get update || echo "::warning::Un dépôt n'a pas répondu ; installation depuis les autres."
               DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
                 libopengl0 libegl1 libglx0 libfontconfig1 libx11-xcb1 libxcb1 libx11-6 \
                 libwayland-client0 libharfbuzz0b libfreetype6 libsm6 libice6 libgpg-error0 libcom-err2 \
