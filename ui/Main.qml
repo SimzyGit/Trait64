@@ -55,6 +55,10 @@ ApplicationWindow {
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
     palette.placeholderText: muted
+    // Le groupe « désactivé » ne suit pas les lignes ci-dessus : en thème sombre, un bouton
+    // grisé (pendant un import, par exemple) se peignait en blanc, son texte illisible.
+    palette.disabled.window: bg; palette.disabled.windowText: muted; palette.disabled.base: panel; palette.disabled.text: muted
+    palette.disabled.button: panel; palette.disabled.buttonText: fg; palette.disabled.mid: line; palette.disabled.alternateBase: raised
     // « light » et « dark » sont des nuances de surface, pas des couleurs de texte : le
     // thème Basic s'en sert comme fond du survol des menus. Affectés au texte, ils
     // peignaient l'entrée survolée en noir sur noir — ou en blanc sur blanc en thème

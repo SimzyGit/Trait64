@@ -47,6 +47,12 @@ int uiLayoutProbe(const QString &directory) {
         auto *font=window->findChild<QObject *>("fontSelector");
         check(font&&font->property("currentText").toString()==c.preferences()["fontFamily"].toString(),"Layout: font selector agrees with selected font");
         check(category->property("currentIndex").toInt()==selectedCategory,"Layout: language changes preserve catalog selection");
+        // Un bouton grisé garde la surface du thème : le groupe « désactivé » de la palette
+        // restait clair, et en thème sombre ces boutons se peignaient en blanc.
+        if(auto *palette=window->property("palette").value<QObject *>()) {
+            auto *active=palette->property("active").value<QObject *>(),*disabled=palette->property("disabled").value<QObject *>();
+            check(active&&disabled&&active->property("button").value<QColor>()==disabled->property("button").value<QColor>(),"Layout: disabled buttons keep the theme's surface");
+        }
         auto *catalog=window->findChild<QObject *>("contentList");
         check(catalog&&catalog->property("count").toInt()>0,"Layout: translated catalog still displays engines");
         for(int page=0;page<7;++page) {
