@@ -27,7 +27,7 @@ if(T64_SANITIZERS AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_link_options(-fsanitize=address,undefined)
 endif()
 find_package(Threads REQUIRED)
-add_library(t64core libs/core/game.cpp libs/core/formats.cpp libs/core/parallel.cpp libs/core/explanation.cpp libs/core/html_export.cpp libs/core/structure.cpp libs/core/tactics.cpp libs/core/polyglot.cpp libs/core/accuracy.cpp libs/core/hardware.cpp libs/core/moveorder.cpp libs/core/qr.cpp libs/core/themes.cpp)
+add_library(t64core libs/core/game.cpp libs/core/formats.cpp libs/core/parallel.cpp libs/core/explanation.cpp libs/core/html_export.cpp libs/core/structure.cpp libs/core/tactics.cpp libs/core/polyglot.cpp libs/core/accuracy.cpp libs/core/hardware.cpp libs/core/moveorder.cpp libs/core/qr.cpp libs/core/themes.cpp libs/core/cql.cpp)
 # Nayuki's QR Code generator (MIT), for the links a phone reads off the screen.
 add_library(qrcodegen STATIC third_party/qrcodegen/qrcodegen.cpp)
 target_include_directories(qrcodegen SYSTEM PUBLIC third_party/qrcodegen)

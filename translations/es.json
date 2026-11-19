@@ -1701,5 +1701,6 @@
   "Clé stratégique": "Clave estratégica",
   "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 partida(s) importada(s) antes de esta versión aún no están clasificadas: Herramientas → Reindexar.",
   "Clés stratégiques : %1": "Claves estratégicas: %1",
-  "Thème inconnu.": "Tema desconocido."
+  "Thème inconnu.": "Tema desconocido.",
+  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "Consulta CQL (p. ej. «Ra8 kg8 mate»; lenta: repasa cada partida, variantes incluidas)"
 }

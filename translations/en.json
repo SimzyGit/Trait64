@@ -1701,5 +1701,6 @@
   "Clé stratégique": "Strategic key",
   "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 game(s) imported before this version are not classified yet: Tools → Reindex.",
   "Clés stratégiques : %1": "Strategic keys: %1",
-  "Thème inconnu.": "Unknown theme."
+  "Thème inconnu.": "Unknown theme.",
+  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "CQL query (e.g. “Ra8 kg8 mate”; slow: replays every game, variations included)"
 }

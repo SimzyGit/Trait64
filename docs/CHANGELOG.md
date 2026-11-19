@@ -2,6 +2,8 @@
 
 ## Bases SCID 5 — 19 novembre 2026
 
+- **Requêtes CQL** (*Recherche avancée → Requête CQL*) : un sous-ensemble du Chess Query Language. Pièces et cases (`Ra8`, `[Qq]d4`, `Pa-h7`, `_e4`, `A`/`a` pour n'importe quelle pièce d'un camp), faits (`check`, `mate`, `stalemate`, `wtm`, `btm`), `X attacks Y`, le dernier coup (`move from K to g1`), `not`, `or` et les accolades. Une partie est retenue dès qu'une de ses positions, variantes comprises, répond à la requête. Ce que Trait64 ne lit pas (séquences, comptes, rayons…) est refusé avec un message, jamais ignoré en silence. Comme la recherche par placement, elle rejoue la bibliothèque une fois par requête, puis garde le résultat tant que la base ne change pas.
+
 - **Clés stratégiques** : chaque partie est classée selon dix thèmes reconnus à la géométrie — pion isolé en d, pions pendants, pion passé avancé, pions doublés, fous de couleurs opposées, paire de fous, structure Carlsbad, étau de Maróczy, Stonewall, milieu de jeu sans dames. Un thème compte s'il tient au moins quatre demi-coups passé le seizième. *Recherche avancée → Clé stratégique* retrouve les parties ; l'onglet Arbre nomme ceux de la position. Les parties déjà importées se classent avec *Outils → Réindexer* (le dialogue dit combien il en reste). La bibliothèque passe au schéma 15 (une table ajoutée, rien n'est rejoué).
 - La recherche avancée remet chaque libellé en face de sa liste (un champ de texte en nombre impair les décalait d'une colonne).
 

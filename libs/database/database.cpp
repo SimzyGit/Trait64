@@ -487,6 +487,10 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         collectPlacementMatches(placement, canceled);
         statement += " AND g.id IN(SELECT game_id FROM temp.placement_hits)";
     }
+    if (const auto cqlText = filters.value("cql").toString().trimmed(); !cqlText.isEmpty()) {
+        collectCqlMatches(cqlText, canceled);
+        statement += " AND g.id IN(SELECT game_id FROM temp.cql_hits)";
+    }
     // Le texte des commentaires et les symboles d'annotation (!!, ?…) n'ont pas d'index : la
     // recherche parcourt le PGN, en arrière-plan et annulable comme les autres.
     if (const auto text = filters.value("comment").toString().trimmed(); !text.isEmpty()) {

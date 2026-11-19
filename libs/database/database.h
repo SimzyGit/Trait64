@@ -9,6 +9,7 @@
 #include <QVariantMap>
 #include <array>
 #include <atomic>
+#include <functional>
 #include <map>
 #include <memory>
 
@@ -252,6 +253,13 @@ class Database {
     // toutes, une fois par motif, et la liste est gardée tant que la base ne change pas.
     void collectPlacementMatches(const QString &pattern,
                                  const std::shared_ptr<std::atomic_bool> &canceled) const;
+    // De même pour une requête CQL (cql.h), variantes comprises.
+    void collectCqlMatches(const QString &query, const std::shared_ptr<std::atomic_bool> &canceled) const;
+    // La partie commune : rejoue la bibliothèque une fois par `key`, garde les parties où
+    // `matches` accepte une position, et les range dans la table temporaire `table`.
+    void collectReplayMatches(const QString &key, const char *table,
+                              const std::function<bool(const Game &, const Node &)> &matches,
+                              const std::shared_ptr<std::atomic_bool> &canceled) const;
     static constexpr int sparseMatches = 20000;
     QSqlQuery &statement(const QString &text) const;
     mutable std::map<QString, QSqlQuery> statements_;

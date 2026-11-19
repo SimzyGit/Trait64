@@ -1049,6 +1049,17 @@ int main(int argc, char **argv) {
                       "A partial placement is found wherever it occurs in the game");
                 check(found({}, {{"placement", "Ka8 ka1 Qh5 qh4 Pa7 pa2"}}).isEmpty(),
                       "A placement no game ever reached finds nothing");
+                // CQL : la même position décrite autrement, puis une requête refusée.
+                check(found({}, {{"cql", late}}).contains(id) &&
+                          found({}, {{"cql", "Ka8 ka1 Qh5 qh4"}}).isEmpty(),
+                      "A CQL query finds the games where one position matches");
+                bool cqlRefused = false;
+                try {
+                    found({}, {{"cql", "sequence {mate}"}});
+                } catch (const std::exception &e) {
+                    cqlRefused = QString::fromUtf8(e.what()).startsWith("Requête CQL");
+                }
+                check(cqlRefused, "An unreadable CQL query says so");
                 const auto wanted = t64::Database::parsePlacement("Ke1, pd5");
                 check(t64::Database::placementMatches(wanted, "4k3/8/8/3p4/8/8/8/4K3 w - - 0 1") &&
                           !t64::Database::placementMatches(wanted, "4k3/8/8/3P4/8/8/8/4K3 w - - 0 1") &&

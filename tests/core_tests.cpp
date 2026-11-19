@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "accuracy.h"
+#include "cql.h"
 #include "explanation.h"
 #include "game.h"
 #include "hardware.h"
@@ -529,6 +530,36 @@ int main() {
                           t64::QueenlessMiddlegame,
                       "Queens off with the pieces still on is a queenless middlegame");
                 check(themes(chess::constants::STARTPOS) == 0, "The starting position has no strategic key");
+            }
+            // CQL : un sous-ensemble lu, le reste refusé avec un message.
+            {
+                const auto cql = [](const char *query, const char *fen, const char *move = "") {
+                    return t64::cql::Query(query).matches(chess::Board(fen), move);
+                };
+                const char *backRank = "R5k1/5ppp/8/8/8/8/8/6K1 b - - 1 1"; // Ra8 mat
+                check(cql("Ra8 kg8 mate", backRank) && cql("cql() Ra-h8 btm check", backRank) &&
+                          !cql("stalemate", backRank) && !cql("wtm", backRank),
+                      "CQL designators and facts describe a back-rank mate");
+                check(cql("not Q not q", backRank) && cql("[Qq] or R", backRank) &&
+                          !cql("{ Q or q } R", backRank),
+                      "CQL groups, alternatives and negation combine");
+                check(cql("R attacks k", backRank) && !cql("k attacks R", backRank) &&
+                          cql("_e4 [e-h1-2]", backRank) && !cql("[a-d1-4]", backRank),
+                      "CQL attacks, empty squares and square ranges");
+                check(cql("move from R to a8", backRank, "a1a8") && !cql("move from K", backRank, "a1a8") &&
+                          !cql("move to a8", chess::constants::STARTPOS),
+                      "CQL reads the move that led to the position");
+                check(cql("bb5", "rnbqk1nr/pppp1ppp/8/1b2p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3") &&
+                          cql("b5", "rnbqk1nr/pppp1ppp/8/1b2p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3") &&
+                          !cql("b5", chess::constants::STARTPOS),
+                      "A file letter before a rank is a square, before a square a black piece");
+                bool refused = false;
+                try {
+                    t64::cql::Query("sequence {Ra8} {mate}");
+                } catch (const std::invalid_argument &) {
+                    refused = true;
+                }
+                check(refused, "What Trait64 does not read is refused, not ignored");
             }
             // L'« Elo des gaffes » : une droite tirée de la bibliothèque, et le silence tant
             // qu'elle ne prouve rien.

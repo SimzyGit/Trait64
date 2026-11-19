@@ -15,10 +15,12 @@
 //  - une position exacte au-delà de l'horizon se retrouve en rejouant les seules parties
 //    qui ont eu ce matériel et ces pions : quelques centaines au lieu de toute la base.
 #include "cancellation.h"
+#include "cql.h"
 #include "database.h"
 #include "game.h"
 #include "themes.h"
 #include <QFileInfo>
+#include <QHash>
 #include <QMutex>
 #include <QRegularExpression>
 #include <QSqlError>
@@ -26,6 +28,7 @@
 #include <QUuid>
 #include <cstring>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdexcept>
 
@@ -220,16 +223,36 @@ bool Database::placementMatches(const std::array<char, 64> &wanted, std::string_
 void Database::collectPlacementMatches(const QString &pattern,
                                        const std::shared_ptr<std::atomic_bool> &canceled) const {
     const auto wanted = parsePlacement(pattern);
+    collectReplayMatches(
+        "placement|" + pattern, "placement_hits",
+        [&wanted](const Game &, const Node &node) { return placementMatches(wanted, node.fen); }, canceled);
+}
+
+void Database::collectCqlMatches(const QString &query,
+                                 const std::shared_ptr<std::atomic_bool> &canceled) const {
+    std::optional<cql::Query> parsed;
+    try {
+        parsed.emplace(query.toStdString());
+    } catch (const std::invalid_argument &e) {
+        throw std::runtime_error(e.what());
+    }
+    collectReplayMatches(
+        "cql|" + query, "cql_hits",
+        [&parsed](const Game &, const Node &node) {
+            return parsed->matches(chess::Board(node.fen), node.uci);
+        },
+        canceled);
+}
+
+void Database::collectReplayMatches(const QString &key, const char *table,
+                                    const std::function<bool(const Game &, const Node &)> &matches,
+                                    const std::shared_ptr<std::atomic_bool> &canceled) const {
     // Chaque page de résultats ouvre sa propre connexion : la liste trouvée est gardée
     // pour tout le programme, tant que le fichier de la base et son journal n'ont pas
     // bougé. Sans cela, tourner une page rejouerait toute la bibliothèque.
-    struct Kept {
-        QString stamp;
-        QList<qint64> hits;
-    };
     static QMutex guard;
-    static Kept kept;
-    QString stamp = path_ + "|" + pattern;
+    static QHash<QString, QPair<QString, QList<qint64>>> kept; // clé → (empreinte, parties)
+    QString stamp = path_;
     for (const char *suffix : {"", "-wal"}) {
         const QFileInfo file(path_ + suffix);
         stamp += QString("|%1:%2").arg(file.size()).arg(file.lastModified().toMSecsSinceEpoch());
@@ -238,8 +261,8 @@ void Database::collectPlacementMatches(const QString &pattern,
     bool known = false;
     {
         const QMutexLocker lock(&guard);
-        if (kept.stamp == stamp) {
-            hits = kept.hits;
+        if (const auto it = kept.constFind(key); it != kept.cend() && it->first == stamp) {
+            hits = it->second;
             known = true;
         }
     }
@@ -251,23 +274,31 @@ void Database::collectPlacementMatches(const QString &pattern,
         while (games.next()) {
             if (canceled && canceled->load())
                 throw std::runtime_error("Recherche annulée.");
-            const auto parsed = parsePgn(games.value(1).toString().toStdString());
+            std::vector<Game> parsed;
+            try {
+                parsed = parsePgn(games.value(1).toString().toStdString());
+            } catch (const std::exception &) {
+                continue;
+            }
             if (parsed.size() != 1)
                 continue;
             for (const auto &node : parsed[0].nodes)
-                if (placementMatches(wanted, node.fen)) {
+                if (matches(parsed[0], node)) {
                     hits << games.value(0).toLongLong();
                     break;
                 }
         }
         games.finish();
         const QMutexLocker lock(&guard);
-        kept = {stamp, hits};
+        if (kept.size() > 16) // quelques motifs suffisent : on ne garde pas tout l'historique
+            kept.clear();
+        kept[key] = {stamp, hits};
     }
-    sql("CREATE TEMP TABLE IF NOT EXISTS placement_hits(game_id INTEGER PRIMARY KEY)");
-    sql("DELETE FROM placement_hits");
+    const QString name = QString::fromLatin1(table);
+    sql("CREATE TEMP TABLE IF NOT EXISTS " + name + "(game_id INTEGER PRIMARY KEY)");
+    sql("DELETE FROM " + name);
     QSqlQuery insert(db_);
-    insert.prepare("INSERT OR IGNORE INTO placement_hits VALUES(?)");
+    insert.prepare("INSERT OR IGNORE INTO " + name + " VALUES(?)");
     for (const auto id : hits) {
         insert.bindValue(0, id);
         run(insert);
