@@ -86,10 +86,21 @@ int main(int argc, char *argv[]) {
             }
             if (analyse)
                 QTimer::singleShot(100, &app, [&controller] { controller.toggleAnalysis(); });
+            // Une base PGN importée avant la capture, pour montrer une bibliothèque remplie.
+            const bool importing = qEnvironmentVariableIsSet("T64_SCREENSHOT_IMPORT");
+            if (importing)
+                controller.importFile(
+                    QUrl::fromLocalFile(qEnvironmentVariable("T64_SCREENSHOT_IMPORT")).toString());
             if (const auto language = qEnvironmentVariable("T64_SCREENSHOT_LANGUAGE"); !language.isEmpty())
                 controller.setPreference("language", language);
+            // Le thème est posé dès le départ : changé juste avant la capture, il lançait les
+            // fondus de couleur des boutons, que l'écran virtuel ne fait pas avancer, et les
+            // boutons restaient de la couleur de l'ancien thème sur l'image.
+            if (const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");
+                theme == "light" || theme == "dark")
+                controller.setPreference("lightTheme", theme == "light");
             constexpr int pages = 9, step = 170;
-            const int sweep = 150 + pages * step + (analyse ? 6000 : 0);
+            const int sweep = 150 + pages * step + (analyse ? 6000 : 0) + (importing ? 8000 : 0);
             for (int i = 0; i < pages; ++i)
                 QTimer::singleShot(150 + i * step, &app, [window, i] { window->setProperty("page", i); });
             QTimer::singleShot(sweep, &app, [window, &controller] {
@@ -97,11 +108,6 @@ int main(int argc, char *argv[]) {
                                      ? qEnvironmentVariableIntValue("T64_SCREENSHOT_PAGE")
                                      : 2;
                 window->setProperty("page", qBound(0, page, pages - 1));
-                // « dark » manquait : on ne pouvait capturer que le thème clair, donc
-                // vérifier la moitié de ce que l'on voulait voir.
-                const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");
-                if (theme == "light" || theme == "dark")
-                    controller.setPreference("lightTheme", theme == "light");
                 // Un nom finissant par « Menu » ouvre ce menu et surligne sa première
                 // entrée : l'état survolé ne se voyait sur aucune capture, et c'est
                 // justement là que le fond du menu peignait le texte en noir sur noir.

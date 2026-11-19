@@ -26,7 +26,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
         ScrollView {id:profileScroll;SplitView.fillWidth:true;contentWidth:availableWidth;clip:true
             Column {id:profileBody;width:Math.max(1,profileScroll.availableWidth);spacing:18
                 Label {text:root.profile.name||qsTr("Sélectionnez un joueur");wrapMode:Text.WordWrap;font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;x:20;width:Math.max(1,profileBody.width-20)}
-                Label {text:root.profile.name?qsTr("%1 partie(s) · Elo récent : %2").arg(root.profile.games).arg(root.profile.elo||qsTr("non renseigné")):"";wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
+                Label {text:root.profile.name?qsTr("%1 partie(s) · Elo récent : %2").arg(root.profile.games).arg(root.profile.elo||qsTr("non renseigné")):qsTr("Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.");wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
                 // Ses pages en ligne : Lichess, Chess.com, FIDE, quand la bibliothèque les connaît.
                 Flow {objectName:"playerLinks";x:20;width:Math.max(1,profileBody.width-20);spacing:8
                     visible:!!root.profile.name&&Object.keys(root.profile.links||{}).length>0

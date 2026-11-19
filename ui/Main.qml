@@ -41,10 +41,10 @@ ApplicationWindow {
     property string promotionPrefix: ""
     property int selectedGame: 0
     property int selectedMedals: 0
-    // Les médailles de ChessBase, un bit chacune, dans son ordre.
     // Les clés stratégiques (themes.h), dans l'ordre de leurs bits.
     readonly property var themeKeys: ["isolatedQueenPawn","hangingPawns","advancedPassedPawn","doubledPawns","oppositeBishops","bishopPair","carlsbad","maroczy","stonewall","queenlessMiddlegame"]
     readonly property var themeNames: [qsTr("Pion isolé en d"), qsTr("Pions pendants"), qsTr("Pion passé avancé"), qsTr("Pions doublés"), qsTr("Fous de couleurs opposées"), qsTr("Paire de fous"), qsTr("Structure Carlsbad"), qsTr("Étau de Maróczy"), qsTr("Stonewall"), qsTr("Milieu de jeu sans dames")]
+    // Les médailles de ChessBase, un bit chacune, dans son ordre.
     readonly property var medalNames: [qsTr("Meilleure partie"), qsTr("Décisive pour le tournoi"), qsTr("Modèle d’ouverture"),
         qsTr("Nouveauté"), qsTr("Structure de pions"), qsTr("Stratégie"), qsTr("Tactique"), qsTr("Attaque"),
         qsTr("Sacrifice"), qsTr("Défense"), qsTr("Matériel"), qsTr("Jeu des pièces"), qsTr("Finale"),
@@ -689,7 +689,11 @@ ColumnLayout {width:openingsViewport.availableWidth;height:Math.max(openingsView
                     TButton {objectName:"openingReport";text:qsTr("Dossier de la position");accent:true;onClicked:openingReportDialog.open()
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Les coups joués ici, leur score, le même découpage par force des joueurs, et les parties les mieux classées qui y sont passées.")}
                     TButton {text:qsTr("←  Reculer");enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:qsTr("Position initiale");onClicked:controller.step(-2)} TButton {text:qsTr("Voir l’échiquier");onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:qsTr("Préparer");onClicked:preparationDialog.open()} TButton {text:qsTr("Mes répertoires");objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:qsTr("Créer une carte depuis ici");accent:true;onClicked:cardDialog.open()}}
-                Label {text:controller.state.fen;color:win.muted;font.family:"monospace";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);elide:Text.ElideRight;Layout.fillWidth:true}
+                // Le nom de l'ouverture d'abord, en clair ; la FEN reste dessous, plus discrète,
+                // pour qui veut la copier.
+                Label {objectName:"openingsName";visible:!!controller.state.opening;text:controller.state.opening||"";font.weight:Font.DemiBold;elide:Text.ElideRight;Layout.fillWidth:true}
+                TextEdit {objectName:"openingsFen";text:controller.state.fen;readOnly:true;selectByMouse:true;color:win.muted;selectionColor:win.accent;font.family:"monospace";opacity:.8
+                    font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true;wrapMode:TextEdit.NoWrap;clip:true}
                 Rectangle {Layout.fillWidth:true;height:1;color:win.line}
                 RowLayout {Layout.fillWidth:true;Label {text:qsTr("Coup");Layout.preferredWidth:95;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("Parties");Layout.preferredWidth:90;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("BLANCS / NULLES / NOIRS (RÉSULTATS TERMINÉS)");color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true}}
                 ListView {id:openingList;Layout.minimumHeight:160;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:10;model:controller.openings
@@ -1129,10 +1133,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             // Les champs sont en nombre impair : une case vide remet chaque libellé suivant en
             // face de sa liste.
             Item {Layout.fillWidth:true;visible:fieldRepeater.count%2===1}
-            Label {text:qsTr("Couleur du joueur")} TComboBox {id:colourFilter;model:["Les deux couleurs","Blancs","Noirs"]}
+            Label {text:qsTr("Couleur du joueur")} TComboBox {id:colourFilter;Layout.fillWidth:true;model:[qsTr("Les deux couleurs"),qsTr("Blancs"),qsTr("Noirs")]}
             // Les six symboles courants, dans l'ordre du plus fort au plus faible ; la valeur
             // est le NAG du PGN ($3 pour !!).
-            Label {text:qsTr("Finale atteinte")} TComboBox {id:endgameFilter;objectName:"endgameFilter"
+            Label {text:qsTr("Finale atteinte")} TComboBox {id:endgameFilter;objectName:"endgameFilter";Layout.fillWidth:true
                 readonly property var keys:["","pawns","knights","bishops","knightBishop","minor","rooks","rookMinor","rookMinorRook","doubleRooks","queens","queenRook"]
                 model:[qsTr("Aucune"),qsTr("Pions seuls"),qsTr("Cavalier contre cavalier"),qsTr("Fou contre fou"),qsTr("Cavalier contre fou"),qsTr("Pièces mineures"),
                     qsTr("Tour contre tour"),qsTr("Tour contre pièce mineure"),qsTr("Tour et pièce mineure contre tour"),qsTr("Deux tours contre deux tours"),qsTr("Dame contre dame"),qsTr("Dame contre tour")]}
@@ -1141,8 +1145,8 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;visible:advancedDialog.themesPending>0
                     font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
                     text:qsTr("%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.").arg(advancedDialog.themesPending)}}
-            Label {text:qsTr("Médaille")} TComboBox {id:medalFilter;objectName:"medalFilter";model:[qsTr("Aucune")].concat(win.medalNames)}
-            Label {text:qsTr("Symbole d’annotation")} TComboBox {id:nagFilter;objectName:"nagFilter";model:[qsTr("Aucun"),"!!","!","!?","?!","?","??"]}
+            Label {text:qsTr("Médaille")} TComboBox {id:medalFilter;objectName:"medalFilter";Layout.fillWidth:true;model:[qsTr("Aucune")].concat(win.medalNames)}
+            Label {text:qsTr("Symbole d’annotation")} TComboBox {id:nagFilter;objectName:"nagFilter";Layout.fillWidth:true;model:[qsTr("Aucun"),"!!","!","!?","?!","?","??"]}
             CheckBox {text:qsTr("Parties commentées seulement");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.annotated||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.annotated=checked}
             Label {text:qsTr("Elo minimal des deux joueurs");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
             Label {text:qsTr("Elo maximal (0 = sans limite)");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}

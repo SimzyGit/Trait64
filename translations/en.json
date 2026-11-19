@@ -1702,5 +1702,6 @@
   "%1 partie(s) · Elo récent : %2": "%1 game(s) · Recent Elo: %2",
   "%1 avec les Blancs · %2 avec les Noirs · %3 inachevée(s)": "%1 as White · %2 as Black · %3 unfinished",
   "%1 partie(s) lue(s), %2 nouvelle(s).": "%1 game(s) read, %2 new.",
-  "en cours": "ongoing"
+  "en cours": "ongoing",
+  "Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.": "Pick a name in the list: the card gathers their scores with each colour, openings, opponents, style and latest games."
 }

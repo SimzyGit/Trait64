@@ -11,6 +11,21 @@ std::string lichessAnalysisUrl(const std::string &fen, bool chess960) {
     return std::string("https://lichess.org/analysis/") + (chess960 ? "chess960/" : "standard/") + path;
 }
 
+std::vector<std::vector<bool>> qrModules(const std::string &text) {
+    try {
+        const auto code = qrcodegen::QrCode::encodeText(text.c_str(), qrcodegen::QrCode::Ecc::MEDIUM);
+        const int size = code.getSize(), border = 4;
+        std::vector<std::vector<bool>> grid(size_t(size + 2 * border),
+                                            std::vector<bool>(size_t(size + 2 * border)));
+        for (int y = 0; y < size; ++y)
+            for (int x = 0; x < size; ++x)
+                grid[size_t(y + border)][size_t(x + border)] = code.getModule(x, y);
+        return grid;
+    } catch (const qrcodegen::data_too_long &) {
+        return {};
+    }
+}
+
 std::string qrSvg(const std::string &text) {
     try {
         const auto code = qrcodegen::QrCode::encodeText(text.c_str(), qrcodegen::QrCode::Ecc::MEDIUM);

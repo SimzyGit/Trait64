@@ -1,5 +1,15 @@
 # Changements
 
+## Finitions visuelles — 20 novembre 2026
+
+- **QR code de la position** dessiné en PNG : en SVG, il restait blanc là où le greffon d'images SVG de Qt manque.
+- **Barre latérale** : *Profils* et *Études* ont chacun leur icône (une fiche, un livre coché) au lieu de répéter celles de *Joueurs* et d'*Ouvertures*.
+- **Boutons d'accent désactivés** (« Réviser la prochaine carte »…) peints comme les autres boutons grisés plutôt qu'en bleu délavé.
+- **Ouvertures** : le nom de l'ouverture s'affiche en clair au-dessus de la FEN, que l'on peut désormais sélectionner et copier.
+- **Recherche avancée** : listes déroulantes à pleine largeur (« Les deux couleurs » était coupé) et choix de couleur traduits.
+- **Joueurs** : la page vide explique ce que contient une fiche.
+- **Captures** : celles du README sont refaites sur une bibliothèque remplie (joueurs fictifs) ; le mode capture accepte une base à importer (`T64_SCREENSHOT_IMPORT`) et pose le thème dès le départ, faute de quoi les fondus de couleur, figés sur l'écran virtuel, laissaient des boutons de l'ancien thème.
+
 ## Audit — 19 novembre 2026
 
 Pas de nouvelle fonction : une passe de vérification de tout le logiciel.

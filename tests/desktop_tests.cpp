@@ -1171,7 +1171,7 @@ int main(int argc, char **argv) {
             quiz.setComment("");
             const auto qr = quiz.positionQr();
             check(qr["url"].toString().startsWith("https://lichess.org/analysis/standard/") &&
-                      qr["image"].toString().startsWith("data:image/svg+xml;base64,"),
+                      qr["image"].toString().startsWith("data:image/png;base64,"),
                   "The current position has a Lichess link and its QR code");
         }
         {

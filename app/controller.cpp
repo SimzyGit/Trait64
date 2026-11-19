@@ -12,6 +12,7 @@
 #include "sounds.h"
 #include "tactics.h"
 #include "themes.h"
+#include <QBuffer>
 #include <QClipboard>
 #include <QDate>
 #include <QDateTime>
@@ -20,6 +21,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -1918,9 +1920,24 @@ void Controller::startGuessing(bool white) {
 }
 QVariantMap Controller::positionQr() const {
     const auto url = t64::lichessAnalysisUrl(game_.nodes[node_].fen, game_.chess960);
-    const auto svg = QByteArray::fromStdString(t64::qrSvg(url));
-    return {{"url", s(url)},
-            {"image", svg.isEmpty() ? QString() : "data:image/svg+xml;base64," + svg.toBase64()}};
+    // Une image PNG plutôt qu'un SVG : le SVG demande le greffon d'images de Qt Svg, absent
+    // de certaines installations, et le code restait alors blanc.
+    const auto grid = t64::qrModules(url);
+    if (grid.empty())
+        return {{"url", s(url)}, {"image", QString()}};
+    constexpr int scale = 8;
+    const int side = int(grid.size());
+    QImage image(side * scale, side * scale, QImage::Format_Grayscale8);
+    for (int y = 0; y < side * scale; ++y) {
+        auto *line = image.scanLine(y);
+        for (int x = 0; x < side * scale; ++x)
+            line[x] = grid[size_t(y / scale)][size_t(x / scale)] ? 0 : 255;
+    }
+    QByteArray png;
+    QBuffer buffer(&png);
+    buffer.open(QIODevice::WriteOnly);
+    image.save(&buffer, "PNG");
+    return {{"url", s(url)}, {"image", "data:image/png;base64," + png.toBase64()}};
 }
 void Controller::setMoveTitle(const QString &title) {
     if (trainingActive() || node_ == 0)
