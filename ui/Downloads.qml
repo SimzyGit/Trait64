@@ -96,7 +96,7 @@ ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsVi
                 required property var modelData
                 width: history.width
                 Label {text: (modelData.title || qsTr("Import PGN local")) + " · " + modelData.date; font.bold: true}
-                Label {text: modelData.processed + qsTr(" parties lues, ") + modelData.added + " nouvelles."; font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                Label {text: qsTr("%1 partie(s) lue(s), %2 nouvelle(s).").arg(modelData.processed).arg(modelData.added); font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 Label {text: modelData.file; Layout.fillWidth: true; wrapMode: Text.WrapAnywhere; font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
                 Label {text: modelData.sha256 ? "SHA-256 : " + modelData.sha256 : qsTr("Empreinte non enregistrée pour cet import local."); Layout.fillWidth: true; wrapMode: Text.WrapAnywhere; font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
             }

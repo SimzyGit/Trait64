@@ -20,13 +20,13 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
     SplitView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:350*controller.preferences.fontScale
         ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:4;ScrollBar.vertical:ScrollBar{}
             delegate:ItemDelegate {required property var modelData;width:players.width;implicitHeight:55*controller.preferences.fontScale*controller.preferences.uiScale
-                text:modelData.name+"\n"+modelData.games+qsTr(" parties");onClicked:root.backend.inspectPlayer(modelData.name)
+                text:modelData.name+"\n"+qsTr("%1 partie(s)").arg(modelData.games);onClicked:root.backend.inspectPlayer(modelData.name)
             }
         }
         ScrollView {id:profileScroll;SplitView.fillWidth:true;contentWidth:availableWidth;clip:true
             Column {id:profileBody;width:Math.max(1,profileScroll.availableWidth);spacing:18
                 Label {text:root.profile.name||qsTr("Sélectionnez un joueur");wrapMode:Text.WordWrap;font.pixelSize:Math.round(24*controller.preferences.fontScale*controller.preferences.uiScale);font.bold:true;x:20;width:Math.max(1,profileBody.width-20)}
-                Label {text:root.profile.name?(root.profile.games+qsTr(" parties · Elo récent : ")+(root.profile.elo||qsTr("non renseigné"))):"";wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
+                Label {text:root.profile.name?qsTr("%1 partie(s) · Elo récent : %2").arg(root.profile.games).arg(root.profile.elo||qsTr("non renseigné")):"";wrapMode:Text.WordWrap;color:root.p.muted;x:20;width:Math.max(1,profileBody.width-20)}
                 // Ses pages en ligne : Lichess, Chess.com, FIDE, quand la bibliothèque les connaît.
                 Flow {objectName:"playerLinks";x:20;width:Math.max(1,profileBody.width-20);spacing:8
                     visible:!!root.profile.name&&Object.keys(root.profile.links||{}).length>0
@@ -43,7 +43,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                         }
                     }
                 }
-                Label {visible:!!root.profile.name;text:(root.profile.whiteGames||0)+qsTr(" avec les Blancs · ")+(root.profile.blackGames||0)+qsTr(" avec les Noirs · ")+(root.profile.unfinished||0)+qsTr(" inachevées");wrapMode:Text.WordWrap;x:20;width:Math.max(1,profileBody.width-20);color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                Label {visible:!!root.profile.name;text:qsTr("%1 avec les Blancs · %2 avec les Noirs · %3 inachevée(s)").arg(root.profile.whiteGames||0).arg(root.profile.blackGames||0).arg(root.profile.unfinished||0);wrapMode:Text.WordWrap;x:20;width:Math.max(1,profileBody.width-20);color:root.p.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 // Le style en quelques chiffres, d'après la ligne principale de ses parties.
                 Label {text:qsTr("Style");visible:!!(root.profile.style||{}).averageMoves;x:20;font.bold:true}
                 Label {objectName:"playerStyle";visible:!!(root.profile.style||{}).averageMoves;x:20;width:Math.max(1,profileBody.width-20);wrapMode:Text.WordWrap;color:root.p.muted
@@ -112,7 +112,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                 }
                 Label {text:qsTr("Parties récentes");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.recent||[]
-                    delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);text:modelData.date+" · "+modelData.opponent+" · "+modelData.result;elide:Text.ElideRight}
+                    delegate:Label {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);text:(/^[?.]*$/.test(modelData.date||"")?qsTr("date inconnue"):modelData.date.replace(/\.\?\?/g,""))+" · "+modelData.opponent+" · "+(modelData.result==="*"?qsTr("en cours"):modelData.result);elide:Text.ElideRight}
                 }
             }
         }

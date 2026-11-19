@@ -364,7 +364,7 @@ QVariantMap Uci::parseInfo(const QString &line, const QString &fen, bool chess96
     if (pv < 0)
         return {};
     const auto parts = line.left(pv).split(' ', Qt::SkipEmptyParts);
-    auto value = [&](const QString &key, QString fallback = QString()) {
+    auto value = [&](const QString &key, const QString &fallback = QString()) {
         const int i = parts.indexOf(key);
         return i >= 0 && i + 1 < parts.size() ? parts[i + 1] : fallback;
     };

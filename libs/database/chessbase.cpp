@@ -641,7 +641,7 @@ std::string pgnOf(const Base &db, qsizetype number) {
         }
     }
 
-    const auto orUnknown = [](std::string value) { return value.empty() ? std::string("?") : value; };
+    const auto orUnknown = [](const std::string &value) { return value.empty() ? std::string("?") : value; };
     const auto player = [&](unsigned id) {
         const auto last = db.players.field(id, 0, 30), first = db.players.field(id, 30, 20);
         return orUnknown(first.empty() ? last : last + ", " + first);

@@ -310,15 +310,11 @@
   "Préparer cette position": "Prepare this position",
   " parties": " games",
   "Sélectionnez un joueur": "Select a player",
-  " parties · Elo récent : ": " games · Recent Elo: ",
   "non renseigné": "not recorded",
   "non renseignée": "not recorded",
   "Victoires": "Wins",
   "Nulles": "Draws",
   "Défaites": "Losses",
-  " avec les Blancs · ": " as White · ",
-  " avec les Noirs · ": " as Black · ",
-  " inachevées": " unfinished",
   "OUVERTURES JOUÉES": "OPENINGS PLAYED",
   "PARTIES RÉCENTES": "RECENT GAMES",
   " parties · ": " games · ",
@@ -1702,5 +1698,9 @@
   "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 game(s) imported before this version are not classified yet: Tools → Reindex.",
   "Clés stratégiques : %1": "Strategic keys: %1",
   "Thème inconnu.": "Unknown theme.",
-  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "CQL query (e.g. “Ra8 kg8 mate”; slow: replays every game, variations included)"
+  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "CQL query (e.g. “Ra8 kg8 mate”; slow: replays every game, variations included)",
+  "%1 partie(s) · Elo récent : %2": "%1 game(s) · Recent Elo: %2",
+  "%1 avec les Blancs · %2 avec les Noirs · %3 inachevée(s)": "%1 as White · %2 as Black · %3 unfinished",
+  "%1 partie(s) lue(s), %2 nouvelle(s).": "%1 game(s) read, %2 new.",
+  "en cours": "ongoing"
 }

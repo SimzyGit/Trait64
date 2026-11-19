@@ -130,6 +130,10 @@ class Parser {
     explicit Parser(std::string_view text) : text_(text) {}
 
     std::unique_ptr<Filter> query() {
+        // Une requête tient en quelques lignes ; la borne évite qu'un texte collé par erreur
+        // (ou mille « not » imbriqués) ne fasse déborder la pile.
+        if (text_.size() > 4096)
+            fail("trop longue (4 096 caractères au plus).");
         skip();
         // L'en-tête « cql(...) » des fichiers CQL est accepté et ignoré.
         if (text_.substr(at_, 3) == "cql" && next(3) == '(') {
@@ -150,6 +154,7 @@ class Parser {
   private:
     std::string_view text_;
     size_t at_ = 0;
+    int depth_ = 0;
 
     char next(size_t offset = 0) const { return at_ + offset < text_.size() ? text_[at_ + offset] : '\0'; }
     void skip() {
@@ -196,6 +201,14 @@ class Parser {
     }
 
     std::unique_ptr<Filter> unit() {
+        struct Depth {
+            int &depth;
+            explicit Depth(int &d) : depth(d) {
+                if (++depth > 64)
+                    fail("trop d'imbrications.");
+            }
+            ~Depth() { --depth; }
+        } guard(depth_);
         skip();
         if (next() == '{') {
             ++at_;

@@ -310,15 +310,11 @@
   "Préparer cette position": "Preparar esta posición",
   " parties": " partidas",
   "Sélectionnez un joueur": "Selecciona un jugador",
-  " parties · Elo récent : ": " partidas · Elo reciente: ",
   "non renseigné": "sin registrar",
   "non renseignée": "sin registrar",
   "Victoires": "Victorias",
   "Nulles": "Tablas",
   "Défaites": "Derrotas",
-  " avec les Blancs · ": " con blancas · ",
-  " avec les Noirs · ": " con negras · ",
-  " inachevées": " sin terminar",
   "OUVERTURES JOUÉES": "APERTURAS JUGADAS",
   "PARTIES RÉCENTES": "PARTIDAS RECIENTES",
   " parties · ": " partidas · ",
@@ -1702,5 +1698,9 @@
   "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 partida(s) importada(s) antes de esta versión aún no están clasificadas: Herramientas → Reindexar.",
   "Clés stratégiques : %1": "Claves estratégicas: %1",
   "Thème inconnu.": "Tema desconocido.",
-  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "Consulta CQL (p. ej. «Ra8 kg8 mate»; lenta: repasa cada partida, variantes incluidas)"
+  "Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)": "Consulta CQL (p. ej. «Ra8 kg8 mate»; lenta: repasa cada partida, variantes incluidas)",
+  "%1 partie(s) · Elo récent : %2": "%1 partida(s) · Elo reciente: %2",
+  "%1 avec les Blancs · %2 avec les Noirs · %3 inachevée(s)": "%1 con blancas · %2 con negras · %3 sin terminar",
+  "%1 partie(s) lue(s), %2 nouvelle(s).": "%1 partida(s) leída(s), %2 nueva(s).",
+  "en cours": "en curso"
 }

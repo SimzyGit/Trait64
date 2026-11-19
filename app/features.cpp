@@ -927,7 +927,7 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                     t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool()), list);
             };
             const auto verdict = t64::explainMistake(replay(playedLine), replay(bestLine));
-            const auto piece = names[int(verdict.piece)], square = qs(verdict.square),
+            const auto &piece = names[int(verdict.piece)], square = qs(verdict.square),
                        proof = qs(verdict.proof);
             switch (verdict.reason) {
             case t64::MistakeReason::AllowsMate:

@@ -983,7 +983,10 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             TextField {id:labelField;objectName:"labelImportField";Layout.fillWidth:true;placeholderText:qsTr("Ex. Tournoi de Paris 2026, Cours de finales…")}
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
                 text:qsTr("Elle devient la collection de ces parties : la bibliothèque les retrouve par elle. Laissez-la vide pour importer sans étiquette.")}
-            CheckBox {id:studyKind;objectName:"labelImportStudy";text:qsTr("Ce sont des études ou des cours, pas des parties jouées")
+            // Le libellé revient à la ligne : traduit ou en grand, il dépassait du dialogue.
+            CheckBox {id:studyKind;objectName:"labelImportStudy";Layout.fillWidth:true;text:qsTr("Ce sont des études ou des cours, pas des parties jouées")
+                contentItem:Label {text:studyKind.text;font:studyKind.font;wrapMode:Text.WordWrap;verticalAlignment:Text.AlignVCenter
+                    leftPadding:studyKind.indicator.width+studyKind.spacing}
                 ToolTip.visible:hovered;ToolTip.text:qsTr("Les noms qu’ils portent à la place des joueurs (chapitres, titres) n’entrent pas dans l’onglet Joueurs.")}
         }
         onAccepted:controller.importLabeled(url,labelField.text,studyKind.checked)

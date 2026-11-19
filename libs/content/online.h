@@ -39,7 +39,7 @@ class OnlineGames : public QObject {
     void failed(const QString &message);
 
   private:
-    void get(const QUrl &url, const char *accept, std::function<void(const QByteArray &)> done);
+    void get(const QUrl &url, const char *accept, const std::function<void(const QByteArray &)> &done);
     void nextArchive();
     void finish(const QByteArray &pgn);
     void fail(const QString &message);

@@ -31,7 +31,7 @@ void Database::upgradeV3(int originalVersion) {
         sql("INSERT INTO player_counts SELECT name,COUNT(*) FROM (SELECT white name FROM games WHERE "
             "deleted=0 UNION ALL SELECT black FROM games WHERE deleted=0) GROUP BY name");
         sql("CREATE INDEX player_counts_rank ON player_counts(games DESC,name)");
-        auto delta = [&](QString ref, int sign) {
+        auto delta = [&](const QString &ref, int sign) {
             QString d = QString::number(sign) + "*(" + ref + ".deleted=0)";
             QString text = "UPDATE library_counts SET games=games+" + d + ",favorites=favorites+" + d + "*(" +
                            ref + ".favorite=1),whiteWins=whiteWins+" + d + "*(" + ref +

@@ -163,7 +163,7 @@ int main() {
             // Seul le lien du QR code mène dehors, et rien n'est chargé : ni source, ni import.
             const auto lichess = t64::lichessAnalysisUrl(study.nodes[study.mainline().back()].fen);
             auto stripped = page;
-            for (const std::string known : {lichess, std::string("http://www.w3.org/2000/svg")})
+            for (const std::string &known : {lichess, std::string("http://www.w3.org/2000/svg")})
                 for (auto at = stripped.find(known); at != std::string::npos; at = stripped.find(known))
                     stripped.erase(at, known.size());
             check(stripped.find("http") == std::string::npos && page.find("src=") == std::string::npos &&
@@ -560,6 +560,13 @@ int main() {
                     refused = true;
                 }
                 check(refused, "What Trait64 does not read is refused, not ignored");
+                refused = false;
+                try {
+                    t64::cql::Query(std::string(100, '{'));
+                } catch (const std::invalid_argument &) {
+                    refused = true;
+                }
+                check(refused, "A runaway CQL query is refused before it can overflow the stack");
             }
             // L'« Elo des gaffes » : une droite tirée de la bibliothèque, et le silence tant
             // qu'elle ne prouve rien.

@@ -140,7 +140,7 @@ void OnlineGames::nextArchive() {
     });
 }
 
-void OnlineGames::get(const QUrl &url, const char *accept, std::function<void(const QByteArray &)> done) {
+void OnlineGames::get(const QUrl &url, const char *accept, const std::function<void(const QByteArray &)> &done) {
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", userAgent);
     request.setRawHeader("Accept", accept);

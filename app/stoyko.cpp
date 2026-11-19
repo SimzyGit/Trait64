@@ -22,7 +22,7 @@ QString lineText(const t64::Game &game, int from, int leaf) {
     QStringList words;
     for (size_t i = 0; i < path.size(); ++i) {
         const auto &node = game.nodes[path[i]];
-        const auto before = game.boardOf(node.parent);
+        const auto &before = game.boardOf(node.parent);
         const bool white = before.sideToMove() == chess::Color::WHITE;
         const int number = before.fullMoveNumber();
         if (white)

@@ -36,7 +36,7 @@ int uiLayoutProbe(const QString &directory) {
         check(ready.wait(3000), "Layout: screenshot ready");
         check(grab->saveToFile(output+"/"+name+".png"), "Layout: screenshot saved");
     };
-    int index=0;
+    int index=0,dialogViews=0;
     for(const auto &s:scenarios) {
         auto *language=window->findChild<QObject *>("languageSelector");
         auto *category=window->findChild<QObject *>("contentCategory");
@@ -77,8 +77,8 @@ int uiLayoutProbe(const QString &directory) {
             capture(QString("case%1-page%2").arg(index).arg(page)); report.append(row);
         }
         if(index==0||index==5||index==7||index==8) {
-            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","tournamentDialog","puzzlesDialog","accountsDialog","analysisQueueDialog","updatesDialog","commandsDialog","fenDialog","pgnDialog","cardDialog","playDialog","tagsDialog","helpDialog","collectionDialog","deleteCardDialog","deleteVariationDialog","chess960Dialog","promotionDialog","reviewExplanationDialog"}) {
-                auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");
+            for(const char *name:{"appearanceDialog","settingsDialog","advancedDialog","preparationDialog","repertoiresDialog","importsDialog","downloadsDialog","positionEditor","reviewDialog","compareDialog","tournamentDialog","puzzlesDialog","accountsDialog","analysisQueueDialog","updatesDialog","commandsDialog","fenDialog","pgnDialog","cardDialog","playDialog","tagsDialog","helpDialog","collectionDialog","deleteCardDialog","deleteVariationDialog","chess960Dialog","promotionDialog","reviewExplanationDialog","backupsDialog","crosstableDialog","endgamesDialog","guideDialog","labelImportDialog","libraryChartsDialog","namesDialog","plansDialog","positionQrDialog","saveSearchDialog","shortcutsDialog","similarDialog","skillDashboardDialog"}) {
+                auto *dialog=window->findChild<QObject *>(name);check(dialog, "Layout: dialog exists");++dialogViews;
                 check(QMetaObject::invokeMethod(dialog,"open"), "Layout: dialog opens");QTest::qWait(60);
                 check(dialog->property("visible").toBool(), "Layout: dialog visible");
                 if(QString::fromLatin1(name)=="preparationDialog") {
@@ -122,6 +122,6 @@ int uiLayoutProbe(const QString &directory) {
     c.setPreference("reduceMotion",true);c.setPreference("sidebarCompact",true);QTest::qWait(30);
     check(warnings.isEmpty(), "Layout: no QML warnings");
     if(!output.isEmpty()){QFile file(output+"/matrix.json");check(file.open(QIODevice::WriteOnly),"Layout: report opened");file.write(QJsonDocument(QJsonObject{{"cases",report},{"checks",checks},{"qmlWarnings",warnings.count()}}).toJson());}
-    std::cout<<"UI layout: "<<checks<<" checks, 9 scenarios, 63 page views, 100 dialog views, "<<warnings.count()<<" QML warnings\n";
+    std::cout<<"UI layout: "<<checks<<" checks, 9 scenarios, 63 page views, "<<dialogViews<<" dialog views, "<<warnings.count()<<" QML warnings\n";
     return 0;
 }

@@ -1173,7 +1173,7 @@ int main(int argc, char **argv) {
                 bool counted = false;
                 for (const auto &p : shelf.players())
                     counted =
-                        counted || p.toMap()["name"] == "Chapitre 1 : les finales" && p.toMap()["games"] == 2;
+                        counted || (p.toMap()["name"] == "Chapitre 1 : les finales" && p.toMap()["games"] == 2);
                 check(counted, "Marked as played games, the collection's names count again");
                 check(shelf.removeSource(courseId) == 2 && shelf.sources().isEmpty() &&
                           shelf.stats()["games"].toInt() == 1,
