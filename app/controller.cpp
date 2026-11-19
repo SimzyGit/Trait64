@@ -11,6 +11,7 @@
 #include "scid.h"
 #include "sounds.h"
 #include "tactics.h"
+#include "themes.h"
 #include <QClipboard>
 #include <QDate>
 #include <QDateTime>
@@ -640,6 +641,13 @@ void Controller::refresh(bool content) {
                                           [](char c) { return std::strchr("NBRQnbrq", c) && c; });
         if (pieces <= 6)
             state_["endgame"] = db_->materialResults(t64::Database::materialCode(current.fen));
+        // Les clés stratégiques de la position, que la recherche avancée sait retrouver.
+        QStringList themes;
+        const auto found = t64::positionThemes(board);
+        for (int i = 0; i < t64::themeCount; ++i)
+            if (found >> i & 1)
+                themes << QString::fromUtf8(t64::themeKey(i).data(), qsizetype(t64::themeKey(i).size()));
+        state_["themes"] = themes;
     } catch (const std::exception &e) {
         fail(e);
     }

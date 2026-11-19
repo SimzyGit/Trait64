@@ -330,6 +330,14 @@ void Controller::openSimilar(qint64 id, int node) {
         navigate(node);
 }
 
+int Controller::gamesWithoutThemes() const {
+    try {
+        return db_->gamesWithoutThemes();
+    } catch (const std::exception &) {
+        return 0;
+    }
+}
+
 void Controller::explorePlans() {
     const auto generation = ++plansGeneration_;
     const auto fen = game_.nodes[node_].fen;

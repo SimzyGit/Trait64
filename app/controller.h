@@ -509,6 +509,8 @@ class Controller : public QObject {
     // Ouvre la partie et se place sur la position trouvée.
     Q_INVOKABLE void openSimilar(qint64 id, int node);
     Q_INVOKABLE void explorePlans();
+    // Parties de la bibliothèque pas encore classées par clés stratégiques (à réindexer).
+    Q_INVOKABLE int gamesWithoutThemes() const;
     Q_INVOKABLE void stopStoyko();
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();

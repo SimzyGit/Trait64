@@ -1687,5 +1687,19 @@
   "Aucune position de la bibliothèque n’a ce matériel avec le même camp au trait.": "No position in the library has this material with the same side to move.",
   "Même matériel, même camp au trait, une position par partie. L’écart compte les cases qui diffèrent, un pion comptant double.": "Same material, same side to move, one position per game. The gap counts the squares that differ, a pawn counting double.",
   "identique": "identical",
-  "écart %1": "gap %1"
+  "écart %1": "gap %1",
+  "Pion isolé en d": "Isolated queen's pawn",
+  "Pions pendants": "Hanging pawns",
+  "Pion passé avancé": "Advanced passed pawn",
+  "Pions doublés": "Doubled pawns",
+  "Fous de couleurs opposées": "Opposite-coloured bishops",
+  "Paire de fous": "Bishop pair",
+  "Structure Carlsbad": "Carlsbad structure",
+  "Étau de Maróczy": "Maróczy bind",
+  "Stonewall": "Stonewall",
+  "Milieu de jeu sans dames": "Queenless middlegame",
+  "Clé stratégique": "Strategic key",
+  "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 game(s) imported before this version are not classified yet: Tools → Reindex.",
+  "Clés stratégiques : %1": "Strategic keys: %1",
+  "Thème inconnu.": "Unknown theme."
 }

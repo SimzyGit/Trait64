@@ -1687,5 +1687,19 @@
   "Aucune position de la bibliothèque n’a ce matériel avec le même camp au trait.": "Ninguna posición de la biblioteca tiene este material con el mismo bando al turno.",
   "Même matériel, même camp au trait, une position par partie. L’écart compte les cases qui diffèrent, un pion comptant double.": "Mismo material, mismo bando al turno, una posición por partida. La diferencia cuenta las casillas distintas; un peón cuenta doble.",
   "identique": "idéntica",
-  "écart %1": "diferencia %1"
+  "écart %1": "diferencia %1",
+  "Pion isolé en d": "Peón aislado en d",
+  "Pions pendants": "Peones colgantes",
+  "Pion passé avancé": "Peón pasado avanzado",
+  "Pions doublés": "Peones doblados",
+  "Fous de couleurs opposées": "Alfiles de distinto color",
+  "Paire de fous": "Pareja de alfiles",
+  "Structure Carlsbad": "Estructura Carlsbad",
+  "Étau de Maróczy": "Bind de Maróczy",
+  "Stonewall": "Stonewall",
+  "Milieu de jeu sans dames": "Medio juego sin damas",
+  "Clé stratégique": "Clave estratégica",
+  "%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.": "%1 partida(s) importada(s) antes de esta versión aún no están clasificadas: Herramientas → Reindexar.",
+  "Clés stratégiques : %1": "Claves estratégicas: %1",
+  "Thème inconnu.": "Tema desconocido."
 }

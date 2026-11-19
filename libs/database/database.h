@@ -203,6 +203,8 @@ class Database {
     QVariantList similarPositions(const std::string &fen, int limit = 30, int candidates = 1500,
                                   const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantList duplicates() const;
+    // Parties encore sans clés stratégiques : celles d'avant le schéma 15, à réindexer.
+    int gamesWithoutThemes() const;
     int rebuildIndexes(const std::function<bool(int)> &progress = {});
     QString path() const { return path_; }
     // Demi-coups de la ligne principale dont chaque position est indexée. Au-delà, une
@@ -238,6 +240,7 @@ class Database {
     void upgradeV12(int originalVersion);
     void upgradeV13(int originalVersion);
     void upgradeV14(int originalVersion);
+    void upgradeV15(int originalVersion);
     // Schéma 12 : index allégé. Voir lightindex.cpp.
     bool light_ = false;
     void saveLegacyIndex(const Game &game, qint64 id);

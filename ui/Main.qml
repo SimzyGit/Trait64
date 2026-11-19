@@ -42,6 +42,9 @@ ApplicationWindow {
     property int selectedGame: 0
     property int selectedMedals: 0
     // Les médailles de ChessBase, un bit chacune, dans son ordre.
+    // Les clés stratégiques (themes.h), dans l'ordre de leurs bits.
+    readonly property var themeKeys: ["isolatedQueenPawn","hangingPawns","advancedPassedPawn","doubledPawns","oppositeBishops","bishopPair","carlsbad","maroczy","stonewall","queenlessMiddlegame"]
+    readonly property var themeNames: [qsTr("Pion isolé en d"), qsTr("Pions pendants"), qsTr("Pion passé avancé"), qsTr("Pions doublés"), qsTr("Fous de couleurs opposées"), qsTr("Paire de fous"), qsTr("Structure Carlsbad"), qsTr("Étau de Maróczy"), qsTr("Stonewall"), qsTr("Milieu de jeu sans dames")]
     readonly property var medalNames: [qsTr("Meilleure partie"), qsTr("Décisive pour le tournoi"), qsTr("Modèle d’ouverture"),
         qsTr("Nouveauté"), qsTr("Structure de pions"), qsTr("Stratégie"), qsTr("Tactique"), qsTr("Attaque"),
         qsTr("Sacrifice"), qsTr("Défense"), qsTr("Matériel"), qsTr("Jeu des pièces"), qsTr("Finale"),
@@ -547,6 +550,11 @@ objectName:"analysisSplit"
                                                 text:qsTr("Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %").arg(odds.games||0)
                                                     .arg(Math.round(100*(odds.white||0)/Math.max(1,odds.games||0))).arg(Math.round(100*(odds.draws||0)/Math.max(1,odds.games||0)))
                                                     .arg(Math.round(100*(odds.black||0)/Math.max(1,odds.games||0)))}
+                                            // Les clés stratégiques de la position.
+                                            Label {objectName:"positionThemes";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var keys:controller.state.themes||[]
+                                                visible:keys.length>0
+                                                text:qsTr("Clés stratégiques : %1").arg(keys.map(function(k){return win.themeNames[win.themeKeys.indexOf(k)]||k}).join(" · "))}
                                             // La tendance : le score des Blancs selon l'écart d'Elo, quand il est connu.
                                             Label {objectName:"endgameTrend";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
                                                 readonly property var rows:(controller.state.endgame||{}).byElo||[]
@@ -1100,15 +1108,19 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     }
     TDialog {id:advancedDialog;objectName:"advancedDialog";title:qsTr("Recherche avancée");anchors.centerIn:parent;width:Math.min(690,win.width-32);height:Math.min(760,win.height-32);modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         property var draft:({})
-        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=["updated","date","players","elo","length"].indexOf(draft.sort||"updated");colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""));nagFilter.currentIndex=Math.max(0,[0,3,1,5,6,2,4].indexOf(draft.nag||0));medalFilter.currentIndex=draft.medal?Math.round(Math.log2(draft.medal))+1:0;endgameFilter.currentIndex=Math.max(0,endgameFilter.keys.indexOf(draft.endgame||""))}
+        property int themesPending:0
+        onOpened:{draft=Object.assign({},win.advanced);minElo.value=draft.minElo||0;maxElo.value=draft.maxElo||0;maxPlies.value=draft.maxPlies||0;sortBy.currentIndex=["updated","date","players","elo","length"].indexOf(draft.sort||"updated");colourFilter.currentIndex=Math.max(0,["","white","black"].indexOf(draft.colour||""));nagFilter.currentIndex=Math.max(0,[0,3,1,5,6,2,4].indexOf(draft.nag||0));medalFilter.currentIndex=draft.medal?Math.round(Math.log2(draft.medal))+1:0;endgameFilter.currentIndex=Math.max(0,endgameFilter.keys.indexOf(draft.endgame||""));themeFilter.currentIndex=win.themeKeys.indexOf(draft.theme||"")+1;themesPending=controller.gamesWithoutThemes()}
         ScrollView {id:advancedScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         GridLayout {width:advancedScroll.availableWidth;columns:2;columnSpacing:12;rowSpacing:10
-            Repeater {model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"placement",label:qsTr("Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")},{key:"comment",label:qsTr("Texte dans les commentaires")},{key:"maneuver",label:qsTr("Manœuvre d’une pièce (ex. Cf3-d2-f1)")}]
+            Repeater {id:fieldRepeater;model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"placement",label:qsTr("Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")},{key:"comment",label:qsTr("Texte dans les commentaires")},{key:"maneuver",label:qsTr("Manœuvre d’une pièce (ex. Cf3-d2-f1)")}]
                 delegate:ColumnLayout {required property var modelData;Layout.fillWidth:true
                     Label {text:modelData.label;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                     TextField {Layout.fillWidth:true;text:advancedDialog.draft[modelData.key]||"";onTextEdited:advancedDialog.draft[modelData.key]=text}
                 }
             }
+            // Les champs sont en nombre impair : une case vide remet chaque libellé suivant en
+            // face de sa liste.
+            Item {Layout.fillWidth:true;visible:fieldRepeater.count%2===1}
             Label {text:qsTr("Couleur du joueur")} TComboBox {id:colourFilter;model:["Les deux couleurs","Blancs","Noirs"]}
             // Les six symboles courants, dans l'ordre du plus fort au plus faible ; la valeur
             // est le NAG du PGN ($3 pour !!).
@@ -1116,6 +1128,11 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 readonly property var keys:["","pawns","knights","bishops","knightBishop","minor","rooks","rookMinor","rookMinorRook","doubleRooks","queens","queenRook"]
                 model:[qsTr("Aucune"),qsTr("Pions seuls"),qsTr("Cavalier contre cavalier"),qsTr("Fou contre fou"),qsTr("Cavalier contre fou"),qsTr("Pièces mineures"),
                     qsTr("Tour contre tour"),qsTr("Tour contre pièce mineure"),qsTr("Tour et pièce mineure contre tour"),qsTr("Deux tours contre deux tours"),qsTr("Dame contre dame"),qsTr("Dame contre tour")]}
+            Label {text:qsTr("Clé stratégique")} ColumnLayout {Layout.fillWidth:true;spacing:2
+                TComboBox {id:themeFilter;objectName:"themeFilter";Layout.fillWidth:true;model:[qsTr("Aucune")].concat(win.themeNames)}
+                Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;visible:advancedDialog.themesPending>0
+                    font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
+                    text:qsTr("%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.").arg(advancedDialog.themesPending)}}
             Label {text:qsTr("Médaille")} TComboBox {id:medalFilter;objectName:"medalFilter";model:[qsTr("Aucune")].concat(win.medalNames)}
             Label {text:qsTr("Symbole d’annotation")} TComboBox {id:nagFilter;objectName:"nagFilter";model:[qsTr("Aucun"),"!!","!","!?","?!","?","??"]}
             CheckBox {text:qsTr("Parties commentées seulement");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.annotated||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.annotated=checked}
@@ -1127,7 +1144,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             TButton {text:qsTr("Effacer les filtres");onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
         }}
-        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.nag=[0,3,1,5,6,2,4][nagFilter.currentIndex];draft.medal=medalFilter.currentIndex>0?1<<(medalFilter.currentIndex-1):0;draft.endgame=endgameFilter.keys[endgameFilter.currentIndex];if(sortBy.currentIndex>=0&&["updated","date","players","elo","length"][sortBy.currentIndex]!==(draft.sort||"updated")){draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];draft.reverse=false}win.advanced=Object.assign({},draft);win.applyAdvanced()}
+        onAccepted:{draft.minElo=minElo.value;draft.maxElo=maxElo.value;draft.maxPlies=maxPlies.value;draft.colour=["","white","black"][colourFilter.currentIndex];draft.nag=[0,3,1,5,6,2,4][nagFilter.currentIndex];draft.medal=medalFilter.currentIndex>0?1<<(medalFilter.currentIndex-1):0;draft.endgame=endgameFilter.keys[endgameFilter.currentIndex];draft.theme=themeFilter.currentIndex>0?win.themeKeys[themeFilter.currentIndex-1]:"";if(sortBy.currentIndex>=0&&["updated","date","players","elo","length"][sortBy.currentIndex]!==(draft.sort||"updated")){draft.sort=["updated","date","players","elo","length"][sortBy.currentIndex];draft.reverse=false}win.advanced=Object.assign({},draft);win.applyAdvanced()}
     }
     TDialog {id:commands;objectName:"commandsDialog";title:qsTr("Commandes rapides");anchors.centerIn:parent;width:Math.min(680,win.width-32);height:Math.min(620,win.height-32);modal:true;standardButtons:Dialog.Close
         readonly property var entries:[

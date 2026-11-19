@@ -17,6 +17,7 @@
 #include "cancellation.h"
 #include "database.h"
 #include "game.h"
+#include "themes.h"
 #include <QFileInfo>
 #include <QMutex>
 #include <QRegularExpression>
@@ -159,6 +160,10 @@ void Database::indexGame(const Game &game, qint64 id, bool existing) {
         sign.bindValue(3, late ? 1 : 0);
         run(sign);
     }
+    auto &themes = statement("INSERT OR REPLACE INTO game_themes(game_id,themes) VALUES(?,?)");
+    themes.bindValue(0, id);
+    themes.bindValue(1, gameThemes(game));
+    run(themes);
     auto &owned = statement("INSERT INTO game_material(material,game_id) VALUES(?,?)");
     for (const auto material : materials) {
         owned.bindValue(0, material);
@@ -427,5 +432,33 @@ void Database::upgradeV12(int originalVersion) {
     // Une base existante rend ici au disque les neuf dixièmes de son index.
     if (originalVersion > 0)
         sql("VACUUM");
+}
+// Les clés stratégiques de chaque partie (themes.h) : une ligne par partie indexée, même
+// sans thème, pour savoir lesquelles restent à classer. Les parties d'avant ce schéma le
+// sont en réindexant la bibliothèque ; rien n'est rejoué pendant la mise à jour.
+void Database::upgradeV15(int originalVersion) {
+    if (originalVersion >= 15)
+        return;
+    sql("SAVEPOINT schema15");
+    try {
+        sql("CREATE TABLE IF NOT EXISTS game_themes(game_id INTEGER PRIMARY KEY REFERENCES games(id) ON "
+            "DELETE "
+            "CASCADE,themes INTEGER NOT NULL)");
+        sql("PRAGMA user_version=15");
+        sql("RELEASE schema15");
+    } catch (...) {
+        sql("ROLLBACK TO schema15");
+        sql("RELEASE schema15");
+        throw;
+    }
+}
+
+int Database::gamesWithoutThemes() const {
+    QSqlQuery q(db_);
+    q.prepare(
+        "SELECT COUNT(*) FROM games g WHERE g.deleted=0 AND NOT EXISTS(SELECT 1 FROM game_themes t WHERE "
+        "t.game_id=g.id)");
+    run(q);
+    return q.next() ? q.value(0).toInt() : 0;
 }
 } // namespace t64

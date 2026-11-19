@@ -7,6 +7,7 @@
 #include "polyglot.h"
 #include "qr.h"
 #include "tactics.h"
+#include "themes.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -504,6 +505,31 @@ int main() {
             // arithmétique, qui vaudrait 92,5 ici.
             const double blundered = t64::aggregateAccuracy({100, 100, 100, 70});
             check(blundered < 92 && blundered > 60, "One blunder weighs on an otherwise clean set");
+            // Les clés stratégiques, constatées sur des positions types.
+            {
+                const auto themes = [](const char *fen) { return t64::positionThemes(chess::Board(fen)); };
+                // Pion isolé en d4, contre une structure noire e6 sans pion d.
+                check(themes("r1bq1rk1/pp2bppp/2n1pn2/8/3P4/2NB1N2/PP3PPP/R1BQ1RK1 w - - 0 10") &
+                          t64::IsolatedQueenPawn,
+                      "An isolated d4 pawn is an isolated queen's pawn");
+                // Pions pendants c5-d5 chez les Noirs.
+                check(themes("r2q1rk1/p3bppp/2n2n2/2pp4/8/1P2PN2/PB2BPPP/R2Q1RK1 w - - 0 12") &
+                          t64::HangingPawns,
+                      "Side-by-side c and d pawns without b or e pawns are hanging pawns");
+                // Carlsbad : d4 sans c pour les Blancs, c6-d5 sans e pour les Noirs.
+                check(themes("r1bq1rk1/pp2bppp/2pn1n2/3p4/3P4/2NBPN2/PP3PPP/R2Q1RK1 w - - 0 10") &
+                          t64::Carlsbad,
+                      "The exchange Queen's Gambit structure is Carlsbad");
+                // Fous de couleurs opposées, et un pion passé noir en a3 (sixième rangée pour lui).
+                const auto ending = themes("8/5k2/3b4/8/8/p7/5PK1/5B2 w - - 0 50");
+                check((ending & t64::OppositeBishops) && (ending & t64::AdvancedPassedPawn) &&
+                          !(ending & t64::BishopPair),
+                      "Opposite bishops and an advanced passed pawn are seen from either side");
+                check(themes("r1b1k2r/pp1n1ppp/2p1pn2/8/2BP4/2N2N2/PP3PPP/R1B2RK1 w kq - 0 10") &
+                          t64::QueenlessMiddlegame,
+                      "Queens off with the pieces still on is a queenless middlegame");
+                check(themes(chess::constants::STARTPOS) == 0, "The starting position has no strategic key");
+            }
             // L'« Elo des gaffes » : une droite tirée de la bibliothèque, et le silence tant
             // qu'elle ne prouve rien.
             {

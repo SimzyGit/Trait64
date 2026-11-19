@@ -2,6 +2,9 @@
 
 ## Bases SCID 5 — 19 novembre 2026
 
+- **Clés stratégiques** : chaque partie est classée selon dix thèmes reconnus à la géométrie — pion isolé en d, pions pendants, pion passé avancé, pions doublés, fous de couleurs opposées, paire de fous, structure Carlsbad, étau de Maróczy, Stonewall, milieu de jeu sans dames. Un thème compte s'il tient au moins quatre demi-coups passé le seizième. *Recherche avancée → Clé stratégique* retrouve les parties ; l'onglet Arbre nomme ceux de la position. Les parties déjà importées se classent avec *Outils → Réindexer* (le dialogue dit combien il en reste). La bibliothèque passe au schéma 15 (une table ajoutée, rien n'est rejoué).
+- La recherche avancée remet chaque libellé en face de sa liste (un champ de texte en nombre impair les décalait d'une colonne).
+
 - **Positions semblables** (onglet Arbre → *Positions semblables*, ou la palette de commandes) : les positions de la bibliothèque qui ont le même matériel et le même camp au trait, les plus proches d'abord, une par partie. L'écart compte les cases qui diffèrent, un pion comptant double puisque la structure décide du plan. Un clic ouvre la partie sur cette position. La recherche porte sur les 1 500 parties les mieux classées où ce matériel a paru.
 
 - **Les bases SCID 5 s'importent** (`.si5`, `.sn5`, `.sg5`, le format par défaut de SCID depuis la version 5) comme celles de SCID 4 : *Importer*, glisser-déposer ou onglet *Études*, en choisissant n'importe lequel des trois fichiers. Coups, variantes, commentaires, NAG, positions de départ et Elo sont repris ; les parties marquées pour suppression dans SCID sont laissées de côté. Vérifié sur une base écrite par le code de SCID lui-même (tests/scid/README.md) et sur 3 000 parties relues à l'identique.

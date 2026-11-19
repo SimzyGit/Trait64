@@ -278,6 +278,21 @@ int main(int argc, char **argv) {
             check(board.reviewSummary({"alice"})["games"].toInt() == 2,
                   "Nicknames are matched without regard to case");
             check(board.reviewSummary({})["games"].toInt() == 0, "No nickname means nothing to measure");
+            {
+                // Les clés stratégiques : un Gambit de la Dame, variante d'échange, garde la
+                // structure Carlsbad bien après le seizième demi-coup.
+                t64::Database keys(dir.filePath("themes.sqlite"));
+                keys.importGames(
+                    t64::parsePgn("[White \"Carl\"]\n[Black \"Sbad\"]\n\n1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. "
+                                  "cxd5 exd5 5. Bg5 Be7 6. e3 c6 7. Bd3 Nbd7 8. Qc2 O-O 9. Nf3 "
+                                  "Re8 10. O-O Nf8 11. h3 g6 *"));
+                const auto theme = [&](const char *key) {
+                    return keys.search({}, {}, false, {}, false, {{"theme", key}}).size();
+                };
+                check(theme("carlsbad") == 1 && theme("isolatedQueenPawn") == 0 &&
+                          keys.gamesWithoutThemes() == 0,
+                      "Games are classified by the strategic keys they kept");
+            }
             check(board.accuracyEloSamples().empty(),
                   "Games without ratings, or too short, do not calibrate the estimated strength");
             const auto history = board.reviewHistory({"Alice"}, 12);
@@ -598,8 +613,8 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 14,
-                      "Schema version 14");
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 15,
+                      "Schema version 15");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
                 check(q.exec("SELECT typeof(key) FROM positions LIMIT 1") && q.next() &&

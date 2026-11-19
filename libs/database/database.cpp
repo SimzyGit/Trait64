@@ -2,6 +2,7 @@
 #include "database.h"
 #include "cancellation.h"
 #include "crosstable.h"
+#include "themes.h"
 #include <QBuffer>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -77,7 +78,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 14, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 15, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -154,6 +155,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV12(v);
         upgradeV13(v);
         upgradeV14(v);
+        upgradeV15(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
@@ -521,6 +523,16 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     }
     if (filters.value("annotated").toBool())
         statement += " AND instr(g.pgn,'{')>0";
+    // Une clé stratégique de la partie (themes.h), d'après son nom.
+    if (const auto key = filters.value("theme").toString(); !key.isEmpty()) {
+        int bit = -1;
+        for (int i = 0; i < themeCount; ++i)
+            if (themeKey(i) == key.toStdString())
+                bit = i;
+        check(bit >= 0, "Thème inconnu.");
+        statement += " AND g.id IN(SELECT game_id FROM game_themes WHERE themes&?<>0)";
+        args << (1 << bit);
+    }
     // Une finale atteinte au cours de la partie, d'après le matériel de ses positions : les
     // pièces de chaque camp, pions à part, dans un sens ou dans l'autre.
     if (const auto kind = filters.value("endgame").toString(); !kind.isEmpty()) {
