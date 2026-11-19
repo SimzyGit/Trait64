@@ -8,7 +8,9 @@
 - **Ouvertures** : le nom de l'ouverture s'affiche en clair au-dessus de la FEN, que l'on peut désormais sélectionner et copier.
 - **Recherche avancée** : listes déroulantes à pleine largeur (« Les deux couleurs » était coupé) et choix de couleur traduits.
 - **Joueurs** : la page vide explique ce que contient une fiche.
-- **Captures** : celles du README sont refaites sur une bibliothèque remplie (joueurs fictifs) ; le mode capture accepte une base à importer (`T64_SCREENSHOT_IMPORT`) et pose le thème dès le départ, faute de quoi les fondus de couleur, figés sur l'écran virtuel, laissaient des boutons de l'ancien thème.
+- **Paramètres** : « sans limite » (profondeur d'analyse) suit la langue ; le compteur de Qt gardait « no limit » après un passage au français.
+- **Études** : l'invite « Choisissez une étude » occupe le panneau, au centre, au lieu d'une ligne dans un coin ; positions semblables : résultats en « ½-½ » et dates inconnues en clair.
+- **Captures** : celles du README sont refaites sur une bibliothèque remplie (joueurs fictifs) ; le mode capture accepte une base à importer (`T64_SCREENSHOT_IMPORT`) pose le thème dès le départ et coupe les animations, faute de quoi les fondus de couleur, figés sur l'écran virtuel, laissaient des boutons de l'ancien thème.
 
 ## Audit — 19 novembre 2026
 

@@ -35,7 +35,7 @@ TDialog {
                         Label {Layout.fillWidth:true;elide:Text.ElideRight;font.weight:Font.DemiBold
                             text:modelData.white+(modelData.whiteElo>0?" ("+modelData.whiteElo+")":"")+" – "
                                  +modelData.black+(modelData.blackElo>0?" ("+modelData.blackElo+")":"")}
-                        Label {opacity:.75;text:modelData.result+" · "+modelData.date}
+                        Label {opacity:.75;text:(modelData.result==="1/2-1/2"?"½-½":modelData.result)+" · "+(String(modelData.date).indexOf("?")<0?modelData.date:qsTr("date inconnue"))}
                     }
                     Label {Layout.preferredWidth:96*root.ui;horizontalAlignment:Text.AlignRight;font.weight:Font.DemiBold
                         text:modelData.distance===0?qsTr("identique"):qsTr("écart %1").arg(modelData.distance)}

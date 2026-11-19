@@ -96,6 +96,10 @@ int main(int argc, char *argv[]) {
             // Le thème est posé dès le départ : changé juste avant la capture, il lançait les
             // fondus de couleur des boutons, que l'écran virtuel ne fait pas avancer, et les
             // boutons restaient de la couleur de l'ancien thème sur l'image.
+            // Sans fondus non plus : un dialogue ouvert juste avant la capture lançait les siens,
+            // que l'écran virtuel ne fait pas avancer non plus.
+            if (!screenshot.isEmpty())
+                controller.setPreference("reduceMotion", true);
             if (const auto theme = qEnvironmentVariable("T64_SCREENSHOT_THEME");
                 theme == "light" || theme == "dark")
                 controller.setPreference("lightTheme", theme == "light");

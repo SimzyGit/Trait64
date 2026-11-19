@@ -269,10 +269,16 @@ ColumnLayout {
             SplitView.minimumWidth: 300
             spacing: 10
 
+            // Rien de choisi : l'invite occupe le panneau, au centre, comme les autres pages
+            // vides, plutôt qu'une ligne perdue dans un coin.
             Label {
+                objectName: "studiesEmpty"
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 visible: !root.collection && root.selectedId <= 0
                 wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
                 color: root.preferences.muted
                 text: qsTr("Choisissez une étude dans la liste.")
             }

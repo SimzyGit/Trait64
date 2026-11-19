@@ -1066,7 +1066,13 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Label {text:qsTr("Le niveau concerne le jeu contre Stockfish. L’analyse utilise sa pleine force.\nLes réglages sont appliqués au démarrage du moteur.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
             RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} SpinBox {objectName:"analysisDepth";from:0;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)
                         // 0 : le moteur creuse tant qu'on regarde la position.
+                        // Le texte affiché est une liaison à part : le SpinBox de Qt 6.4 ne
+                        // recalcule pas son texte quand la langue change, et « no limit »
+                        // restait affiché en français.
+                        id:analysisDepthBox
                         textFromValue:function(value){return value===0?qsTr("sans limite"):String(value)}
+                        contentItem:Label {text:analysisDepthBox.value===0?qsTr("sans limite"):String(analysisDepthBox.value);font:analysisDepthBox.font
+                            horizontalAlignment:Text.AlignHCenter;verticalAlignment:Text.AlignVCenter;color:win.fg}
                         valueFromText:function(text){var n=parseInt(text);return isNaN(n)?0:n}
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Sans limite, le moteur approfondit tant que la position reste affichée. Une profondeur fixe l’arrête dès qu’elle est atteinte.")}}
             RowLayout {Layout.fillWidth:true
