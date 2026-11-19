@@ -1235,7 +1235,6 @@
   "Réponse illisible de l’explorateur Lichess.": "Respuesta ilegible del explorador de Lichess.",
   "Identifiant de partie Lichess invalide.": "Identificador de partida de Lichess no válido.",
   "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.": "Este archivo .db3 no es una base de En Croissant en formato SQLite.",
-  "Base SCID incomplète ou d’un autre format : il faut les trois fichiers .si4, .sn4 et .sg4 côte à côte (le format 5 de SCID, .si5, n’est pas lu).": "Base SCID incompleta o de otro formato: los tres archivos .si4, .sn4 y .sg4 deben estar juntos (el formato 5 de SCID, .si5, no se lee).",
   "Cette base dépasse un million de parties : l’importer prendrait des heures et des dizaines de gigaoctets.": "Esta base tiene más de un millón de partidas: importarla llevaría horas y decenas de gigabytes.",
   "Cette base dépasse un million de parties : l’importer prendrait des heures et des dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne depuis le dossier de la position.": "Esta base contiene más de un millón de partidas: importarla llevaría horas y decenas de gigabytes, ya que se indexa cada posición. Consúltala en línea desde el informe de la posición.",
   "Import annulé.": "Importación cancelada.",
@@ -1572,7 +1571,6 @@
   "• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic, gauche ou droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Clic droit sur un coup ou touche Suppr : le supprimer avec sa suite (Ctrl+Z pour annuler).\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.": "• Pulsa una pieza y luego su casilla, o arrástrala.\n• Vuelve atrás en una partida y juega otra jugada para empezar una variante.\n• Arrastrar con clic derecho: flecha; clic derecho en una casilla: círculo;\n  doble clic, izquierdo o derecho: borrar todas las anotaciones.\n• Ctrl + rueda sobre el tablero: ajustar su tamaño.\n• Flechas izquierda/derecha: jugadas; arriba/abajo: variantes; Espacio: reproducción automática.\n• Clic derecho en una jugada o tecla Supr: eliminarla con lo que sigue (Ctrl+Z para deshacer).\n• Guarda un estudio para añadirlo a tu biblioteca.\n• Importa un PGN para alimentar el explorador de aperturas.\n• Crea tarjetas con las líneas que quieras recordar.",
   "Analyse assistée": "Análisis asistido",
   "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "Al elegir una pieza, sus casillas de destino se colorean: verde para la mejor jugada del motor, verde claro a menos de medio peón, rojo para una jugada que pierde material o que el motor considera mala.",
-  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Partidas, posiciones y bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
   "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Base ChessBase incompleta: deben estar juntos al menos los archivos .cbh, .cbg, .cbp y .cbt (no se leen el formato 2CBH de ChessBase 18 ni los archivos .cbv).",
   "Relations d’attaque": "Relaciones de ataque",
   "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "Al elegir una pieza, una flecha roja sale de cada pieza que la ataca y una verde de cada pieza que la defiende.",
@@ -1681,5 +1679,7 @@
   "Elo proches": "Elo parecidos",
   "Noirs plus forts": "Negras más fuertes",
   "Score des Blancs selon l’Elo : %1": "Puntuación de las blancas según el Elo: %1",
-  "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "«Más fuertes»: al menos 100 puntos de Elo de ventaja. Las partidas sin Elo no cuentan aquí."
+  "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "«Más fuertes»: al menos 100 puntos de Elo de ventaja. Las partidas sin Elo no cuentan aquí.",
+  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)": "Partidas, posiciones y bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)",
+  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Base SCID incompleta: sus tres archivos deben estar juntos (.si4, .sn4 y .sg4, o .si5, .sn5 y .sg5)."
 }

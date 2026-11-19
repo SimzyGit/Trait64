@@ -6,6 +6,7 @@
 #include <QIODevice>
 #include <algorithm>
 #include <array>
+#include <climits>
 #include <map>
 #include <stdexcept>
 #include <vector>
@@ -27,12 +28,19 @@ struct Reader {
     }
 };
 
-QString base(const QString &path) {
+// Le chemin sans extension, et le format (4 ou 5) que dit l'extension ; 0 sinon.
+std::pair<QString, int> base(const QString &path) {
     const QFileInfo file(path);
     const auto suffix = file.suffix().toLower();
-    if (suffix == "si4" || suffix == "sn4" || suffix == "sg4")
-        return file.absolutePath() + "/" + file.completeBaseName();
-    return {};
+    const int format = suffix.size() == 3 && suffix[0] == 's' && QStringLiteral("ing").contains(suffix[1])
+                           ? suffix[2] == '4'   ? 4
+                             : suffix[2] == '5' ? 5
+                                                : 0
+                           : 0;
+    return {format ? file.absolutePath() + "/" + file.completeBaseName() : QString(), format};
+}
+QString suffix(char kind, int format) {
+    return QStringLiteral(".s%1%2").arg(kind).arg(format);
 }
 
 QByteArray readAll(const QString &path) {
@@ -99,6 +107,56 @@ Entry readEntry(Reader in) {
     e.date = in.take(4) & 0xFFFFF;
     e.whiteElo = in.take(2) & 0xFFF;
     e.blackElo = in.take(2) & 0xFFF;
+    return e;
+}
+
+// Le format 5 : des noms à la suite, chacun précédé d'un entier variable (longueur × 8
+// + type ; types 0 à 3 comme au format 4, 4 pour les informations de la base).
+std::array<std::vector<std::string>, 4> readNames5(const QByteArray &bytes) {
+    const auto *at = reinterpret_cast<const unsigned char *>(bytes.constData());
+    const auto *end = at + bytes.size();
+    std::array<std::vector<std::string>, 4> names;
+    while (at < end) {
+        quint64 value = 0;
+        for (int shift = 0;; shift += 7) {
+            if (at == end || shift > 56)
+                throw std::runtime_error("Fichier de noms SCID endommagé.");
+            value |= quint64(*at & 127) << shift;
+            if (*at++ < 128)
+                break;
+        }
+        const auto kind = unsigned(value & 7);
+        const auto length = value >> 3;
+        if (kind > 4 || length > quint64(end - at))
+            throw std::runtime_error("Fichier de noms SCID endommagé.");
+        if (kind < 4)
+            names[kind].emplace_back(reinterpret_cast<const char *>(at), size_t(length));
+        at += length;
+    }
+    return names;
+}
+
+// Une fiche du format 5 : 56 octets, douze entiers de 32 bits écrits poids faible
+// d'abord, dont les bits de tête portent un second champ, puis les pions de départ.
+Entry readEntry5(const unsigned char *at, quint64 &offset) {
+    const auto word = [at](int i) {
+        const auto *b = at + 4 * i;
+        return unsigned(b[0]) | unsigned(b[1]) << 8 | unsigned(b[2]) << 16 | unsigned(b[3]) << 24;
+    };
+    const auto low = [](unsigned value, int high) { return value & (0xFFFFFFFFu >> high); };
+    Entry e;
+    e.white = low(word(0), 4);
+    e.black = low(word(1), 4);
+    e.event = low(word(2), 4);
+    e.site = word(3);
+    e.round = low(word(4), 1);
+    e.whiteElo = word(5) >> 20;
+    e.date = low(word(5), 12);
+    e.blackElo = word(6) >> 20;
+    e.flags = low(word(7), 10);
+    e.length = word(8) >> 15;
+    offset = quint64(low(word(8), 17)) << 32 | word(9);
+    e.result = (word(11) >> 16) & 3;
     return e;
 }
 
@@ -409,17 +467,21 @@ std::string pgnOf(const QByteArray &record, const Entry &entry,
 } // namespace
 
 QString indexPath(const QString &path) {
-    const auto stem = base(path);
-    return stem.isEmpty() ? QString() : stem + ".si4";
+    const auto [stem, format] = base(path);
+    return stem.isEmpty() ? QString() : stem + suffix('i', format);
 }
 
 bool isScidBase(const QString &path) {
-    const auto stem = base(path);
-    if (stem.isEmpty() || !QFileInfo(stem + ".sn4").isFile() || !QFileInfo(stem + ".sg4").isFile())
+    const auto [stem, format] = base(path);
+    if (stem.isEmpty() || !QFileInfo(stem + suffix('n', format)).isFile() ||
+        !QFileInfo(stem + suffix('g', format)).isFile())
         return false;
-    QFile index(stem + ".si4");
+    QFile index(stem + suffix('i', format));
     if (!index.open(QIODevice::ReadOnly))
         return false;
+    // Le format 5 n'a pas d'en-tête : rien que des fiches de 56 octets.
+    if (format == 5)
+        return index.size() % 56 == 0;
     const auto head = index.read(10);
     return head.size() == 10 && head.startsWith("Scid.si") &&
            ((unsigned char)head[8] << 8 | (unsigned char)head[9]) >= 400;
@@ -431,6 +493,8 @@ int games(const QString &path) {
     QFile index(indexPath(path));
     if (!index.open(QIODevice::ReadOnly))
         return 0;
+    if (base(path).second == 5)
+        return int(std::min<qint64>(index.size() / 56, INT_MAX));
     const auto head = index.read(17);
     if (head.size() < 17)
         return 0;
@@ -440,27 +504,35 @@ int games(const QString &path) {
 Outcome exportPgn(const QString &path, QIODevice &out, const std::function<void(int, int)> &progress,
                   const std::shared_ptr<std::atomic_bool> &canceled) {
     if (!isScidBase(path))
-        throw std::runtime_error("Ce n’est pas une base SCID au format 4 (.si4, .sn4, .sg4).");
-    const auto stem = base(path);
-    const auto names = readNames(readAll(stem + ".sn4"));
-    const auto index = readAll(stem + ".si4");
-    QFile moves(stem + ".sg4");
+        throw std::runtime_error(
+            "Ce n’est pas une base SCID (.si4 ou .si5, avec ses fichiers de noms et de parties).");
+    const auto [stem, format] = base(path);
+    const bool five = format == 5;
+    const auto nameBytes = readAll(stem + suffix('n', format));
+    const auto names = five ? readNames5(nameBytes) : readNames(nameBytes);
+    const auto index = readAll(stem + suffix('i', format));
+    QFile moves(stem + suffix('g', format));
     if (!moves.open(QIODevice::ReadOnly))
         throw std::runtime_error("Fichier des parties SCID illisible.");
     const int total = games(path);
-    if (index.size() < headerSize + qsizetype(total) * entrySize)
+    if (!five && index.size() < headerSize + qsizetype(total) * entrySize)
         throw std::runtime_error("Index SCID tronqué.");
     Outcome outcome;
     const auto *bytes = reinterpret_cast<const unsigned char *>(index.constData());
     for (int i = 0; i < total; ++i) {
         if (canceled && canceled->load())
             break;
-        const auto *at = bytes + headerSize + qsizetype(i) * entrySize;
-        const auto entry = readEntry(Reader{at, at + entrySize});
+        quint64 offset = 0;
+        const auto entry = five ? readEntry5(bytes + qsizetype(i) * 56, offset) : [&] {
+            const auto *at = bytes + headerSize + qsizetype(i) * entrySize;
+            auto e = readEntry(Reader{at, at + entrySize});
+            offset = e.offset;
+            return e;
+        }();
         if (entry.flags & (1u << 3)) // marquée pour suppression dans SCID
             continue;
         try {
-            if (!moves.seek(entry.offset))
+            if (!moves.seek(qint64(offset)))
                 throw std::runtime_error("Position introuvable dans le fichier des parties.");
             const auto record = moves.read(entry.length);
             if (record.size() != qsizetype(entry.length))

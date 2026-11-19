@@ -1000,10 +1000,9 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
         // Une base SCID aussi : trois fichiers, dont on peut avoir choisi n'importe lequel.
         const bool scidBase = !t64::scid::indexPath(path).isEmpty();
         if (scidBase) {
-            require(
-                t64::scid::isScidBase(path),
-                "Base SCID incomplète ou d’un autre format : il faut les trois fichiers .si4, .sn4 et .sg4 "
-                "côte à côte (le format 5 de SCID, .si5, n’est pas lu).");
+            require(t64::scid::isScidBase(path),
+                    "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou "
+                    ".si5, .sn5 et .sg5).");
             require(t64::scid::games(path) <= 1000000,
                     "Cette base dépasse un million de parties : l’importer prendrait des heures et des "
                     "dizaines de gigaoctets.");

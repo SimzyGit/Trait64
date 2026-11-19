@@ -15,15 +15,15 @@ const QStringList &readableStudySuffixes() {
 // répertoire, non : neuf millions de parties fondues dans un arbre de préparation n'en
 // sont pas un.
 const QStringList &readableCollectionSuffixes() {
-    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3", ".si4", ".cbh"};
+    static const QStringList suffixes = readableStudySuffixes() + QStringList{".db3", ".si4", ".si5", ".cbh"};
     return suffixes;
 }
 // Les bases des autres logiciels : l'explorateur les montre pour dire pourquoi elles ne
-// s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide. Les .sg4 et
-// .sn4 d'une base SCID n'y figurent pas : c'est son .si4 qui la représente, comme le .cbh
+// s'ouvrent pas, au lieu de les taire et de laisser croire au dossier vide. Les .sg et
+// .sn d'une base SCID n'y figurent pas : c'est son index (.si4, .si5) qui la représente, comme le .cbh
 // une base ChessBase.
 const QStringList &foreignBaseSuffixes() {
-    static const QStringList suffixes{".si5", ".2cbh", ".cbv", ".cbf", ".pdb"};
+    static const QStringList suffixes{".2cbh", ".cbv", ".cbf", ".pdb"};
     return suffixes;
 }
 bool endsWithAny(const QString &lowercaseName, const QStringList &suffixes) {
@@ -255,8 +255,7 @@ void Controller::importRepertoireFolder(const QString &url, bool white) {
             // d'un système à l'autre. Et on retient au passage les bases d'un autre
             // logiciel, pour pouvoir dire ce qu'il y a plutôt que « rien trouvé ».
             const auto &readable = readableStudySuffixes();
-            static const QStringList foreignBases{".db3", ".si4", ".si5",  ".sg4",
-                                                  ".cbh", ".cbv", ".scid", ".sqlite"};
+            static const QStringList foreignBases{".db3", ".sg4", ".sg5", ".cbh", ".cbv", ".scid", ".sqlite"};
             QStringList files;
             QSet<QString> foreign;
             int visited = 0;
@@ -398,7 +397,8 @@ void Controller::importStudyCollection(const QString &url) {
         // du fichier est gardé : c'est lui que l'explorateur reconnaît.
         const QVariantMap source{{"id", slug}, {"title", name}, {"kind", "study"}, {"source", path}};
         if (path.endsWith(".pgn", Qt::CaseInsensitive) || path.endsWith(".db3", Qt::CaseInsensitive) ||
-            path.endsWith(".si4", Qt::CaseInsensitive) || path.endsWith(".cbh", Qt::CaseInsensitive)) {
+            path.endsWith(".si4", Qt::CaseInsensitive) || path.endsWith(".si5", Qt::CaseInsensitive) ||
+            path.endsWith(".cbh", Qt::CaseInsensitive)) {
             importSourceFile(url, source);
             return;
         }

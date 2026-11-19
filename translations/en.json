@@ -1235,7 +1235,6 @@
   "Réponse illisible de l’explorateur Lichess.": "Unreadable answer from the Lichess explorer.",
   "Identifiant de partie Lichess invalide.": "Invalid Lichess game id.",
   "Ce fichier .db3 n’est pas une base En Croissant au format SQLite.": "This .db3 file is not an En Croissant database in the SQLite format.",
-  "Base SCID incomplète ou d’un autre format : il faut les trois fichiers .si4, .sn4 et .sg4 côte à côte (le format 5 de SCID, .si5, n’est pas lu).": "Incomplete SCID database or another format: the three files .si4, .sn4 and .sg4 must sit side by side (SCID format 5, .si5, is not read).",
   "Cette base dépasse un million de parties : l’importer prendrait des heures et des dizaines de gigaoctets.": "This database has more than a million games: importing it would take hours and tens of gigabytes.",
   "Cette base dépasse un million de parties : l’importer prendrait des heures et des dizaines de gigaoctets, chaque position étant indexée. Interrogez-la plutôt en ligne depuis le dossier de la position.": "This database holds more than a million games: importing it would take hours and tens of gigabytes, since every position is indexed. Query it online from the position report instead.",
   "Import annulé.": "Import cancelled.",
@@ -1572,7 +1571,6 @@
   "• Cliquez une pièce puis sa case, ou glissez-la.\n• Revenez dans une partie et jouez un autre coup pour créer une variante.\n• Clic droit glissé : flèche ; clic droit sur une case : cercle ;\n  double clic, gauche ou droit : effacer toutes les annotations.\n• Ctrl + molette au-dessus de l’échiquier : régler sa taille.\n• Flèches gauche/droite : coups ; haut/bas : variantes ; Espace : lecture automatique.\n• Clic droit sur un coup ou touche Suppr : le supprimer avec sa suite (Ctrl+Z pour annuler).\n• Enregistrez une étude pour l’ajouter à votre bibliothèque.\n• Importez un PGN pour alimenter l’explorateur d’ouvertures.\n• Créez des cartes à partir des lignes que vous souhaitez retenir.": "• Click a piece then its square, or drag it.\n• Go back into a game and play another move to start a variation.\n• Right-click drag: arrow; right-click a square: circle;\n  double click, left or right: clear every annotation.\n• Ctrl + wheel over the board: adjust its size.\n• Left/right arrows: moves; up/down: variations; Space: automatic playback.\n• Right-click a move or press Delete: remove it and what follows (Ctrl+Z to undo).\n• Save a study to add it to your library.\n• Import a PGN to feed the opening explorer.\n• Create cards from the lines you want to remember.",
   "Analyse assistée": "Assisted analysis",
   "Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.": "When a piece is chosen, its target squares are coloured: green for the engine's best move, light green within half a pawn, red for a move that loses material or that the engine rates poorly.",
-  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.cbh)",
   "Base ChessBase incomplète : il faut au moins les fichiers .cbh, .cbg, .cbp et .cbt côte à côte (le format 2CBH de ChessBase 18 et les archives .cbv ne sont pas lus).": "Incomplete ChessBase database: at least the files .cbh, .cbg, .cbp and .cbt must sit side by side (the 2CBH format of ChessBase 18 and .cbv archives are not read).",
   "Relations d’attaque": "Attack relations",
   "Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.": "When a piece is selected, a red arrow comes from each piece attacking it and a green one from each piece defending it.",
@@ -1681,5 +1679,7 @@
   "Elo proches": "Close ratings",
   "Noirs plus forts": "Black stronger",
   "Score des Blancs selon l’Elo : %1": "White's score by rating: %1",
-  "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "“Stronger”: at least 100 rating points ahead. Games without ratings are not counted here."
+  "« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.": "“Stronger”: at least 100 rating points ahead. Games without ratings are not counted here.",
+  "Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)": "Games, positions and databases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)",
+  "Base SCID incomplète : il faut ses trois fichiers côte à côte (.si4, .sn4 et .sg4, ou .si5, .sn5 et .sg5).": "Incomplete SCID database: its three files must sit side by side (.si4, .sn4 and .sg4, or .si5, .sn5 and .sg5)."
 }

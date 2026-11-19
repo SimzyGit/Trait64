@@ -14,11 +14,12 @@ namespace t64 {
 // Chaque coup tient sur un octet : le rang de la pièce dans la liste que SCID tient pour
 // chaque camp, et quatre bits qui disent où elle va. On rejoue cette liste à l'identique,
 // on relit les parties en PGN, et le reste du logiciel les importe comme d'habitude.
-// Le format 5 de SCID (.si5) n'est pas lu.
+// Le format 5 (.si5, .sn5, .sg5, celui de SCID 5) se lit aussi : l'index et les noms y
+// sont rangés autrement, les parties sont codées de la même façon.
 namespace scid {
 // Le chemin de l'index, quel que soit celui des trois fichiers que l'on a choisi.
 QString indexPath(const QString &path);
-// Vrai si les trois fichiers sont là et que l'index porte la marque du format 4.
+// Vrai si les trois fichiers sont là et que l'index a la forme de son format.
 bool isScidBase(const QString &path);
 // Nombre de parties annoncé par l'index, 0 s'il ne se lit pas.
 int games(const QString &path);

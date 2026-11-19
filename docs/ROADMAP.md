@@ -21,7 +21,7 @@ Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide
 | Langage de requêtes (CQL) | — | ✅ | — | ✗ | K |
 | Drapeaux multiples sur les parties, médailles | ✅ | ✅ | — | ✅ favoris, collections, les seize médailles de ChessBase 16 nov. | D3 |
 | Graphes de la base (années, résultats, Elo du filtre) | ✅ | ✅ | — | ✅ 16 nov. (*Base → Graphiques de la sélection*) | D3 |
-| Bases ChessBase, SCID 5 | ✅ | ✅ SCID | — | ◐ ChessBase classique (.cbh) ✅ 16 nov., SCID 4 ✅ ; ni 2CBH, ni .cbv, ni SCID 5 | D |
+| Bases ChessBase, SCID 5 | ✅ | ✅ SCID | — | ◐ ChessBase classique (.cbh) ✅ 16 nov., SCID 4 ✅, SCID 5 (.si5) ✅ 19 nov. ; ni 2CBH, ni .cbv | D |
 | Grande base de référence en ligne | ✅ 8 M | — | ✅ 14 M | ✅ maîtres et parties Lichess | — |
 
 ### Joueurs et préparation

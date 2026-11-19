@@ -1,5 +1,9 @@
 # Changements
 
+## Bases SCID 5 — 19 novembre 2026
+
+- **Les bases SCID 5 s'importent** (`.si5`, `.sn5`, `.sg5`, le format par défaut de SCID depuis la version 5) comme celles de SCID 4 : *Importer*, glisser-déposer ou onglet *Études*, en choisissant n'importe lequel des trois fichiers. Coups, variantes, commentaires, NAG, positions de départ et Elo sont repris ; les parties marquées pour suppression dans SCID sont laissées de côté. Vérifié sur une base écrite par le code de SCID lui-même (tests/scid/README.md) et sur 3 000 parties relues à l'identique.
+
 ## Titres de rubrique — 19 novembre 2026
 
 - **Tendances de finale** (onglet Arbre, sous le score du matériel) : le score des Blancs dans ce matériel selon l'écart d'Elo — Blancs plus forts d'au moins 100 points, Elo proches, Noirs plus forts — avec le nombre de parties de chaque tranche. Les parties sans Elo n'y entrent pas.
