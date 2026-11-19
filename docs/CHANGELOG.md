@@ -10,8 +10,9 @@ Pas de nouvelle fonction : une passe de vérification de tout le logiciel.
 - **Requêtes CQL** bornées (4 096 caractères, 64 niveaux d'imbrication) : un texte collé par erreur ne fait plus déborder la pile.
 - **Moteurs d'appoint** (évaluations des retransmissions, exercice de Stoyko) : un moteur changé dans les préférences ou tombé en panne est remplacé au lieu de rester muet.
 - **Import étiqueté** : l'usage choisi (études ou parties jouées) s'applique aussi à un recueil déjà connu ; relire le fichier sans rien choisir garde l'usage en place.
+- **Thème sombre** : un bouton grisé (pendant un import, une analyse…) se peignait en blanc, son texte illisible ; le groupe « désactivé » de la palette suit maintenant le thème, et la sonde le vérifie.
 - **Interface** : la sonde de mise en page ouvre aussi les 13 dialogues qui lui échappaient (164 vues contrôlées) ; la case « études » du dialogue d'import revient à la ligne au lieu de déborder ; fiche joueur aux pluriels justes, dates inconnues et parties en cours écrites en clair ; « nouvelles » traduit dans les téléchargements.
-- **GitHub** : README français et anglais, fonctions, état du projet et feuille de route à jour ; `actions/checkout` v7.
+- **GitHub** : README français et anglais, fonctions, état du projet et feuille de route à jour, capture de l'analyse refaite sur l'interface actuelle (l'Immortelle, Stockfish en marche) ; `actions/checkout` v7. Le mode capture accepte des coups à jouer, la langue et l'analyse (`T64_SCREENSHOT_MOVES`, `T64_SCREENSHOT_LANGUAGE`, `T64_SCREENSHOT_ANALYSE`).
 
 ## Bases SCID 5 — 19 novembre 2026
 

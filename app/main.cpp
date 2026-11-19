@@ -75,7 +75,21 @@ int main(int argc, char *argv[]) {
             // Les instants suivent le nombre de pages : figés, l'ajout d'une page faisait
             // tomber le dernier pas de la traversée après le choix de la page à capturer,
             // qui se retrouvait écrasé.
-            constexpr int pages = 9, step = 170, sweep = 150 + pages * step;
+            // Pour les captures de la documentation : des coups joués, la langue choisie et,
+            // si demandé, le moteur lancé (le temps de la capture s'allonge d'autant).
+            const bool analyse = qEnvironmentVariableIntValue("T64_SCREENSHOT_ANALYSE") > 0;
+            // Des coups UCI séparés par des espaces, joués dans une nouvelle étude.
+            if (const auto moves = qEnvironmentVariable("T64_SCREENSHOT_MOVES"); !moves.isEmpty()) {
+                controller.newGame();
+                for (const auto &uci : moves.split(' ', Qt::SkipEmptyParts))
+                    controller.move(uci);
+            }
+            if (analyse)
+                QTimer::singleShot(100, &app, [&controller] { controller.toggleAnalysis(); });
+            if (const auto language = qEnvironmentVariable("T64_SCREENSHOT_LANGUAGE"); !language.isEmpty())
+                controller.setPreference("language", language);
+            constexpr int pages = 9, step = 170;
+            const int sweep = 150 + pages * step + (analyse ? 6000 : 0);
             for (int i = 0; i < pages; ++i)
                 QTimer::singleShot(150 + i * step, &app, [window, i] { window->setProperty("page", i); });
             QTimer::singleShot(sweep, &app, [window, &controller] {
