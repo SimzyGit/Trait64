@@ -706,6 +706,9 @@ int main(int argc, char **argv) {
                 t64::Database::materialCode(std::string_view("4k3/r7/8/8/8/8/8/4K1N1")));
             check(odds["games"].toInt() == 1 && odds["black"].toInt() == 1,
                   "The endgame odds count the games that reached this material, by result");
+            check(odds["byElo"].toList().size() == 3 &&
+                      odds["byElo"].toList()[1].toMap()["games"].toInt() == 0,
+                  "Games without ratings stay out of the trend by rating gap");
             // L'explorateur de plans, sur la structure d4-d5 : les manœuvres de chaque camp tant
             // qu'elle tient, puis la rupture qui la change (2.c4 dans trois parties, 3...e6 ici).
             scout.save(t64::parsePgn("[White \"Pla\"]\n[Black \"Nes\"]\n[Result \"1-0\"]\n\n"

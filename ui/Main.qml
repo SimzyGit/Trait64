@@ -547,6 +547,15 @@ objectName:"analysisSplit"
                                                 text:qsTr("Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %").arg(odds.games||0)
                                                     .arg(Math.round(100*(odds.white||0)/Math.max(1,odds.games||0))).arg(Math.round(100*(odds.draws||0)/Math.max(1,odds.games||0)))
                                                     .arg(Math.round(100*(odds.black||0)/Math.max(1,odds.games||0)))}
+                                            // La tendance : le score des Blancs selon l'écart d'Elo, quand il est connu.
+                                            Label {objectName:"endgameTrend";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var rows:(controller.state.endgame||{}).byElo||[]
+                                                readonly property var names:[qsTr("Blancs plus forts"),qsTr("Elo proches"),qsTr("Noirs plus forts")]
+                                                visible:rows.some(function(r){return r.games>0})
+                                                text:qsTr("Score des Blancs selon l’Elo : %1").arg(rows.map(function(r,i){return r.games>0?names[i]+" "+r.score+" % ("+r.games+")":""}).filter(function(t){return t}).join(" · "))
+                                                ToolTip.visible:trendHover.hovered;ToolTip.delay:500
+                                                ToolTip.text:qsTr("« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.")
+                                                HoverHandler {id:trendHover}}
                                             TButton {objectName:"bestGamesHere";width:parent.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
                                             TButton {objectName:"plansHere";width:parent.width;flat:true;text:qsTr("Plans de cette structure")+"  →";onClicked:plansDialog.open()}
                                         }

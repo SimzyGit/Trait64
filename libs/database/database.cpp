@@ -809,19 +809,35 @@ QVariantList Database::explorer(const QString &position) const {
 }
 QVariantMap Database::materialResults(qint64 code) {
     QSqlQuery q(db_);
+    // Le résultat, et l'écart d'Elo en trois tranches : la tendance d'une finale se lit
+    // dans ce qu'elle donne quand le plus fort la joue, et quand c'est l'autre.
     q.prepare(
-        "SELECT g.result,COUNT(*) FROM game_material m JOIN games g ON g.id=m.game_id WHERE m.material=? "
-        "AND g.deleted=0 GROUP BY g.result");
+        "SELECT g.result,CASE WHEN g.white_elo=0 OR g.black_elo=0 THEN -1 WHEN g.white_elo-g.black_elo>=100 "
+        "THEN 0 WHEN g.black_elo-g.white_elo>=100 THEN 2 ELSE 1 END AS gap,COUNT(*) FROM game_material m "
+        "JOIN games g ON g.id=m.game_id WHERE m.material=? AND g.deleted=0 AND g.result<>'*' GROUP BY "
+        "g.result,gap");
     q.addBindValue(code);
     run(q);
     qint64 white = 0, draws = 0, black = 0;
+    std::array<qint64, 3> games{}, points{}; // points en demi-points des Blancs
     while (q.next()) {
         const auto result = q.value(0).toString();
-        (result == "1-0"   ? white
-         : result == "0-1" ? black
-                           : draws) += result == "*" ? 0 : q.value(1).toLongLong();
+        const int gap = q.value(1).toInt();
+        const auto count = q.value(2).toLongLong();
+        (result == "1-0" ? white : result == "0-1" ? black : draws) += count;
+        if (gap >= 0)
+            games[gap] += count, points[gap] += count * (result == "1-0" ? 2 : result == "0-1" ? 0 : 1);
     }
-    return {{"games", white + draws + black}, {"white", white}, {"draws", draws}, {"black", black}};
+    QVariantList trend;
+    for (int gap = 0; gap < 3; ++gap)
+        trend << QVariantMap{
+            {"games", games[gap]},
+            {"score", games[gap] ? QVariant(qRound(50.0 * points[gap] / games[gap])) : QVariant()}};
+    return {{"games", white + draws + black},
+            {"white", white},
+            {"draws", draws},
+            {"black", black},
+            {"byElo", trend}};
 }
 void Database::setMedals(qint64 id, int medals) {
     QSqlQuery q(db_);

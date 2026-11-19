@@ -2,6 +2,8 @@
 
 ## Titres de rubrique — 19 novembre 2026
 
+- **Tendances de finale** (onglet Arbre, sous le score du matériel) : le score des Blancs dans ce matériel selon l'écart d'Elo — Blancs plus forts d'au moins 100 points, Elo proches, Noirs plus forts — avec le nombre de parties de chaque tranche. Les parties sans Elo n'y entrent pas.
+
 - **Force estimée (« Elo des gaffes »)** dans le tableau de progrès : l'Elo qu'ont, dans la bibliothèque, les joueurs aussi précis que vous, avec sa marge. La droite est étalonnée sur les parties analysées de la bibliothèque dont l'Elo est connu (au moins 30 camps de 15 coups mesurés, des Elo assez variés) ; sans cela, rien n'est affiché plutôt qu'un chiffre inventé.
 
 - **Titres de rubrique dans la notation** (clic droit sur un coup → *Titre de rubrique…*) : « Le milieu de jeu », « La finale »… s'affiche en gras avant le coup, en table comme en notation continue. Il s'écrit `[%title …]` dans le commentaire du coup ; la zone d'annotation ne le montre pas et le garde quand on y écrit, comme la marque des questions d'entraînement.
