@@ -64,8 +64,14 @@ void Controller::startStoyko() {
         for (const auto &line : lines)
             if (!stoykoQueue_.contains(line.toMap()["fen"].toString()))
                 stoykoQueue_ << line.toMap()["fen"].toString();
+        // Un moteur changé dans les préférences, ou tombé en panne, est remplacé.
+        if (stoykoEngine_ && stoykoEngine_->property("t64Path").toString() != path) {
+            stoykoEngine_->deleteLater();
+            stoykoEngine_ = nullptr;
+        }
         if (!stoykoEngine_) {
             stoykoEngine_ = new t64::Uci(this);
+            stoykoEngine_->setProperty("t64Path", path);
             connect(stoykoEngine_, &t64::Uci::completed, this,
                     [this](const QString &fen, const QVariantList &found) {
                         if (fen != stoykoEvaluating_)
@@ -94,6 +100,7 @@ void Controller::startStoyko() {
                 stoykoEvaluating_.clear();
                 stoyko_["running"] = false;
                 stoyko_["error"] = error;
+                stoykoEngine_->setProperty("t64Path", QString());
                 emit stoykoChanged();
             });
             stoykoEngine_->start(path, settings_.value("threads", 1).toInt(),

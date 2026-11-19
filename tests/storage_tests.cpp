@@ -1172,9 +1172,21 @@ int main(int argc, char **argv) {
                 shelf.setSourcePurpose(courseId, "games");
                 bool counted = false;
                 for (const auto &p : shelf.players())
-                    counted =
-                        counted || (p.toMap()["name"] == "Chapitre 1 : les finales" && p.toMap()["games"] == 2);
+                    counted = counted ||
+                              (p.toMap()["name"] == "Chapitre 1 : les finales" && p.toMap()["games"] == 2);
                 check(counted, "Marked as played games, the collection's names count again");
+                // Relu sans usage donné, le recueil garde le sien ; importé de nouveau avec un
+                // usage explicite, il prend celui-là.
+                shelf.importPgnFile(course, [](int) { return true; },
+                                    {{"id", "import:cours"}, {"title", "Cours"}, {"kind", "import"}});
+                check(shelf.sources().first().toMap()["purpose"] == "games",
+                      "Re-reading keeps the chosen purpose");
+                shelf.importPgnFile(
+                    course, [](int) { return true; },
+                    {{"id", "import:cours"}, {"title", "Cours"}, {"kind", "import"}, {"purpose", "study"}});
+                check(shelf.sources().first().toMap()["purpose"] == "study",
+                      "An explicit purpose on import wins");
+                shelf.setSourcePurpose(courseId, "games");
                 check(shelf.removeSource(courseId) == 2 && shelf.sources().isEmpty() &&
                           shelf.stats()["games"].toInt() == 1,
                       "Removing a collection trashes its own games and forgets it");

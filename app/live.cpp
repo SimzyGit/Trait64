@@ -56,8 +56,15 @@ void Controller::liveShowRound(const QVariantMap &round) {
     const auto path = settings_.value("enginePath").toString();
     if (liveQueue_.isEmpty() || !QFileInfo(path).isExecutable())
         return;
+    // Un moteur changé dans les préférences, ou tombé en panne, est remplacé.
+    if (liveEngine_ && liveEngine_->property("t64Path").toString() != path) {
+        liveEngine_->deleteLater();
+        liveEngine_ = nullptr;
+        liveEvaluating_.clear();
+    }
     if (!liveEngine_) {
         liveEngine_ = new t64::Uci(this);
+        liveEngine_->setProperty("t64Path", path);
         connect(liveEngine_, &t64::Uci::completed, this,
                 [this](const QString &fen, const QVariantList &lines) {
                     if (!lines.isEmpty() && fen == liveEvaluating_) {
@@ -72,6 +79,7 @@ void Controller::liveShowRound(const QVariantMap &round) {
         connect(liveEngine_, &t64::Uci::failed, this, [this] {
             liveQueue_.clear();
             liveEvaluating_.clear();
+            liveEngine_->setProperty("t64Path", QString());
         });
         liveEngine_->start(path, 1, 16, 1);
     }

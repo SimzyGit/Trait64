@@ -132,11 +132,15 @@ qint64 Database::registerSource(const QVariantMap &source) {
         return 0;
     QSqlQuery q(db_);
     // L'usage choisi pour un recueil déjà connu reste le sien : relire le fichier ne le
-    // remet pas à sa valeur par défaut.
+    // remet pas à sa valeur par défaut. Un usage donné explicitement (l'import étiqueté)
+    // l'emporte, lui.
+    const bool explicitPurpose = source.contains("purpose");
     q.prepare(
-        "INSERT INTO sources(slug,title,url,license,kind,purpose) VALUES(?,?,?,?,?,?) ON CONFLICT(slug) "
-        "DO UPDATE SET title=excluded.title,url=excluded.url,license=excluded.license,"
-        "kind=excluded.kind");
+        QString(
+            "INSERT INTO sources(slug,title,url,license,kind,purpose) VALUES(?,?,?,?,?,?) ON CONFLICT(slug) "
+            "DO UPDATE SET title=excluded.title,url=excluded.url,license=excluded.license,"
+            "kind=excluded.kind") +
+        (explicitPurpose ? ",purpose=excluded.purpose" : ""));
     q.addBindValue(source["id"].toString().left(200));
     q.addBindValue(source["title"].toString().left(300));
     q.addBindValue(source.value("source", QString("")).toString().left(2048));
