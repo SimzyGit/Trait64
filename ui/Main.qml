@@ -329,10 +329,11 @@ ApplicationWindow {
                             }
                         }
                         ListView {id:libraryList;objectName:"libraryResults";TextZoom {}Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:180;clip:true;spacing:0;model:controller.games;enabled:!controller.librarySearching;opacity:enabled?1:.5
-                            // Les lignes sont recyclées plutôt que créées puis détruites : une
-                            // bibliothèque de plusieurs centaines de parties défilait en
-                            // reconstruisant chaque ligne, colonnes comprises.
-                            reuseItems:true
+                            // Pas de recyclage des lignes : avec Qt 6.4, une ligne recyclée pendant
+                            // que la taille du texte change (Ctrl + molette) laissait un pointeur
+                            // mort dans sa mise en page, et le programme tombait (vu sous ASan,
+                            // un passage sur quatre environ). Une page compte au plus 200 lignes.
+                            reuseItems:false
                             readonly property bool detailed:width>900*win.textScale
                             readonly property var columns:({number:40*win.textScale,elo:42*win.textScale,result:56*win.textScale,moves:44*win.textScale,
                                                             eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
