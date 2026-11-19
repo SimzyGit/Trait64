@@ -1,5 +1,18 @@
 # Changements
 
+## Audit — 19 novembre 2026
+
+Pas de nouvelle fonction : une passe de vérification de tout le logiciel.
+
+- **Analyse statique** (clang-tidy, contrôles `bugprone`, `performance` et analyseur de Clang) : copies inutiles évitées, deux avertissements de compilation levés ; les autres signalements relus et écartés (faux positifs de Qt, `catch` vides voulus).
+- **Sanitizers** (ASan, UBSan, fuites) : les 16 suites construites dans ce mode passent ; les fuites relevées viennent toutes du moteur QML de Qt à la fermeture, aucune du code de Trait64.
+- **Fichiers malformés** : 13 500 essais par mutation aléatoire de PGN, de bases SCID 4 et 5, d'une base ChessBase et de requêtes CQL, sous sanitizers, sans un plantage ; chaque fichier abîmé est lu ou refusé proprement.
+- **Requêtes CQL** bornées (4 096 caractères, 64 niveaux d'imbrication) : un texte collé par erreur ne fait plus déborder la pile.
+- **Moteurs d'appoint** (évaluations des retransmissions, exercice de Stoyko) : un moteur changé dans les préférences ou tombé en panne est remplacé au lieu de rester muet.
+- **Import étiqueté** : l'usage choisi (études ou parties jouées) s'applique aussi à un recueil déjà connu ; relire le fichier sans rien choisir garde l'usage en place.
+- **Interface** : la sonde de mise en page ouvre aussi les 13 dialogues qui lui échappaient (164 vues contrôlées) ; la case « études » du dialogue d'import revient à la ligne au lieu de déborder ; fiche joueur aux pluriels justes, dates inconnues et parties en cours écrites en clair ; « nouvelles » traduit dans les téléchargements.
+- **GitHub** : README français et anglais, fonctions, état du projet et feuille de route à jour ; `actions/checkout` v7.
+
 ## Bases SCID 5 — 19 novembre 2026
 
 - **Requêtes CQL** (*Recherche avancée → Requête CQL*) : un sous-ensemble du Chess Query Language. Pièces et cases (`Ra8`, `[Qq]d4`, `Pa-h7`, `_e4`, `A`/`a` pour n'importe quelle pièce d'un camp), faits (`check`, `mate`, `stalemate`, `wtm`, `btm`), `X attacks Y`, le dernier coup (`move from K to g1`), `not`, `or` et les accolades. Une partie est retenue dès qu'une de ses positions, variantes comprises, répond à la requête. Ce que Trait64 ne lit pas (séquences, comptes, rayons…) est refusé avec un message, jamais ignoré en silence. Comme la recherche par placement, elle rejoue la bibliothèque une fois par requête, puis garde le résultat tant que la base ne change pas.
