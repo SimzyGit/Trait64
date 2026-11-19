@@ -55,15 +55,17 @@ The packages are unsigned: on first launch Windows (SmartScreen) and macOS (Gate
 
 ## What Trait64 does
 
-- **Library** — resumable PGN import, multi-criteria search, player cards, collections, trash, automatic backups.
+- **Library** — resumable PGN import, direct reading of ChessBase (`.cbh`) and SCID 4 and 5 (`.si4`, `.si5`) databases, player cards, collections, medals, trash, automatic backups.
+- **Search** — player, opening, rating, date, result, exact position, pawn structure, pieces on squares, a piece manoeuvre (`Nf3-d2-f1`), endgame reached, strategic keys (isolated pawn, hanging pawns, Carlsbad…), CQL queries; similar positions and the plans of a structure.
 - **Online accounts** — Lichess and Chess.com, no password; each sync only fetches new games.
 - **Player profiles** — one profile gathers your accounts and your FIDE record, whose ratings are read from the federation's official lists.
 - **Analysis** — Stockfish or any UCI engine, several lines, engines compared side by side, a resumable background analysis queue.
 - **Game review** — evaluation graph, accuracy per phase, blunders and inaccuracies explained, tactical motifs recognised, PGN annotation.
 - **Reviewing a whole database** — after a sync or an import, one button reviews the entire batch at the depth you choose, without redoing what has already been seen.
 - **Dashboard** — accuracy, blunders per hundred moves, tactics, month-by-month progress.
-- **Openings** — statistical tree of your own database, Polyglot books, repertoires with transpositions, novelty detection, a preparation file against a given opponent.
-- **Training** — rated puzzles (the free Lichess set and your own blunders), spaced-repetition cards, repertoire review.
+- **Openings** — statistical tree of your own database, endgame odds and trends, Lichess cloud analysis, Polyglot books, repertoires with transpositions, novelty detection, a preparation file against a given opponent.
+- **Studies** — notation with section headings, diagrams and training questions, labels on import, study collections kept out of player statistics.
+- **Training** — rated puzzles (the free Lichess set, your own blunders, mates taken from your library), spaced-repetition cards, repertoire review, the Stoyko exercise.
 - **Playing** — against the engine at a chosen rating, two players with a clock, engine tournaments.
 - **Comfort** — light or dark theme, adjustable interface size, French, English and Spanish, **Ctrl K** for the command palette.
 
@@ -97,4 +99,4 @@ Bug reports, ideas and contributions are welcome: read [CONTRIBUTING.md](CONTRIB
 
 Trait64 code: **GNU AGPL v3 or later** — [LICENSE](LICENSE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The name and visual identity stay separate from the code licence; see [TRADEMARKS.md](TRADEMARKS.md).
 
-Trait64 reuses `chess-library` and Fathom under MIT and links Qt dynamically from system packages. UCI engines remain separate programs: the catalogue downloads verified builds of Stockfish, Arasan and PlentyChess, but no engine is embedded in the binary. PGN collections likewise come from their original sources. No account, advertising, telemetry or remote service is needed for local use. An engine you choose runs with your own privileges: only run executables you trust.
+Trait64 reuses `chess-library`, Fathom, CityHash and Nayuki's QR code generator under MIT and links Qt dynamically from system packages. UCI engines remain separate programs: the catalogue downloads verified builds of Stockfish, Arasan and PlentyChess, but no engine is embedded in the binary. PGN collections likewise come from their original sources. No account, advertising, telemetry or remote service is needed for local use. An engine you choose runs with your own privileges: only run executables you trust.

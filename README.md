@@ -65,16 +65,18 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 
 ## Ce que fait Trait64
 
-- **Bibliothèque** — import PGN reprenable, recherche multicritère, fiches joueurs, collections, corbeille, sauvegardes automatiques.
+- **Bibliothèque** — import PGN reprenable, lecture directe des bases ChessBase (`.cbh`) et SCID 4 et 5 (`.si4`, `.si5`), fiches joueurs, collections, médailles, corbeille, sauvegardes automatiques.
+- **Recherche** — joueur, ouverture, Elo, date, résultat, position exacte, structure de pions, pièces sur des cases, manœuvre d’une pièce (`Cf3-d2-f1`), finale atteinte, clés stratégiques (pion isolé, pions pendants, Carlsbad…), requêtes CQL ; positions semblables et plans d’une structure.
 - **Comptes en ligne** — Lichess et Chess.com, sans mot de passe ; chaque synchronisation ne récupère que les parties nouvelles.
 - **Profils de joueur** — un seul profil rassemble vos comptes et votre fiche FIDE, dont les classements se lisent dans les listes officielles de la fédération.
 - **Analyse** — Stockfish ou tout moteur UCI, plusieurs variantes, comparaison de moteurs côte à côte, file d’analyse en arrière-plan reprenable.
 - **Bilan de partie** — graphe d’évaluation, précision par phase, gaffes et imprécisions expliquées, motifs tactiques reconnus, annotation du PGN, et un point coloré par coup dans le carnet : vert pour un bon coup, rouge pour une gaffe, violet quand un mat entre dans le compte.
 - **Bilan de toute une base** — après une synchronisation ou un import, un bouton passe en revue le lot entier à la profondeur de votre choix, sans refaire ce qui a déjà été vu.
 - **Tableau de bord** — précision, fautes pour cent coups, tactique, progression mois par mois.
-- **Ouvertures** — arbre statistique de votre base, classement ECO automatique des parties qui n’en portent pas, dossier d’une position (coups joués, score, découpage par force des joueurs, parties modèles), livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire donné.
+- **Ouvertures** — arbre statistique de votre base, probabilités et tendances des finales, analyse dans le nuage de Lichess, classement ECO automatique des parties qui n’en portent pas, dossier d’une position (coups joués, score, découpage par force des joueurs, parties modèles), livres Polyglot, répertoires avec transpositions, détection des nouveautés, dossier de préparation contre un adversaire donné.
 - **Répertoires** — import d’un dossier entier venu d’En Croissant ou de Pawn Appétit, PGN compressés compris, et une comparaison avec vos propres parties : à quel coup vous quittez votre préparation, et ce qui était prévu à la place.
-- **Entraînement** — puzzles notés (base Lichess libre et vos propres gaffes), cartes à répétition espacée, révision de répertoire.
+- **Études** — notation avec titres de rubrique, diagrammes et questions d’entraînement, étiquettes à l’import, recueils d’études tenus à l’écart des statistiques de joueurs.
+- **Entraînement** — puzzles notés (base Lichess libre, vos propres gaffes, mats tirés de votre bibliothèque), cartes à répétition espacée, révision de répertoire, exercice de Stoyko.
 - **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs.
 - **Confort** — thème clair ou sombre, taille d’interface réglable, français, anglais et espagnol, **Ctrl K** pour la palette de commandes.
 
@@ -108,4 +110,4 @@ Les signalements de bugs, les idées et les contributions sont bienvenus : lisez
 
 Code Trait64 : **GNU AGPL v3 ou ultérieure** — [LICENSE](LICENSE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Le nom et l’identité visuelle restent distincts de la licence du code ; voir [TRADEMARKS.md](TRADEMARKS.md).
 
-Trait64 réutilise `chess-library` et Fathom sous MIT, et lie Qt dynamiquement depuis les paquets système. Les moteurs UCI restent des programmes séparés : le catalogue télécharge des versions vérifiées de Stockfish, Arasan et PlentyChess, mais aucun moteur n’est incorporé au binaire. Les collections PGN proviennent également de leurs sources d’origine. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire à l’usage local. Un moteur que vous choisissez s’exécute avec vos droits : ne lancez que des exécutables de confiance.
+Trait64 réutilise `chess-library`, Fathom, CityHash et le générateur de QR codes de Nayuki sous MIT, et lie Qt dynamiquement depuis les paquets système. Les moteurs UCI restent des programmes séparés : le catalogue télécharge des versions vérifiées de Stockfish, Arasan et PlentyChess, mais aucun moteur n’est incorporé au binaire. Les collections PGN proviennent également de leurs sources d’origine. Aucun compte, publicité, télémétrie ou service distant n’est nécessaire à l’usage local. Un moteur que vous choisissez s’exécute avec vos droits : ne lancez que des exécutables de confiance.

@@ -1,4 +1,4 @@
-# Trait64 — état du projet au 13 novembre 2026
+# Trait64 — état du projet au 19 novembre 2026
 
 > **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux, Windows et macOS · AGPL-3.0-or-later**
 
@@ -6,9 +6,7 @@ Ce document présente **le code fusionné dans `main` et les versions réellemen
 
 ## Dernière version publiée
 
-**[v0.3.0-dev.177](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.177)** — 13 novembre 2026. Construction, tests et publication Linux verts (Debian 12 et 13, sanitizers), constructions et tests Windows et macOS verts. Localement : 20 suites vertes.
-
-Le lancement de l'AppImage est rejoué sur 12 distributions à chaque version ; la dernière passe relevée ici est verte sur dev.173.
+**[v0.3.0-dev.231](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.231)** — 19 novembre 2026. Construction, tests et publication Linux verts (Debian 12 et 13, sanitizers), constructions et tests Windows et macOS verts, lancement de l'AppImage vert sur les 12 distributions. Localement : 20 suites vertes.
 
 ## Ce qui est intégré
 
@@ -16,14 +14,15 @@ Le lancement de l'AppImage est rejoué sur 12 distributions à chaque version ; 
 | --- | --- |
 | Interface | Navigation latérale, panneaux adaptables, clavier, thèmes, français/anglais |
 | Échiquier | Glisser ou clic-clic, pièces animées, sons des coups, flèches du moteur, menace, pièces prises et avance matérielle, lecture automatique, molette en option |
-| Études | Variantes, Chess960, PGN annoté, onglets, explorateur de fichiers avec arbre, corbeille du système, export PGN, EPD et page HTML autonome |
+| Études | Variantes, Chess960, titres de rubrique, diagrammes, questions d'entraînement, étiquettes à l'import, PGN annoté, onglets, explorateur de fichiers avec arbre, corbeille du système, export PGN, EPD et page HTML autonome |
 | Moteurs | UCI, détection des moteurs installés, catalogue téléchargeable, MultiPV, comparaison de 2 à 4 moteurs, recherche sans plafond de profondeur, de fils ni de mémoire autre que la machine |
 | Analyse | Graphique et bilan, file persistante, cache, précision ; explication de chaque coup avec sa raison tirée des deux suites du moteur |
+| Recherche | Position exacte, structure de pions, pièces sur des cases, manœuvres, finales atteintes, clés stratégiques, requêtes CQL (sous-ensemble), positions semblables, plans d'une structure |
 | Motifs | Fourchette, clouage et enfilade au roi, échec à la découverte, échec double, pièce en prise, attaque à la découverte, menace de mat en un coup |
 | Bibliothèques | SQLite schéma 15, index allégé (positions sur 20 coups, signatures au-delà, recherche de position complète), import parallèle et reprenable, bases `.db3` d'En Croissant et `.si4` et `.si5` de SCID, `.cbh` de ChessBase |
-| En ligne (facultatif) | Explorateur Lichess, base des maîtres, tables de finales, comptes Lichess et Chess.com, lien de partie ou d'étude Lichess |
+| En ligne (facultatif) | Explorateur Lichess, base des maîtres, analyse dans le nuage, tables de finales, retransmissions en direct, comptes Lichess et Chess.com, lien de partie ou d'étude Lichess |
 | Ouvertures et préparation | ECO, livres Polyglot, répertoires par position, dossier de position, préparation filtrée |
-| Entraînement | Puzzles classés, cartes issues des erreurs, répétition des répertoires, exercice de coordonnées |
+| Entraînement | Puzzles classés (dont mats tirés de la bibliothèque), cartes issues des erreurs, répétition des répertoires, exercice de coordonnées, exercice de Stoyko, force estimée |
 | Distribution | Paquets .deb, AppImage vérifiant son hôte, Windows et macOS construits et testés en CI, mise à jour proposée à chaque version |
 
 ## Mesures de référence
@@ -32,11 +31,11 @@ Un million de parties de maîtres réelles : import en 85 minutes sur deux cœur
 
 ## Limites à ne pas présenter comme levées
 
-- Les explications reposent sur les suites calculées par le moteur : un calcul plus long peut dire autre chose. Déviations, surcharges, structures de pions et plans ne sont pas reconnus.
+- Les explications reposent sur les suites calculées par le moteur : un calcul plus long peut dire autre chose. Les explications ne parlent ni de déviation, ni de surcharge, ni de plan ; l'explorateur de plans et les clés stratégiques décrivent les structures, ils n'expliquent pas un coup.
 - L'import d'étude Lichess et les requêtes Lichess en ligne ne sont testés que par faux réseau.
 - Les sons ont été vérifiés sous Linux en enregistrant la sortie d'un serveur PulseAudio ; sous Windows et macOS ils sont seulement compilés.
 - Aucun essai sur le matériel réel de l'utilisateur (Voyager, Wayland, écran 120 Hz).
-- Format SCID 5 et ChessBase, OCR, échiquiers électroniques : non faits.
+- ChessBase 18 (2CBH) et archives `.cbv`, partie par correspondance, OCR, échiquiers électroniques : non faits. CQL n'est lu qu'en partie.
 - Le format `.t64` reste expérimental. Pas de version stable 1.0.
 
 ## Historique des jalons vérifiés
