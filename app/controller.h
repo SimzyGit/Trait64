@@ -314,7 +314,8 @@ class Controller : public QObject {
     Q_INVOKABLE void mergeGame(qint64 id);
     // Two passes by default: a quick one from the first move to the last, then a full one from
     // the last move back to the first, the engine keeping its hash table between positions.
-    Q_INVOKABLE void analyseGame(int milliseconds = 500, bool twoPasses = true);
+    // depth > 0 : la profondeur décide, milliseconds n'est plus qu'un plafond par position.
+    Q_INVOKABLE void analyseGame(int milliseconds = 500, bool twoPasses = true, int depth = 0);
     Q_INVOKABLE void cancelReview();
     Q_INVOKABLE void annotateReview();
     Q_INVOKABLE QVariantMap explainReview(int index, bool alternative = false) const;
@@ -771,7 +772,7 @@ class Controller : public QObject {
     std::vector<int> reviewNodes_;
     QVariantList reviewScores_;
     bool reviewing_ = false;
-    int reviewIndex_ = 0, reviewMilliseconds_ = 500, reviewEpoch_ = 0, reviewPass_ = 0, reviewDone_ = 0;
+    int reviewIndex_ = 0, reviewMilliseconds_ = 500, reviewDepth_ = 0, reviewEpoch_ = 0, reviewPass_ = 0, reviewDone_ = 0;
     bool reviewTwoPasses_ = true;
     void rebuildReview();
     QString reviewError_;

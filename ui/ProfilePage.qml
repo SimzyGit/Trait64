@@ -34,7 +34,7 @@ ColumnLayout {
             id: depth
             objectName: "profileReviewDepth"
             Layout.preferredWidth: 170
-            model: [qsTr("Court · 12"), qsTr("Moyen · 18"), qsTr("Approfondi · 24")]
+            model: [qsTr("Court · 12"), qsTr("Moyen · 18"), qsTr("Comme Lichess · 22"), qsTr("Approfondi · 24")]
             currentIndex: 1
         }
         TButton {
@@ -42,7 +42,7 @@ ColumnLayout {
             text: qsTr("Analyser le profil")
             accent: true
             enabled: root.backend.profiles.length > 0 && !root.backend.state.training
-            onClicked: root.backend.reviewProfile(root.profileIndex, [12, 18, 24][depth.currentIndex])
+            onClicked: root.backend.reviewProfile(root.profileIndex, [12, 18, 22, 24][depth.currentIndex])
             ToolTip.visible: hovered || visualFocus
             ToolTip.text: qsTr("Passe en revue les parties synchronisées de ce profil qui n’ont pas encore de bilan à cette profondeur. Celles déjà vues aussi loin sont laissées telles quelles.")
         }

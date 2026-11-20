@@ -1,5 +1,12 @@
 # Changements
 
+## Bilan à profondeur visée — 20 novembre 2026
+
+- **Bilan d'une partie par profondeur** et non plus par temps : 18 (rapide), 22 (comparable au bilan de Lichess), 26 ou 30. Le temps n'est plus qu'un plafond par position, pour qu'aucune ne bloque le bilan. Avec deux passages, le premier va six demi-coups moins loin, le second au bout. À 0,5 seconde par position sur un seul fil, l'ancien réglage par défaut plafonnait vers la profondeur 16 à 18.
+- **Profondeur atteinte affichée** sous la barre de progression, en moyenne sur les positions analysées : c'est elle qui dit ce que vaut le bilan.
+- **Bilan de profil** : un niveau « Comme Lichess · 22 » entre Moyen et Approfondi.
+- **Guide de l'utilisateur** à jour (français et anglais) : barre latérale, profondeurs du bilan, nouvelle section « Vos progrès » sur les profils et leur bilan, marge d'erreur et LOS des tournois.
+
 ## Bilan de profil complet et bilans plus rapides — 20 novembre 2026
 
 - **Bilan de profil** : le rapport se met à jour à mesure que les parties sortent de la file d'analyse. Il restait figé sur les premières parties analysées (19 sur un compte Lichess de 670 parties) tant que la bibliothèque ne changeait pas. Il dit maintenant sur combien de parties du profil il porte (« 19 parties passées en revue sur 670 ») et combien attendent encore dans la file. L'import Lichess et Chess.com, lui, n'était pas en cause : jusqu'à 5 000 parties par compte, archive par archive chez Chess.com.

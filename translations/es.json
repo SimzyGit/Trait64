@@ -1708,5 +1708,11 @@
   "Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.": "Elija un nombre de la lista: la ficha reúne sus resultados con cada color, sus aperturas, rivales, estilo y últimas partidas.",
   "Moments clés": "Momentos clave",
   "%1 · %2 centipions perdus": "%1 · %2 centipeones perdidos",
-  "Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)": "Blancas %1 % · tablas %2 % · negras %3 % (estimación del motor)"
+  "Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)": "Blancas %1 % · tablas %2 % · negras %3 % (estimación del motor)",
+  "18 · rapide": "18 · rápida",
+  "22 · comme Lichess": "22 · como Lichess",
+  "26 · approfondi": "26 · profunda",
+  "30 · maximal": "30 · máxima",
+  "Profondeur atteinte : %1 en moyenne": "Profundidad alcanzada: %1 de media",
+  "Comme Lichess · 22": "Como Lichess · 22"
 }

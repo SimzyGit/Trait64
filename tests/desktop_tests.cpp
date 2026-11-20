@@ -1587,6 +1587,19 @@ int main(int argc, char **argv) {
                 check(c.reviewState()["passes"] == 1 && c.review().size() == 2 &&
                           c.review()[0].toMap()["pass"] == 1,
                       "A single forward pass stays available");
+                // Bilan à profondeur visée : le moteur va jusqu'à elle, et l'état dit la
+                // profondeur réellement atteinte.
+                c.analyseGame(5000, true, 12);
+                timer.restart();
+                while (c.reviewState()["running"].toBool() && timer.elapsed() < 30000)
+                    QTest::qWait(20);
+                check(c.review().size() == 2 && c.reviewState()["depth"] == 12 &&
+                          c.reviewState()["reachedDepth"].toDouble() >= 12,
+                      "A depth-targeted review reaches the requested depth and reports it");
+                c.analyseGame(100, false);
+                timer.restart();
+                while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)
+                    QTest::qWait(20);
                 // Les explications sont traduites : on les lit ici en français, la langue des
                 // textes attendus, quelle que soit celle de la machine de test.
                 c.setPreference("language", "fr");

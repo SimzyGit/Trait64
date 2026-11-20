@@ -1708,5 +1708,11 @@
   "Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.": "Pick a name in the list: the card gathers their scores with each colour, openings, opponents, style and latest games.",
   "Moments clés": "Key moments",
   "%1 · %2 centipions perdus": "%1 · %2 centipawns lost",
-  "Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)": "White %1% · draw %2% · Black %3% (engine estimate)"
+  "Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)": "White %1% · draw %2% · Black %3% (engine estimate)",
+  "18 · rapide": "18 · quick",
+  "22 · comme Lichess": "22 · like Lichess",
+  "26 · approfondi": "26 · deep",
+  "30 · maximal": "30 · maximum",
+  "Profondeur atteinte : %1 en moyenne": "Depth reached: %1 on average",
+  "Comme Lichess · 22": "Like Lichess · 22"
 }

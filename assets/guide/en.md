@@ -6,7 +6,7 @@ Trait64 works on your computer: your games, studies and analyses stay with you, 
 2. **Install an engine.** An installed Stockfish is found automatically. Otherwise, *Engine → Engines and databases to download* installs a verified one, and the *Detect* button in the settings searches again.
 3. **Analyse.** On the *Analysis* page, *Analyze* starts the engine on the position shown; *Review* goes through the whole game.
 
-Pages are chosen at the top: Home, Library, Analysis, Openings, Training, Tools, Players, Profiles and Studies. *Ctrl+K* opens the command palette, which finds any action by name.
+Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Training, Players, Profiles, Studies and Tools. It folds into icons with « (or on its own when the window is narrow). *Ctrl+K* opens the command palette, which finds any action by name.
 
 ## The board
 
@@ -33,11 +33,13 @@ Each open study has its own tab, up to sixteen; they come back after a restart.
 - *Analyze* runs the engine with no depth limit; several lines are shown (MultiPV). Clicking a line inserts it into the study.
 - Blue arrows show the best moves; *Threat* (key *M*) shows in red what the opponent would play if you passed your turn.
 - The engine's threads and memory are set from your machine; *Settings* lets you change them.
-- Several engines can analyse side by side, and engine tournaments are run from *Engine → Engine tournament*.
+- Several engines can analyse side by side, and engine tournaments are run from *Engine → Engine tournament*. The standings give the Elo gap with its 95% error margin and the LOS, the likelihood that the engine is really stronger: below 95%, the result may still be down to chance.
 
 ## Understanding your mistakes
 
-*Review* analyses the game and grades each move. Opening a move's explanation shows **why** it is worse than the engine's: mate allowed or missed, material lost or missed (with the piece, the square and the move that shows it), a piece left en prise, or otherwise a positional gap. Patterns (fork, pin, discovered attack, threat of mate…) and what the move changes to the pawns and the king's shelter are given alongside.
+*Review* analyses the game and grades each move. First choose the **depth**: 18 for a quick look, 22 for a review comparable to Lichess's, 26 or 30 to go further. The engine uses every core but one; with *Two passes*, it goes through the game from start to end, then from the end back to the start, using what it learnt. The depth actually reached is shown under the progress bar, and the game's three key moments are numbered on the graph.
+
+ Opening a move's explanation shows **why** it is worse than the engine's: mate allowed or missed, material lost or missed (with the piece, the square and the move that shows it), a piece left en prise, or otherwise a positional gap. Patterns (fork, pin, discovered attack, threat of mate…) and what the move changes to the pawns and the king's shelter are given alongside.
 
 These explanations come from the lines the engine computed: a longer calculation may say otherwise.
 
@@ -72,6 +74,12 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 - **Endgames to play**: basic endgames and the Lucena and Philidor positions, against the engine.
 - **Coordinates**: thirty seconds to click the named squares.
 - **Blindfold**: the pieces disappear, moves are still played.
+
+## Your progress
+
+The *Profiles* page gathers your Lichess and Chess.com accounts (*File → Lichess and Chess.com accounts*) and your FIDE record under one name. A sync fetches up to 5,000 games per account, then only the new ones.
+
+*Review this profile* sends every game of the profile to the analysis queue at the chosen depth (12, 18, 22 like Lichess, or 24). The report fills in as it goes: it says how many games have been reviewed out of the total, and how many are still waiting. A game already reviewed as deep is not redone. Accuracy by phase, errors per hundred moves, estimated strength and month-by-month progress are then read in the same place.
 
 ## Playing
 

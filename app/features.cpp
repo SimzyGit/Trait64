@@ -604,15 +604,26 @@ void Controller::removeEngineProfile(int index) {
 }
 QVariantMap Controller::reviewState() const {
     const int n = int(reviewNodes_.size());
+    // La profondeur réellement atteinte, en moyenne : c'est elle qui dit ce que vaut le
+    // bilan, bien plus que la consigne.
+    int searched = 0, depths = 0;
+    for (const auto &value : reviewScores_)
+        if (const int depth = value.toMap()["depth"].toInt(); depth > 0) {
+            depths += depth;
+            ++searched;
+        }
+    const QVariant reachedDepth = searched ? QVariant(qRound(10.0 * depths / searched) / 10.) : QVariant();
     return {{"running", reviewing_},
             {"done", reviewDone_},
             {"total", reviewTwoPasses_ && n > 1 ? 2 * n : n},
             {"pass", reviewPass_ + 1},
             {"passes", reviewTwoPasses_ ? 2 : 1},
             {"error", reviewError_},
-            {"milliseconds", reviewMilliseconds_}};
+            {"milliseconds", reviewMilliseconds_},
+            {"depth", reviewDepth_},
+            {"reachedDepth", reachedDepth}};
 }
-void Controller::analyseGame(int milliseconds, bool twoPasses) {
+void Controller::analyseGame(int milliseconds, bool twoPasses, int depth) {
     if (trainingActive())
         return;
     cancelReview();
@@ -628,7 +639,8 @@ void Controller::analyseGame(int milliseconds, bool twoPasses) {
     reviewPass_ = 0;
     reviewDone_ = 0;
     reviewTwoPasses_ = twoPasses;
-    reviewMilliseconds_ = std::clamp(milliseconds, 100, 10000);
+    reviewMilliseconds_ = std::clamp(milliseconds, 100, 60000);
+    reviewDepth_ = std::clamp(depth, 0, 60);
     reviewing_ = true;
     auto options = settings_.value("uciOptions").toMap();
     options["UCI_LimitStrength"] = false;
@@ -697,8 +709,16 @@ void Controller::requestReviewPosition() {
     // The first of two passes is a quick sketch (a third of the budget); the second is the full search.
     const int budget =
         reviewTwoPasses_ && reviewPass_ == 0 ? std::max(100, reviewMilliseconds_ / 3) : reviewMilliseconds_;
-    reviewer_.analyse(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), true, budget, 24,
-                      reviewGame_.chess960);
+    if (reviewDepth_ > 0) {
+        // Une profondeur visée, comme l'analyse de Lichess : le premier passage esquisse
+        // six demi-coups moins loin, le second va au bout, la table de hachage aidant.
+        const int target =
+            reviewTwoPasses_ && reviewPass_ == 0 ? std::max(8, reviewDepth_ - 6) : reviewDepth_;
+        reviewer_.analyseToDepth(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), target, budget,
+                                 reviewGame_.chess960);
+    } else
+        reviewer_.analyse(qs(reviewGame_.nodes[node].fen), position(reviewGame_, node), true, budget, 24,
+                          reviewGame_.chess960);
 }
 void Controller::rebuildReview() {
     // One row per move whose position before and after are both evaluated.

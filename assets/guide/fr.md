@@ -6,7 +6,7 @@ Trait64 travaille sur votre ordinateur : vos parties, vos études et vos analyse
 2. **Installez un moteur.** Stockfish déjà installé est trouvé tout seul. Sinon, *Moteur → Moteurs et bases à télécharger* en installe un vérifié, et le bouton *Détecter* des paramètres relance la recherche.
 3. **Analysez.** Dans l'onglet *Analyse*, *Analyser* lance le moteur sur la position affichée ; *Bilan* passe toute la partie en revue.
 
-Les pages se choisissent en haut : Accueil, Bibliothèque, Analyse, Ouvertures, Entraînement, Outils, Joueurs, Profils et Études. *Ctrl+K* ouvre la palette de commandes, qui retrouve n'importe quelle action par son nom.
+Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèque, Ouvertures, Entraînement, Joueurs, Profils, Études et Outils. Elle se replie en icônes avec « (ou d'elle-même si la fenêtre est étroite). *Ctrl+K* ouvre la palette de commandes, qui retrouve n'importe quelle action par son nom.
 
 ## L'échiquier
 
@@ -33,11 +33,13 @@ Chaque étude ouverte a son onglet, jusqu'à seize ; ils sont retrouvés au red�
 - *Analyser* lance le moteur sans limite de profondeur ; plusieurs lignes s'affichent (MultiPV). Un clic sur une ligne l'insère dans l'étude.
 - Les flèches bleues montrent les meilleurs coups ; *Menace* (touche *M*) montre en rouge ce que jouerait l'adversaire si vous passiez votre tour.
 - Le nombre de fils et la mémoire du moteur sont réglés d'après votre machine ; *Paramètres* permet de les changer.
-- Plusieurs moteurs peuvent analyser côte à côte, et des tournois entre moteurs se jouent depuis *Moteur → Tournoi de moteurs*.
+- Plusieurs moteurs peuvent analyser côte à côte, et des tournois entre moteurs se jouent depuis *Moteur → Tournoi de moteurs*. Le classement donne l'écart d'Elo avec sa marge d'erreur à 95 % et la LOS, la probabilité que le moteur soit réellement plus fort : en dessous de 95 %, le résultat peut encore tenir du hasard.
 
 ## Comprendre ses erreurs
 
-*Bilan* analyse la partie et classe chaque coup. En ouvrant l'explication d'un coup, un encadré dit **pourquoi** il est moins bon que celui du moteur : mat permis ou manqué, matériel perdu ou manqué (avec la pièce, la case et le coup qui le montre), pièce laissée en prise, sinon écart positionnel. Les motifs (fourchette, clouage, attaque à la découverte, menace de mat…) et ce que le coup change aux pions et à l'abri du roi sont donnés à côté.
+*Bilan* analyse la partie et classe chaque coup. Choisissez d'abord la **profondeur** : 18 pour un aperçu rapide, 22 pour un bilan comparable à celui de Lichess, 26 ou 30 pour aller plus loin. Le moteur prend tous les cœurs de la machine sauf un ; avec *Deux passages*, il parcourt la partie du début à la fin, puis de la fin vers le début en profitant de ce qu'il a appris. La profondeur réellement atteinte s'affiche sous la barre de progression, et les trois moments clés de la partie sont numérotés sur la courbe.
+
+ En ouvrant l'explication d'un coup, un encadré dit **pourquoi** il est moins bon que celui du moteur : mat permis ou manqué, matériel perdu ou manqué (avec la pièce, la case et le coup qui le montre), pièce laissée en prise, sinon écart positionnel. Les motifs (fourchette, clouage, attaque à la découverte, menace de mat…) et ce que le coup change aux pions et à l'abri du roi sont donnés à côté.
 
 Ces explications viennent des suites calculées par le moteur : un calcul plus long peut dire autre chose.
 
@@ -72,6 +74,12 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 - **Finales à jouer** : les finales de base et les positions de Lucena et de Philidor, contre le moteur.
 - **Coordonnées** : trente secondes pour cliquer les cases nommées.
 - **À l'aveugle** : les pièces disparaissent, les coups se jouent toujours.
+
+## Vos progrès
+
+La page *Profils* réunit sous un seul nom vos comptes Lichess et Chess.com (*Fichier → Comptes Lichess et Chess.com*) et votre fiche FIDE. Une synchronisation récupère jusqu'à 5 000 parties par compte, puis seulement les nouvelles.
+
+*Analyser le profil* envoie toutes les parties du profil dans la file d'analyse, à la profondeur choisie (12, 18, 22 comme Lichess, ou 24). Le rapport se complète à mesure : il dit combien de parties sont déjà passées en revue sur le total, et combien attendent encore. Une partie déjà vue aussi loin n'est pas refaite. Précision par phase, fautes pour cent coups, force estimée et progression mois par mois se lisent ensuite au même endroit.
 
 ## Jouer
 
