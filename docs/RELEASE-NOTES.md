@@ -6,6 +6,8 @@
 
 **Des tournois de moteurs qu'on peut lire.** Le classement donne l'écart d'Elo avec sa marge d'erreur à 95 % et la probabilité que chaque moteur soit réellement plus fort (LOS), calculées comme dans Cute Chess et fastchess.
 
+**Des bilans plus profonds et plus rapides.** Le bilan d'une partie vise une profondeur (18, 22 comme Lichess, 26 ou 30) et affiche celle qu'il atteint vraiment ; il prend tous les cœurs de la machine sauf un. Le bilan d'un profil garde le moteur ouvert d'une partie à l'autre, se met à jour à mesure que la file avance et dit sur combien de parties il porte.
+
 **Un plantage en moins.** Ctrl + molette sur la bibliothèque pouvait fermer le programme ; c'est corrigé.
 
 Détail complet dans le [journal des changements](CHANGELOG.md).
