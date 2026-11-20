@@ -3,6 +3,7 @@
 ## Tournois de moteurs mesurés — 20 novembre 2026
 
 - **Elo ± marge à 95 %** et **LOS** (probabilité d'être réellement plus fort) dans le classement des tournois de moteurs, calculés comme dans Cute Chess et fastchess. Un écart de 50 Elo sur dix parties ne se lit plus comme un résultat établi.
+- **Plantage corrigé** : Ctrl + molette sur la bibliothèque pouvait faire tomber le programme (vu sous AddressSanitizer, une fois sur trois sous charge). Les titres de colonnes étaient recréés à chaque cran pendant que leur rangée les plaçait, et Qt 6.4 gardait un pointeur vers un titre détruit ; ils ne sont plus recréés.
 - **Comparaison élargie** ([docs/COMPARISON.md](COMPARISON.md)) : Fritz 20, HIARCS Chess Explorer, Shredder, Arena, Banksia, Cute Chess, fastchess, PyChess, Chessbook, Listudy, Aimchess, ChessTempo, DecodeChess et Chessify, avec ce que Trait64 fait déjà de chacun et les écarts restants.
 
 ## Contrôles d'interface — 20 novembre 2026

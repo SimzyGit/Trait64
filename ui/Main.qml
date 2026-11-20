@@ -317,19 +317,24 @@ ApplicationWindow {
                             RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
                                 // Un clic sur un titre trie sur sa colonne, un second l'inverse ; la
                                 // flèche dit l'ordre en cours. N° revient à l'ordre de modification.
+                                // Le modèle ne dépend pas de la taille du texte : il en dépendait, et
+                                // chaque cran de Ctrl + molette recréait les titres pendant que la rangée
+                                // les plaçait. Qt 6.4 gardait alors un pointeur mort (plantage vu sous
+                                // ASan, une fois sur trois). Les largeurs se calculent dans chaque titre.
                                 Repeater {
-                                    model:[{t:qsTr("N°"),w:libraryList.columns.number,k:"updated"},{t:qsTr("Blancs"),w:-1,k:"white"},{t:"Elo",w:libraryList.columns.elo,k:"whiteElo"},
-                                           {t:qsTr("Noirs"),w:-1,k:"black"},{t:"Elo",w:libraryList.columns.elo,k:"blackElo"},{t:qsTr("Résultat"),w:libraryList.columns.result,k:"result"},
-                                           {t:qsTr("Coups"),w:libraryList.columns.moves,k:"length"},{t:"ECO",w:libraryList.columns.eco,k:"eco"},
-                                           {t:qsTr("Événement"),w:libraryList.detailed?libraryList.columns.event:0,k:"event"},{t:qsTr("Date"),w:libraryList.columns.date,k:"date"},
-                                           {t:"",w:libraryList.columns.actions,k:""}]
+                                    model:[{t:qsTr("N°"),c:"number",k:"updated"},{t:qsTr("Blancs"),c:"",k:"white"},{t:"Elo",c:"elo",k:"whiteElo"},
+                                           {t:qsTr("Noirs"),c:"",k:"black"},{t:"Elo",c:"elo",k:"blackElo"},{t:qsTr("Résultat"),c:"result",k:"result"},
+                                           {t:qsTr("Coups"),c:"moves",k:"length"},{t:"ECO",c:"eco",k:"eco"},
+                                           {t:qsTr("Événement"),c:"event",k:"event"},{t:qsTr("Date"),c:"date",k:"date"},
+                                           {t:"",c:"actions",k:""}]
                                     Label {required property var modelData
+                                        readonly property real w:modelData.c===""?-1:modelData.c==="event"&&!libraryList.detailed?0:libraryList.columns[modelData.c]
                                         readonly property bool active:modelData.k!==""&&((win.advanced.sort||"updated")===modelData.k||(win.advanced.sort==="elo"&&modelData.k.indexOf("Elo")>0))
                                         // Flèche vers le haut : de A à Z, du plus petit au plus grand.
                                         readonly property bool rising:["updated","whiteElo","blackElo","date"].indexOf(modelData.k)<0!==!!win.advanced.reverse
-                                        text:modelData.t+(active?(rising?" ▲":" ▼"):"");visible:modelData.w!==0;elide:Text.ElideRight
+                                        text:modelData.t+(active?(rising?" ▲":" ▼"):"");visible:w!==0;elide:Text.ElideRight
                                         color:active?win.fg:win.muted;font.weight:active?Font.DemiBold:Font.Normal
-                                        Layout.fillWidth:modelData.w<0;Layout.preferredWidth:modelData.w<0?80:modelData.w;Layout.maximumWidth:modelData.w<0?100000:modelData.w;Layout.minimumWidth:0
+                                        Layout.fillWidth:w<0;Layout.preferredWidth:w<0?80:w;Layout.maximumWidth:w<0?100000:w;Layout.minimumWidth:0
                                         Accessible.role:modelData.k?Accessible.ColumnHeader:Accessible.StaticText;Accessible.name:modelData.k?qsTr("Trier par %1").arg(modelData.t):text
                                         HoverHandler {enabled:modelData.k!=="";cursorShape:Qt.PointingHandCursor}
                                         TapHandler {enabled:modelData.k!=="";onTapped:win.sortLibrary(modelData.k)}
