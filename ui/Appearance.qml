@@ -123,7 +123,6 @@ TDialog {
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.")}
                 TCheckBox {text:qsTr("Relations d’attaque");checked:root.backend.preferences.showAttacks;onToggled:root.backend.setPreference("showAttacks",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.")}
-                TCheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
                 TCheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
                 TCheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}
                 TCheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
@@ -138,6 +137,23 @@ TDialog {
                     ToolTip.visible:hovered||pressed;ToolTip.text:qsTr("Réglable aussi à la molette, en maintenant Ctrl au-dessus de l’échiquier.")
                 }
                 Label {text:Math.round(root.backend.preferences.boardScale*100)+" %";color:root.backend.preferences.muted}
+            }
+            // Les sons : un jeu au choix, un volume, et de quoi les couper d'un clic. Chaque
+            // genre de coup a le sien (coup, prise, échec, roque, promotion, mat).
+            Label {text:qsTr("Sons");font.bold:true}
+            Flow {Layout.fillWidth:true;Layout.preferredWidth:1;spacing:10
+                TCheckBox {objectName:"soundsEnabled";text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
+                TComboBox {objectName:"soundTheme";width:150;enabled:root.backend.preferences.sounds
+                    readonly property var keys:["bois","feutre","clic","marbre","retro"]
+                    model:[qsTr("Bois"),qsTr("Feutre"),qsTr("Clic"),qsTr("Marbre"),qsTr("Rétro")];translateOptions:false
+                    currentIndex:Math.max(0,keys.indexOf(root.backend.preferences.soundTheme))
+                    onActivated:function(index){root.backend.setPreference("soundTheme",keys[index]);root.backend.previewSound(keys[index])}}
+                Label {text:qsTr("Volume");height:28*root.backend.preferences.uiScale;verticalAlignment:Text.AlignVCenter;color:root.backend.preferences.muted}
+                Slider {objectName:"soundVolume";width:160;from:0;to:100;stepSize:5;enabled:root.backend.preferences.sounds
+                    value:root.backend.preferences.soundVolume;onMoved:root.backend.setPreference("soundVolume",value)}
+                Label {text:Math.round(root.backend.preferences.soundVolume)+" %";height:28*root.backend.preferences.uiScale;verticalAlignment:Text.AlignVCenter;color:root.backend.preferences.muted}
+                TButton {text:qsTr("Écouter");enabled:root.backend.preferences.sounds&&root.backend.preferences.soundVolume>0
+                         onClicked:root.backend.previewSound(root.backend.preferences.soundTheme)}
             }
             TButton {text:qsTr("Rétablir l’apparence par défaut");onClicked:root.backend.resetAppearance()}
             Label {text:qsTr("Pièces : C. M. L. Burnett et A. Hernandez Marroquin (GPL-2.0+), Maurizio Monge (MIT), therealqtpi (AGPL-3.0+). Les choix sont enregistrés automatiquement.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);opacity:.7}

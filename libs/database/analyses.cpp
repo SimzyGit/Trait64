@@ -196,10 +196,27 @@ void Database::recordGameReview(qint64 job, qint64 game, int depth) {
 qint64 Database::createAnalysisJob(const QString &pgn, const QVariantMap &config, bool variations,
                                    int total, qint64 gameId) {
     require(pgn.size() <= 16 * 1024 * 1024 && total > 0 && total <= 100000, "Étude trop volumineuse.");
-    QSqlQuery count(db_);
-    require(count.exec("SELECT COUNT(*) FROM analysis_jobs") && count.next(), count.lastError().text());
-    require(count.value(0).toInt() < 500, "500 analyses conservées : exportez puis retirez les anciennes.");
-    count.finish();
+    if (gameId > 0) {
+        // Un bilan de partie n'a pas à être gardé une fois terminé : ses chiffres sont dans
+        // game_reviews et ses évaluations dans le cache. On n'en garde que les 200 derniers.
+        // Compté avec les analyses ordinaires sous un plafond de 500, il bloquait le bilan
+        // d'un profil après quelques dizaines de parties (24 sur 670, chez Sïmzy).
+        QSqlQuery prune(db_);
+        prune.prepare("DELETE FROM analysis_results WHERE job IN (SELECT id FROM analysis_jobs WHERE game>0 "
+                      "AND status='completed' ORDER BY id DESC LIMIT -1 OFFSET 200)");
+        run(prune);
+        prune.prepare("DELETE FROM analysis_jobs WHERE id IN (SELECT id FROM analysis_jobs WHERE game>0 "
+                      "AND status='completed' ORDER BY id DESC LIMIT -1 OFFSET 200)");
+        run(prune);
+    } else {
+        // Les analyses ouvertes à la main se gardent, d'où un plafond : 500, bilans exclus.
+        QSqlQuery count(db_);
+        require(count.exec("SELECT COUNT(*) FROM analysis_jobs WHERE game IS NULL OR game<=0") &&
+                    count.next(),
+                count.lastError().text());
+        require(count.value(0).toInt() < 500,
+                "500 analyses conservées : exportez puis retirez les anciennes.");
+    }
     auto games = parsePgn(pgn.toStdString());
     require(games.size() == 1, "Une analyse doit contenir exactement une partie.");
     const auto &tags = games.front().tags;

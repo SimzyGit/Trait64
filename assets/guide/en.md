@@ -15,6 +15,7 @@ Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Traini
 - **Flip the board**: *F*.
 - **Annotate**: right-click and drag draws an arrow, right-click on a square draws a circle; Shift, Ctrl or Alt change the colour. A double click, left or right, clears every arrow and circle.
 - **Next to the players' names**, captured pieces and the material lead are shown.
+- **Sounds**: move, capture, check, castling, promotion and mate each have their own, in five sets to choose from (wood, felt, click, marble, retro) and at the volume you like. *View → Mute sounds* silences them in one click.
 
 *View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys. *View → Hanging pieces* circles in red what a capture would win.
 
@@ -63,7 +64,7 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 - The *Openings* page shows the move tree of your games, Polyglot books and each position's ECO name.
 - A **repertoire** gathers the lines you play. Its gaps tab gives the **estimated coverage** — the share of your library's games that stay within the repertoire — and the unprepared opponent replies, from most to least frequent.
 - *Compare…* puts two repertoires side by side.
-- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline. The settings can also download them: 3 to 5 pieces (939 MiB) cover most endgames.
+- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). Lichess requires a free **account token** for this: *File → Lichess and Chess.com accounts*, *Create a token on Lichess* (without ticking any permission), then paste it and save. If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline. The settings can also download them: 3 to 5 pieces (939 MiB) cover most endgames.
 
 ## Training
 

@@ -699,7 +699,9 @@ void Controller::publish() {
             node_ > 0 && node_ < int(game_.nodes.size()) && game_.nodes[node_].parent == heardNode_;
         heardNode_ = node_;
         if (forward && settings_.value("sounds", true).toBool())
-            t64::playSound(t64::soundFor(game_.nodes[node_].san));
+            t64::playSound(t64::soundFor(game_.nodes[node_].san),
+                           settings_.value("soundTheme", "bois").toString(),
+                           settings_.value("soundVolume", 80).toInt());
     }
     // Les listes : comparées avant d'être annoncées. La plupart des coups ne changent ni
     // les onglets ni les puzzles, et un modèle annoncé reconstruit tout ce qui l'affiche.

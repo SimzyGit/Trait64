@@ -25,6 +25,9 @@ class OpeningExplorer : public QObject {
     // Le dossier des tables Syzygy de l'ordinateur : quand elles couvrent la position, les
     // finales s'y lisent sans réseau. Vide : toujours Lichess.
     void setLocalTables(const QString &folder) { localTables_ = folder; }
+    // Jeton personnel Lichess : l'explorateur refuse les requêtes anonymes depuis 2025.
+    // Il n'est envoyé qu'à explorer.lichess.ovh, jamais aux autres services.
+    void setToken(const QString &token) { token_ = token.trimmed(); }
     bool busy() const { return !reply_.isNull(); }
     static bool knownSource(const QString &source);
     // Séparées de la requête pour s'éprouver sans réseau.
@@ -47,6 +50,6 @@ class OpeningExplorer : public QObject {
   private:
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
-    QString localTables_;
+    QString localTables_, token_;
 };
 } // namespace t64

@@ -359,6 +359,12 @@ class Controller : public QObject {
     Q_INVOKABLE void addOnlineAccount(const QString &site, const QString &user);
     Q_INVOKABLE void removeOnlineAccount(int index);
     Q_INVOKABLE void syncOnlineAccount(int index);
+    // Jeton personnel Lichess pour l'explorateur d'ouvertures (vide : le retirer). Il ne
+    // repart jamais vers l'interface : on dit seulement s'il y en a un.
+    Q_INVOKABLE void setLichessToken(const QString &token);
+    Q_INVOKABLE bool hasLichessToken() const;
+    // Fait entendre un jeu de sons (coup, prise, échec), pour le choisir à l'oreille.
+    Q_INVOKABLE void previewSound(const QString &theme);
     Q_INVOKABLE void syncAllAccounts();
     bool onlineFetching() const { return online_->busy(); }
     Q_INVOKABLE void exportFile(const QString &url, bool all = false);

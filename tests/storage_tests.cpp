@@ -281,6 +281,33 @@ int main(int argc, char **argv) {
             check(board.gamesCountFor({"alice"}) >= 2 && board.gamesCountFor({}) == 0,
                   "A profile counts all its games, reviewed or not");
             {
+                // Le bilan d'un profil de plusieurs centaines de parties : aucun plafond ne
+                // doit l'arrêter en route. Les bilans terminés au-delà des 200 derniers
+                // sont retirés, leurs chiffres restant dans game_reviews.
+                const auto gameId = board.gamesToReviewFor({"alice"}, 99).first().toLongLong();
+                const auto study = t64::parsePgn("1.e4 e5 *").front();
+                const auto pgn = QString::fromStdString(study.pgn());
+                const QVariantMap config{{"depth", 1}};
+                qint64 last = 0;
+                for (int i = 0; i < 600; ++i) {
+                    last = board.createAnalysisJob(pgn, config, false, 3, gameId);
+                    if (i < 590) {
+                        board.setAnalysisStatus(last, "running");
+                        for (int ordinal = 0; ordinal < 3; ++ordinal)
+                            board.saveAnalysisResult(last, ordinal, ordinal,
+                                                     QString::fromStdString(study.nodes[ordinal].fen),
+                                                     {QVariantMap{{"rank", 1},
+                                                                  {"score", 0.},
+                                                                  {"cp", 0},
+                                                                  {"scoreType", "cp"},
+                                                                  {"depth", 1}}});
+                        board.setAnalysisStatus(last, "completed");
+                    }
+                }
+                check(last > 0 && board.pendingAnalyses() == 10 && board.analysisJobs().size() <= 211,
+                      "Six hundred game reviews queue without hitting the 500-analysis cap");
+            }
+            {
                 // Les clés stratégiques : un Gambit de la Dame, variante d'échange, garde la
                 // structure Carlsbad bien après le seizième demi-coup.
                 t64::Database keys(dir.filePath("themes.sqlite"));

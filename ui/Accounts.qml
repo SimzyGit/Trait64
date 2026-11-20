@@ -29,6 +29,37 @@ TDialog {
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
                 text: qsTr("Vos parties publiques arrivent dans la bibliothèque, rangées par compte. Chaque synchronisation ne récupère que les parties jouées depuis la précédente. Aucun mot de passe n’est demandé.")
             }
+            // Le livre Lichess (explorateur d'ouvertures) demande un jeton de compte depuis
+            // 2025. Un jeton sans aucune autorisation suffit ; il reste sur cette machine.
+            Rectangle {
+                Layout.fillWidth: true; implicitHeight: tokenBox.implicitHeight + 20
+                color: palette.base; border.color: palette.mid; radius: 6
+                ColumnLayout {
+                    id: tokenBox; anchors.fill: parent; anchors.margins: 10; spacing: 8
+                    Label { text: qsTr("Livre Lichess"); font.bold: true }
+                    Label {
+                        Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
+                        // Relu quand la liste des comptes change, où le jeton s'annonce aussi.
+                        text: (root.backend.onlineAccounts, root.backend.hasLichessToken())
+                              ? qsTr("Jeton enregistré : l’explorateur d’ouvertures de Lichess est accessible.")
+                              : qsTr("L’explorateur d’ouvertures de Lichess demande un jeton de compte, gratuit. Créez-en un sur Lichess sans cocher aucune autorisation, puis collez-le ici.")
+                    }
+                    Flow {
+                        Layout.fillWidth: true; Layout.preferredWidth: 1; spacing: 8
+                        TTextField {
+                            id: tokenField; objectName: "lichessToken"; width: 280
+                            echoMode: TextInput.Password; placeholderText: qsTr("Jeton Lichess (lip_…)")
+                            onAccepted: { root.backend.setLichessToken(text); text = "" }
+                        }
+                        TButton { text: qsTr("Enregistrer"); accent: true; enabled: tokenField.text.length > 0
+                                  onClicked: { root.backend.setLichessToken(tokenField.text); tokenField.text = "" } }
+                        TButton { text: qsTr("Créer un jeton sur Lichess")
+                                  onClicked: Qt.openUrlExternally("https://lichess.org/account/oauth/token/create?description=Trait64") }
+                        TButton { text: qsTr("Retirer"); visible: (root.backend.onlineAccounts, root.backend.hasLichessToken())
+                                  onClicked: root.backend.setLichessToken("") }
+                    }
+                }
+            }
             ReviewImported { Layout.fillWidth: true; backend: root.backend }
             Profiles { Layout.fillWidth: true; backend: root.backend }
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }

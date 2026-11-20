@@ -15,6 +15,7 @@ Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèq
 - **Retourner l'échiquier** : *F*.
 - **Annoter** : un clic droit glissé trace une flèche, un clic droit sur une case pose un cercle ; Maj, Ctrl ou Alt changent la couleur. Un double clic, gauche ou droit, efface toutes les flèches et tous les cercles.
 - **À côté des noms** des joueurs s'affichent les pièces prises et l'avance matérielle.
+- **Sons** : coup, prise, échec, roque, promotion et mat ont chacun le leur, dans cinq jeux au choix (bois, feutre, clic, marbre, rétro) et au volume voulu. *Affichage → Couper le son* les fait taire d'un clic.
 
 *Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.
 
@@ -63,7 +64,7 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 - La page *Ouvertures* montre l'arbre des coups de vos parties, les livres Polyglot et le nom ECO de chaque position.
 - Un **répertoire** rassemble les lignes que vous jouez. Son onglet des lacunes donne la **couverture estimée** — la part des parties de votre bibliothèque qui restent dans le répertoire — et les réponses adverses non préparées, de la plus fréquente à la plus rare.
 - *Comparer…* met deux répertoires côte à côte.
-- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau. Les paramètres savent aussi les télécharger : 3 à 5 pièces (939 Mio) suffisent à la plupart des finales.
+- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Lichess demande pour cela un **jeton de compte**, gratuit : *Fichier → Comptes Lichess et Chess.com*, *Créer un jeton sur Lichess* (sans cocher aucune autorisation), puis collez-le et enregistrez. Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau. Les paramètres savent aussi les télécharger : 3 à 5 pièces (939 Mio) suffisent à la plupart des finales.
 
 ## S'entraîner
 

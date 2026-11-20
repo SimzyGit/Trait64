@@ -1,5 +1,11 @@
 # Changements
 
+## Bilan de profil sans plafond, livre Lichess, sons — 20 novembre 2026
+
+- **Bilan de profil complet** : il s'arrêtait après quelques dizaines de parties (24 sur 670 chez Sïmzy). La file d'analyse refusait toute nouvelle tâche au-delà de 500 analyses conservées, bilans terminés compris ; les refus tombaient en silence, partie par partie. Les bilans de partie terminés ne comptent plus dans ce plafond, qui ne vise que les analyses ouvertes à la main : seuls les 200 derniers sont gardés, leurs chiffres restant dans la base et leurs évaluations dans le cache.
+- **Livre Lichess de nouveau accessible** : l'explorateur d'ouvertures de Lichess refuse depuis 2025 les requêtes sans compte. Un jeton personnel gratuit, créé sur Lichess sans aucune autorisation, se colle dans *Fichier → Comptes Lichess et Chess.com* ; il n'est envoyé qu'à l'explorateur. Sans jeton, ou s'il est refusé, le message dit quoi faire au lieu de « explorateur injoignable ».
+- **Sons** : un son propre au roque, à la promotion et au mat, en plus du coup, de la prise et de l'échec ; cinq jeux au choix (bois, feutre, clic, marbre, rétro), tous synthétisés par `tools/make-sounds.py` ; un réglage du volume ; *Écouter* pour essayer un jeu ; *Affichage → Couper le son* pour les faire taire d'un clic.
+
 ## Bilan à profondeur visée — 20 novembre 2026
 
 - **Bilan d'une partie par profondeur** et non plus par temps : 18 (rapide), 22 (comparable au bilan de Lichess), 26 ou 30. Le temps n'est plus qu'un plafond par position, pour qu'aucune ne bloque le bilan. Avec deux passages, le premier va six demi-coups moins loin, le second au bout. À 0,5 seconde par position sur un seul fil, l'ancien réglage par défaut plafonnait vers la profondeur 16 à 18.

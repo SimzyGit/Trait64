@@ -2,7 +2,9 @@
 // Saved Lichess / Chess.com accounts, kept in sync with the library like En Croissant does:
 // each sync only asks for the games played since the previous one.
 #include "controller.h"
+#include "sounds.h"
 #include <QDateTime>
+#include <QRegularExpression>
 #include <QTimer>
 
 QVariantList Controller::onlineAccounts() const {
@@ -89,4 +91,35 @@ void Controller::accountSynced(int added) {
     emit accountsChanged();
     // Let the library refresh before the next account starts.
     QTimer::singleShot(0, this, [this] { if (!busy()) nextAccountSync(); });
+}
+
+void Controller::setLichessToken(const QString &token) {
+    const auto clean = token.trimmed();
+    // Un jeton Lichess : lettres, chiffres et soulignés (lip_…). Autre chose serait une
+    // erreur de copier-coller, et partirait tel quel dans un en-tête HTTP.
+    static const QRegularExpression shape("^[A-Za-z0-9_]{8,200}$");
+    if (!clean.isEmpty() && !shape.match(clean).hasMatch()) {
+        emit message(tr("Ce jeton Lichess ne semble pas valide : copiez-le tel que Lichess l’affiche."));
+        return;
+    }
+    if (clean.isEmpty())
+        settings_.remove("lichessToken");
+    else
+        settings_.setValue("lichessToken", clean);
+    emit accountsChanged();
+    emit message(clean.isEmpty() ? tr("Jeton Lichess retiré.")
+                                 : tr("Jeton Lichess enregistré : le livre Lichess est accessible."));
+}
+
+bool Controller::hasLichessToken() const {
+    return !settings_.value("lichessToken").toString().isEmpty();
+}
+
+void Controller::previewSound(const QString &theme) {
+    const int volume = settings_.value("soundVolume", 80).toInt();
+    const t64::BoardSound sequence[] = {t64::BoardSound::Move, t64::BoardSound::Capture,
+                                        t64::BoardSound::Check};
+    for (int i = 0; i < 3; ++i)
+        QTimer::singleShot(i * 350, this,
+                           [theme, volume, sound = sequence[i]] { t64::playSound(sound, theme, volume); });
 }

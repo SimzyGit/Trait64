@@ -187,6 +187,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Analyse assistée"); checkable: true; checked: !!controller.preferences.assistedAnalysis; onTriggered: controller.setPreference("assistedAnalysis", checked)}
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
             MenuItem {text: qsTr("Relations d’attaque"); checkable: true; checked: !!controller.preferences.showAttacks; onTriggered: controller.setPreference("showAttacks", checked)}
+            MenuItem {objectName: "muteSounds"; text: qsTr("Couper le son"); checkable: true; checked: !controller.preferences.sounds; onTriggered: controller.setPreference("sounds", !checked)}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}

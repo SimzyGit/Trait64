@@ -121,16 +121,38 @@ int main(int argc, char **argv) {
             return importGuiProbe(app, dir.path());
         {
             using t64::BoardSound;
-            check(t64::soundFor("e4") == BoardSound::Move && t64::soundFor("O-O") == BoardSound::Move,
+            check(t64::soundFor("e4") == BoardSound::Move && t64::soundFor("Nf3") == BoardSound::Move,
                   "A quiet move sounds like a move");
             check(t64::soundFor("exd5") == BoardSound::Capture, "A capture has its own sound");
-            check(t64::soundFor("Qxf7#") == BoardSound::Check && t64::soundFor("Bb5+") == BoardSound::Check,
-                  "Check and mate take precedence over the capture");
-            check(!t64::playSound(BoardSound::Move),
-                  "Without a screen nothing is played and nothing is loaded");
-            check(QFile::exists(":/assets/sounds/move.wav") && QFile::exists(":/assets/sounds/capture.wav") &&
-                      QFile::exists(":/assets/sounds/check.wav"),
-                  "The three sounds are built into the program itself");
+            check(t64::soundFor("O-O") == BoardSound::Castle &&
+                      t64::soundFor("O-O-O") == BoardSound::Castle &&
+                      t64::soundFor("exd8=Q") == BoardSound::Promote,
+                  "Castling and promotion have their own sounds");
+            check(t64::soundFor("Qxf7#") == BoardSound::Mate && t64::soundFor("Bb5+") == BoardSound::Check &&
+                      t64::soundFor("O-O+") == BoardSound::Check &&
+                      t64::soundFor("e8=Q#") == BoardSound::Mate,
+                  "Mate, then check, take precedence over everything else");
+            check(!t64::playSound(BoardSound::Move) && !t64::playSound(BoardSound::Move, "bois", 0),
+                  "Without a screen, or at zero volume, nothing is played");
+            bool every = true;
+            for (const auto &theme : t64::soundThemes())
+                for (int sound = 0; sound <= int(BoardSound::Mate); ++sound)
+                    every &= t64::soundClip(BoardSound(sound), theme, 100).size() > 1000;
+            check(every && t64::soundThemes().size() == 5,
+                  "Every sound of every theme is built into the program");
+            // Le volume met les échantillons à l'échelle : à 50 %, le pic est divisé par deux.
+            const auto peak = [](const QByteArray &wav) {
+                int top = 0;
+                for (qsizetype i = 44; i + 1 < wav.size(); i += 2)
+                    top = std::max(top, std::abs(int(qint16(quint8(wav[i]) | (quint8(wav[i + 1]) << 8)))));
+                return top;
+            };
+            const int full = peak(t64::soundClip(BoardSound::Move, "bois", 100)),
+                      half = peak(t64::soundClip(BoardSound::Move, "bois", 50));
+            check(full > 20000 && std::abs(half * 2 - full) <= 2 &&
+                      t64::soundClip(BoardSound::Move, "inconnu", 100) ==
+                          t64::soundClip(BoardSound::Move, "bois", 100),
+                  "Volume scales the samples, and an unknown theme falls back to wood");
         }
         {
             // Trouver un moteur déjà installé : par son nom, dans les dossiers du système
@@ -759,6 +781,14 @@ int main(int argc, char **argv) {
                     QTest::qWait(10);
                 QTest::qWait(20);
             };
+            // Le jeton du livre Lichess : refusé s'il ne ressemble pas à un jeton (il partirait
+            // dans un en-tête HTTP), gardé sinon, retiré par une chaîne vide.
+            c.setLichessToken("lip_abc\r\nX-Evil: 1");
+            check(!c.hasLichessToken(), "A malformed Lichess token is refused");
+            c.setLichessToken("  lip_AbCdEf123456  ");
+            check(c.hasLichessToken(), "A Lichess token is kept, trimmed");
+            c.setLichessToken("");
+            check(!c.hasLichessToken(), "An empty Lichess token removes it");
             messages.clear();
             c.addOnlineAccount("lichess", "../x");
             check(c.onlineAccounts().isEmpty() && messages.size() == 1, "Invalid account names are refused");

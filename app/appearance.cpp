@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
 #include "hardware.h"
+#include "sounds.h"
 #include <QColor>
 #include <QDir>
 #include <QFile>
@@ -175,6 +176,8 @@ QVariantMap Controller::preferences() const {
                          {"showAttacks", false},
                          {"assistedAnalysis", false},
                          {"sounds", true},
+                         {"soundTheme", "bois"},
+                         {"soundVolume", 80},
                          {"wheelMoves", false},
                          {"blindfold", false},
                          {"dailyGoal", 10},
@@ -263,10 +266,11 @@ QVariantMap Controller::preferences() const {
 }
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
-        const QMap<QString, QPair<int, int>> limits{
-            {"threads", {1, 1024}},     {"hash", {16, 262144}},   {"multiPV", {1, 5}},
-            {"skill", {0, 20}},         {"playElo", {0, 4000}},   {"moveTime", {100, 10000}},
-            {"analysisDepth", {0, 99}}, {"dailyGoal", {1, 1000}}, {"importWorkers", {1, 8}}};
+        const QMap<QString, QPair<int, int>> limits{{"threads", {1, 1024}},     {"hash", {16, 262144}},
+                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}},
+                                                    {"playElo", {0, 4000}},     {"moveTime", {100, 10000}},
+                                                    {"analysisDepth", {0, 99}}, {"dailyGoal", {1, 1000}},
+                                                    {"importWorkers", {1, 8}},  {"soundVolume", {0, 100}}};
         QVariant clean = value;
         if (limits.contains(key)) {
             bool ok;
@@ -286,6 +290,9 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                                                                          : QGuiApplication::font().family();
         } else if (key == "notebookLayout") {
             if (!QStringList{"table", "flow"}.contains(value.toString()))
+                return;
+        } else if (key == "soundTheme") {
+            if (!t64::soundThemes().contains(value.toString()))
                 return;
         } else if (key == "language") {
             if (!QStringList{"auto", "fr", "en", "es"}.contains(value.toString()))

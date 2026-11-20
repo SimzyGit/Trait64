@@ -265,8 +265,11 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
     request.setTransferTimeout(20000);
     request.setRawHeader("Accept", "application/json");
     request.setRawHeader("User-Agent", "Trait64-explorer/1.0");
+    const bool explorer = url.host() == "explorer.lichess.ovh";
+    if (explorer && !token_.isEmpty())
+        request.setRawHeader("Authorization", "Bearer " + token_.toUtf8());
     reply_ = network_->get(request);
-    connect(reply_, &QNetworkReply::finished, this, [this, tables, cloud, fen] {
+    connect(reply_, &QNetworkReply::finished, this, [this, tables, cloud, fen, explorer] {
         if (!reply_)
             return;
         std::unique_ptr<QNetworkReply> reply(reply_.data());
@@ -278,6 +281,15 @@ void OpeningExplorer::query(const QString &source, const QString &fen, const QVa
         // 429 : l'explorateur limite les appels, et le dire vaut mieux qu'un échec muet.
         if (status == 429) {
             emit failed("L’explorateur Lichess demande de ralentir. Réessayez dans un instant.");
+            return;
+        }
+        // 401 : l'explorateur demande un compte. Dire quoi faire, pas « injoignable ».
+        if (explorer && (status == 401 || status == 403)) {
+            emit failed(token_.isEmpty()
+                            ? "L’explorateur Lichess demande désormais un jeton de compte, gratuit : "
+                              "ajoutez-le dans Fichier → Comptes Lichess et Chess.com."
+                            : "Lichess refuse ce jeton : créez-en un nouveau dans Fichier → Comptes "
+                              "Lichess et Chess.com.");
             return;
         }
         // 404 : la position n'est pas dans le nuage, ce qui n'a rien d'une panne.
