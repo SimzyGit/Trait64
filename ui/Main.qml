@@ -97,6 +97,13 @@ ApplicationWindow {
     menuBar: MenuBar {
         objectName: "mainMenuBar"
         font.pixelSize: Math.round(12*win.textScale)
+        // La barre de menus prend le ton du fond, avec un filet dessous : en blanc pur, elle
+        // tranchait sur le papier du thème clair comme une bande rapportée.
+        background: Rectangle {
+            implicitHeight: 28*win.uiScale
+            color: win.bg
+            Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;opacity:.6}
+        }
         Menu { title: qsTr("&Fichier")
             MenuItem {text: qsTr("Nouvelle étude"); onTriggered: controller.newGame()}
             MenuItem {text: qsTr("Importer des parties…"); onTriggered: importDialog.open()}
@@ -369,7 +376,10 @@ ApplicationWindow {
                                         TButton {text:modelData.favorite?"★":"☆";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Favori");onClicked:controller.favorite(modelData.id,!modelData.favorite)}
                                         Label {objectName:"medalMark";visible:(modelData.medals||0)>0;text:"◆";color:controller.preferences.accentColor;Layout.preferredWidth:10
                                             HoverHandler {id:medalHover} ToolTip.visible:medalHover.hovered;ToolTip.text:win.medalList(modelData.medals||0)}
-                                        TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;onClicked:controller.loadGame(modelData.id)}
+                                        // « Ouvrir » ne paraît que sur la ligne visée : répété sur deux cents lignes,
+                                        // il faisait une colonne de boutons plus voyante que les parties. Un double
+                                        // clic sur la ligne ouvre toujours la partie.
+                                        TButton {text:qsTr("Ouvrir");implicitHeight:22;Layout.fillWidth:true;opacity:rowHover.hovered||activeFocus?1:0;onClicked:controller.loadGame(modelData.id)}
                                         TButton {text:"⋮";implicitHeight:22;flat:true;Layout.preferredWidth:24;Accessible.name:qsTr("Actions de la partie");onClicked:{win.selectedGame=modelData.id;win.selectedMedals=modelData.medals||0;collectionField.text=modelData.collection||"";gameMenu.open()}}
                                     }
                                 }
@@ -668,6 +678,18 @@ objectName:"analysisSplit"
                                         required property int index
                                         width:ListView.view.width;spacing:8
                                         Label {text:modelData.eval;Layout.preferredWidth:52;font.weight:Font.DemiBold;horizontalAlignment:Text.AlignRight}
+                                        // Gain, nulle, perte selon le moteur (vus des Blancs), comme dans
+                                        // Nibbler : une évaluation de +1 ne dit pas si la nulle reste probable.
+                                        Item {objectName:"engineWdl";visible:!!modelData.wdl;Layout.preferredWidth:44;Layout.preferredHeight:8
+                                            readonly property var w:modelData.wdl||[0,1000,0]
+                                            Row {anchors.fill:parent
+                                                Rectangle {width:parent.width*parent.parent.w[0]/1000;height:parent.height;color:"#f4f1ea"}
+                                                Rectangle {width:parent.width*parent.parent.w[1]/1000;height:parent.height;color:"#9a958b"}
+                                                Rectangle {width:parent.width*parent.parent.w[2]/1000;height:parent.height;color:"#2a2926"}}
+                                            Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line;radius:1}
+                                            HoverHandler {id:wdlHover}
+                                            ToolTip.visible:wdlHover.hovered;ToolTip.delay:300
+                                            ToolTip.text:qsTr("Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)").arg(Math.round(w[0]/10)).arg(Math.round(w[1]/10)).arg(Math.round(w[2]/10))}
                                         Label {text:modelData.san;elide:Text.ElideRight;Layout.fillWidth:true}
                                         Label {text:"d"+modelData.depth+" · "+Math.round(Number(modelData.nps)/1000)+" kN/s";color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                         TButton {text:"+";flat:true;implicitWidth:24;implicitHeight:22;onClicked:controller.addEngineLine(index);ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ajouter cette ligne à l’étude")}

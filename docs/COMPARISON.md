@@ -48,3 +48,63 @@ Trait64 ne cherche pas à reproduire un logiciel existant à l’identique : son
 > **Important :** ChessBase reste nettement plus mature sur la recherche professionnelle, les très grandes bases, la préparation d’adversaire et son écosystème de données. Scid vs. PC bénéficie de nombreuses années de développement et d’outils spécialisés. En Croissant possède déjà une excellente intégration des moteurs, bases téléchargeables et plateformes en ligne. Trait64 se différencie surtout par son approche **local-first, libre, Linux-first, sans compte ni télémétrie**, avec l’ambition de réunir ces usages dans un environnement cohérent.
 
 Sources de référence pour cette comparaison : [ChessBase 18](https://shop.chessbase.com/en/products/chessbase_18_program_only), [Scid vs. PC](https://sourceforge.net/projects/scidvspc/), [En Croissant](https://encroissant.org/docs/). La comparaison reflète les informations publiques disponibles et les fonctions de Trait64 documentées dans ce dépôt ; elle pourra évoluer avec les versions.
+
+## Relevé élargi — novembre 2026
+
+Ce relevé ajoute aux trois logiciels du tableau ChessX, Lucas Chess, Nibbler, Lichess, Chess.com et Chessable. Il dit où Trait64 fait aussi bien, ce qui lui manque encore, et ce qu'il emprunte aux autres pour son apparence.
+
+### Les références
+
+| Outil | Genre | Ce qu'il fait de mieux |
+|---|---|---|
+| **ChessBase 18** | base de parties, Windows, payant | recherche de références, rapports de style et d'erreurs, préparation contre un adversaire, médailles, format 2CBH |
+| **SCID vs. PC / Scid** | base de parties, libre | rapidité sur des millions de parties, arbre, recherches matérielles et de motifs |
+| **En Croissant** | interface d'analyse, libre (Tauri) | interface moderne en onglets, import Lichess et Chess.com, répertoires, puzzles |
+| **ChessX** | base de parties, libre (Qt) | légèreté, classement ECO, recherche de positions |
+| **Lucas Chess** | entraînement, libre | dizaines de modes d'entraînement, adversaires par niveau |
+| **Nibbler** | interface pour Lc0 | probabilités gain/nulle/perte, flèches de politique |
+| **Lichess** | site | tableau d'analyse, explorateur, études partagées, « Apprendre de vos erreurs », analyse dans le nuage |
+| **Chess.com** | site | bilan de partie guidé par moments clés, coup à réessayer, classement des coups |
+| **Chessable** | site | répétition espacée des répertoires |
+
+### Où Trait64 est au niveau
+
+- **Base de parties** : SQLite local, import reprenable, ChessBase `.cbh` et SCID 4/5 lus directement, recherche multicritère, médailles, corbeille, sauvegardes.
+- **Recherche** : position exacte, structure de pions, pièces sur des cases, manœuvres, finales atteintes, clés stratégiques, sous-ensemble de CQL. C'est le niveau de ChessBase et de Scid, sans le format propriétaire.
+- **Analyse** : plusieurs moteurs UCI, bilan en deux passages, flèches, relations d'attaque, analyse assistée, analyse dans le nuage de Lichess, tables de Syzygy.
+- **Préparation** : contre un adversaire depuis la bibliothèque et ses parties en ligne, fiche joueur avec style et liens. C'est l'équivalent des rapports de ChessBase 18.
+- **Entraînement** : puzzles Lichess et puzzles tirés des gaffes, mats tirés de la bibliothèque, répétition espacée façon Chessable, exercice de Stoyko, coordonnées, finales.
+- **Vie privée** : tout tourne localement, rien ne part sans demande. Ce n'est le cas ni de Lichess, ni de Chess.com, ni de ChessBase Cloud.
+
+### Ce qui manque, par ordre d'utilité
+
+| Écart | Vu chez | Effort | Décision |
+|---|---|---|---|
+| **Moments clés** : les trois tournants de la partie, signalés sur la courbe et dans la notation | Chess.com, Lichess | petit | fait (20 nov.) |
+| **Symboles de qualité dans la notation** (?!, ?, ??) posés par le bilan, en couleur | Chess.com, Lichess | — | déjà présent (vue Tableau) |
+| **Probabilités gain/nulle/perte** du moteur à côté de l'évaluation | Nibbler, Lichess | petit (UCI_ShowWDL) | fait (20 nov.) |
+| Format **2CBH** et archives **.cbv** | ChessBase 18 | grand, non documenté | en attente de fichiers d'exemple |
+| **Partie par correspondance** (Xfcc) | ChessBase, Arena | moyen, compte requis | en attente d'un compte d'essai |
+| **Échiquiers électroniques** (DGT, Chessnut) | ChessBase, En Croissant | grand, matériel requis | en attente de matériel |
+| **Synchronisation** entre appareils | ChessBase Cloud, sites | grand | à concevoir (dossier synchronisé ?) |
+| **Saisie vocale** des coups | ChessBase 18 | moyen | pas prioritaire |
+| **Texte généré par IA** (biographies, conseils) | ChessBase 18 | — | écarté : invérifiable, contraire à l'esprit local |
+
+### Ce que Trait64 prend ailleurs pour son apparence
+
+Le but n'est pas d'imiter un site d'échecs. Trait64 emprunte aux outils de travail qu'on garde ouverts des heures :
+
+- **Logic Pro et Ableton Live** : une interface dense et calme, des contrôles fins et des aplats sans dégradé. La couleur est réservée à ce qui signifie quelque chose.
+- **Things et Bear** : un thème clair de papier chaud plutôt que de gris neutres, une hiérarchie typographique nette, des marges régulières.
+- **Lichess** : la sobriété du tableau d'analyse, et une courbe d'évaluation en blanc et noir plutôt qu'en couleur d'accent.
+- **Les pendules de tournoi et le feutre des tables de club** : un vert d'accent profond plutôt que le bleu de toutes les applications.
+
+Ce que Trait64 s'interdit : les dégradés violets, le verre dépoli, les grandes ombres, les émojis dans l'interface, les icônes « étincelle » et les textes promotionnels. Ce sont les marques des interfaces générées en série.
+
+### Sources
+
+- [ChessBase 18 — nouveautés (aide officielle)](https://help.chessbase.com/CBase/18/Eng/whats_new_.htm)
+- [John Watson : ChessBase 18, mettre à jour ou non ?](https://en.chessbase.com/post/john-watson-chessbase-18-review-chess-life)
+- [En Croissant — présentation](https://www.linuxlinks.com/en-croissant-gui-chess-toolkit/) et [versions](https://github.com/franciscoBSalgueiro/en-croissant/releases)
+- [Chess.com — nouveau Game Review](https://chess.com/news/view/game-review-design-update)
+- [Lichess — journal des changements](https://www.lichess.org/changelog)

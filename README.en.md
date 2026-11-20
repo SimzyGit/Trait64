@@ -59,7 +59,7 @@ The packages are unsigned: on first launch Windows (SmartScreen) and macOS (Gate
 - **Search** — player, opening, rating, date, result, exact position, pawn structure, pieces on squares, a piece manoeuvre (`Nf3-d2-f1`), endgame reached, strategic keys (isolated pawn, hanging pawns, Carlsbad…), CQL queries; similar positions and the plans of a structure.
 - **Online accounts** — Lichess and Chess.com, no password; each sync only fetches new games.
 - **Player profiles** — one profile gathers your accounts and your FIDE record, whose ratings are read from the federation's official lists.
-- **Analysis** — Stockfish or any UCI engine, several lines, engines compared side by side, a resumable background analysis queue.
+- **Analysis** — Stockfish or any UCI engine, several lines with win/draw/loss odds, game review and its key moments, engines compared side by side, a resumable background analysis queue.
 - **Game review** — evaluation graph, accuracy per phase, blunders and inaccuracies explained, tactical motifs recognised, PGN annotation.
 - **Reviewing a whole database** — after a sync or an import, one button reviews the entire batch at the depth you choose, without redoing what has already been seen.
 - **Dashboard** — accuracy, blunders per hundred moves, tactics, month-by-month progress.

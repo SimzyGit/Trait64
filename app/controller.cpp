@@ -1682,6 +1682,11 @@ void Controller::startEngine() {
     auto options = settings_.value("uciOptions").toMap();
     if (!playing_)
         options["UCI_LimitStrength"] = false;
+    // Les probabilités gain / nulle / perte, quand le moteur sait les donner (Stockfish,
+    // Lc0) : elles s'affichent à côté de l'évaluation. Un moteur qui ne connaît pas
+    // l'option ne la reçoit pas.
+    if (!options.contains("UCI_ShowWDL"))
+        options["UCI_ShowWDL"] = true;
     engine_.setLimitElo(playing_ ? settings_.value("playElo", 0).toInt() : 0);
     // Plus de fils que de cœurs ralentit le moteur, et une table plus grande que la
     // mémoire fait échanger la machine : on borne à ce qu'elle a réellement, pas à un

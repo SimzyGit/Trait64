@@ -69,7 +69,7 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 - **Recherche** — joueur, ouverture, Elo, date, résultat, position exacte, structure de pions, pièces sur des cases, manœuvre d’une pièce (`Cf3-d2-f1`), finale atteinte, clés stratégiques (pion isolé, pions pendants, Carlsbad…), requêtes CQL ; positions semblables et plans d’une structure.
 - **Comptes en ligne** — Lichess et Chess.com, sans mot de passe ; chaque synchronisation ne récupère que les parties nouvelles.
 - **Profils de joueur** — un seul profil rassemble vos comptes et votre fiche FIDE, dont les classements se lisent dans les listes officielles de la fédération.
-- **Analyse** — Stockfish ou tout moteur UCI, plusieurs variantes, comparaison de moteurs côte à côte, file d’analyse en arrière-plan reprenable.
+- **Analyse** — Stockfish ou tout moteur UCI, plusieurs variantes avec probabilités gain/nulle/perte, bilan de partie et ses moments clés, comparaison de moteurs côte à côte, file d’analyse en arrière-plan reprenable.
 - **Bilan de partie** — graphe d’évaluation, précision par phase, gaffes et imprécisions expliquées, motifs tactiques reconnus, annotation du PGN, et un point coloré par coup dans le carnet : vert pour un bon coup, rouge pour une gaffe, violet quand un mat entre dans le compte.
 - **Bilan de toute une base** — après une synchronisation ou un import, un bouton passe en revue le lot entier à la profondeur de votre choix, sans refaire ce qui a déjà été vu.
 - **Tableau de bord** — précision, fautes pour cent coups, tactique, progression mois par mois.

@@ -1,5 +1,16 @@
 # Changements
 
+## Nouvelle allure — 20 novembre 2026
+
+Trait64 a été comparé aux logiciels et sites d'échecs courants (ChessBase 18, Scid, En Croissant, ChessX, Lucas Chess, Nibbler, Lichess, Chess.com, Chessable) : voir [docs/COMPARISON.md](COMPARISON.md). Il en sort une apparence à lui et trois emprunts.
+
+- **Palette** : un papier chaud en thème clair et un graphite à peine teinté en thème sombre, au lieu de gris neutres. Le vert profond des tables de club et des pendules remplace le bleu générique. L'échiquier par défaut passe au sauge ; l'ancien reste disponible sous le nom « Ardoise bleue ». Les couleurs déjà choisies ne changent pas.
+- **Police** : IBM Plex Sans est livrée avec le programme (licence OFL). Elle est nette aux petites tailles des listes et de la notation, et la même sur tous les systèmes.
+- **Barre de menus** au ton du fond, soulignée d'un filet, au lieu d'une bande blanche.
+- **Bibliothèque** : « Ouvrir » n'apparaît plus que sur la ligne survolée ; un double clic ouvre toujours la partie.
+- **Courbe du bilan** en blanc et noir, comme chez Lichess : on voit d'un coup d'œil qui mène. Les **trois moments clés** de la partie (les coups qui ont le plus coûté) y sont numérotés. Le bilan en fait une liste où un clic mène à la position.
+- **Probabilités gain / nulle / perte** du moteur, comme dans Nibbler : une barre à côté de chaque évaluation, avec le détail au survol, quand le moteur sait les donner (Stockfish, Lc0).
+
 ## Finitions visuelles — 20 novembre 2026
 
 - **QR code de la position** dessiné en PNG : en SVG, il restait blanc là où le greffon d'images SVG de Qt manque.

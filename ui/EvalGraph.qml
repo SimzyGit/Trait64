@@ -17,6 +17,17 @@ Item {
         return -1
     }
     implicitHeight: 92
+    // Les moments clés : les trois coups qui ont le plus coûté (au moins une erreur, 100
+    // centipions), dans l'ordre de la partie. Ce sont les tournants qu'un bilan doit
+    // montrer d'abord ; la courbe les numérote et le bilan en fait une liste.
+    readonly property var keyMoments: {
+        var picked = []
+        for (var i = 0; i < rows.length; i++)
+            if (rows[i].loss >= 100)
+                picked.push(i)
+        picked.sort(function(a, b) { return rows[b].loss - rows[a].loss })
+        return picked.slice(0, 3).sort(function(a, b) { return a - b })
+    }
 
     function abscissa(index, span) { return rows.length === 1 ? span / 2 : index * span / (rows.length - 1) }
     function ordinate(score, span) { return span / 2 - Math.max(-5, Math.min(5, score)) * span / 10 }
@@ -44,16 +55,24 @@ Item {
                 var series = root.rows
                 if (!series.length)
                     return
-                var accent = root.backend.preferences.accentColor
-                // Aplat sous la courbe : à cette hauteur, un trait seul se lit mal.
+                // Le camp qui mène se lit à la couleur, comme sur un échiquier : sous la
+                // courbe la part des Blancs, en clair ; au-dessus celle des Noirs, en sombre.
+                // Un aplat de la couleur d'accent ne disait pas qui menait.
+                var light = root.backend.preferences.lightTheme
+                ctx.fillStyle = light ? "#3b3a37" : "#0f0f10"
+                ctx.globalAlpha = light ? .82 : .9
+                ctx.fillRect(0, 0, width, height)
+                ctx.globalAlpha = 1
                 ctx.beginPath()
-                ctx.moveTo(0, height / 2)
+                ctx.moveTo(0, height)
                 for (var i = 0; i < series.length; i++)
                     ctx.lineTo(root.abscissa(i, width), root.ordinate(series[i].score, height))
-                ctx.lineTo(root.abscissa(series.length - 1, width), height / 2)
+                ctx.lineTo(root.abscissa(series.length - 1, width), height)
                 ctx.closePath()
-                ctx.globalAlpha = .18; ctx.fillStyle = accent; ctx.fill(); ctx.globalAlpha = 1
-                ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.lineJoin = "round"
+                ctx.fillStyle = light ? "#fbfaf7" : "#d9d5cc"; ctx.fill()
+                ctx.strokeStyle = root.backend.preferences.line; ctx.lineWidth = 1
+                ctx.beginPath(); ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2); ctx.stroke()
+                ctx.strokeStyle = root.backend.preferences.accentColor; ctx.lineWidth = 1.5; ctx.lineJoin = "round"
                 ctx.beginPath()
                 for (var j = 0; j < series.length; j++) {
                     var x = root.abscissa(j, width), y = root.ordinate(series[j].score, height)
@@ -62,15 +81,26 @@ Item {
                 ctx.stroke()
                 for (var k = 0; k < series.length; k++)
                     if (series[k].loss >= 100) {
-                        ctx.fillStyle = series[k].loss >= 250 ? "#dc6659" : "#d7a355"
+                        ctx.fillStyle = series[k].loss >= 250 ? "#d0574a" : "#d39a3f"
                         ctx.beginPath()
                         ctx.arc(root.abscissa(k, width), root.ordinate(series[k].score, height), 3.5, 0, Math.PI * 2)
                         ctx.fill()
                     }
+                // Les moments clés, numérotés au pied de leur trait.
+                ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"
+                for (var m = 0; m < root.keyMoments.length; m++) {
+                    var at = root.keyMoments[m], mx = root.abscissa(at, width)
+                    ctx.strokeStyle = series[at].loss >= 250 ? "#d0574a" : "#d39a3f"
+                    ctx.globalAlpha = .7; ctx.lineWidth = 1
+                    ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, height); ctx.stroke(); ctx.globalAlpha = 1
+                    ctx.fillStyle = ctx.strokeStyle
+                    ctx.beginPath(); ctx.arc(mx, 8, 7, 0, Math.PI * 2); ctx.fill()
+                    ctx.fillStyle = "#ffffff"; ctx.fillText(String(m + 1), mx, 11.5)
+                }
                 if (root.current >= 0) {
                     var cx = root.abscissa(root.current, width)
-                    ctx.strokeStyle = root.backend.preferences.foreground
-                    ctx.globalAlpha = .55; ctx.lineWidth = 1
+                    ctx.strokeStyle = root.backend.preferences.accentColor
+                    ctx.globalAlpha = .9; ctx.lineWidth = 1.5
                     ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, height); ctx.stroke()
                     ctx.globalAlpha = 1
                 }

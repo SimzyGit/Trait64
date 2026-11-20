@@ -170,7 +170,9 @@ Notices amont conservées dans `assets/pieces/LICHESS-COPYING.md`. Textes des li
 
 ## SQLite et polices
 
-SQLite est utilisé par le greffon Qt SQL système et lié dynamiquement pour son API d’annulation `sqlite3_progress_handler` (https://sqlite.org/). Son code est dans le domaine public ; les sources et notices du paquet système accompagnent les bibliothèques de l’AppImage. Le style Unicode utilise la police système DejaVu Sans installée séparément (https://dejavu-fonts.github.io/). Aucune police n’est copiée dans le dépôt. Le greffon SVG de Qt est une dépendance système.
+SQLite est utilisé par le greffon Qt SQL système et lié dynamiquement pour son API d’annulation `sqlite3_progress_handler` (https://sqlite.org/). Son code est dans le domaine public ; les sources et notices du paquet système accompagnent les bibliothèques de l’AppImage. Le style Unicode utilise la police système DejaVu Sans installée séparément (https://dejavu-fonts.github.io/).
+
+L’interface embarque IBM Plex Sans (graisses Regular, Medium, SemiBold et Bold), © 2017 IBM Corp., sous SIL Open Font License 1.1 (https://github.com/IBM/plex). Le texte de la licence est dans `assets/fonts/OFL-IBM-Plex.txt`. C’est la seule police copiée dans le dépôt. Le greffon SVG de Qt est une dépendance système.
 
 Les exemples PGN sont des lignes pédagogiques écrites pour ce projet. Aucune base propriétaire ChessBase ni aucun actif de marque En Croissant n’est incorporé. Les ressources libres citées ci-dessus n’impliquent aucune affiliation à leurs auteurs ni à Lichess.
 

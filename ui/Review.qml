@@ -24,7 +24,17 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
         }
         ProgressBar {Layout.fillWidth:true;from:0;to:Math.max(1,root.backend.reviewState.total);value:root.backend.reviewState.done}
         Label {text:root.backend.reviewState.error||qsTr("Évaluations du point de vue des Blancs. Cliquez le graphe ou un coup pour revoir la position.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-        EvalGraph {Layout.fillWidth:true;Layout.preferredHeight:155;backend:root.backend}
+        EvalGraph {id:reviewGraph;Layout.fillWidth:true;Layout.preferredHeight:155;backend:root.backend}
+        // Les moments clés, à portée de clic : les tournants d'abord, le détail ensuite.
+        Flow {objectName:"keyMoments";Layout.fillWidth:true;Layout.preferredWidth:1;spacing:6;visible:reviewGraph.keyMoments.length>0
+            Label {text:qsTr("Moments clés");font.bold:true;height:26*root.backend.preferences.uiScale;verticalAlignment:Text.AlignVCenter}
+            Repeater {model:reviewGraph.keyMoments
+                delegate:TButton {required property var modelData;required property int index
+                    readonly property var row:reviewGraph.rows[modelData]
+                    text:(index+1)+".  "+row.move+"  "+row.eval
+                    ToolTip.text:qsTr("%1 · %2 centipions perdus").arg(row.label).arg(row.loss)
+                    onClicked:root.backend.navigate(row.node)}}
+        }
         AccuracyPanel {Layout.fillWidth:true;backend:root.backend}
         Label {text:qsTr("Perte moyenne (centipions) — Blancs : ")+root.average(true)+qsTr(" · Noirs : ")+root.average(false);Layout.fillWidth:true;wrapMode:Text.WordWrap;font.bold:true}
         ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:170;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}

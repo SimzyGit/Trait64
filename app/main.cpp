@@ -2,6 +2,7 @@
 #include "controller.h"
 #include <QDebug>
 #include <QDir>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLockFile>
@@ -33,6 +34,11 @@ int main(int argc, char *argv[]) {
         logo.addFile(QString(":/assets/app/trait64-%1.png").arg(side), QSize(side, side));
     QGuiApplication::setWindowIcon(logo);
     QQuickStyle::setStyle("Basic");
+    // IBM Plex Sans, livrée avec le programme (licence OFL) : une police de travail, nette
+    // aux petites tailles des listes et de la notation, et la même sur chaque système au
+    // lieu de la police par défaut de chacun.
+    for (const char *weight : {"Regular", "Medium", "SemiBold", "Bold"})
+        QFontDatabase::addApplicationFont(QString(":/assets/fonts/IBMPlexSans-%1.ttf").arg(weight));
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
     if (smoke) {

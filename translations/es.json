@@ -1703,5 +1703,8 @@
   "%1 avec les Blancs · %2 avec les Noirs · %3 inachevée(s)": "%1 con blancas · %2 con negras · %3 sin terminar",
   "%1 partie(s) lue(s), %2 nouvelle(s).": "%1 partida(s) leída(s), %2 nueva(s).",
   "en cours": "en curso",
-  "Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.": "Elija un nombre de la lista: la ficha reúne sus resultados con cada color, sus aperturas, rivales, estilo y últimas partidas."
+  "Choisissez un nom dans la liste : sa fiche réunit ses scores avec chaque couleur, ses ouvertures, ses adversaires, son style et ses dernières parties.": "Elija un nombre de la lista: la ficha reúne sus resultados con cada color, sus aperturas, rivales, estilo y últimas partidas.",
+  "Moments clés": "Momentos clave",
+  "%1 · %2 centipions perdus": "%1 · %2 centipeones perdidos",
+  "Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)": "Blancas %1 % · tablas %2 % · negras %3 % (estimación del motor)"
 }

@@ -142,7 +142,9 @@ QVariantMap Controller::preferences() const {
                          {"studyFolder", ""},
                          {"bookPath", ""},
                          {"lightTheme", true},
-                         {"fontFamily", QGuiApplication::font().family()},
+                         {"fontFamily", QFontDatabase::families().contains("IBM Plex Sans")
+                                            ? QString("IBM Plex Sans")
+                                            : QGuiApplication::font().family()},
                          {"fontScale", 1.0},
                          {"uiScale", 1.0},
                          {"sidebarCompact", false},
@@ -161,9 +163,9 @@ QVariantMap Controller::preferences() const {
                          // lisent tel quel. La liste tient les jeux installés à côté.
                          {"customPiecePath", ""},
                          {"customPieceSets", QVariantList()},
-                         {"boardLight", "#e9dfcb"},
-                         {"boardDark", "#71838c"},
-                         {"boardHighlight", "#d6a166"},
+                         {"boardLight", "#ebe3d1"},
+                         {"boardDark", "#7f9585"},
+                         {"boardHighlight", "#d2ae5a"},
                          {"backgroundColor", ""},
                          {"accentColor", "#ef997a"},
                          {"legalMoves", true},
@@ -206,7 +208,9 @@ QVariantMap Controller::preferences() const {
     defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
-        bg = QColor(defaults["lightTheme"].toBool() ? "#eceef1" : "#1f2124"); // neutral greys, no tint
+        // Un papier chaud et un graphite à peine teinté plutôt que des gris neutres : des
+        // heures devant un échiquier fatiguent moins sur un fond qui ne tire pas au bleu.
+        bg = QColor(defaults["lightTheme"].toBool() ? "#eeebe4" : "#1c1c1b");
     auto linear = [](double x) { return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4); };
     const double luminance =
         .2126 * linear(bg.redF()) + .7152 * linear(bg.greenF()) + .0722 * linear(bg.blueF());
@@ -230,15 +234,17 @@ QVariantMap Controller::preferences() const {
     defaults["panel"] = light ? towardWhite(.85) : blend(.045);
     defaults["raised"] = blend(.085);
     defaults["line"] = blend(.17);
-    defaults["foreground"] = light ? "#1d2125" : "#e6e8eb";
-    defaults["muted"] = light ? "#5c6570" : "#a4abb4";
+    defaults["foreground"] = light ? "#211f1b" : "#e8e4dc";
+    defaults["muted"] = light ? "#69645a" : "#a29d93";
     if (defaults["highContrast"].toBool()) {
         defaults["foreground"] = light ? "#000000" : "#ffffff";
         defaults["muted"] = light ? "#202020" : "#eeeeee";
         defaults["line"] = light ? "#656565" : "#b0b0b0";
     }
     if (!settings_.contains("accentColor"))
-        defaults["accentColor"] = light ? "#2f66ad" : "#6a9fdc"; // restrained blue, as in desktop chess tools
+        // Un vert profond, celui du feutre des tables de club et des pendules, plutôt que le
+        // bleu de toutes les applications ; plus clair en thème sombre pour rester lisible.
+        defaults["accentColor"] = light ? "#2c6a4d" : "#7db893";
     // Les raccourcis en vigueur : ceux d'origine, recouverts par ceux que l'on a choisis.
     QVariantMap keys;
     const auto chosen = settings_.value("shortcuts").toMap();
@@ -333,7 +339,8 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
 // table associative : l'ordre est voulu — les claires d'abord, les sombres ensuite.
 static const std::vector<std::pair<QString, QStringList>> &boardPresetTable() {
     static const std::vector<std::pair<QString, QStringList>> presets{
-        {"Trait64", {"#e9dfcb", "#71838c", "#d6a166"}},
+        {"Trait64", {"#ebe3d1", "#7f9585", "#d2ae5a"}},
+        {"Ardoise bleue", {"#e9dfcb", "#71838c", "#d6a166"}},
         {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
         {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},
         {"Océan", {"#dee7eb", "#6487a3", "#a3bb52"}},
