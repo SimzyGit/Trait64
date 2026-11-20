@@ -491,23 +491,42 @@ int Database::rebuildIndexes(const std::function<bool(int)> &progress) {
 #include <fstream>
 namespace t64 {
 int Database::importPgnFile(const QString &path, const std::function<bool(int)> &progress,
-                            const QVariantMap &source) {
+                            const QVariantMap &source, int *skipped) {
     std::ifstream input(path.toStdString(), std::ios::binary);
     if (!input)
         throw std::runtime_error("Impossible de lire le PGN.");
     const int before = stats()["games"].toInt();
-    int processed = 0;
+    int processed = 0, unreadable = 0;
     sql("SAVEPOINT stream_import");
     try {
         const auto sourceId = registerSource(source);
-        readPgn(input, [&](Game &&game) {
+        // Une partie illisible ou d'une variante non prise en charge (Crazyhouse, Atomic…)
+        // est mise de côté et comptée. Elle faisait échouer tout le fichier : un compte
+        // Lichess avec une seule partie de Crazyhouse n'importait aucune de ses 670 parties.
+        scanPgnRecords(input, [&](std::string &&record, uint64_t) {
+            std::vector<Game> games;
+            try {
+                games = parsePgn(record, 1);
+            } catch (const std::exception &) {
+                ++unreadable;
+                return;
+            }
+            if (games.empty())
+                return;
             if (progress && !progress(processed))
                 throw std::runtime_error("Import interrompu : aucune partie ajoutée.");
-            linkSource(sourceId, save(game, 0, source.value("collection").toString()));
+            linkSource(sourceId, save(games.front(), 0, source.value("collection").toString()));
             ++processed;
         });
+        if (skipped)
+            *skipped = unreadable;
         if (!processed)
-            throw std::runtime_error("Aucune partie trouvée.");
+            throw std::runtime_error(unreadable
+                                         ? QString("Aucune partie lisible : %1 partie(s) de variantes non "
+                                                   "prises en charge ou illisibles.")
+                                               .arg(unreadable)
+                                               .toStdString()
+                                         : std::string("Aucune partie trouvée."));
         if (progress && !progress(processed))
             throw std::runtime_error("Import interrompu : aucune partie ajoutée.");
         recordImport(sourceId, path, source.value("sha256", QString("")).toString(), processed,

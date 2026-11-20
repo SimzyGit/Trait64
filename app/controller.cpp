@@ -94,6 +94,34 @@ Controller::Controller(const QString &path, QObject *parent)
                           {"title", tournamentTitle_}});
     });
     online_ = new t64::OnlineGames(this);
+    lichessLogin_ = new t64::LichessLogin(this);
+    connect(lichessLogin_, &t64::LichessLogin::failed, this, [this](const QString &text) {
+        emit accountsChanged();
+        emit message(text, true);
+    });
+    connect(
+        lichessLogin_, &t64::LichessLogin::connected, this,
+        [this](const QString &user, const QString &token) {
+            auto list = settings_.value("onlineAccounts").toList();
+            int index = -1;
+            for (int i = 0; i < list.size(); ++i)
+                if (list[i].toMap()["site"] == "lichess" &&
+                    list[i].toMap()["user"].toString().compare(user, Qt::CaseInsensitive) == 0)
+                    index = i;
+            if (index < 0) {
+                list << QVariantMap{{"site", "lichess"}, {"user", user}, {"games", 0}};
+                index = int(list.size()) - 1;
+            }
+            auto account = list[index].toMap();
+            account["token"] = token;
+            list[index] = account;
+            settings_.setValue("onlineAccounts", list);
+            emit accountsChanged();
+            emit message(
+                tr("Compte Lichess %1 connecté : livre Lichess accessible, parties téléchargées plus vite.")
+                    .arg(user));
+            syncOnlineAccount(index);
+        });
     connect(online_, &t64::OnlineGames::failed, this, [this](const QString &text) {
         emit busyChanged();
         emit message(text, true);
@@ -118,15 +146,7 @@ Controller::Controller(const QString &path, QObject *parent)
             emit busyChanged();
             return;
         }
-        const auto key = onlineSyncKey_.section('/', 1);
-        const auto site = key.section('/', 0, 0), user = key.section('/', 1);
-        const bool lichess = site == "lichess";
-        importSourceFile(downloaded, {{"id", site + ":" + user},
-                                      {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
-                                      {"source", lichess ? "https://lichess.org/@/" + user
-                                                         : "https://www.chess.com/member/" + user},
-                                      {"online", true}});
-        emit busyChanged();
+        importOnlineDownload(downloaded);
     });
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
@@ -287,7 +307,12 @@ Controller::Controller(const QString &path, QObject *parent)
                              .arg(r.job["added"].toLongLong()));
         else
             emit message(
-                tr("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates));
+                tr("%1 partie(s) importée(s), %2 doublon(s) ignoré(s).").arg(r.count).arg(r.duplicates) +
+                (r.skipped > 0 ? " " + tr("%1 partie(s) de variantes non prises en charge (Crazyhouse, "
+                                          "Atomic…) ou illisibles "
+                                          "mises de côté.")
+                                           .arg(r.skipped)
+                               : QString()));
     });
     QFile session(sessionPath_);
     if (session.open(QIODevice::ReadOnly)) {
@@ -942,6 +967,7 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         QDir().mkpath(dataPath_ + "/downloads");
         onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
         const qint64 since = settings_.value(onlineSyncKey_, 0).toLongLong();
+        online_->setToken(site == "lichess" ? accountToken(user.trimmed()) : QString());
         online_->fetch(site, user.trimmed(), max, onlineFile_, since);
         emit busyChanged();
     } catch (const std::exception &e) {
@@ -1001,6 +1027,24 @@ void Controller::removeStudyCollection(qint64 source) {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+void Controller::importOnlineDownload(const QString &downloaded) {
+    // Un autre traitement en cours (un import, un classement ECO) : on attend qu'il se
+    // termine. Refusées sur le champ, les parties téléchargées étaient perdues et le
+    // compte restait « en synchronisation » pour toujours.
+    if (busy_) {
+        QTimer::singleShot(1000, this, [this, downloaded] { importOnlineDownload(downloaded); });
+        return;
+    }
+    const auto key = onlineSyncKey_.section('/', 1);
+    const auto site = key.section('/', 0, 0), user = key.section('/', 1);
+    const bool lichess = site == "lichess";
+    importSourceFile(downloaded, {{"id", site + ":" + user},
+                                  {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
+                                  {"source", lichess ? "https://lichess.org/@/" + user
+                                                     : "https://www.chess.com/member/" + user},
+                                  {"online", true}});
+    emit busyChanged();
 }
 void Controller::importSourceFile(const QString &url, const QVariantMap &source) {
     try {
@@ -1089,7 +1133,7 @@ void Controller::importSourceFile(const QString &url, const QVariantMap &source)
                                 progress->store(n);
                                 return !canceled->load();
                             },
-                            source);
+                            source, &r.skipped);
                         r.duplicates = progress->load() - r.count;
                     } catch (const std::exception &e) {
                         r.error = QString::fromUtf8(e.what());

@@ -64,7 +64,7 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 - La page *Ouvertures* montre l'arbre des coups de vos parties, les livres Polyglot et le nom ECO de chaque position.
 - Un **répertoire** rassemble les lignes que vous jouez. Son onglet des lacunes donne la **couverture estimée** — la part des parties de votre bibliothèque qui restent dans le répertoire — et les réponses adverses non préparées, de la plus fréquente à la plus rare.
 - *Comparer…* met deux répertoires côte à côte.
-- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Lichess demande pour cela un **jeton de compte**, gratuit : *Fichier → Comptes Lichess et Chess.com*, *Créer un jeton sur Lichess* (sans cocher aucune autorisation), puis collez-le et enregistrez. Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau. Les paramètres savent aussi les télécharger : 3 à 5 pièces (939 Mio) suffisent à la plupart des finales.
+- L'onglet *Lichess* de l'analyse montre ce qui se joue sur Lichess ou chez les maîtres dans la position affichée, et les tables de finales à sept pièces (connexion nécessaire). Lichess demande pour cela un compte : dans *Fichier → Comptes Lichess et Chess.com*, *Se connecter avec Lichess* ouvre le navigateur, vous autorisez Trait64, et le compte est ajouté ou relié. On peut aussi coller un jeton créé sur Lichess et choisir le compte auquel le lier. Si vous avez des tables Syzygy sur l'ordinateur, indiquez leur dossier dans les paramètres : les finales qu'elles couvrent se lisent alors sans réseau. Les paramètres savent aussi les télécharger : 3 à 5 pièces (939 Mio) suffisent à la plupart des finales.
 
 ## S'entraîner
 
@@ -78,7 +78,7 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 
 ## Vos progrès
 
-La page *Profils* réunit sous un seul nom vos comptes Lichess et Chess.com (*Fichier → Comptes Lichess et Chess.com*) et votre fiche FIDE. Une synchronisation récupère jusqu'à 5 000 parties par compte, puis seulement les nouvelles.
+La page *Profils* réunit sous un seul nom vos comptes Lichess et Chess.com (*Fichier → Comptes Lichess et Chess.com*) et votre fiche FIDE. Une synchronisation récupère jusqu'à 5 000 parties par compte, puis seulement les nouvelles ; les parties de variantes (Crazyhouse, Atomic…) sont laissées de côté.
 
 *Analyser le profil* envoie toutes les parties du profil dans la file d'analyse, à la profondeur choisie (12, 18, 22 comme Lichess, ou 24). Le rapport se complète à mesure : il dit combien de parties sont déjà passées en revue sur le total, et combien attendent encore. Une partie déjà vue aussi loin n'est pas refaite. Précision par phase, fautes pour cent coups, force estimée et progression mois par mois se lisent ensuite au même endroit.
 

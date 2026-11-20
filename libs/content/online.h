@@ -30,6 +30,9 @@ class OnlineGames : public QObject {
     void fetchStudy(const QString &study, const QString &chapter, const QString &destination);
     static QUrl studyUrl(const QString &study, const QString &chapter);
     void cancel();
+    // Jeton du compte Lichess suivi, envoyé à lichess.org seulement : Lichess sert plus
+    // vite les parties d'un compte à son propriétaire.
+    void setToken(const QString &token) { token_ = token; }
     // Keeps the last `max` games of a PGN text (games start with an [Event tag).
     static QByteArray lastGames(const QByteArray &pgn, int max, int *count = nullptr);
 
@@ -46,7 +49,7 @@ class OnlineGames : public QObject {
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
     QString empty_; // ce qu'on dit quand la réponse ne contient aucune partie
-    QString user_, destination_;
+    QString user_, destination_, token_;
     int max_ = 0;
     qint64 since_ = 0;
     QStringList archives_;

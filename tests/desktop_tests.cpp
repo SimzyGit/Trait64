@@ -798,6 +798,15 @@ int main(int argc, char **argv) {
             emit online->upToDate();
             settle();
             online->cancel();
+            // Un jeton collé se lie à un compte Lichess existant ; l'interface apprend qu'il
+            // est connecté, jamais le jeton lui-même.
+            c.setAccountToken(0, "lip_KimToken123");
+            check(c.onlineAccounts()[0].toMap()["connected"].toBool() &&
+                      !c.onlineAccounts()[0].toMap().contains("token") && c.hasLichessToken(),
+                  "A pasted token links to an existing account and never reaches the interface");
+            c.setAccountToken(0, "");
+            check(!c.onlineAccounts()[0].toMap()["connected"].toBool() && !c.hasLichessToken(),
+                  "Disconnecting an account removes its token");
             settle();
             const auto kim = c.onlineAccounts()[0].toMap();
             check(kim["lastSync"].toLongLong() > 0 && !kim["syncing"].toBool(),

@@ -2,6 +2,7 @@
 #include "broadcasts.h"
 #include "explorer.h"
 #include "fide.h"
+#include "lichess_login.h"
 #include "online.h"
 #include "puzzles.h"
 #include "syzygy.h"
@@ -15,6 +16,7 @@
 #include <QProcess>
 #include <QSet>
 #include <QSignalSpy>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
@@ -598,6 +600,55 @@ int main(int argc, char **argv) {
                 QTest::qWait(5);
             check(failed.size() == 1 && failed.first().first().toString().contains("ralentir"),
                   "Being rate-limited is said plainly");
+        }
+        {
+            // Connexion à Lichess (OAuth2 PKCE, comme En Croissant). Le défi attendu est
+            // calculé à part (hashlib de Python) ; le parcours complet passe par un faux
+            // Lichess : retour du navigateur sur le port local, échange du code, puis
+            // identité du compte.
+            check(t64::LichessLogin::challenge("dBjftJeZ4CVP-mJ92K9qPpFHwRnZ8xUMBdGwvTyW-cM") ==
+                      "1wHdrIKq_XNdXa0jVUWLQ7ing83pS-ieBtEEvxYtSJM",
+                  "The PKCE challenge is the base64url SHA-256 of the verifier");
+            Network network;
+            network.responses << Response{200, R"({"token_type":"Bearer","access_token":"lip_abcdef123"})"}
+                              << Response{200, R"({"id":"simzy","username":"Simzy"})"};
+            t64::LichessLogin login(nullptr, &network);
+            login.setBase("https://lichess.test");
+            QSignalSpy connected(&login, &t64::LichessLogin::connected),
+                failed(&login, &t64::LichessLogin::failed);
+            check(login.start() && login.running(), "The local sign-in server listens");
+            const QUrlQuery asked(login.authorizeUrl());
+            const QUrl redirect(asked.queryItemValue("redirect_uri", QUrl::FullyDecoded));
+            check(login.authorizeUrl().host() == "lichess.test" &&
+                      asked.queryItemValue("code_challenge_method") == "S256" &&
+                      redirect.host() == "127.0.0.1" && !asked.queryItemValue("scope").size(),
+                  "The browser is sent to Lichess with a PKCE challenge, a loopback redirect and no scope");
+            // Une requête étrangère (mauvais état) n'interrompt pas l'attente.
+            const auto browse = [&](const QString &query) {
+                QTcpSocket browser;
+                browser.connectToHost("127.0.0.1", quint16(redirect.port()));
+                check(browser.waitForConnected(2000), "The browser reaches the local server");
+                browser.write(("GET /?" + query + " HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n").toUtf8());
+                browser.flush();
+                // Lu au fil de l'eau : le serveur vit dans ce même fil, il faut lui rendre la main.
+                QByteArray received;
+                for (int i = 0; i < 100 && browser.state() == QAbstractSocket::ConnectedState; ++i) {
+                    QTest::qWait(10);
+                    received += browser.readAll();
+                }
+                return received + browser.readAll();
+            };
+            check(browse("code=forged&state=wrong").contains("200 OK"), "A stray request still gets a page");
+            check(login.running() && network.requests.isEmpty(), "A request with the wrong state is ignored");
+            const auto page = browse("code=good&state=" + asked.queryItemValue("state"));
+            for (int i = 0; i < 200 && connected.isEmpty() && failed.isEmpty(); ++i)
+                QTest::qWait(5);
+            check(page.contains("200 OK") && !connected.isEmpty() && connected.first().at(0) == "Simzy" &&
+                      connected.first().at(1) == "lip_abcdef123" && !login.running(),
+                  "The code is exchanged for a token, then the token names its account");
+            check(network.requests.size() == 2 && network.requests[0].url().path() == "/api/token" &&
+                      network.requests[1].rawHeader("Authorization") == "Bearer lip_abcdef123",
+                  "The token exchange and the account lookup go to Lichess, the second with the token");
         }
         std::cout << checks << " online checks passed\n";
         return 0;

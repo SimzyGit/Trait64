@@ -64,7 +64,7 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 - The *Openings* page shows the move tree of your games, Polyglot books and each position's ECO name.
 - A **repertoire** gathers the lines you play. Its gaps tab gives the **estimated coverage** — the share of your library's games that stay within the repertoire — and the unprepared opponent replies, from most to least frequent.
 - *Compare…* puts two repertoires side by side.
-- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). Lichess requires a free **account token** for this: *File → Lichess and Chess.com accounts*, *Create a token on Lichess* (without ticking any permission), then paste it and save. If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline. The settings can also download them: 3 to 5 pieces (939 MiB) cover most endgames.
+- The *Lichess* tab of the analysis shows what is played on Lichess or by masters in the position shown, and seven-piece endgame tables (connection needed). Lichess requires an account for this: in *File → Lichess and Chess.com accounts*, *Sign in with Lichess* opens your browser, you authorise Trait64, and the account is added or linked. You can also paste a token created on Lichess and choose the account to link it to. If you have Syzygy tables on your computer, set their folder in the settings: the endgames they cover are then read offline. The settings can also download them: 3 to 5 pieces (939 MiB) cover most endgames.
 
 ## Training
 
@@ -78,7 +78,7 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 
 ## Your progress
 
-The *Profiles* page gathers your Lichess and Chess.com accounts (*File → Lichess and Chess.com accounts*) and your FIDE record under one name. A sync fetches up to 5,000 games per account, then only the new ones.
+The *Profiles* page gathers your Lichess and Chess.com accounts (*File → Lichess and Chess.com accounts*) and your FIDE record under one name. A sync fetches up to 5,000 games per account, then only the new ones; variant games (Crazyhouse, Atomic…) are left aside.
 
 *Review this profile* sends every game of the profile to the analysis queue at the chosen depth (12, 18, 22 like Lichess, or 24). The report fills in as it goes: it says how many games have been reviewed out of the total, and how many are still waiting. A game already reviewed as deep is not redone. Accuracy by phase, errors per hundred moves, estimated strength and month-by-month progress are then read in the same place.
 

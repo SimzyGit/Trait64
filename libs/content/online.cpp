@@ -97,7 +97,12 @@ void OnlineGames::fetch(const QString &site, const QString &user, int max, const
     archives_.clear();
     if (site == "lichess") {
         QUrl url("https://lichess.org/api/games/user/" + user);
-        QUrlQuery query{{"max", QString::number(max_)}, {"clocks", "true"}, {"evals", "true"}};
+        // Sans les variantes (Crazyhouse, Atomic…), que Trait64 ne lit pas : le Chess960 et
+        // toutes les cadences restent.
+        QUrlQuery query{{"max", QString::number(max_)},
+                        {"clocks", "true"},
+                        {"evals", "true"},
+                        {"perfType", "ultraBullet,bullet,blitz,rapid,classical,correspondence,chess960"}};
         if (sinceMs > 0)
             query.addQueryItem("since", QString::number(sinceMs));
         url.setQuery(query);
@@ -144,6 +149,8 @@ void OnlineGames::get(const QUrl &url, const char *accept, const std::function<v
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", userAgent);
     request.setRawHeader("Accept", accept);
+    if (!token_.isEmpty() && url.host() == "lichess.org")
+        request.setRawHeader("Authorization", "Bearer " + token_.toUtf8());
     request.setTransferTimeout(60000);
     reply_ = network_->get(request);
     connect(reply_, &QNetworkReply::downloadProgress, this, [this](qint64 received, qint64) {

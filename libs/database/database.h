@@ -32,7 +32,7 @@ class Database {
     qint64 save(const Game &game, qint64 id = 0, const QString &collection = {});
     int importGames(const std::vector<Game> &games, const std::function<bool(int)> &progress = {});
     int importPgnFile(const QString &path, const std::function<bool(int)> &progress,
-                      const QVariantMap &source = {});
+                      const QVariantMap &source = {}, int *skipped = nullptr);
     QVariantList sources() const;
     // L'usage d'un recueil : « games » (des parties jouées, dont les joueurs entrent dans
     // l'onglet Joueurs) ou « study » (études, cours, exercices : leurs « joueurs » sont des

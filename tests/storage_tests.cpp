@@ -935,6 +935,36 @@ int main(int argc, char **argv) {
         check(db.stats()["games"].toInt() == beforeImport, "Canceled streaming import rolls back all games");
         check(db.importPgnFile(streamPath, [](int) { return true; }) == 15,
               "Streaming importer commits complete file");
+        {
+            // Un compte en ligne mêle souvent des variantes : une partie de Crazyhouse au
+            // milieu ne doit pas faire échouer l'import des autres.
+            const auto mixed = dir.path() + "/mixed.pgn";
+            QFile file(mixed);
+            check(file.open(QIODevice::WriteOnly), "Open mixed-variant fixture");
+            file.write(
+                "[Event \"Rated blitz\"]\n[White \"Simzy\"]\n[Black \"B\"]\n1.e4 e5 2.Nf3 Nc6 1-0\n\n"
+                "[Event \"Rated crazyhouse\"]\n[Variant \"Crazyhouse\"]\n[White \"Simzy\"]\n[Black \"C\"]\n"
+                "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qd8 4.N@f3 *\n\n"
+                "[Event \"Rated rapid\"]\n[White \"D\"]\n[Black \"Simzy\"]\n1.d4 Nf6 2.c4 e6 0-1\n");
+            file.close();
+            int skipped = -1;
+            const int before = db.stats()["games"].toInt();
+            check(db.importPgnFile(
+                      mixed, [](int) { return true; }, {}, &skipped) == 2 &&
+                      skipped == 1 && db.stats()["games"].toInt() == before + 2,
+                  "An unsupported variant is set aside instead of aborting the whole import");
+            QFile only(dir.path() + "/variant-only.pgn");
+            check(only.open(QIODevice::WriteOnly), "Open variant-only fixture");
+            only.write("[Variant \"Atomic\"]\n1.e4 e5 *\n");
+            only.close();
+            bool told = false;
+            try {
+                db.importPgnFile(only.fileName(), [](int) { return true; });
+            } catch (const std::exception &e) {
+                told = QString::fromUtf8(e.what()).contains("variantes");
+            }
+            check(told, "A file of variants only says why nothing was imported");
+        }
         // Materialized totals must remain equivalent to the raw rows after every write path.
         {
             const auto path = dir.path() + "/counters.sqlite";

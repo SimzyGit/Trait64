@@ -178,7 +178,7 @@ void Controller::buildOnlineReport(const QString &source, const QVariantMap &fil
     onlineReport_ = {{"running", true}, {"source", source}, {"fen", fen}, {"name", state_["opening"]}};
     emit onlineReportChanged();
     explorer_->setLocalTables(settings_.value("syzygyPath").toString());
-    explorer_->setToken(settings_.value("lichessToken").toString());
+    explorer_->setToken(lichessToken());
     explorer_->query(source, fen, filters);
 }
 

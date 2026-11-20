@@ -4,6 +4,7 @@
 #include "controller.h"
 #include "sounds.h"
 #include <QDateTime>
+#include <QDesktopServices>
 #include <QRegularExpression>
 #include <QTimer>
 
@@ -14,6 +15,8 @@ QVariantList Controller::onlineAccounts() const {
         const auto key = "onlineSync/" + account["site"].toString() + "/" + account["user"].toString().toLower();
         account["lastSync"] = settings_.value(key, 0).toLongLong();
         account["syncing"] = online_ && onlineSyncKey_ == key && (online_->busy() || busy_);
+        // Le jeton ne repart jamais vers l'interface : seulement le fait qu'il y en a un.
+        account["connected"] = !account.take("token").toString().isEmpty();
         accounts << account;
     }
     return accounts;
@@ -112,7 +115,64 @@ void Controller::setLichessToken(const QString &token) {
 }
 
 bool Controller::hasLichessToken() const {
-    return !settings_.value("lichessToken").toString().isEmpty();
+    return !lichessToken().isEmpty();
+}
+
+QString Controller::accountToken(const QString &user) const {
+    for (const auto &value : settings_.value("onlineAccounts").toList()) {
+        const auto account = value.toMap();
+        if (account["site"] == "lichess" &&
+            account["user"].toString().compare(user, Qt::CaseInsensitive) == 0)
+            return account["token"].toString();
+    }
+    return {};
+}
+
+QString Controller::lichessToken() const {
+    if (const auto own = settings_.value("lichessToken").toString(); !own.isEmpty())
+        return own;
+    for (const auto &value : settings_.value("onlineAccounts").toList())
+        if (const auto token = value.toMap()["token"].toString(); !token.isEmpty())
+            return token;
+    return {};
+}
+
+void Controller::setAccountToken(int index, const QString &token) {
+    auto list = settings_.value("onlineAccounts").toList();
+    if (index < 0 || index >= list.size() || list[index].toMap()["site"] != "lichess") {
+        emit message(tr("Choisissez un compte Lichess enregistré."), true);
+        return;
+    }
+    const auto clean = token.trimmed();
+    static const QRegularExpression shape("^[A-Za-z0-9_]{8,200}$");
+    if (!clean.isEmpty() && !shape.match(clean).hasMatch()) {
+        emit message(tr("Ce jeton Lichess ne semble pas valide : copiez-le tel que Lichess l’affiche."),
+                     true);
+        return;
+    }
+    auto account = list[index].toMap();
+    if (clean.isEmpty())
+        account.remove("token");
+    else
+        account["token"] = clean;
+    list[index] = account;
+    settings_.setValue("onlineAccounts", list);
+    emit accountsChanged();
+    emit message(clean.isEmpty() ? tr("Compte %1 déconnecté de Lichess.").arg(account["user"].toString())
+                                 : tr("Jeton lié au compte %1.").arg(account["user"].toString()));
+}
+
+void Controller::connectLichess() {
+    if (!lichessLogin_->start())
+        return;
+    QDesktopServices::openUrl(lichessLogin_->authorizeUrl());
+    emit accountsChanged();
+    emit message(tr("Lichess s’ouvre dans votre navigateur : autorisez Trait64, puis revenez ici."));
+}
+
+void Controller::cancelLichessLogin() {
+    lichessLogin_->cancel();
+    emit accountsChanged();
 }
 
 void Controller::previewSound(const QString &theme) {

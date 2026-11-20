@@ -6,6 +6,7 @@
 #include "database.h"
 #include "explorer.h"
 #include "fide.h"
+#include "lichess_login.h"
 #include "online.h"
 #include "polyglot.h"
 #include "queue.h"
@@ -363,6 +364,13 @@ class Controller : public QObject {
     // repart jamais vers l'interface : on dit seulement s'il y en a un.
     Q_INVOKABLE void setLichessToken(const QString &token);
     Q_INVOKABLE bool hasLichessToken() const;
+    // Lie un jeton collé à un compte Lichess déjà enregistré (vide : le délier).
+    Q_INVOKABLE void setAccountToken(int index, const QString &token);
+    // Se connecter à Lichess dans le navigateur, comme En Croissant : le compte connecté
+    // est ajouté s'il n'existe pas, et reçoit son jeton s'il existe.
+    Q_INVOKABLE void connectLichess();
+    Q_INVOKABLE void cancelLichessLogin();
+    Q_INVOKABLE bool lichessLoginRunning() const { return lichessLogin_ && lichessLogin_->running(); }
     // Fait entendre un jeu de sons (coup, prise, échec), pour le choisir à l'oreille.
     Q_INVOKABLE void previewSound(const QString &theme);
     Q_INVOKABLE void syncAllAccounts();
@@ -636,7 +644,7 @@ class Controller : public QObject {
     void initContent();
     void importSourceFile(const QString &url, const QVariantMap &source);
     struct ImportResult {
-        int count = 0, duplicates = 0;
+        int count = 0, duplicates = 0, skipped = 0;
         QString error, detail, operation = "import";
         bool canceled = false;
         QVariantMap job;
@@ -681,6 +689,11 @@ class Controller : public QObject {
     void finishPuzzle();
     bool acceptPuzzleMate(const QString &uci);
     t64::OnlineGames *online_ = nullptr;
+    t64::LichessLogin *lichessLogin_ = nullptr;
+    // Le jeton d'un compte Lichess enregistré (vide s'il n'est pas connecté), et celui
+    // que l'explorateur utilise : le jeton collé à part, sinon celui d'un compte.
+    QString accountToken(const QString &user) const;
+    QString lichessToken() const;
     t64::OpeningExplorer *explorer_ = nullptr;
     QVariantMap onlineReport_;
     t64::SyzygyDownload *syzygyLoader_ = nullptr;
@@ -826,6 +839,7 @@ class Controller : public QObject {
     void importBytes(const QByteArray &bytes);
     void requestEngine();
     QString positionCommand() const;
+    void importOnlineDownload(const QString &downloaded);
     // Fils et table de hachage des moteurs : le réglage s'il existe, sinon ce que la
     // machine peut donner (tous les cœurs moins un), bornés à ses cœurs et à sa mémoire.
     int engineThreads() const;

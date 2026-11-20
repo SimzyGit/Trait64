@@ -1,5 +1,11 @@
 # Changements
 
+## Parties des comptes enfin importées, connexion à Lichess — 20 novembre 2026
+
+- **Import des comptes en ligne réparé** : une seule partie d'une variante que Trait64 ne lit pas (Crazyhouse, Atomic, Antichess…) faisait échouer tout le fichier, et aucune partie du compte n'entrait dans la bibliothèque, donc aucune ne pouvait passer au bilan. Ces parties sont désormais mises de côté et comptées dans le message ; Lichess ne les envoie d'ailleurs plus. Une synchronisation qui arrive pendant un autre traitement attend son tour au lieu d'être perdue, le compte restant « en synchronisation ».
+- **Se connecter avec Lichess**, comme dans En Croissant et Pawn Appétit : Lichess s'ouvre dans le navigateur, on autorise Trait64 (OAuth2 avec PKCE, aucune autorisation demandée), et le jeton reçu est lié au compte, ajouté s'il n'existait pas. Un jeton collé à la main se lie aussi à un compte choisi. Chaque compte Lichess dit s'il est connecté et se déconnecte d'un clic ; ses parties se téléchargent avec son jeton. Le jeton ne quitte jamais la machine que vers Lichess, et l'interface ne le voit pas.
+- Défaut corrigé avant sa sortie : la page « Trait64 est connecté » partait dans un socket déjà détruit, et le navigateur aurait affiché une erreur.
+
 ## Bilan de profil sans plafond, livre Lichess, sons — 20 novembre 2026
 
 - **Bilan de profil complet** : il s'arrêtait après quelques dizaines de parties (24 sur 670 chez Sïmzy). La file d'analyse refusait toute nouvelle tâche au-delà de 500 analyses conservées, bilans terminés compris ; les refus tombaient en silence, partie par partie. Les bilans de partie terminés ne comptent plus dans ce plafond, qui ne vise que les analyses ouvertes à la main : seuls les 200 derniers sont gardés, leurs chiffres restant dans la base et leurs évaluations dans le cache.
