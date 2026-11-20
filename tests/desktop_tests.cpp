@@ -1298,8 +1298,12 @@ int main(int argc, char **argv) {
             {
                 // Ctrl + molette sur la liste : la taille du texte, bornée.
                 window->setProperty("page", 1);
-                QTest::qWait(50);
+                // La page doit être posée avant la molette : sur une machine lente, 50 ms ne
+                // suffisaient pas toujours, l'événement tombait à côté de la liste.
                 auto *list = visualItem(window->contentItem(), "libraryResults");
+                for (int i = 0; i < 100 && !(list && list->isVisible() && list->height() > 0); ++i)
+                    QTest::qWait(20);
+                QTest::qWait(100);
                 check(list, "The library list is reachable");
                 const auto scale = c.preferences()["fontScale"].toDouble();
                 const auto wheel = [&](int delta, Qt::KeyboardModifiers modifiers) {
