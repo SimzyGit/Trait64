@@ -724,26 +724,29 @@ ColumnLayout {width:openingsViewport.availableWidth;height:Math.max(openingsView
                 Flow {Layout.fillWidth:true;spacing:8
                     TButton {objectName:"openingReport";text:qsTr("Dossier de la position");accent:true;onClicked:openingReportDialog.open()
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Les coups joués ici, leur score, le même découpage par force des joueurs, et les parties les mieux classées qui y sont passées.")}
-                    TButton {text:qsTr("←  Reculer");enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:qsTr("Position initiale");onClicked:controller.step(-2)} TButton {text:qsTr("Voir l’échiquier");onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:qsTr("Préparer");onClicked:preparationDialog.open()} TButton {text:qsTr("Mes répertoires");objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:qsTr("Créer une carte depuis ici");accent:true;onClicked:cardDialog.open()}}
+                    TButton {text:qsTr("←  Reculer");enabled:controller.state.canBack;onClicked:controller.step(-1)} TButton {text:qsTr("Position initiale");onClicked:controller.step(-2)} TButton {text:qsTr("Voir l’échiquier");onClicked:win.page=2} Item {Layout.fillWidth:true} TButton {text:qsTr("Préparer");onClicked:preparationDialog.open()} TButton {text:qsTr("Mes répertoires");objectName:"showRepertoires";onClicked:repertoiresDialog.open()} TButton {text:qsTr("Créer une carte depuis ici");onClicked:cardDialog.open()}}
                 // Le nom de l'ouverture d'abord, en clair ; la FEN reste dessous, plus discrète,
                 // pour qui veut la copier.
                 Label {objectName:"openingsName";visible:!!controller.state.opening;text:controller.state.opening||"";font.weight:Font.DemiBold;elide:Text.ElideRight;Layout.fillWidth:true}
                 TextEdit {objectName:"openingsFen";text:controller.state.fen;readOnly:true;selectByMouse:true;color:win.muted;selectionColor:win.accent;font.family:"monospace";opacity:.8
                     font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true;wrapMode:TextEdit.NoWrap;clip:true}
                 Rectangle {Layout.fillWidth:true;height:1;color:win.line}
-                RowLayout {Layout.fillWidth:true;Label {text:qsTr("Coup");Layout.preferredWidth:95;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("Parties");Layout.preferredWidth:90;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("BLANCS / NULLES / NOIRS (RÉSULTATS TERMINÉS)");color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true}}
-                ListView {id:openingList;Layout.minimumHeight:160;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:10;model:controller.openings
+                // En-têtes alignés sur les colonnes des lignes, en petites capitales comme le troisième.
+                RowLayout {Layout.fillWidth:true;Layout.leftMargin:8;Layout.rightMargin:8;spacing:12;Label {text:qsTr("Coup");Layout.preferredWidth:76;color:win.muted;font.capitalization:Font.AllUppercase;font.letterSpacing:.4;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("Parties");Layout.preferredWidth:66;color:win.muted;font.capitalization:Font.AllUppercase;font.letterSpacing:.4;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:qsTr("BLANCS / NULLES / NOIRS (RÉSULTATS TERMINÉS)");color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);Layout.fillWidth:true}}
+                // Une ligne par coup, serrées comme un tableau : à 62 px et espacées de 10, trois
+                // suites remplissaient déjà l'écran.
+                ListView {id:openingList;Layout.minimumHeight:160;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:2;model:controller.openings
                     delegate:Rectangle {
                         required property var modelData
-                        width:openingList.width;height:62;radius:2;color:win.panel
-                        RowLayout {anchors.fill:parent;anchors.margins:12;spacing:18
+                        width:openingList.width;height:40*win.uiScale;radius:4;color:win.panel;border.color:win.line
+                        RowLayout {anchors.fill:parent;anchors.leftMargin:8;anchors.rightMargin:8;spacing:12
                             TButton {text:modelData.san;Layout.preferredWidth:76;onClicked:controller.move(modelData.uci)}
                             Label {text:modelData.count;Layout.preferredWidth:66;font.weight:Font.DemiBold}
-                            Row {Layout.fillWidth:true;Layout.preferredHeight:25
+                            Row {Layout.fillWidth:true;Layout.preferredHeight:22
                                 property real total:Math.max(1,modelData.white+modelData.draw+modelData.black)
-                                Rectangle {width:parent.width*modelData.white/parent.total;height:25;color:"#f3f0e8";border.color:win.line;Text {anchors.centerIn:parent;text:modelData.white;color:"#2b2925";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
-                                Rectangle {width:parent.width*modelData.draw/parent.total;height:25;color:"#a19c91";Text {anchors.centerIn:parent;text:modelData.draw;color:"#ffffff";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
-                                Rectangle {width:parent.width*modelData.black/parent.total;height:25;color:"#2b2925";Text {anchors.centerIn:parent;text:modelData.black;color:"#f3f0e8";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.white/parent.total;height:22;color:"#f3f0e8";border.color:win.line;Text {anchors.centerIn:parent;text:modelData.white;color:"#2b2925";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.draw/parent.total;height:22;color:"#a19c91";Text {anchors.centerIn:parent;text:modelData.draw;color:"#ffffff";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.black/parent.total;height:22;color:"#2b2925";Text {anchors.centerIn:parent;text:modelData.black;color:"#f3f0e8";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
                             }
                             TButton {text:qsTr("Jouer  →");onClicked:controller.move(modelData.uci)}
                         }
@@ -810,42 +813,42 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 ColumnLayout {width:toolsViewport.availableWidth;spacing:20
                     Label {text:qsTr("Importer, sauvegarder, vérifier. Gardez la main sur vos données.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                     GridLayout {columns:toolsViewport.availableWidth>1000*win.textScale?2:1;columnSpacing:18;rowSpacing:18;Layout.fillWidth:true
-                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
-                                Label {text:qsTr("PGN & positions");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:18;spacing:8
+                                Label {text:qsTr("PGN & positions");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Ouvrir un fichier ou coller une partie et ses variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Coller un PGN");onClicked:pgnDialog.open()} TButton {text:qsTr("Charger une FEN");onClicked:fenDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
-                                Label {text:qsTr("Sauvegarde complète");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:18;spacing:8
+                                Label {text:qsTr("Sauvegarde complète");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Parties, favoris, collections et cartes dans un fichier SQLite.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Sauvegarder");onClicked:backupDialog.open()} TButton {objectName:"openBackups";text:qsTr("Restaurer…");onClicked:backupsDialog.open()} TButton {text:qsTr("Ouvrir une base");onClicked:openDatabaseDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
-                                Label {text:qsTr("Intégrité & diagnostic");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:18;spacing:8
+                                Label {text:qsTr("Intégrité & diagnostic");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
-                                Label {text:qsTr("Fichiers & exemples");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:18;spacing:8
+                                Label {text:qsTr("Fichiers & exemples");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Accédez aux fichiers locaux ou chargez les études de découverte.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Dossier local");onClicked:controller.openDataFolder()} TButton {text:qsTr("Exemples");onClicked:controller.loadExamples()}}
                             }
                         }
                     }
-                    Rectangle {Layout.fillWidth:true;implicitHeight:children[0].implicitHeight+44;radius:6;color:win.raised
-                        ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:10
-                            Label {text:qsTr("Trait64 est un logiciel libre.");font.pixelSize:Math.round(17*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                    Rectangle {Layout.fillWidth:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:"transparent";border.color:win.line
+                        ColumnLayout {anchors.fill:parent;anchors.margins:18;spacing:6
+                            Label {text:qsTr("Trait64 est un logiciel libre.");font.pixelSize:Math.round(14*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                             Label {text:qsTr("C++23 · Qt6 · chess-library · moteurs UCI externes. Code sous AGPL-3.0-or-later.\nCette version alpha propose les outils locaux essentiels ; le catalogue complet reste en développement.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
                         }
                     }

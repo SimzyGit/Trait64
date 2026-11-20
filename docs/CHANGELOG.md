@@ -14,6 +14,7 @@ Pas de nouvelle fonction : les contrôles communs reprennent tous la même mesur
 - **Barre latérale** plus compacte (entrées de 36 px, 204 px de large), une seule marque pour la page ouverte ; **marges** des pages portées à 14 px.
 - **Accueil** : les cartes d'une même rangée ont la même hauteur. **Entraînement** : compteurs plus ramassés, un seul bouton d'accent par rangée, état vide centré. **Joueurs** : le nom entier et le nombre de parties sur deux lignes (« Alpha, A… » auparavant), le joueur choisi surligné.
 - Arrondis harmonisés : 3 px pour les contrôles, 6 px pour les cartes et les dialogues.
+- **Ouvertures** : une ligne de 40 px par coup, serrée comme un tableau, en-têtes alignés sur les colonnes ; un seul bouton d'accent. **Outils** : cartes à la hauteur de leur contenu, titres à 15 px. Poignée des **tournois en direct** réduite à un filet.
 
 ## Nouvelle allure — 20 novembre 2026
 

@@ -34,6 +34,8 @@ TDialog {
         }
         SplitView {
             Layout.fillWidth:true;Layout.fillHeight:true
+            // Un filet d'un pixel, comme les autres panneaux : la poignée par défaut faisait une barre grise.
+            handle:Rectangle {implicitWidth:7;color:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:SplitHandle.hovered||SplitHandle.pressed?palette.highlight:palette.mid}}
             ListView {
                 id:tours;objectName:"liveTours";SplitView.preferredWidth:300*root.ui;SplitView.minimumWidth:200;clip:true;spacing:2
                 model:root.list
