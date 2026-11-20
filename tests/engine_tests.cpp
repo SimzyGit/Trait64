@@ -12,6 +12,7 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <cmath>
 #include <iostream>
 bool waitFor(std::function<bool()> predicate, int milliseconds = 7000) {
     QEventLoop loop;
@@ -156,6 +157,15 @@ int main(int argc, char **argv) {
             check(t64::Tournament::eloDifference(.5) == 0 && t64::Tournament::eloDifference(.75) == 191 &&
                       t64::Tournament::eloDifference(1) == 798 && t64::Tournament::eloDifference(0) == -798,
                   "Score fractions map to the logistic Elo difference, bounded at both ends");
+            // 6 victoires, 8 nulles, 2 défaites : +89 Elo, marge à 95 % d'environ ±125,
+            // et moins de 8 % de chances que l'écart soit dû au hasard.
+            check(t64::Tournament::eloMargin(6, 8, 2) >= 115 && t64::Tournament::eloMargin(6, 8, 2) <= 135 &&
+                      t64::Tournament::eloMargin(0, 0, 0) == 0 && t64::Tournament::eloMargin(0, 10, 0) == 0,
+                  "The 95 % Elo margin follows the per-game score spread");
+            check(std::abs(t64::Tournament::likelihoodOfSuperiority(6, 2) - .9214) < .001 &&
+                      t64::Tournament::likelihoodOfSuperiority(0, 0) == .5 &&
+                      t64::Tournament::likelihoodOfSuperiority(3, 3) == .5,
+                  "LOS comes from the decisive games only");
             QTemporaryDir dir;
             QFile fake(dir.path() + "/illegal-engine");
             check(fake.open(QIODevice::WriteOnly), "Create illegal-move fixture");

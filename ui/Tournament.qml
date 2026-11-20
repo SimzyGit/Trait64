@@ -80,10 +80,10 @@ TDialog {
                 from: 0; to: Math.max(1, root.tournament.total); value: root.tournament.played
             }
             GridLayout {
-                Layout.fillWidth: true; columns: 7; columnSpacing: 12; rowSpacing: 6
+                Layout.fillWidth: true; columns: 8; columnSpacing: 12; rowSpacing: 6
                 visible: root.tournament.standings.length > 0
                 Repeater {
-                    model: [qsTr("Rang"), qsTr("Moteur"), qsTr("Points"), "+", "=", "−", qsTr("Elo ±")]
+                    model: [qsTr("Rang"), qsTr("Moteur"), qsTr("Points"), "+", "=", "−", qsTr("Elo ±"), qsTr("LOS")]
                     Label { required property string modelData; text: modelData; font.bold: true }
                 }
                 Repeater {
@@ -92,7 +92,9 @@ TDialog {
                         required property int index
                         required property var modelData
                         model: [index + 1, modelData.name, modelData.points + " / " + modelData.games, modelData.wins,
-                                modelData.draws, modelData.losses, (modelData.elo > 0 ? "+" : "") + modelData.elo]
+                                modelData.draws, modelData.losses,
+                                (modelData.elo > 0 ? "+" : "") + modelData.elo + (modelData.margin > 0 ? " ± " + modelData.margin : ""),
+                                Math.round((modelData.los || .5) * 100) + " %"]
                         Label { required property int index; required property var modelData; text: String(modelData); Layout.fillWidth: index === 1 }
                     }
                 }
@@ -100,7 +102,7 @@ TDialog {
             Label {
                 visible: root.tournament.standings.length > 0; color: palette.placeholderText
                 Layout.fillWidth: true; wrapMode: Text.WordWrap
-                text: qsTr("« Elo ± » est l'écart estimé face au reste du plateau. Sur peu de parties, la marge d'erreur dépasse souvent 100 Elo.")
+                text: qsTr("« Elo ± » est l'écart estimé face au reste du plateau, avec sa marge à 95 %. « LOS » est la probabilité que le moteur soit réellement plus fort, d'après les parties décisives : en dessous de 95 %, le résultat peut encore tenir du hasard.")
             }
         }
     }

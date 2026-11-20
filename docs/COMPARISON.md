@@ -90,6 +90,33 @@ Ce relevé ajoute aux trois logiciels du tableau ChessX, Lucas Chess, Nibbler, L
 | **Saisie vocale** des coups | ChessBase 18 | moyen | pas prioritaire |
 | **Texte généré par IA** (biographies, conseils) | ChessBase 18 | — | écarté : invérifiable, contraire à l'esprit local |
 
+### Relevé complété — 20 novembre 2026
+
+Le tour s'étend aux autres familles d'outils : interfaces de moteurs, suites commerciales, sites d'entraînement et applications de répertoire.
+
+| Outil | Genre | Ce qu'il apporte | Chez Trait64 |
+|---|---|---|---|
+| **Fritz 20** (ChessBase) | interface de jeu et d'analyse, payant | niveaux de jeu « humains », entraîneur pendant la partie | jeu contre moteur à Elo limité, analyse assistée, pièces en prise |
+| **HIARCS Chess Explorer** | base et analyse, payant (Windows, macOS) | arbre d'ouvertures rapide, bases jusqu'à 30 millions de parties | arbre et explorateur, recherche indexée, import reprenable |
+| **Shredder GUI** | interface de moteur, payant | analyse intégrée en parcourant une base | analyse depuis la bibliothèque, partie suivante/précédente |
+| **Arena**, **Banksia** | interfaces de moteurs, gratuites | tournois de moteurs, nombreux protocoles | tournoi toutes rondes UCI, livre Polyglot, Elo et sa marge, LOS (20 nov.) |
+| **Cute Chess**, **fastchess** | matchs de moteurs, libres | Elo ± marge à 95 %, LOS, SPRT | Elo ± marge et LOS (20 nov.) ; SPRT non, Trait64 n'est pas un banc de test de moteurs |
+| **PyChess** | interface libre | jeu en ligne (FICS), variantes | Chess960 ; jeu en ligne non, Lichess et Chess.com servent à cela |
+| **Chessbook**, **Listudy** | répertoires, en ligne | couverture du répertoire, répétition espacée | couverture estimée, réponses à préparer, cartes à répétition espacée |
+| **Aimchess** | rapports de progression, en ligne | points faibles par thème, sur vos parties | bilan de compétences, force estimée, profils réunissant les comptes |
+| **ChessTempo** | tactique, en ligne | puzzles classés, finales | puzzles Lichess classés, puzzles tirés des gaffes, finales à jouer |
+| **DecodeChess** | explication, en ligne | le pourquoi d'un coup, en phrases | « Comprendre ce coup » : menaces, matériel, ligne du moteur, sans texte inventé |
+| **Chessify** | analyse dans le nuage, scanner | position photographiée ou capturée à l'écran | non : reconnaissance d'image écartée pour l'instant (voir ci-dessous) |
+
+Écarts relevés en plus :
+
+| Écart | Vu chez | Effort | Décision |
+|---|---|---|---|
+| **Marge d'erreur et LOS** dans les tournois de moteurs | Cute Chess, fastchess, Arena | petit | fait (20 nov.) |
+| **Position depuis une photo** ou une capture d'écran | Chessify, ChessBase 18 | grand (reconnaissance d'image) | écarté pour l'instant : il faudrait un modèle livré avec le programme |
+| **Adversaires « humains »** (réseaux Maia) | Lichess, Chessiverse, Fritz 20 | moyen (Lc0 et ses réseaux à télécharger) | à étudier : dépend de Lc0 sur la machine |
+| **SPRT** pour arrêter un match quand l'écart est établi | fastchess, OpenBench | moyen | pas prioritaire hors développement de moteurs |
+
 ### Ce que Trait64 prend ailleurs pour son apparence
 
 Le but n'est pas d'imiter un site d'échecs. Trait64 emprunte aux outils de travail qu'on garde ouverts des heures :
@@ -102,6 +129,9 @@ Le but n'est pas d'imiter un site d'échecs. Trait64 emprunte aux outils de trav
 Ce que Trait64 s'interdit : les dégradés violets, le verre dépoli, les grandes ombres, les émojis dans l'interface, les icônes « étincelle » et les textes promotionnels. Ce sont les marques des interfaces générées en série.
 
 ### Sources
+
+- [HIARCS Chess Explorer](https://www.hiarcs.com/pc-chess-explorer.html)
+- [Comparatif des outils d'ouvertures (Chessiverse)](https://chessiverse.com/compare/chess-opening-practice-tools-compared)
 
 - [ChessBase 18 — nouveautés (aide officielle)](https://help.chessbase.com/CBase/18/Eng/whats_new_.htm)
 - [John Watson : ChessBase 18, mettre à jour ou non ?](https://en.chessbase.com/post/john-watson-chessbase-18-review-chess-life)

@@ -32,6 +32,25 @@ int Tournament::eloDifference(double score) {
     return std::clamp(int(std::lround(-400.0 * std::log10(1.0 / s - 1.0))), -800, 800);
 }
 
+int Tournament::eloMargin(int wins, int draws, int losses) {
+    const int games = wins + draws + losses;
+    if (games < 2)
+        return 0;
+    const double mean = (wins + .5 * draws) / games;
+    const double variance =
+        (wins * std::pow(1 - mean, 2) + draws * std::pow(.5 - mean, 2) + losses * std::pow(mean, 2)) / games;
+    const double spread = 1.959964 * std::sqrt(variance / games);
+    if (spread <= 0)
+        return 0;
+    return (eloDifference(mean + spread) - eloDifference(mean - spread) + 1) / 2;
+}
+
+double Tournament::likelihoodOfSuperiority(int wins, int losses) {
+    if (wins + losses == 0)
+        return .5;
+    return .5 * (1 + std::erf((wins - losses) / std::sqrt(2.0 * (wins + losses))));
+}
+
 void Tournament::start(const QVariantList &profiles, const Settings &settings) {
     if (profiles.size() < 2 || profiles.size() > 8)
         throw std::runtime_error("Sélectionnez entre deux et huit profils UCI.");
@@ -232,7 +251,9 @@ QVariantList Tournament::standings() const {
         const int games = player->wins + player->draws + player->losses;
         rows << QVariantMap{{"name", player->name}, {"points", player->points}, {"games", games},
                             {"wins", player->wins}, {"draws", player->draws}, {"losses", player->losses},
-                            {"elo", games ? eloDifference(player->points / games) : 0}};
+                            {"elo", games ? eloDifference(player->points / games) : 0},
+                            {"margin", eloMargin(player->wins, player->draws, player->losses)},
+                            {"los", likelihoodOfSuperiority(player->wins, player->losses)}};
     }
     return rows;
 }

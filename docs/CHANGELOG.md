@@ -1,5 +1,10 @@
 # Changements
 
+## Tournois de moteurs mesurés — 20 novembre 2026
+
+- **Elo ± marge à 95 %** et **LOS** (probabilité d'être réellement plus fort) dans le classement des tournois de moteurs, calculés comme dans Cute Chess et fastchess. Un écart de 50 Elo sur dix parties ne se lit plus comme un résultat établi.
+- **Comparaison élargie** ([docs/COMPARISON.md](COMPARISON.md)) : Fritz 20, HIARCS Chess Explorer, Shredder, Arena, Banksia, Cute Chess, fastchess, PyChess, Chessbook, Listudy, Aimchess, ChessTempo, DecodeChess et Chessify, avec ce que Trait64 fait déjà de chacun et les écarts restants.
+
 ## Contrôles d'interface — 20 novembre 2026
 
 Pas de nouvelle fonction : les contrôles communs reprennent tous la même mesure et le même dessin, au lieu des valeurs par défaut du thème Basic de Qt.

@@ -29,6 +29,11 @@ class Tournament : public QObject {
     static QStringList defaultOpenings();
     // Elo difference implied by a score fraction, bounded to ±800.
     static int eloDifference(double score);
+    // Demi-largeur de l'intervalle de confiance à 95 % de cet écart, comme Cute Chess et
+    // fastchess la calculent : l'écart-type du score par partie, porté sur la courbe d'Elo.
+    static int eloMargin(int wins, int draws, int losses);
+    // Probabilité d'être réellement plus fort (LOS), d'après les seules parties décisives.
+    static double likelihoodOfSuperiority(int wins, int losses);
     void start(const QVariantList &profiles, const Settings &settings);
     Q_INVOKABLE void stop();
     QVariantList standings() const;
