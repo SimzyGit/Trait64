@@ -1,5 +1,12 @@
 # Changements
 
+## Bilan de profil complet et bilans plus rapides — 20 novembre 2026
+
+- **Bilan de profil** : le rapport se met à jour à mesure que les parties sortent de la file d'analyse. Il restait figé sur les premières parties analysées (19 sur un compte Lichess de 670 parties) tant que la bibliothèque ne changeait pas. Il dit maintenant sur combien de parties du profil il porte (« 19 parties passées en revue sur 670 ») et combien attendent encore dans la file. L'import Lichess et Chess.com, lui, n'était pas en cause : jusqu'à 5 000 parties par compte, archive par archive chez Chess.com.
+- **File de bilan plus rapide** : le moteur reste ouvert d'une partie à l'autre, avec sa table de hachage, au lieu d'être relancé et son binaire relu pour chaque partie ; une seule suite est calculée par position (le bilan n'en lit pas d'autre) au lieu de trois.
+- **Bilan d'une partie plus rapide** : il prend tous les cœurs sauf un et la mémoire conseillée tant que le réglage du moteur n'a jamais été changé. Il tournait jusqu'ici sur un seul fil et 128 Mo. Même correction pour l'exercice de Stoyko.
+- **Sans ralentir la fenêtre** : la file d'analyse ne renvoie plus à l'interface que ses 200 tâches les plus récentes, au lieu de toutes (des milliers après un bilan de profil) dix fois par seconde. Le message « Analyse en arrière-plan terminée » ne tombe plus qu'à la fin de la file, plus à chaque partie.
+
 ## 0.4.0-beta.1 — 20 novembre 2026
 
 - **Version 0.4**, première bêta. Le numéro affiché dans les paramètres suit désormais la version réelle au lieu d'un « 0.3.0 » écrit en dur.

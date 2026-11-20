@@ -632,9 +632,10 @@ void Controller::analyseGame(int milliseconds, bool twoPasses) {
     reviewing_ = true;
     auto options = settings_.value("uciOptions").toMap();
     options["UCI_LimitStrength"] = false;
-    reviewer_.start(settings_.value("enginePath").toString(), settings_.value("threads", 1).toInt(),
-                    settings_.value("hash", 128).toInt(), 1, 20, settings_.value("syzygyPath").toString(),
-                    options);
+    // Tous les cœurs sauf un, comme l'analyse : réglage jamais touché, le bilan tournait
+    // sur un seul fil et 128 Mo, quatre à huit fois plus lentement qu'il ne le pouvait.
+    reviewer_.start(settings_.value("enginePath").toString(), engineThreads(), engineHashMb(), 1, 20,
+                    settings_.value("syzygyPath").toString(), options);
     if (reviewing_)
         requestReviewPosition();
     emit reviewChanged();

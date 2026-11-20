@@ -1688,19 +1688,23 @@ void Controller::startEngine() {
     if (!options.contains("UCI_ShowWDL"))
         options["UCI_ShowWDL"] = true;
     engine_.setLimitElo(playing_ ? settings_.value("playElo", 0).toInt() : 0);
-    // Plus de fils que de cœurs ralentit le moteur, et une table plus grande que la
-    // mémoire fait échanger la machine : on borne à ce qu'elle a réellement, pas à un
-    // chiffre rond. Mémoire inconnue (0) : on fait confiance au réglage.
-    const int cores = std::max(1, int(std::thread::hardware_concurrency()));
-    const auto memory = t64::installedMemoryMb();
-    const int threads = std::clamp(settings_.value("threads", t64::recommendedThreads()).toInt(), 1, cores);
-    const int wanted = settings_.value("hash", t64::recommendedHashMb()).toInt();
-    const int hash = memory > 0 ? int(std::min<long long>(wanted, memory * 3 / 4)) : wanted;
-    engine_.start(settings_.value("enginePath").toString(), threads, hash,
+    engine_.start(settings_.value("enginePath").toString(), engineThreads(), engineHashMb(),
                   settings_.value("multiPV", 3).toInt(), playing_ ? settings_.value("skill", 12).toInt() : 20,
                   settings_.value("syzygyPath").toString(), options);
     if (analysis_ || playing_)
         requestEngine();
+}
+int Controller::engineThreads() const {
+    // Plus de fils que de cœurs ralentit le moteur : on borne à ce que la machine a.
+    const int cores = std::max(1, int(std::thread::hardware_concurrency()));
+    return std::clamp(settings_.value("threads", t64::recommendedThreads()).toInt(), 1, cores);
+}
+int Controller::engineHashMb() const {
+    // Une table plus grande que la mémoire fait échanger la machine. Mémoire inconnue
+    // (0) : on fait confiance au réglage.
+    const auto memory = t64::installedMemoryMb();
+    const int wanted = settings_.value("hash", t64::recommendedHashMb()).toInt();
+    return memory > 0 ? int(std::min<long long>(wanted, memory * 3 / 4)) : wanted;
 }
 QString Controller::positionCommand() const {
     QStringList moves;

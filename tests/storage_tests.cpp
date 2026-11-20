@@ -278,6 +278,8 @@ int main(int argc, char **argv) {
             check(board.reviewSummary({"alice"})["games"].toInt() == 2,
                   "Nicknames are matched without regard to case");
             check(board.reviewSummary({})["games"].toInt() == 0, "No nickname means nothing to measure");
+            check(board.gamesCountFor({"alice"}) >= 2 && board.gamesCountFor({}) == 0,
+                  "A profile counts all its games, reviewed or not");
             {
                 // Les clés stratégiques : un Gambit de la Dame, variante d'échange, garde la
                 // structure Carlsbad bien après le seizième demi-coup.

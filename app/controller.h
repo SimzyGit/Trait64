@@ -819,6 +819,10 @@ class Controller : public QObject {
     void importBytes(const QByteArray &bytes);
     void requestEngine();
     QString positionCommand() const;
+    // Fils et table de hachage des moteurs : le réglage s'il existe, sinon ce que la
+    // machine peut donner (tous les cœurs moins un), bornés à ses cœurs et à sa mémoire.
+    int engineThreads() const;
+    int engineHashMb() const;
     QString localPath(const QString &url) const;
     void fail(const std::exception &e);
 };

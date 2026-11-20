@@ -218,10 +218,11 @@ qint64 Database::createAnalysisJob(const QString &pgn, const QVariantMap &config
     run(q);
     return q.lastInsertId().toLongLong();
 }
-QVariantList Database::analysisJobs() const {
+QVariantList Database::analysisJobs(int limit) const {
     QSqlQuery q(db_);
     q.prepare("SELECT id,title,status,total,done,error,created,updated,variations,config FROM analysis_jobs "
-              "ORDER BY id DESC");
+              "ORDER BY id DESC" +
+              QString(limit > 0 ? " LIMIT " + QString::number(limit) : QString()));
     run(q);
     QVariantList rows;
     while (q.next())
@@ -231,6 +232,18 @@ QVariantList Database::analysisJobs() const {
                             {"created", q.value(6)},    {"updated", q.value(7)},
                             {"variations", q.value(8)}, {"config", decoded(q.value(9))}};
     return rows;
+}
+qint64 Database::nextQueuedAnalysis() const {
+    QSqlQuery q(db_);
+    q.prepare("SELECT id FROM analysis_jobs WHERE status='queued' ORDER BY id LIMIT 1");
+    run(q);
+    return q.next() ? q.value(0).toLongLong() : 0;
+}
+int Database::pendingAnalyses() const {
+    QSqlQuery q(db_);
+    q.prepare("SELECT COUNT(*) FROM analysis_jobs WHERE status IN ('queued','running')");
+    run(q);
+    return q.next() ? q.value(0).toInt() : 0;
 }
 QVariantMap Database::analysisJob(qint64 id, bool includePgn) const {
     QSqlQuery q(db_);

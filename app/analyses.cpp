@@ -66,7 +66,10 @@ void Controller::reviewImported(int depth, int profile) {
         const int wanted = std::clamp(depth, 1, 40);
         if (importedGames_ <= 0)
             throw std::runtime_error("Aucune partie récemment importée à passer en revue.");
-        const auto config = analysisConfig(reviewTimeCeiling(wanted), profile, wanted);
+        auto config = analysisConfig(reviewTimeCeiling(wanted), profile, wanted);
+        // Le bilan ne lit que la meilleure suite de chaque position : en demander trois
+        // triplait le travail du moteur pour rien.
+        config["multiPV"] = 1;
         // Un seul message clair, plutôt qu'un échec par partie.
         if (!QFileInfo(config["enginePath"].toString()).isExecutable())
             throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");
@@ -94,7 +97,8 @@ void Controller::reviewProfile(int profileIndex, int depth, int enginePreset) {
         if (names.isEmpty())
             throw std::runtime_error("Rattachez un compte à ce profil avant d’analyser ses parties.");
         const int wanted = std::clamp(depth, 1, 40);
-        const auto config = analysisConfig(reviewTimeCeiling(wanted), enginePreset, wanted);
+        auto config = analysisConfig(reviewTimeCeiling(wanted), enginePreset, wanted);
+        config["multiPV"] = 1; // une seule suite suffit au bilan (voir reviewImported)
         // Un seul message clair, plutôt qu'un échec par partie.
         if (!QFileInfo(config["enginePath"].toString()).isExecutable())
             throw std::runtime_error("Choisissez un moteur UCI dans les paramètres.");

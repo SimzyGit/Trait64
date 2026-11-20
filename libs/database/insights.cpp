@@ -296,6 +296,19 @@ QVariantList Database::gamesToReviewFor(const QStringList &names, int depth, int
     std::reverse(ids.begin(), ids.end());
     return ids;
 }
+int Database::gamesCountFor(const QStringList &names) const {
+    if (names.isEmpty())
+        return 0;
+    const auto marks = placeholders(int(names.size()));
+    QSqlQuery q(db_);
+    q.prepare("SELECT COUNT(*) FROM games WHERE deleted=0 AND (white COLLATE NOCASE IN (" + marks +
+              ") OR black COLLATE NOCASE IN (" + marks + "))");
+    for (int side = 0; side < 2; ++side)
+        for (const auto &name : names)
+            q.addBindValue(name);
+    run(q);
+    return q.next() ? q.value(0).toInt() : 0;
+}
 QVariantMap Database::reviewSummary(const QStringList &names) const {
     if (names.isEmpty())
         return {{"games", 0}, {"moves", 0}};

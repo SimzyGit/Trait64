@@ -103,8 +103,7 @@ void Controller::startStoyko() {
                 stoykoEngine_->setProperty("t64Path", QString());
                 emit stoykoChanged();
             });
-            stoykoEngine_->start(path, settings_.value("threads", 1).toInt(),
-                                 settings_.value("hash", 64).toInt(), 1);
+            stoykoEngine_->start(path, engineThreads(), engineHashMb(), 1);
         }
         emit stoykoChanged();
         stoykoNext();

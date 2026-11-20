@@ -364,6 +364,9 @@ QVariantMap Controller::skillDashboard(int profileIndex) const {
         }
         auto result = summary;
         result["ready"] = true;
+        // Le bilan ne porte que sur les parties passées par le moteur : dire sur combien
+        // en tout, pour qu'un compte de 670 parties ne semble pas réduit à 19.
+        result["profileGames"] = db_->gamesCountFor(names);
         result["name"] = profile["name"];
         result["accounts"] = names;
         result["history"] = history;

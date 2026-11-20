@@ -252,6 +252,21 @@ int main(int argc, char **argv) {
         queue.select(pagesId, 200);
         check(waitFor([&] { return queue.results().size() == 9 && !queue.state()["hasNext"].toBool(); }),
               "Second result page has exact remaining positions");
+        {
+            // Deux parties à la suite, mêmes réglages : la seconde reprend le moteur resté
+            // chaud, sans le relancer, et finit comme la première.
+            const int count = queue.jobs().size();
+            queue.enqueue("1.d4 d5 2.c4 e6 *", profile, false);
+            queue.enqueue("1.c4 e5 2.Nc3 Nf6 *", profile, false);
+            const auto second = added(queue, count + 2);
+            complete(queue, second);
+            complete(queue, second - 1);
+            check(db.analysisResults(second).size() == 5 && db.analysisResults(second - 1).size() == 5,
+                  "Back-to-back jobs on a warm engine analyse every position");
+            check(db.nextQueuedAnalysis() == 0 && db.pendingAnalyses() == 0 &&
+                      db.analysisJobs(1).size() == 1 && db.analysisJobs().size() == count + 2,
+                  "Queue lookups find nothing pending and the job list can be bounded");
+        }
         for (const auto &study : std::vector<t64::Game>{
                  t64::Game("4k3/8/8/8/8/8/8/R3K3 w - - 100 1"),
                  t64::parsePgn("1.Nf3 Nf6 2.Ng1 Ng8 3.Nf3 Nf6 4.Ng1 Ng8 *").front()}) {

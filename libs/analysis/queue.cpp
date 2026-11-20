@@ -216,6 +216,7 @@ class AnalysisWorker : public QObject {
         if (active_) {
             const auto id = active_;
             active_ = 0;
+            warm_ = false;
             engine_->shutdown();
             // On ferme : si la base refuse encore cette écriture, rien ne doit faire
             // échouer la fermeture. La tâche restera « en cours », et recoverAnalyses()
@@ -259,6 +260,7 @@ class AnalysisWorker : public QObject {
                 return;
             if (active_ == id) {
                 active_ = 0;
+                warm_ = false;
                 engine_->shutdown();
             }
             db_->setAnalysisStatus(id, "paused");
@@ -269,6 +271,7 @@ class AnalysisWorker : public QObject {
         guarded([&] {
             if (active_) {
                 active_ = 0;
+                warm_ = false;
                 engine_->shutdown();
             }
             for (const auto &v : db_->analysisJobs()) {
@@ -330,7 +333,7 @@ class AnalysisWorker : public QObject {
     std::unique_ptr<QLockFile> lock_;
     std::unique_ptr<Uci> engine_;
     QTimer *notify_ = nullptr;
-    bool owned_ = false, closing_ = false, scheduled_ = false;
+    bool owned_ = false, closing_ = false, scheduled_ = false, warm_ = false;
     quint64 epoch_ = 0;
     qint64 active_ = 0, selected_ = 0;
     int index_ = 0, offset_ = 0;
@@ -342,10 +345,15 @@ class AnalysisWorker : public QObject {
             notify_->stop();
         QVariantList jobs, results;
         bool hasNext = false;
+        int pending = 0;
         QVariantMap selected;
         try {
             if (db_) {
-                jobs = db_->analysisJobs();
+                // Une page de tâches suffit à la vue : la liste entière (des milliers après
+                // le bilan d'un profil) repartait vers l'interface dix fois par seconde,
+                // et c'est elle qui faisait ramer la fenêtre pendant les bilans.
+                jobs = db_->analysisJobs(200);
+                pending = db_->pendingAnalyses();
                 if (selected_) {
                     selected = db_->analysisJob(selected_, false);
                     selected.remove("pgn");
@@ -367,6 +375,7 @@ class AnalysisWorker : public QObject {
                    {"offset", offset_},
                    {"page", offset_ / 200 + 1},
                    {"hasNext", hasNext},
+                   {"pending", pending},
                    {"error", error_}});
     }
     void schedule() {
@@ -378,13 +387,12 @@ class AnalysisWorker : public QObject {
             if (closing_ || active_)
                 return;
             try {
-                auto jobs = db_->analysisJobs();
-                for (auto it = jobs.crbegin(); it != jobs.crend(); ++it) {
-                    const auto row = it->toMap();
-                    if (row["status"] == "queued") {
-                        start(row["id"].toLongLong());
-                        break;
-                    }
+                if (const auto id = db_->nextQueuedAnalysis())
+                    start(id);
+                else if (warm_) {
+                    // Plus rien à faire : le moteur gardé chaud entre deux parties s'arrête.
+                    warm_ = false;
+                    engine_->shutdown();
                 }
             } catch (const std::exception &e) {
                 fail(QString::fromUtf8(e.what()));
@@ -400,9 +408,31 @@ class AnalysisWorker : public QObject {
         index_ = job["done"].toInt();
         require(int(nodes_.size()) == job["total"].toInt() && index_ <= int(nodes_.size()),
                 "Copie de la partie incohérente.");
-        config_ = job["config"].toMap();
+        const auto config = job["config"].toMap();
+        const bool reuse = warm_ && engine_->ready() && config == config_ && !identity_.isEmpty();
+        config_ = config;
         db_->setAnalysisStatus(id, "running");
         publish();
+        if (reuse) {
+            // Même moteur, mêmes réglages que la partie précédente : on le garde, avec sa
+            // table de hachage, au lieu de le relancer et de relire son binaire à chaque
+            // partie. Sur un profil de 670 parties, c'était l'essentiel du temps perdu.
+            warm_ = false;
+            db_->setAnalysisIdentity(id, identity_);
+            const auto epoch = epoch_;
+            QTimer::singleShot(0, this, [this, id, epoch] {
+                if (id != active_ || epoch != epoch_ || closing_)
+                    return;
+                try {
+                    next();
+                } catch (const std::exception &e) {
+                    fail(QString::fromUtf8(e.what()));
+                }
+            });
+            return;
+        }
+        warm_ = false;
+        identity_.clear();
         engine_->start(config_["enginePath"].toString(), config_["threads"].toInt(), config_["hash"].toInt(),
                        config_["multiPV"].toInt(), 20, config_["syzygyPath"].toString(),
                        config_["uciOptions"].toMap());
@@ -413,10 +443,15 @@ class AnalysisWorker : public QObject {
         if (index_ == int(nodes_.size())) {
             const auto id = active_;
             active_ = 0;
-            engine_->shutdown();
+            // Le moteur reste prêt pour la partie suivante ; schedule() l'arrête s'il n'y
+            // en a pas.
+            warm_ = true;
             db_->setAnalysisStatus(id, "completed");
             publish();
-            emit message("Analyse en arrière-plan terminée.", false);
+            // Un seul message à la fin de la file : pendant le bilan d'un profil, il
+            // tombait à chaque partie, des centaines de fois.
+            if (!db_->nextQueuedAnalysis())
+                emit message("Analyse en arrière-plan terminée.", false);
             schedule();
             return;
         }
@@ -478,6 +513,7 @@ class AnalysisWorker : public QObject {
         error_ = text;
         const auto id = active_;
         active_ = 0;
+        warm_ = false;
         if (engine_)
             engine_->shutdown();
         if (id && db_) {

@@ -30,6 +30,12 @@ Item {
         // Inutile de recalculer un écran masqué : la lecture parcourt toute la base.
         function onLibraryChanged() { if (root.visible) root.refresh() }
     }
+    // Chaque partie qui sort de la file de bilan change les chiffres : sans cela, le
+    // rapport restait figé sur les premières parties analysées. Une lecture au plus
+    // toutes les deux secondes, la base entière étant parcourue.
+    readonly property int pending: (backend.analysisQueue.state || {}).pending || 0
+    onPendingChanged: refreshLater.restart()
+    Timer { id: refreshLater; interval: 2000; onTriggered: if (root.visible) root.refresh() }
 
     function reading(value, suffix) {
         return value === undefined || value === null ? "—" : value.toFixed(1) + (suffix || "")
@@ -83,9 +89,15 @@ Item {
                 Label {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
                     font.pixelSize: Math.round(11 * root.uiZoom); opacity: .75
-                    text: qsTr("%1 partie(s) passée(s) en revue, %2 coup(s) mesuré(s), sous %3.")
-                              .arg(root.report.games || 0).arg(root.report.moves || 0)
-                              .arg((root.report.accounts || []).join(", "))
+                    text: qsTr("%1 partie(s) passée(s) en revue sur %2, %3 coup(s) mesuré(s), sous %4.")
+                              .arg(root.report.games || 0).arg(root.report.profileGames || root.report.games || 0)
+                              .arg(root.report.moves || 0).arg((root.report.accounts || []).join(", "))
+                }
+                Label {
+                    objectName: "skillPending"
+                    Layout.fillWidth: true; wrapMode: Text.WordWrap; visible: root.pending > 0
+                    font.pixelSize: Math.round(11 * root.uiZoom); color: root.backend.preferences.accentColor
+                    text: qsTr("Bilan en cours : %1 partie(s) encore dans la file d’analyse.").arg(root.pending)
                 }
 
                 // Note d'ensemble, et l'écart avec les mois précédents.

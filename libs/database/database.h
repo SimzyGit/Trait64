@@ -63,13 +63,20 @@ class Database {
     // joue : un profil en rassemble plusieurs. Seules les parties déjà passées en revue
     // comptent, et chaque note est prise du côté où le joueur se trouvait.
     QVariantMap reviewSummary(const QStringList &names) const;
+    // Toutes les parties où l'un de ces noms joue, passées en revue ou non.
+    int gamesCountFor(const QStringList &names) const;
     // Même bilan, découpé par mois, du plus récent au plus ancien. Sert à comparer le
     // joueur à sa propre progression plutôt qu'à une référence extérieure.
     QVariantList reviewHistory(const QStringList &names, int months = 12) const;
     // L'étalonnage de la force estimée : chaque camp d'une partie passée en revue, avec
     // son Elo et au moins quinze coups mesurés, donne un point (précision, Elo).
     std::vector<std::pair<double, double>> accuracyEloSamples(int limit = 20000) const;
-    QVariantList analysisJobs() const;
+    // Les plus récentes d'abord ; limit > 0 borne la liste (la vue n'en montre qu'une page).
+    QVariantList analysisJobs(int limit = 0) const;
+    // La plus ancienne tâche en attente, 0 s'il n'y en a pas.
+    qint64 nextQueuedAnalysis() const;
+    // Nombre de tâches en attente ou en cours.
+    int pendingAnalyses() const;
     QVariantMap analysisJob(qint64 id, bool includePgn = true) const;
     QVariantList analysisResults(qint64 id, int offset = 0, int limit = 200) const;
     void setAnalysisStatus(qint64 id, const QString &status, const QString &error = QStringLiteral(""));
