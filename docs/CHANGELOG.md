@@ -5,6 +5,7 @@
 Trait64 a été comparé aux logiciels et sites d'échecs courants (ChessBase 18, Scid, En Croissant, ChessX, Lucas Chess, Nibbler, Lichess, Chess.com, Chessable) : voir [docs/COMPARISON.md](COMPARISON.md). Il en sort une apparence à lui et trois emprunts.
 
 - **Palette** : un papier chaud en thème clair et un graphite à peine teinté en thème sombre, au lieu de gris neutres. Le vert profond des tables de club et des pendules remplace le bleu générique. L'échiquier par défaut passe au sauge ; l'ancien reste disponible sous le nom « Ardoise bleue ». Les couleurs déjà choisies ne changent pas.
+- **Échiquier par défaut accordé au thème** : en thème sombre, des cases plus feutrées remplacent le papier clair qui éclairait l'écran à lui seul (tant qu'aucun échiquier n'a été choisi).
 - **Police** : IBM Plex Sans est livrée avec le programme (licence OFL). Elle est nette aux petites tailles des listes et de la notation, et la même sur tous les systèmes.
 - **Barre de menus** au ton du fond, soulignée d'un filet, au lieu d'une bande blanche.
 - **Bibliothèque** : « Ouvrir » n'apparaît plus que sur la ligne survolée ; un double clic ouvre toujours la partie.

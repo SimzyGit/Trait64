@@ -241,6 +241,14 @@ QVariantMap Controller::preferences() const {
         defaults["muted"] = light ? "#202020" : "#eeeeee";
         defaults["line"] = light ? "#656565" : "#b0b0b0";
     }
+    // L'échiquier par défaut se met au thème : en sombre, des cases claires de papier
+    // éclairaient l'écran à elles seules. Un échiquier choisi par l'utilisateur ne bouge pas.
+    if (!light && !settings_.contains("boardLight") && !settings_.contains("boardDark")) {
+        defaults["boardLight"] = "#c8c3b3";
+        defaults["boardDark"] = "#5e7366";
+        if (!settings_.contains("boardHighlight"))
+            defaults["boardHighlight"] = "#a99449";
+    }
     if (!settings_.contains("accentColor"))
         // Un vert profond, celui du feutre des tables de club et des pendules, plutôt que le
         // bleu de toutes les applications ; plus clair en thème sombre pour rester lisible.
