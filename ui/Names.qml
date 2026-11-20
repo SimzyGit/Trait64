@@ -47,7 +47,7 @@ TDialog {
                         }
                     }
                     RowLayout {Layout.fillWidth:true
-                        TextField {id:keptField;Layout.fillWidth:true;text:group.kept;selectByMouse:true;Accessible.name:qsTr("Écriture à garder")}
+                        TTextField {id:keptField;Layout.fillWidth:true;text:group.kept;selectByMouse:true;Accessible.name:qsTr("Écriture à garder")}
                         TButton {objectName:"unify"+group.index;text:qsTr("Unifier");accent:true;enabled:keptField.text.trim().length>0
                             onClicked:root.backend.unifyNames(root.field,group.modelData.names.map(function(n){return n.name}).filter(function(n){return n!==keptField.text.trim()}),keptField.text)}
                     }

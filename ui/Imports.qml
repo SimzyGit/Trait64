@@ -30,10 +30,10 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
         }
         Flow {Layout.fillWidth:true;spacing:8
             TComboBox {id:onlineSite;objectName:"onlineSite";model:["Lichess","Chess.com"];enabled:!root.backend.busy}
-            TextField {id:onlineUser;objectName:"onlineUser";width:200;placeholderText:qsTr("Pseudo");selectByMouse:true;enabled:!root.backend.busy
+            TTextField {id:onlineUser;objectName:"onlineUser";width:200;placeholderText:qsTr("Pseudo");selectByMouse:true;enabled:!root.backend.busy
                 onAccepted: onlineImport.clicked()}
             Label {text:qsTr("Parties max.")}
-            SpinBox {id:onlineMax;objectName:"onlineMax";from:1;to:5000;stepSize:50;value:200;editable:true;enabled:!root.backend.busy}
+            TSpinBox {id:onlineMax;objectName:"onlineMax";from:1;to:5000;stepSize:50;value:200;editable:true;enabled:!root.backend.busy}
             TButton {id:onlineImport;objectName:"onlineImport";text:qsTr("Importer");enabled:!root.backend.busy && onlineUser.text.trim().length>1
                 onClicked:root.backend.importOnline(onlineSite.currentIndex===0?"lichess":"chesscom",onlineUser.text,onlineMax.value)}
             TButton {text:qsTr("Annuler");visible:root.backend.onlineFetching;onClicked:root.backend.cancelOnline()}
@@ -48,7 +48,7 @@ ColumnLayout {width:importsViewport.availableWidth;height:Math.max(importsViewpo
         Flow {Layout.fillWidth:true;spacing:8
 TButton {objectName:"newResumableImport"; text:qsTr("Choisir un PGN"); enabled:!root.backend.busy; onClicked:{root.relocateId=0; choose.open()} }
             Label {text:qsTr("Lecteurs parallèles")}
-            SpinBox {from:1;to:8;value:root.backend.preferences.importWorkers||2;enabled:!root.backend.busy;onValueModified:root.backend.setPreference("importWorkers",value)}
+            TSpinBox {from:1;to:8;value:root.backend.preferences.importWorkers||2;enabled:!root.backend.busy;onValueModified:root.backend.setPreference("importWorkers",value)}
             Item {Layout.fillWidth: true}
             TButton {objectName:"pauseImport"; text:qsTr("Mettre en pause"); visible:root.backend.resumableImport; onClicked:root.backend.cancelTask()}
         }

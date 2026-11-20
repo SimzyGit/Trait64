@@ -126,7 +126,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true; spacing: 8
-        TextField {
+        TTextField {
             id: created; objectName: "profileName"; Layout.fillWidth: true; selectByMouse: true
             placeholderText: qsTr("Nom du profil, par exemple votre prénom")
             onAccepted: if (addProfile.enabled) addProfile.clicked()
@@ -156,7 +156,7 @@ ColumnLayout {
         onOpened: { field.text = proposed; field.selectAll(); field.forceActiveFocus() }
         ColumnLayout {
             anchors.fill: parent
-            TextField { id: field; Layout.fillWidth: true; selectByMouse: true }
+            TTextField { id: field; Layout.fillWidth: true; selectByMouse: true }
         }
     }
 
@@ -189,28 +189,28 @@ ColumnLayout {
             GridLayout {
                 Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 6
                 Label { text: qsTr("Identifiant") }
-                TextField {
+                TTextField {
                     id: identifier; objectName: "fideId"; Layout.fillWidth: true; selectByMouse: true
                     placeholderText: qsTr("chiffres seulement"); inputMethodHints: Qt.ImhDigitsOnly
                 }
                 Label { text: qsTr("Nom") }
-                TextField { id: fullName; Layout.fillWidth: true; selectByMouse: true }
+                TTextField { id: fullName; Layout.fillWidth: true; selectByMouse: true }
                 Label { text: qsTr("Titre") }
-                TextField {
+                TTextField {
                     id: fideTitle; objectName: "fideTitle"; Layout.fillWidth: true; selectByMouse: true
                     placeholderText: qsTr("GM, IM, FM, WGM… laissez vide sans titre")
                 }
                 Label { text: qsTr("Fédération") }
-                TextField {
+                TTextField {
                     id: fideCountry; objectName: "fideCountry"; Layout.fillWidth: true; selectByMouse: true
                     placeholderText: qsTr("code à trois lettres, par exemple FRA")
                 }
                 Label { text: qsTr("Classique") }
-                SpinBox { id: standard; from: 0; to: 3000; editable: true }
+                TSpinBox { id: standard; from: 0; to: 3000; editable: true }
                 Label { text: qsTr("Rapide") }
-                SpinBox { id: rapid; from: 0; to: 3000; editable: true }
+                TSpinBox { id: rapid; from: 0; to: 3000; editable: true }
                 Label { text: qsTr("Blitz") }
-                SpinBox { id: blitz; from: 0; to: 3000; editable: true }
+                TSpinBox { id: blitz; from: 0; to: 3000; editable: true }
             }
             Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
             Label {
@@ -220,9 +220,9 @@ ColumnLayout {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 10
-                CheckBox { id: wantStandard; text: qsTr("Classique"); checked: true }
-                CheckBox { id: wantRapid; text: qsTr("Rapide") }
-                CheckBox { id: wantBlitz; text: qsTr("Blitz") }
+                TCheckBox { id: wantStandard; text: qsTr("Classique"); checked: true }
+                TCheckBox { id: wantRapid; text: qsTr("Rapide") }
+                TCheckBox { id: wantBlitz; text: qsTr("Blitz") }
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 8

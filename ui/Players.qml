@@ -14,13 +14,26 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
     Flow {Layout.fillWidth:true;spacing:8
         Item {Layout.fillWidth:true}
         TButton {objectName:"playersImportOnline";text:qsTr("Comptes Lichess / Chess.com");onClicked:root.importOnline()}
-        TextField {id:filter;placeholderText:qsTr("Rechercher un joueur");Layout.preferredWidth:240}
+        TTextField {id:filter;placeholderText:qsTr("Rechercher un joueur");width:240*root.p.uiScale}
     }
     RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)}}
     SplitView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:350*controller.preferences.fontScale
-        ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:4;ScrollBar.vertical:ScrollBar{}
-            delegate:ItemDelegate {required property var modelData;width:players.width;implicitHeight:55*controller.preferences.fontScale*controller.preferences.uiScale
-                text:modelData.name+"\n"+qsTr("%1 partie(s)").arg(modelData.games);onClicked:root.backend.inspectPlayer(modelData.name)
+        handle:Rectangle {implicitWidth:7;color:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:SplitHandle.hovered||SplitHandle.pressed?root.p.accentColor:root.p.line}}
+        ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:1;ScrollBar.vertical:ScrollBar{}
+            // Le nom sur une ligne, le nombre de parties dessous : réunis dans le texte du
+            // délégué, le nom se coupait dès la virgule (« Alpha, A… »).
+            delegate:ItemDelegate {id:playerRow;required property var modelData;width:players.width
+                readonly property bool current:root.profile.name===modelData.name
+                Accessible.name:modelData.name;onClicked:root.backend.inspectPlayer(modelData.name)
+                leftPadding:10;rightPadding:10;topPadding:6;bottomPadding:6
+                contentItem:Column {spacing:1
+                    Label {width:parent.width;text:playerRow.modelData.name;elide:Text.ElideRight;font.weight:playerRow.current?Font.DemiBold:Font.Normal}
+                    Label {width:parent.width;text:qsTr("%1 partie(s)").arg(playerRow.modelData.games);color:root.p.muted
+                           font.pixelSize:Math.round(11*root.p.fontScale*root.p.uiScale)}
+                }
+                background:Rectangle {radius:4
+                    color:playerRow.current?Qt.rgba(root.p.accentColor.r,root.p.accentColor.g,root.p.accentColor.b,.16):playerRow.hovered?root.p.raised:"transparent"
+                    border.width:playerRow.visualFocus?2:0;border.color:root.p.accentColor}
             }
         }
         ScrollView {id:profileScroll;SplitView.fillWidth:true;contentWidth:availableWidth;clip:true

@@ -20,14 +20,14 @@ TDialog {
                 TComboBox {model:["Stable","Bêta","Développement"];currentIndex:["stable","beta","development"].indexOf(root.info.channel);enabled:!root.info.busy;onActivated:root.backend.setChannel(["stable","beta","development"][currentIndex])}
                 TButton {text:qsTr("Vérifier maintenant");enabled:!root.info.busy;onClicked:root.backend.check()}
             }
-            CheckBox {text:qsTr("Vérifier au lancement");checked:root.info.automatic;onToggled:root.backend.setAutomatic(checked)}
+            TCheckBox {text:qsTr("Vérifier au lancement");checked:root.info.automatic;onToggled:root.backend.setAutomatic(checked)}
             Label {text:qsTr("Stable reçoit uniquement les versions stables publiées. Bêta inclut les préversions bêta ; Développement inclut les versions de travail testées.");wrapMode:Text.WordWrap;Layout.fillWidth:true}
             GroupBox {title:qsTr("Accès au dépôt privé");Layout.fillWidth:true
                 ColumnLayout {anchors.fill:parent
-                    CheckBox {text:qsTr("Utiliser ma connexion GitHub CLI (gh)");checked:root.info.githubCli;enabled:!root.info.busy;onToggled:root.backend.useGithubCli(checked)}
+                    TCheckBox {text:qsTr("Utiliser ma connexion GitHub CLI (gh)");checked:root.info.githubCli;enabled:!root.info.busy;onToggled:root.backend.useGithubCli(checked)}
                     Label {text:qsTr("Connectez gh avec « gh auth login », puis activez cette option. Autre possibilité : un jeton limité à Trait64, permission Contents en lecture, conservé uniquement pour cette session.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                     RowLayout {Layout.fillWidth:true
-                        TextField {id:token;Layout.fillWidth:true;echoMode:TextInput.Password;placeholderText:root.info.authenticated?qsTr("Accès configuré"):qsTr("Jeton de session");enabled:!root.info.busy}
+                        TTextField {id:token;Layout.fillWidth:true;echoMode:TextInput.Password;placeholderText:root.info.authenticated?qsTr("Accès configuré"):qsTr("Jeton de session");enabled:!root.info.busy}
                         TButton {text:qsTr("Utiliser");enabled:!root.info.busy && token.text.length>0;onClicked:{root.backend.setSessionToken(token.text);token.clear();root.backend.check()}}
                     }
                 }

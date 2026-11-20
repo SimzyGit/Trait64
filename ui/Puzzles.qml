@@ -107,13 +107,13 @@ TDialog {
                 TButton { text: qsTr("Ouvrir la page de téléchargement"); onClicked: Qt.openUrlExternally("https://database.lichess.org/#puzzles") }
                 RowLayout {
                     Label { text: qsTr("Nombre max.") }
-                    SpinBox { id: maxPuzzles; from: 1000; to: 6000000; stepSize: 50000; value: 300000; editable: true }
+                    TSpinBox { id: maxPuzzles; from: 1000; to: 6000000; stepSize: 50000; value: 300000; editable: true }
                 }
                 RowLayout {
                     Label { text: qsTr("Classement") }
-                    SpinBox { id: minRating; from: 400; to: 3000; stepSize: 100; value: 600; editable: true }
+                    TSpinBox { id: minRating; from: 400; to: 3000; stepSize: 100; value: 600; editable: true }
                     Label { text: "–" }
-                    SpinBox { id: maxRating; from: 600; to: 3500; stepSize: 100; value: 3000; editable: true }
+                    TSpinBox { id: maxRating; from: 600; to: 3500; stepSize: 100; value: 3000; editable: true }
                 }
                 TButton { objectName: "importPuzzles"; text: qsTr("Importer le fichier…"); enabled: !root.backend.busy; onClicked: puzzleFile.open() }
                 TButton { text: qsTr("Annuler"); visible: root.backend.busy; onClicked: root.backend.cancelTask() }

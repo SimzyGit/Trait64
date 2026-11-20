@@ -33,8 +33,8 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
          spacing:10
         RowLayout {
             Layout.fillWidth:true
-            ComboBox {
-                id: selector; objectName:"repertoireSelector"; enabled:!root.backend.busy
+            TComboBox {
+                translateOptions:false; id: selector; objectName:"repertoireSelector"; enabled:!root.backend.busy
                 Layout.fillWidth:true; textRole:"name"; valueRole:"id"; model:root.backend.repertoires
                 onActivated:root.backend.selectRepertoire(currentValue)
                 onModelChanged:root.syncSelection()
@@ -75,6 +75,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         }
         TabBar {
             id:section;Layout.fillWidth:true
+            background: Rectangle {color: "transparent"; Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: palette.mid}}
             TTabButton {text:qsTr("Position actuelle")}
             TTabButton {text:qsTr("Réponses à préparer")}
             TTabButton {text:qsTr("Positions à retravailler")}
@@ -185,14 +186,14 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
     TDialog {
         id:createDialog;title:qsTr("Nouveau répertoire depuis l’étude");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:460
         ColumnLayout {anchors.fill:parent
-            TextField {id:createName;objectName:"repertoireName";placeholderText:qsTr("Nom du répertoire");Layout.fillWidth:true;maximumLength:200}
+            TTextField {id:createName;objectName:"repertoireName";placeholderText:qsTr("Nom du répertoire");Layout.fillWidth:true;maximumLength:200}
             TComboBox {id:colour;model:["Je prépare les Blancs","Je prépare les Noirs"];Layout.fillWidth:true}
             Label {text:qsTr("Toutes les variantes accessibles de l’étude sont ajoutées. Les transpositions partagent leurs réponses et leurs révisions.");Layout.fillWidth:true;wrapMode:Text.WordWrap}
         }
         onAccepted:root.backend.createRepertoire(createName.text,colour.currentIndex===0)
     }
     TDialog {id:renameDialog;title:qsTr("Renommer");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        TextField {id:renameField;width:350;maximumLength:200} onAccepted:root.backend.renameRepertoire(root.selectedId,renameField.text)
+        TTextField {id:renameField;width:350;maximumLength:200} onAccepted:root.backend.renameRepertoire(root.selectedId,renameField.text)
     }
     TDialog {id:deleteDialog;title:qsTr("Supprimer ce répertoire ?");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Yes|Dialog.No;width:450
         Label {width:parent.width;wrapMode:Text.WordWrap;text:qsTr("Les coups préparés et leurs révisions seront supprimés. Les parties de la bibliothèque seront conservées.")} onAccepted:root.backend.deleteRepertoire(root.selectedId)
@@ -203,7 +204,7 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
     }
     TDialog {id:editDialog;title:qsTr("Coup préparé");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel;width:500;height:310
         ColumnLayout {anchors.fill:parent
-            CheckBox {id:mainCheck;text:qsTr("Choisir comme coup principal")}
+            TCheckBox {id:mainCheck;text:qsTr("Choisir comme coup principal")}
             ScrollView {Layout.fillWidth:true;Layout.fillHeight:true;TextArea {id:noteField;wrapMode:TextEdit.Wrap;placeholderText:qsTr("Idée, plan ou rappel…")}}
         }
         onAccepted:root.backend.editRepertoireMove(root.selectedId,root.editFen,root.editedMove.uci,noteField.text,mainCheck.checked)
@@ -215,8 +216,8 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
         ColumnLayout {
             anchors.fill:parent
             Label {text:qsTr("Profil moteur")}
-            ComboBox {
-                id:analysisProfile;Layout.fillWidth:true
+            TComboBox {
+                onlyFirstOption:true; id:analysisProfile;Layout.fillWidth:true
                 model: { var names=["Réglages actuels"];var saved=root.backend.preferences.engineProfiles||[];for(var i=0;i<saved.length;++i) names.push(saved[i].name);return names }
             }
             Label {text:qsTr("Temps par position")}

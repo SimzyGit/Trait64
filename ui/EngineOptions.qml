@@ -28,12 +28,12 @@ ColumnLayout {
             visible: ["Threads", "Hash", "MultiPV", "Skill Level", "SyzygyPath", "UCI_Chess960"].indexOf(modelData.name) < 0
             Layout.fillWidth: true
             Label { text: row.modelData.name; Layout.preferredWidth: 170; wrapMode: Text.WrapAnywhere }
-            CheckBox {
+            TCheckBox {
                 visible: row.kind === "check"
                 checked: row.current === "true" || row.current === "1"
                 onToggled: root.backend.setEngineOption(row.modelData.name, checked)
             }
-            TextField {
+            TTextField {
                 Layout.fillWidth: true
                 visible: row.kind === "spin" || row.kind === "string"
                 text: row.current
@@ -41,7 +41,8 @@ ColumnLayout {
                 placeholderText: row.kind === "spin" ? row.modelData.min + " … " + row.modelData.max : qsTr("Valeur vide")
                 onEditingFinished: root.backend.setEngineOption(row.modelData.name, text)
             }
-            ComboBox {
+            TComboBox {
+                translateOptions: false
                 Layout.fillWidth: true
                 visible: row.kind === "combo"
                 model: row.modelData.choices

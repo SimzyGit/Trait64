@@ -35,7 +35,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: table.implicitHeight + 16
-        color: root.backend.preferences.panel; radius: 8
+        color: root.backend.preferences.panel; radius:6
         ColumnLayout {
             id: table
             anchors.fill: parent; anchors.margins: 8; spacing: 4

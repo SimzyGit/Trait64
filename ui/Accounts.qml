@@ -80,7 +80,7 @@ TDialog {
             RowLayout {
                 Layout.fillWidth: true; spacing: 8
                 TComboBox { id: site; objectName: "accountSite"; model: ["Lichess", "Chess.com"] }
-                TextField {
+                TTextField {
                     id: user; objectName: "accountUser"; Layout.fillWidth: true; placeholderText: qsTr("Pseudo"); selectByMouse: true
                     onAccepted: if (add.enabled) add.clicked()
                 }
@@ -92,7 +92,7 @@ TDialog {
             }
             RowLayout {
                 Layout.fillWidth: true
-                CheckBox {
+                TCheckBox {
                     objectName: "syncAtStartup"; text: qsTr("Synchroniser au démarrage")
                     checked: !!root.backend.preferences.syncAtStartup
                     onToggled: root.backend.setPreference("syncAtStartup", checked)

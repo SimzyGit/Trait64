@@ -135,7 +135,7 @@ ColumnLayout {
         Layout.leftMargin: 8; Layout.rightMargin: 8
         spacing: 6
         visible: root.folder !== ""
-        TextField {
+        TTextField {
             id: search
             objectName: "explorerSearch"
             Layout.fillWidth: true
@@ -423,7 +423,7 @@ ColumnLayout {
             }
             root.reload()
         }
-        TextField {
+        TTextField {
             id: nameField
             objectName: "explorerName"
             width: root.s(320)
@@ -451,7 +451,7 @@ ColumnLayout {
         }
         ColumnLayout {
             spacing: 8
-            TextField {
+            TTextField {
                 id: fileName
                 objectName: "explorerFileName"
                 Layout.preferredWidth: root.s(420)

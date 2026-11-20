@@ -91,7 +91,7 @@ Item {
                 // Note d'ensemble, et l'écart avec les mois précédents.
                 Rectangle {
                     Layout.fillWidth: true; implicitHeight: headline.implicitHeight + 20
-                    color: root.backend.preferences.panel; radius: 8
+                    color: root.backend.preferences.panel; radius:6
                     RowLayout {
                         id: headline
                         anchors.fill: parent; anchors.margins: 10; spacing: 16
@@ -165,7 +165,7 @@ Item {
                         delegate: Rectangle {
                             required property var modelData
                             Layout.fillWidth: true; implicitHeight: 64
-                            color: root.backend.preferences.panel; radius: 8
+                            color: root.backend.preferences.panel; radius:6
                             ColumnLayout {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
@@ -193,7 +193,7 @@ Item {
                         delegate: Rectangle {
                             required property var modelData
                             Layout.fillWidth: true; implicitHeight: 58
-                            color: root.backend.preferences.panel; radius: 8
+                            color: root.backend.preferences.panel; radius:6
                             ColumnLayout {
                                 anchors.centerIn: parent; spacing: 2
                                 Label {
@@ -221,7 +221,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true; Layout.preferredHeight: 150
                     visible: (root.report.history || []).length > 0
-                    color: root.backend.preferences.panel; radius: 8
+                    color: root.backend.preferences.panel; radius:6
                     RowLayout {
                         anchors.fill: parent; anchors.margins: 10; spacing: 4
                         Repeater {

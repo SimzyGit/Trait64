@@ -7,8 +7,8 @@ Item {
     id: root
     required property var backend
     property bool flipped: false
-    property color lightSide: "#f4f6f8"
-    property color darkSide: "#1d2125"
+    property color lightSide: "#f3f0e8"
+    property color darkSide: "#2b2925"
     // Le trait du thème, pas une teinte fixe : sur fond clair la moitié blanche se
     // confondait avec la page, et la barre semblait flotter sans bas.
     property color line: backend.preferences.line
@@ -29,7 +29,8 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Math.min(width, height) / 2
+        // Droite comme l'échiquier qu'elle borde : arrondie en pilule, elle faisait jauge de téléphone.
+        radius: 2
         color: root.darkSide
         border.color: root.line
         clip: true
@@ -52,13 +53,6 @@ Item {
         }
     }
 
-    // Au repos la barre doit rester lisible comme un blanc et un noir : trop effacée, elle
-    // vire au gris sur gris et ne se lit plus comme un échiquier.
-    opacity: known ? 1 : 0.72
-    Behavior on opacity {
-        enabled: !root.backend.preferences.reduceMotion
-        NumberAnimation { duration: 150 }
-    }
 
     HoverHandler { id: hover }
     ToolTip.visible: hover.hovered

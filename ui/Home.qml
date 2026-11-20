@@ -25,9 +25,11 @@ ScrollView {
         id:card
         property string heading
         default property alias content:body.data
-        Layout.fillWidth:true;Layout.alignment:Qt.AlignTop
+        // Les cartes d'une même rangée prennent la même hauteur : à la hauteur de leur
+        // contenu, elles laissaient des trous inégaux dans la grille.
+        Layout.fillWidth:true;Layout.fillHeight:true
         implicitHeight:body.implicitHeight+2*root.gap
-        radius:8;color:root.p.panel;border.color:root.p.line
+        radius:6;color:root.p.panel;border.color:root.p.line
         ColumnLayout {
             id:body;anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:root.gap;spacing:10
             Label {text:card.heading;font.weight:Font.DemiBold;visible:text.length>0}

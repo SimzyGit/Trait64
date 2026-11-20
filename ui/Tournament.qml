@@ -28,7 +28,7 @@ TDialog {
                 Layout.fillWidth: true; spacing: 8
                 Repeater {
                     model: root.backend.preferences.engineProfiles
-                    CheckBox {
+                    TCheckBox {
                         required property int index
                         required property var modelData
                         objectName: "tournamentProfile_" + index
@@ -49,12 +49,12 @@ TDialog {
             GridLayout {
                 columns: viewport.availableWidth > 640 ? 4 : 2; columnSpacing: 14; rowSpacing: 8; enabled: !root.tournament.running
                 Label { text: qsTr("Parties par paire") }
-                SpinBox { id: games; objectName: "tournamentGames"; from: 2; to: 20; stepSize: 2; value: 2; editable: true }
+                TSpinBox { id: games; objectName: "tournamentGames"; from: 2; to: 20; stepSize: 2; value: 2; editable: true }
                 Label { text: qsTr("Temps par coup (ms)") }
-                SpinBox { id: moveTime; objectName: "tournamentMoveTime"; from: 100; to: 5000; stepSize: 100; value: 300; editable: true }
+                TSpinBox { id: moveTime; objectName: "tournamentMoveTime"; from: 100; to: 5000; stepSize: 100; value: 300; editable: true }
                 Label { text: qsTr("Nulle adjugée après (demi-coups)") }
-                SpinBox { id: maxPlies; from: 40; to: 600; stepSize: 20; value: 300; editable: true }
-                CheckBox {
+                TSpinBox { id: maxPlies; from: 40; to: 600; stepSize: 20; value: 300; editable: true }
+                TCheckBox {
                     id: useBook; Layout.columnSpan: 2
                     text: qsTr("Ouvertures tirées du livre Polyglot")
                     enabled: !!root.backend.preferences.bookPath; checked: false

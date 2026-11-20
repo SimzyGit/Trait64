@@ -118,6 +118,7 @@ ColumnLayout {
                 // d'En Croissant, et c'est celle qu'on a quand on arrive d'ailleurs.
                 TabBar {
                     id: leftTabs
+                    background: Rectangle {color: "transparent"; Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: palette.mid}}
                     Layout.fillWidth: true
                     // Sans étude dans la base, il n'y a rien à montrer dans la liste :
                     // on ouvre sur l'explorateur, qui est là où l'on commence.
@@ -311,7 +312,7 @@ ColumnLayout {
                     elide: Text.ElideRight
                 }
                 // Études ou parties jouées : les premières n'entrent pas dans l'onglet Joueurs.
-                CheckBox {
+                TCheckBox {
                     objectName: "collectionStudy"
                     readonly property var current: {
                         var rows = root.backend.studyCollections
@@ -484,13 +485,13 @@ ColumnLayout {
         ColumnLayout {
             anchors.fill: parent
             spacing: 10
-            TextField {
+            TTextField {
                 id: createName
                 objectName: "studiesCreateName"
                 Layout.fillWidth: true
                 placeholderText: qsTr("Nom de l’étude, par exemple « Italienne »")
             }
-            CheckBox {
+            TCheckBox {
                 id: createWhite
                 text: qsTr("Préparée pour les Blancs")
                 checked: true

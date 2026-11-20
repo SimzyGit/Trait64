@@ -221,8 +221,8 @@ ApplicationWindow {
                 Layout.fillWidth: true; implicitHeight: 34 * controller.preferences.uiScale; color: win.bg
                 Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: win.line}
                 RowLayout {
-                    anchors.fill: parent; anchors.leftMargin: 6; anchors.rightMargin: 6; anchors.topMargin: 4; spacing: 6
-                    Label {text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter; Layout.leftMargin: 6}
+                    anchors.fill: parent; anchors.leftMargin: 14*win.uiScale; anchors.rightMargin: 8*win.uiScale; spacing: 6
+                    Label {text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter}
                     Label {text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
                     TButton {objectName: "commandPaletteButton"; text: "Ctrl K"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Rechercher une commande"); onClicked: commands.open()}
                     TButton {id: appMenuButton; objectName: "appMenuButton"; text: "⚙"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Apparence et langue"); onClicked: appearanceDialog.open()}
@@ -231,7 +231,9 @@ ApplicationWindow {
         StackLayout {
             id: pages
             Layout.fillWidth: true; Layout.fillHeight: true; currentIndex: win.page
-            Layout.leftMargin:6;Layout.rightMargin:6;Layout.topMargin:6;Layout.bottomMargin:4
+            // Une marge franche autour des pages : à 6 px, le contenu collait au filet de la
+            // barre latérale et la fenêtre paraissait trop pleine.
+            Layout.leftMargin:14*win.uiScale;Layout.rightMargin:14*win.uiScale;Layout.topMargin:10*win.uiScale;Layout.bottomMargin:6*win.uiScale
 
             Home {
                 backend: controller
@@ -253,9 +255,9 @@ ApplicationWindow {
                 // la base (exports, classements, comptes, téléchargements) attend dans le menu
                 // « Base » : onze boutons sur deux rangées écrasaient la recherche.
                 RowLayout {Layout.fillWidth:true;spacing:8
-                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredHeight:30*controller.preferences.uiScale;Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
-                    TextField {id:searchField;objectName:"librarySearch";Layout.preferredHeight:30*controller.preferences.uiScale;placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
-                    TComboBox {id:resultBox;Layout.preferredHeight:30*controller.preferences.uiScale;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:140*win.textScale}
+                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    TTextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
+                    TComboBox {id:resultBox;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:140*win.textScale}
                     TButton {text:qsTr("Recherche avancée");onClicked:advancedDialog.open()}
                     // Les recherches enregistrées, et de quoi garder celle qui est à l'écran.
                     TButton {id:savedButton;objectName:"savedSearches";text:qsTr("Recherches  ▾");onClicked:savedMenu.popup(savedButton,0,savedButton.height)
@@ -417,10 +419,22 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                 Layout.margins:0;spacing:win.height<820?8:14
                 // Toolbar: open studies, training status, study actions.
                 RowLayout {Layout.fillWidth:true;spacing:4
-                    ListView {Layout.fillWidth:true;Layout.preferredHeight:28*win.textScale;orientation:ListView.Horizontal;model:controller.tabs;spacing:5;clip:true
-                        delegate:RowLayout {required property var modelData;required property int index;spacing:0
-                            TButton {text:(modelData.dirty?"• ":"")+modelData.title;accent:modelData.active;flat:!modelData.active;implicitHeight:26*win.textScale;implicitWidth:Math.min(240,Math.max(120,text.length*7+24));onClicked:controller.switchTab(index)}
-                            TButton {text:"×";implicitWidth:27*win.textScale;implicitHeight:26*win.textScale;Accessible.name:qsTr("Fermer l’étude");onClicked:controller.closeTab(index)}
+                    ListView {Layout.fillWidth:true;Layout.preferredHeight:28*win.uiScale;orientation:ListView.Horizontal;model:controller.tabs;spacing:4;clip:true
+                        // Un onglet de document : titre et croix dans le même cadre, l'onglet ouvert
+                        // marqué d'un trait d'accent. Deux boutons accolés, l'un vert plein, se
+                        // lisaient comme deux commandes et non comme une étude ouverte.
+                        delegate:Rectangle {id:studyTab;required property var modelData;required property int index
+                            width:Math.min(240*win.textScale,Math.max(110*win.textScale,tabTitle.implicitWidth+tabClose.width+20*win.uiScale));height:28*win.uiScale
+                            radius:3;color:modelData.active?win.panel:tabArea.containsMouse?win.raised:"transparent"
+                            border.color:modelData.active?win.line:"transparent"
+                            Rectangle {visible:studyTab.modelData.active;anchors.left:parent.left;anchors.right:parent.right;anchors.bottom:parent.bottom;anchors.margins:1;height:2;color:win.accent}
+                            MouseArea {id:tabArea;anchors.fill:parent;hoverEnabled:true;onClicked:controller.switchTab(studyTab.index)}
+                            Label {id:tabTitle;anchors.left:parent.left;anchors.leftMargin:10*win.uiScale;anchors.right:tabClose.left;anchors.verticalCenter:parent.verticalCenter
+                                   text:(studyTab.modelData.dirty?"• ":"")+studyTab.modelData.title;elide:Text.ElideRight
+                                   font.weight:studyTab.modelData.active?Font.DemiBold:Font.Normal;color:studyTab.modelData.active?win.fg:win.muted}
+                            TButton {id:tabClose;flat:true;text:"×";anchors.right:parent.right;anchors.rightMargin:3;anchors.verticalCenter:parent.verticalCenter
+                                     implicitWidth:22*win.uiScale;implicitHeight:22*win.uiScale;Accessible.name:qsTr("Fermer l’étude");onClicked:controller.closeTab(studyTab.index)}
+                            Accessible.role:Accessible.PageTab;Accessible.name:studyTab.modelData.title;Accessible.selected:studyTab.modelData.active
                         }
                     }
                     // Parcourir la base ou le recueil depuis l'analyse : la partie
@@ -503,7 +517,7 @@ objectName:"analysisSplit"
                             // Taper un coup plutôt que le jouer à la souris : « Cf3 », « e4 », « O-O ».
                             // Entrée le joue dès qu'un seul coup répond ; les candidats s'affichent
                             // pendant la frappe.
-                            TextField {id:moveEntry;objectName:"moveEntry";visible:!controller.state.training&&(boardPanel.width>=600||activeFocus);Layout.preferredWidth:84*controller.preferences.uiScale;Layout.preferredHeight:26*controller.preferences.uiScale
+                            TTextField {id:moveEntry;objectName:"moveEntry";visible:!controller.state.training&&(boardPanel.width>=600||activeFocus);Layout.preferredWidth:84*controller.preferences.uiScale;Layout.preferredHeight:26*controller.preferences.uiScale
                                 placeholderText:qsTr("Coup…");selectByMouse:true;Accessible.name:qsTr("Taper un coup")
                                 readonly property var matches:text.length?controller.typedMoves(text):[]
                                 color:text.length&&!matches.length?"#c0392b":win.fg
@@ -536,7 +550,7 @@ objectName:"analysisSplit"
                         Rectangle {
                             SplitView.fillHeight:true;SplitView.minimumHeight:180;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:1;spacing:0
-                                Rectangle {Layout.fillWidth:true;implicitHeight:notationTabs.implicitHeight;color:win.bg
+                                Rectangle {Layout.fillWidth:true;implicitHeight:notationTabs.implicitHeight;color:win.panel
                                     TabBar {id:notationTabs;objectName:"notationTabs";anchors.left:parent.left;anchors.bottom:parent.bottom;background:Item {}
                                         TTabButton {text:qsTr("Notation");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
                                         TTabButton {text:qsTr("Arbre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
@@ -727,9 +741,9 @@ ColumnLayout {width:openingsViewport.availableWidth;height:Math.max(openingsView
                             Label {text:modelData.count;Layout.preferredWidth:66;font.weight:Font.DemiBold}
                             Row {Layout.fillWidth:true;Layout.preferredHeight:25
                                 property real total:Math.max(1,modelData.white+modelData.draw+modelData.black)
-                                Rectangle {width:parent.width*modelData.white/parent.total;height:25;color:"#e6ecdf";Text {anchors.centerIn:parent;text:modelData.white;color:"#263329";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
-                                Rectangle {width:parent.width*modelData.draw/parent.total;height:25;color:"#80937f";Text {anchors.centerIn:parent;text:modelData.draw;color:"#ffffff";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
-                                Rectangle {width:parent.width*modelData.black/parent.total;height:25;color:"#3b4840";Text {anchors.centerIn:parent;text:modelData.black;color:"#ffffff";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.white/parent.total;height:25;color:"#f3f0e8";border.color:win.line;Text {anchors.centerIn:parent;text:modelData.white;color:"#2b2925";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.draw/parent.total;height:25;color:"#a19c91";Text {anchors.centerIn:parent;text:modelData.draw;color:"#ffffff";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
+                                Rectangle {width:parent.width*modelData.black/parent.total;height:25;color:"#2b2925";Text {anchors.centerIn:parent;text:modelData.black;color:"#f3f0e8";font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);visible:parent.width>25}}
                             }
                             TButton {text:qsTr("Jouer  →");onClicked:controller.move(modelData.uci)}
                         }
@@ -754,24 +768,24 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 }
                 Row {Layout.fillWidth:true;spacing:16
                     Repeater {model:[{title:"À réviser",key:"due"},{title:"Révisions effectuées",key:"reviews"},{title:"Réussites",key:"successes"}]
-                        delegate:Rectangle {required property var modelData;width:(parent.width-32)/3;height:102*win.textScale;radius:2;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:20;Label {text:win.systemText(modelData.title);Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:controller.stats[modelData.key]||0;font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.Normal}}
+                        delegate:Rectangle {required property var modelData;width:(parent.width-32)/3;height:74*win.textScale;radius:6;color:win.panel;border.color:win.line
+                            ColumnLayout {anchors.fill:parent;anchors.margins:14;spacing:2;Label {text:win.systemText(modelData.title);Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)} Label {text:controller.stats[modelData.key]||0;font.family:controller.preferences.fontFamily;font.pixelSize:Math.round(30*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.Normal}}
                         }
                     }
                 }
                 Flow {Layout.fillWidth:true;spacing:8
-                    TButton {objectName:"openPuzzles";text:qsTr("Puzzles");accent:true;onClicked:puzzlesDialog.open()}
+                    TButton {objectName:"openPuzzles";text:qsTr("Puzzles");onClicked:puzzlesDialog.open()}
                     TButton {objectName:"openCoordinates";text:qsTr("Coordonnées");onClicked:coordinatesDialog.open()}
                     TButton {objectName:"openEndgames";text:qsTr("Finales");onClicked:endgamesDialog.open()}
                     TButton {text:qsTr("Réviser un répertoire");onClicked:repertoiresDialog.open()}
                     TButton {text:qsTr("Réviser la prochaine carte");accent:true;enabled:(controller.stats.due||0)>0;onClicked:controller.nextDueCard()}
-                    Label {text:qsTr("Aujourd’hui : ")+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+qsTr(" · Cette semaine : ")+(controller.stats.weekReviews||0);color:win.muted;Layout.fillWidth:true}
-                    Label {text:qsTr("Objectif")} SpinBox {from:1;to:1000;value:controller.preferences.dailyGoal;onValueModified:controller.setPreference("dailyGoal",value)}
+                    Label {text:qsTr("Aujourd’hui : ")+(controller.stats.todayReviews||0)+" / "+controller.preferences.dailyGoal+qsTr(" · Cette semaine : ")+(controller.stats.weekReviews||0);color:win.muted;height:28*win.uiScale;verticalAlignment:Text.AlignVCenter;leftPadding:8*win.uiScale}
+                    Label {text:qsTr("Objectif");height:28*win.uiScale;verticalAlignment:Text.AlignVCenter;leftPadding:8*win.uiScale} TSpinBox {from:1;to:1000;value:controller.preferences.dailyGoal;onValueModified:controller.setPreference("dailyGoal",value)}
                 }
                 ProgressBar {Layout.fillWidth:true;from:0;to:controller.preferences.dailyGoal;value:controller.stats.todayReviews||0}
-                Label {text:qsTr("Mes cartes");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;Layout.topMargin:8}
+                Label {text:qsTr("Mes cartes");font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold;Layout.topMargin:4}
                 ListView {id:trainingList;Layout.minimumHeight:180;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:8;model:controller.cards;ScrollBar.vertical:ScrollBar {}
-                    delegate:Rectangle {required property var modelData;width:trainingList.width;height:80*win.textScale;radius:2;color:win.panel
+                    delegate:Rectangle {required property var modelData;width:trainingList.width;height:64*win.textScale;radius:6;color:win.panel;border.color:win.line
                         RowLayout {anchors.fill:parent;anchors.margins:16;spacing:16
                             Label {text:"◎";font.pixelSize:Math.round(28*controller.preferences.fontScale*controller.preferences.uiScale);color:win.accent}
                             ColumnLayout {Layout.fillWidth:true;spacing:6
@@ -783,7 +797,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                         }
                     }
                     ColumnLayout {anchors.centerIn:parent;width:parent.width-24;visible:controller.cards.length===0;spacing:16
-                        Label {text:qsTr("Vos variantes deviennent votre entraînement.");font.pixelSize:Math.round(19*controller.preferences.fontScale*controller.preferences.uiScale);Layout.alignment:Qt.AlignHCenter;Layout.fillWidth:true;wrapMode:Text.WordWrap}
+                        Label {text:qsTr("Vos variantes deviennent votre entraînement.");horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(17*controller.preferences.fontScale*controller.preferences.uiScale);Layout.alignment:Qt.AlignHCenter;Layout.fillWidth:true;wrapMode:Text.WordWrap}
                         Label {text:qsTr("Dans une étude, placez-vous avant les coups à apprendre,\npuis cliquez sur « Créer une carte ».");horizontalAlignment:Text.AlignHCenter;color:win.muted;Layout.alignment:Qt.AlignHCenter;Layout.fillWidth:true;wrapMode:Text.WordWrap}
                         TButton {text:qsTr("Ouvrir l’atelier");Layout.alignment:Qt.AlignHCenter;onClicked:win.page=2}
                     }
@@ -796,7 +810,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 ColumnLayout {width:toolsViewport.availableWidth;spacing:20
                     Label {text:qsTr("Importer, sauvegarder, vérifier. Gardez la main sur vos données.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
                     GridLayout {columns:toolsViewport.availableWidth>1000*win.textScale?2:1;columnSpacing:18;rowSpacing:18;Layout.fillWidth:true
-                        Rectangle {Layout.fillWidth:true;implicitHeight:Math.max(192,children[0].implicitHeight+44);radius:8;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:qsTr("PGN & positions");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Ouvrir un fichier ou coller une partie et ses variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -804,7 +818,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Coller un PGN");onClicked:pgnDialog.open()} TButton {text:qsTr("Charger une FEN");onClicked:fenDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:Math.max(192,children[0].implicitHeight+44);radius:8;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:qsTr("Sauvegarde complète");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Parties, favoris, collections et cartes dans un fichier SQLite.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -812,7 +826,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Sauvegarder");onClicked:backupDialog.open()} TButton {objectName:"openBackups";text:qsTr("Restaurer…");onClicked:backupsDialog.open()} TButton {text:qsTr("Ouvrir une base");onClicked:openDatabaseDialog.open()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:Math.max(192,children[0].implicitHeight+44);radius:8;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:qsTr("Intégrité & diagnostic");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -820,7 +834,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
-                        Rectangle {Layout.fillWidth:true;implicitHeight:Math.max(192,children[0].implicitHeight+44);radius:8;color:win.panel;border.color:win.line
+                        Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+40;radius:6;color:win.panel;border.color:win.line
                             ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:12
                                 Label {text:qsTr("Fichiers & exemples");font.pixelSize:Math.round(18*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Accédez aux fichiers locaux ou chargez les études de découverte.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
@@ -829,7 +843,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                             }
                         }
                     }
-                    Rectangle {Layout.fillWidth:true;implicitHeight:children[0].implicitHeight+44;radius:8;color:win.raised
+                    Rectangle {Layout.fillWidth:true;implicitHeight:children[0].implicitHeight+44;radius:6;color:win.raised
                         ColumnLayout {anchors.fill:parent;anchors.margins:22;spacing:10
                             Label {text:qsTr("Trait64 est un logiciel libre.");font.pixelSize:Math.round(17*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                             Label {text:qsTr("C++23 · Qt6 · chess-library · moteurs UCI externes. Code sous AGPL-3.0-or-later.\nCette version alpha propose les outils locaux essentiels ; le catalogue complet reste en développement.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -913,7 +927,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:cardDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
         ColumnLayout {width:cardDialogViewport.availableWidth;spacing:14
             Label {text:qsTr("La suite principale depuis la position actuelle sera à retrouver (40 demi-coups maximum). Placez-vous avant le premier coup à apprendre.");color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-            TextField {id:cardTitle;placeholderText:qsTr("Ex. Italienne — mon plan avec les Blancs");Layout.fillWidth:true}
+            TTextField {id:cardTitle;placeholderText:qsTr("Ex. Italienne — mon plan avec les Blancs");Layout.fillWidth:true}
         }
         }
         onAccepted:controller.createCard(cardTitle.text)
@@ -926,12 +940,12 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:playDialogViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
         ColumnLayout {width:playDialogViewport.availableWidth;spacing:16
             TComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
-            GridLayout {columns:2;Layout.fillWidth:true;Label {text:qsTr("Minutes")} SpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} SpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
+            GridLayout {columns:2;Layout.fillWidth:true;Label {text:qsTr("Minutes")} TSpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} TSpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
             TComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
             RowLayout {Layout.fillWidth:true;visible:opponent.currentIndex===1;spacing:10
-                CheckBox {id:limitElo;objectName:"limitElo";text:qsTr("Limiter la force à");checked:controller.preferences.playElo>0
+                TCheckBox {id:limitElo;objectName:"limitElo";text:qsTr("Limiter la force à");checked:controller.preferences.playElo>0
                     onToggled:controller.setPreference("playElo",checked?playEloValue.value:0)}
-                SpinBox {id:playEloValue;objectName:"playElo";from:800;to:3200;stepSize:50;editable:true;enabled:limitElo.checked
+                TSpinBox {id:playEloValue;objectName:"playElo";from:800;to:3200;stepSize:50;editable:true;enabled:limitElo.checked
                     value:controller.preferences.playElo>0?controller.preferences.playElo:1500
                     onValueModified:if(limitElo.checked)controller.setPreference("playElo",value)}
                 Label {text:qsTr("Elo");color:win.muted}
@@ -948,7 +962,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Repeater {model:["White","Black","Event","Site","Date","Round","Result","ECO","WhiteElo","BlackElo"]
                 delegate:ColumnLayout {required property string modelData;Layout.fillWidth:true;spacing:4
                     Label {text:({White:qsTr("Blancs"),Black:qsTr("Noirs"),Event:qsTr("Événement"),Site:qsTr("Lieu"),Date:qsTr("Date (AAAA.MM.JJ)"),Round:qsTr("Ronde"),Result:qsTr("Résultat : 1-0 / 0-1 / 1/2-1/2 / *"),ECO:qsTr("Code ECO"),WhiteElo:qsTr("Elo Blancs"),BlackElo:qsTr("Elo Noirs")})[modelData];font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted;wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                    TextField {text:controller.state.tags[modelData]||"";Layout.fillWidth:true;onEditingFinished:{var t={};t[modelData]=text;controller.setTags(t)}}
+                    TTextField {text:controller.state.tags[modelData]||"";Layout.fillWidth:true;onEditingFinished:{var t={};t[modelData]=text;controller.setTags(t)}}
                 }
             }
         }
@@ -1011,11 +1025,11 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         }
         ColumnLayout {anchors.fill:parent;spacing:8
             Label {text:qsTr("Étiquette");font.weight:Font.DemiBold}
-            TextField {id:labelField;objectName:"labelImportField";Layout.fillWidth:true;placeholderText:qsTr("Ex. Tournoi de Paris 2026, Cours de finales…")}
+            TTextField {id:labelField;objectName:"labelImportField";Layout.fillWidth:true;placeholderText:qsTr("Ex. Tournoi de Paris 2026, Cours de finales…")}
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.7;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
                 text:qsTr("Elle devient la collection de ces parties : la bibliothèque les retrouve par elle. Laissez-la vide pour importer sans étiquette.")}
             // Le libellé revient à la ligne : traduit ou en grand, il dépassait du dialogue.
-            CheckBox {id:studyKind;objectName:"labelImportStudy";Layout.fillWidth:true;text:qsTr("Ce sont des études ou des cours, pas des parties jouées")
+            TCheckBox {id:studyKind;objectName:"labelImportStudy";Layout.fillWidth:true;text:qsTr("Ce sont des études ou des cours, pas des parties jouées")
                 contentItem:Label {text:studyKind.text;font:studyKind.font;wrapMode:Text.WordWrap;verticalAlignment:Text.AlignVCenter
                     leftPadding:studyKind.indicator.width+studyKind.spacing}
                 ToolTip.visible:hovered;ToolTip.text:qsTr("Les noms qu’ils portent à la place des joueurs (chapitres, titres) n’entrent pas dans l’onglet Joueurs.")}
@@ -1023,7 +1037,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onAccepted:controller.importLabeled(url,labelField.text,studyKind.checked)
     }
     TDialog {id:collectionDialog;objectName:"collectionDialog";title:qsTr("Collection de la partie");anchors.centerIn:parent;modal:true;width:440;standardButtons:Dialog.Ok|Dialog.Cancel
-        TextField {id:collectionField;anchors.fill:parent;placeholderText:qsTr("Ex. Préparation tournoi, Répertoire Blancs…")}
+        TTextField {id:collectionField;anchors.fill:parent;placeholderText:qsTr("Ex. Préparation tournoi, Répertoire Blancs…")}
         onAccepted:controller.setCollection(win.selectedGame,collectionField.text)
     }
     PositionEditor {id:positionEditor;objectName:"positionEditor";backend:controller}
@@ -1050,7 +1064,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         onAccepted:controller.saveSearch(searchName.text,win.currentSearch())
         ColumnLayout {anchors.fill:parent
             Label {text:qsTr("Son nom, pour la retrouver dans le menu Recherches.");wrapMode:Text.WordWrap;Layout.fillWidth:true}
-            TextField {id:searchName;objectName:"searchName";Layout.fillWidth:true;onAccepted:saveSearchDialog.accept()}
+            TTextField {id:searchName;objectName:"searchName";Layout.fillWidth:true;onAccepted:saveSearchDialog.accept()}
         }
     }
     Guide {id:guideDialog;objectName:"guideDialog";backend:controller}
@@ -1063,7 +1077,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)","Image vectorielle SVG (*.svg)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
     Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
     TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
-        ColumnLayout {Label {text:qsTr("Numéro de la position (518 = position classique)")} SpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}
+        ColumnLayout {Label {text:qsTr("Numéro de la position (518 = position classique)")} TSpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}
         onAccepted:controller.newChess960(frcNumber.value)
     }
     Appearance {id:appearanceDialog;objectName:"appearanceDialog";backend:controller}
@@ -1071,22 +1085,22 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         ScrollView {id:settingsScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:settingsScroll.availableWidth;spacing:18
             Label {text:qsTr("Moteur UCI local");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
-            RowLayout {Layout.fillWidth:true;TextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {objectName:"detectEngine";text:qsTr("Détecter");onClicked:{var found=controller.useDetectedEngine();if(found!=="")enginePathField.text=found}
+            RowLayout {Layout.fillWidth:true;TTextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {objectName:"detectEngine";text:qsTr("Détecter");onClicked:{var found=controller.useDetectedEngine();if(found!=="")enginePathField.text=found}
                          ToolTip.visible:hovered;ToolTip.text:qsTr("Cherche Stockfish et les autres moteurs dans les dossiers du système, dans Téléchargements et dans votre dossier personnel.")}
                 TButton {text:qsTr("Parcourir");onClicked:engineFileDialog.open()}}
-            CheckBox {text:qsTr("Sauvegardes automatiques (14 instantanés)");checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
+            TCheckBox {text:qsTr("Sauvegardes automatiques (14 instantanés)");checked:controller.preferences.autoBackup;onToggled:controller.setPreference("autoBackup",checked)}
             TButton {text:qsTr("Créer une sauvegarde automatique maintenant");onClicked:controller.automaticBackup()}
             GridLayout {columns:settingsScroll.availableWidth>700*win.textScale?4:2;columnSpacing:14;rowSpacing:10;Layout.fillWidth:true
                 Label {text:qsTr("Fils de calcul");color:win.muted;ToolTip.visible:threadsHover.hovered;ToolTip.text:qsTr("Votre processeur offre %1 cœurs. Trait64 en laisse un libre pour que la machine reste fluide pendant l’analyse.").arg(controller.preferences.cpuCores);HoverHandler {id:threadsHover}}
-                SpinBox {from:1;to:1024;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
+                TSpinBox {from:1;to:1024;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
                 Label {text:qsTr("Mémoire (Mio)");color:win.muted;ToolTip.visible:hashHover.hovered;ToolTip.text:qsTr("Table de hachage du moteur. Votre machine dispose de %1 Mio.").arg(Math.round(controller.preferences.memoryMb));HoverHandler {id:hashHover}}
-                SpinBox {from:16;to:262144;stepSize:64;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
-                Label {text:qsTr("Variantes");color:win.muted} SpinBox {from:1;to:5;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
-                Label {text:qsTr("Niveau de jeu");color:win.muted} SpinBox {from:0;to:20;value:controller.preferences.skill;onValueModified:controller.setPreference("skill",value)}
-                Label {text:qsTr("Réflexion (ms)");color:win.muted} SpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}
+                TSpinBox {from:16;to:262144;stepSize:64;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
+                Label {text:qsTr("Variantes");color:win.muted} TSpinBox {from:1;to:5;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
+                Label {text:qsTr("Niveau de jeu");color:win.muted} TSpinBox {from:0;to:20;value:controller.preferences.skill;onValueModified:controller.setPreference("skill",value)}
+                Label {text:qsTr("Réflexion (ms)");color:win.muted} TSpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}
             }
             Label {text:qsTr("Le niveau concerne le jeu contre Stockfish. L’analyse utilise sa pleine force.\nLes réglages sont appliqués au démarrage du moteur.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
-            RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} SpinBox {objectName:"analysisDepth";from:0;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)
+            RowLayout {Label {text:qsTr("Profondeur d’analyse");color:win.muted} TSpinBox {objectName:"analysisDepth";from:0;to:99;value:controller.preferences.analysisDepth;onValueModified:controller.setPreference("analysisDepth",value)
                         // 0 : le moteur creuse tant qu'on regarde la position.
                         // Le texte affiché est une liaison à part : le SpinBox de Qt 6.4 ne
                         // recalcule pas son texte quand la langue change, et « no limit »
@@ -1098,7 +1112,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                         valueFromText:function(text){var n=parseInt(text);return isNaN(n)?0:n}
                         ToolTip.visible:hovered;ToolTip.text:qsTr("Sans limite, le moteur approfondit tant que la position reste affichée. Une profondeur fixe l’arrête dès qu’elle est atteinte.")}}
             RowLayout {Layout.fillWidth:true
-                TextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
+                TTextField {Layout.fillWidth:true;text:controller.preferences.syzygyPath;placeholderText:qsTr("Dossier des tablebases Syzygy locales (optionnel)");onEditingFinished:controller.setPreference("syzygyPath",text);selectByMouse:true}
                 TButton {text:qsTr("Parcourir");onClicked:syzygyFolder.open()}
                 Native.FolderDialog {id:syzygyFolder;title:qsTr("Dossier des tables Syzygy");onAccepted:controller.setPreference("syzygyPath",selectedFolder.toString())}
             }
@@ -1118,19 +1132,19 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 Label {color:win.muted;text:qsTr("%1 / %2 fichiers · %3 Mio reçus").arg(controller.syzygyDownload.done||0).arg(controller.syzygyDownload.total||0).arg(Math.round((controller.syzygyDownload.received||0)/1048576))}
                 TButton {text:qsTr("Interrompre");onClicked:controller.cancelSyzygyDownload()}
             }
-            TextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
+            TTextField {objectName:"bookPathField";Layout.fillWidth:true;text:controller.preferences.bookPath;placeholderText:qsTr("Livre d'ouvertures Polyglot .bin (optionnel)");onEditingFinished:controller.setPreference("bookPath",text);selectByMouse:true}
             RowLayout {Layout.fillWidth:true
-                TextField {id:profileName;Layout.fillWidth:true;placeholderText:qsTr("Nom du profil moteur")}
+                TTextField {id:profileName;Layout.fillWidth:true;placeholderText:qsTr("Nom du profil moteur")}
                 TButton {text:qsTr("Mémoriser");onClicked:controller.saveEngineProfile(profileName.text)}
             }
             RowLayout {Layout.fillWidth:true
-                ComboBox {id:profileBox;Layout.fillWidth:true;model:controller.preferences.engineProfiles;textRole:"name"}
+                TComboBox {translateOptions:false;id:profileBox;Layout.fillWidth:true;model:controller.preferences.engineProfiles;textRole:"name"}
                 TButton {text:qsTr("Charger");enabled:profileBox.currentIndex>=0;onClicked:controller.loadEngineProfile(profileBox.currentIndex)}
                 TButton {text:"×";enabled:profileBox.currentIndex>=0;onClicked:controller.removeEngineProfile(profileBox.currentIndex)}
             }
             RowLayout {TButton {text:qsTr("Démarrer / appliquer");accent:true;onClicked:controller.startEngine()} Label {text:win.systemText(controller.engineStatus);elide:Text.ElideRight;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}}
             Rectangle {Layout.fillWidth:true;height:1;color:win.line}
-            RowLayout {CheckBox {text:qsTr("Thème clair");checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} CheckBox {text:qsTr("Coordonnées de l’échiquier");checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
+            RowLayout {TCheckBox {text:qsTr("Thème clair");checked:controller.preferences.lightTheme;onToggled:controller.setPreference("lightTheme",checked)} TCheckBox {text:qsTr("Coordonnées de l’échiquier");checked:controller.preferences.coordinates;onToggled:controller.setPreference("coordinates",checked)}}
             TButton {text:qsTr("Télécharger d’autres moteurs");onClicked:{settingsDialog.close();downloadsDialog.open()}}
             EngineOptions {backend:controller}
             Label {text:qsTr("Vos données : ")+controller.preferences.dataPath;wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -1155,7 +1169,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Repeater {id:fieldRepeater;model:[{key:"player",label:qsTr("Joueur (selon la couleur ci-dessous)")},{key:"openingName",label:qsTr("Ouverture : Française, Najdorf… → ECO")},{key:"white",label:qsTr("Blancs")},{key:"black",label:qsTr("Noirs")},{key:"event",label:qsTr("Tournoi / événement")},{key:"eco",label:qsTr("Code ECO ou fragment")},{key:"ecoFrom",label:qsTr("ECO de (ex. B20)")},{key:"ecoTo",label:qsTr("ECO à (ex. B99)")},{key:"collection",label:qsTr("Collection personnelle")},{key:"material",label:qsTr("Matériel exact (ex. KRkrp)")},{key:"placement",label:qsTr("Pièces sur des cases (ex. Ke1 Pd4 pd5 ; majuscule = Blancs ; lent : rejoue toutes les parties)")},{key:"dateFrom",label:qsTr("À partir de (AAAA.MM.JJ)")},{key:"dateTo",label:qsTr("Jusqu’au (AAAA.MM.JJ)")},{key:"comment",label:qsTr("Texte dans les commentaires")},{key:"maneuver",label:qsTr("Manœuvre d’une pièce (ex. Cf3-d2-f1)")},{key:"cql",label:qsTr("Requête CQL (ex. « Ra8 kg8 mate » ; lent : rejoue chaque partie, variantes comprises)")}]
                 delegate:ColumnLayout {required property var modelData;Layout.fillWidth:true
                     Label {text:modelData.label;wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                    TextField {Layout.fillWidth:true;text:advancedDialog.draft[modelData.key]||"";onTextEdited:advancedDialog.draft[modelData.key]=text}
+                    TTextField {Layout.fillWidth:true;text:advancedDialog.draft[modelData.key]||"";onTextEdited:advancedDialog.draft[modelData.key]=text}
                 }
             }
             // Les champs sont en nombre impair : une case vide remet chaque libellé suivant en
@@ -1175,11 +1189,11 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     text:qsTr("%1 partie(s) importée(s) avant cette version ne sont pas encore classées : Outils → Réindexer.").arg(advancedDialog.themesPending)}}
             Label {text:qsTr("Médaille")} TComboBox {id:medalFilter;objectName:"medalFilter";Layout.fillWidth:true;model:[qsTr("Aucune")].concat(win.medalNames)}
             Label {text:qsTr("Symbole d’annotation")} TComboBox {id:nagFilter;objectName:"nagFilter";Layout.fillWidth:true;model:[qsTr("Aucun"),"!!","!","!?","?!","?","??"]}
-            CheckBox {text:qsTr("Parties commentées seulement");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.annotated||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.annotated=checked}
-            Label {text:qsTr("Elo minimal des deux joueurs");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
-            Label {text:qsTr("Elo maximal (0 = sans limite)");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}
-            Label {text:qsTr("Demi-coups maximum (0 = tous)");wrapMode:Text.WordWrap;Layout.fillWidth:true} SpinBox {id:maxPlies;from:0;to:2000;editable:true}
-            CheckBox {text:qsTr("Correspondance exacte des champs texte");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
+            TCheckBox {text:qsTr("Parties commentées seulement");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.annotated||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.annotated=checked}
+            Label {text:qsTr("Elo minimal des deux joueurs");wrapMode:Text.WordWrap;Layout.fillWidth:true} TSpinBox {id:minElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:qsTr("Elo maximal (0 = sans limite)");wrapMode:Text.WordWrap;Layout.fillWidth:true} TSpinBox {id:maxElo;from:0;to:3500;stepSize:100;editable:true}
+            Label {text:qsTr("Demi-coups maximum (0 = tous)");wrapMode:Text.WordWrap;Layout.fillWidth:true} TSpinBox {id:maxPlies;from:0;to:2000;editable:true}
+            TCheckBox {text:qsTr("Correspondance exacte des champs texte");font.pixelSize:Math.round(12*win.textScale);checked:advancedDialog.draft.exactNames||false;Layout.columnSpan:2;onToggled:advancedDialog.draft.exactNames=checked}
             Label {text:qsTr("Trier par")} TComboBox {id:sortBy;model:["Modification","Date","Joueurs","Elo","Longueur"]}
             Label {text:qsTr("Le nom d’ouverture sélectionne les codes ECO du catalogue Lichess, pas une variante exacte. Pour celle-ci, utilisez la position de l’échiquier. Les filtres Elo excluent les classements inconnus. Le matériel est recherché dans toutes les variantes.");wrapMode:Text.WordWrap;Layout.fillWidth:true;Layout.columnSpan:2;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             TButton {text:qsTr("Effacer les filtres");onClicked:{win.advanced={};win.applyAdvanced();advancedDialog.close()}}
@@ -1240,7 +1254,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         function choose(index){if(index>=0&&index<commandResults.count){var action=commandResults.model[index].run;close();action()}}
         onOpened:{commandSearch.clear();commandSearch.forceActiveFocus()}
         ColumnLayout {anchors.fill:parent;spacing:10
-            TextField {id:commandSearch;objectName:"commandSearch";Layout.fillWidth:true;placeholderText:qsTr("Rechercher une commande…");selectByMouse:true;onAccepted:commands.choose(0);Keys.onDownPressed:{commandResults.currentIndex=0;commandResults.forceActiveFocus()}}
+            TTextField {id:commandSearch;objectName:"commandSearch";Layout.fillWidth:true;placeholderText:qsTr("Rechercher une commande…");selectByMouse:true;onAccepted:commands.choose(0);Keys.onDownPressed:{commandResults.currentIndex=0;commandResults.forceActiveFocus()}}
             ListView {id:commandResults;objectName:"commandResults";Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:4;ScrollBar.vertical:ScrollBar {}
                 model:commands.entries.filter(function(entry){return entry.title.toLocaleLowerCase().indexOf(commandSearch.text.toLocaleLowerCase())>=0})
                 delegate:ItemDelegate {required property var modelData;required property int index;width:commandResults.width;text:modelData.title;highlighted:ListView.isCurrentItem;onClicked:commands.choose(index)}

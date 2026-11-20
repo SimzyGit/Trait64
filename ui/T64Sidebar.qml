@@ -9,7 +9,7 @@ Item {
     required property int currentPage
     required property var preferences
     property bool collapsed: false
-    property real expandedWidth: 224 * preferences.uiScale
+    property real expandedWidth: 204 * preferences.uiScale
     property real compactWidth: 44 * preferences.uiScale
     implicitWidth: collapsed ? compactWidth : expandedWidth
     implicitHeight: 640
@@ -54,7 +54,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: root.collapsed ? 10 : 20
         anchors.bottomMargin: root.collapsed ? 6 : 14
-        spacing: root.collapsed ? 8 : 17
+        spacing: root.collapsed ? 8 : 14
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: root.collapsed ? 10 : 18
@@ -97,7 +97,8 @@ Item {
                     Layout.minimumWidth: 0
                     Layout.maximumWidth: navigation.width - Layout.leftMargin - Layout.rightMargin
                     objectName: modelData.page !== undefined ? "sectionNav" + modelData.page : "nav" + modelData.action
-                    implicitHeight: root.collapsed ? 34 * root.preferences.uiScale : Math.max(44 * root.preferences.uiScale, 28 * root.preferences.fontScale * root.preferences.uiScale + 12)
+                    // 36 px : douze entrées de 44 px occupaient toute la hauteur d'un portable.
+                    implicitHeight: root.collapsed ? 34 * root.preferences.uiScale : Math.max(36 * root.preferences.uiScale, 22 * root.preferences.fontScale * root.preferences.uiScale + 12)
                     hoverEnabled: true
                     Accessible.name: modelData.text
                     Accessible.role: modelData.page !== undefined ? Accessible.PageTab : Accessible.Button
@@ -132,29 +133,25 @@ Item {
                             elide: Text.ElideRight
                         }
                     }
+                    // Un fond plein et un trait d'accent pour la page ouverte, une simple
+                    // nuance au survol : le cadre ajouté autour de l'entrée active et le liseré
+                    // vert du survol doublaient le même signal.
                     background: Rectangle {
-                        // Le survol doit se voir : la teinte « panel » employée jusqu'ici se
-                        // confondait avec le fond de la barre, si bien qu'on ne savait pas
-                        // sur quoi on se trouvait. Une touche d'accent se lit, elle.
                         readonly property color accent: root.preferences.accentColor
-                        radius: 7
+                        radius: 4
                         color: navButton.active ? root.preferences.raised
                              : navButton.hovered ? Qt.rgba(accent.r, accent.g, accent.b,
-                                                           root.preferences.highContrast ? .3 : .14)
+                                                           root.preferences.highContrast ? .3 : .08)
                              : "transparent"
-                        border.width: navButton.visualFocus ? 2 : 1
-                        border.color: navButton.visualFocus ? accent
-                                    : navButton.active ? root.preferences.line
-                                    : navButton.hovered ? Qt.rgba(accent.r, accent.g, accent.b, .45)
-                                    : "transparent"
+                        border.width: navButton.visualFocus ? 2 : 0
+                        border.color: accent
                         Rectangle {
-                            visible: navButton.active || navButton.hovered
-                            opacity: navButton.active ? 1 : .45
+                            visible: navButton.active
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
-                            height: parent.height - 14
+                            height: parent.height - 12
                             width: 3
-                            radius: 2
+                            radius: 1.5
                             color: root.preferences.accentColor
                         }
                     }

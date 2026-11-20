@@ -35,7 +35,7 @@ ColumnLayout {width:analysisqueueViewport.availableWidth;height:Math.max(analysi
         }
         RowLayout {
             Layout.fillWidth: true
-            CheckBox { id: branches; text: qsTr("Toutes les variantes"); checked: true }
+            TCheckBox { id: branches; text: qsTr("Toutes les variantes"); checked: true }
             Item { Layout.fillWidth: true }
             TButton { objectName: "enqueueLibrary"; text: qsTr("Parties affichées de la bibliothèque")
                 enabled: !!root.queue.state.ready && !root.backend.state.training

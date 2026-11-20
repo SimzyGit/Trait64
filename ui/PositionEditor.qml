@@ -67,15 +67,15 @@ TDialog {
                 }
                 TButton {text:qsTr("Gomme (ou clic droit)");onClicked:root.brush="";Layout.fillWidth:true}
                 TComboBox {id:side;model:["Trait aux Blancs","Trait aux Noirs"];Layout.fillWidth:true}
-                CheckBox {id:variant;text:qsTr("Règles Chess960")}
+                TCheckBox {id:variant;text:qsTr("Règles Chess960")}
                 Label {text:qsTr("Roques : KQkq ou lettres des tours (960)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);wrapMode:Text.WordWrap;Layout.fillWidth:true}
-                TextField {id:castles;Layout.fillWidth:true;maximumLength:4;selectByMouse:true}
+                TTextField {id:castles;Layout.fillWidth:true;maximumLength:4;selectByMouse:true}
                 Label {text:qsTr("Case en passant (ou -)");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                TextField {id:ep;Layout.fillWidth:true;maximumLength:2}
+                TTextField {id:ep;Layout.fillWidth:true;maximumLength:2}
                 Label {text:qsTr("Demi-coups sans prise ni pion");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                SpinBox {id:half;from:0;to:255;editable:true;Layout.fillWidth:true}
+                TSpinBox {id:half;from:0;to:255;editable:true;Layout.fillWidth:true}
                 Label {text:qsTr("Numéro du coup");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                SpinBox {id:full;from:1;to:32000;value:1;editable:true;Layout.fillWidth:true}
+                TSpinBox {id:full;from:1;to:32000;value:1;editable:true;Layout.fillWidth:true}
                 TButton {text:qsTr("Créer l’étude");accent:true;Layout.fillWidth:true;onClicked:root.backend.setPosition(root.fen(),variant.checked)}
             }
         }

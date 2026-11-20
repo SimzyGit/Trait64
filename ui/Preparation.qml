@@ -32,7 +32,7 @@ ColumnLayout {width:preparationViewport.availableWidth;height:Math.max(preparati
             Label {text:qsTr("Couleur du joueur")}
             TComboBox {id:colour;model:["Les deux","Blancs","Noirs"];Layout.fillWidth:true}
             Label {text:qsTr("Joueur / adversaire")}
-            TextField {id:player;objectName:"preparationPlayer";placeholderText:qsTr("Nom dans la base ou pseudo en ligne (vide : tous)");Layout.fillWidth:true;Layout.columnSpan:parent.columns-1;maximumLength:300;onAccepted:root.calculate()}
+            TTextField {id:player;objectName:"preparationPlayer";placeholderText:qsTr("Nom dans la base ou pseudo en ligne (vide : tous)");Layout.fillWidth:true;Layout.columnSpan:parent.columns-1;maximumLength:300;onAccepted:root.calculate()}
             Label {text:qsTr("Ses parties en ligne")}
             RowLayout {Layout.fillWidth:true;Layout.columnSpan:parent.columns-1
                 TComboBox {id:onlineSite;model:["Lichess","Chess.com"]}
@@ -43,9 +43,9 @@ ColumnLayout {width:preparationViewport.availableWidth;height:Math.max(preparati
                     text:qsTr("Ses 1 000 dernières parties, ajoutées à la bibliothèque ; le calcul suit.")}
             }
             Label {text:qsTr("Années (0 : sans limite)")}
-            RowLayout {SpinBox {id:fromYear;from:0;to:9999;editable:true} Label {text:qsTr("à")} SpinBox {id:toYear;from:0;to:9999;editable:true}}
+            RowLayout {TSpinBox {id:fromYear;from:0;to:9999;editable:true} Label {text:qsTr("à")} TSpinBox {id:toYear;from:0;to:9999;editable:true}}
             Label {text:qsTr("Elo moyen des deux joueurs")}
-            RowLayout {SpinBox {id:minElo;from:0;to:4000;stepSize:100;editable:true} Label {text:qsTr("à")} SpinBox {id:maxElo;from:0;to:4000;stepSize:100;editable:true}}
+            RowLayout {TSpinBox {id:minElo;from:0;to:4000;stepSize:100;editable:true} Label {text:qsTr("à")} TSpinBox {id:maxElo;from:0;to:4000;stepSize:100;editable:true}}
         }
         Label {text:qsTr("Une borne Elo active exclut les parties où l’un des Elo manque ; une période active exclut les années inconnues. Aucun Elo n’est estimé.");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
         Flow {Layout.fillWidth:true;spacing:8

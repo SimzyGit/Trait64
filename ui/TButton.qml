@@ -8,8 +8,8 @@ Button {
     readonly property bool lit: accent && enabled
     property color accentColor: palette.highlight
     function contrast(c){function linear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}return .2126*linear(c.r)+.7152*linear(c.g)+.0722*linear(c.b)>.179?"#101810":"#ffffff"}
-    // Compact desktop density: 26 px at 100 %, like a classic toolbar button.
-    implicitHeight: Math.max(26*controller.preferences.uiScale,label.implicitHeight+10*controller.preferences.uiScale)
+    // Densité de bureau : 28 px à 100 %, la hauteur des champs et des listes voisins.
+    implicitHeight: Math.max(28*controller.preferences.uiScale,label.implicitHeight+10*controller.preferences.uiScale)
     implicitWidth: Math.max(28*controller.preferences.uiScale, label.implicitWidth + 18*controller.preferences.uiScale)
     padding: 4*controller.preferences.uiScale
     hoverEnabled: true

@@ -16,7 +16,7 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
         RowLayout {Layout.fillWidth:true
             Label {text:qsTr("Temps par position")}
             TComboBox {id:budget;model:["0,2 s","0,5 s","1 s","2 s","5 s"];currentIndex:1;enabled:!root.backend.reviewState.running}
-            CheckBox {id:twoPasses;objectName:"reviewTwoPasses";text:qsTr("Deux passages");checked:true;enabled:!root.backend.reviewState.running
+            TCheckBox {id:twoPasses;objectName:"reviewTwoPasses";text:qsTr("Deux passages");checked:true;enabled:!root.backend.reviewState.running
                 ToolTip.visible:hovered;ToolTip.text:qsTr("Un passage rapide du début à la fin, puis un passage complet de la fin vers le début : le moteur profite de ce qu’il a appris sur la suite de la partie.")}
             TButton {text:root.backend.reviewState.running?qsTr("Interrompre"):qsTr("Analyser la partie");accent:true;onClicked:root.backend.reviewState.running?root.backend.cancelReview():root.backend.analyseGame([200,500,1000,2000,5000][budget.currentIndex],twoPasses.checked)}
             Item {Layout.fillWidth:true}

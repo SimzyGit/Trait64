@@ -21,7 +21,7 @@ ColumnLayout {width:compareenginesViewport.availableWidth;height:Math.max(compar
             Layout.fillWidth:true
             spacing: 8
             Repeater {model:root.backend.preferences.engineProfiles
-                CheckBox {required property int index;required property var modelData;text:modelData.name
+                TCheckBox {required property int index;required property var modelData;text:modelData.name
                     checked:root.selected.indexOf(index)>=0
                     onToggled:{let a=root.selected.slice();let n=a.indexOf(index);if(checked&&n<0)a.push(index);else if(!checked&&n>=0)a.splice(n,1);root.selected=a}
                 }

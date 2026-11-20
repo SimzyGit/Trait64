@@ -33,7 +33,7 @@ ColumnLayout {
             model: [qsTr("Court (profondeur 12)"), qsTr("Moyen (profondeur 18)"), qsTr("Approfondi (profondeur 24)"), qsTr("Profondeur choisie")]
             currentIndex: 1
         }
-        SpinBox {
+        TSpinBox {
             id: custom; objectName: "reviewDepth"; from: 1; to: 40; value: 20
             visible: preset.currentIndex === 3; editable: true
         }

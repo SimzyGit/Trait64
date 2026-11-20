@@ -30,15 +30,15 @@ TDialog {
                 Label {text:qsTr("Langue")}
                 TComboBox {objectName:"languageSelector";Layout.fillWidth:true;model:["Français","English","Español","Système · System"];property var values:["fr","en","es","auto"];currentIndex:values.indexOf(root.backend.preferences.language);onActivated:root.backend.setPreference("language",values[currentIndex])}
                 Label {text:qsTr("Police")}
-                ComboBox {objectName:"fontSelector";Layout.fillWidth:true;model:root.backend.preferences.fontFamilies;currentIndex:model.indexOf(root.backend.preferences.fontFamily);onActivated:root.backend.setPreference("fontFamily",currentText)}
+                TComboBox {translateOptions:false;objectName:"fontSelector";Layout.fillWidth:true;model:root.backend.preferences.fontFamilies;currentIndex:model.indexOf(root.backend.preferences.fontFamily);onActivated:root.backend.setPreference("fontFamily",currentText)}
                 Label {text:qsTr("Taille du texte")}
-                SpinBox {objectName:"fontScaleControl";from:90;to:150;stepSize:10;value:Math.round(root.backend.preferences.fontScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("fontScale",value/100)}
+                TSpinBox {objectName:"fontScaleControl";from:90;to:150;stepSize:10;value:Math.round(root.backend.preferences.fontScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("fontScale",value/100)}
                 Label {text:qsTr("Taille de l’interface")}
-                SpinBox {objectName:"uiScaleControl";from:90;to:125;stepSize:5;value:Math.round(root.backend.preferences.uiScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("uiScale",value/100)}
+                TSpinBox {objectName:"uiScaleControl";from:90;to:125;stepSize:5;value:Math.round(root.backend.preferences.uiScale*100);textFromValue:function(v){return v+" %"};onValueModified:root.backend.setPreference("uiScale",value/100)}
             }
-            CheckBox {objectName:"figurineNotation";text:qsTr("Notation figurine (♘ ♗ ♖ ♕ ♔)");checked:root.backend.preferences.figurines;onToggled:root.backend.setPreference("figurines",checked)}
-            CheckBox {text:qsTr("Contraste renforcé");checked:root.backend.preferences.highContrast;onToggled:root.backend.setPreference("highContrast",checked)}
-            CheckBox {text:qsTr("Réduire les animations");checked:root.backend.preferences.reduceMotion;onToggled:root.backend.setPreference("reduceMotion",checked)}
+            TCheckBox {objectName:"figurineNotation";text:qsTr("Notation figurine (♘ ♗ ♖ ♕ ♔)");checked:root.backend.preferences.figurines;onToggled:root.backend.setPreference("figurines",checked)}
+            TCheckBox {text:qsTr("Contraste renforcé");checked:root.backend.preferences.highContrast;onToggled:root.backend.setPreference("highContrast",checked)}
+            TCheckBox {text:qsTr("Réduire les animations");checked:root.backend.preferences.reduceMotion;onToggled:root.backend.setPreference("reduceMotion",checked)}
             TButton {text:qsTr("Rétablir la largeur des panneaux");onClicked:root.backend.setPreference("analysisPanelRatio",.58)}
             Label {text:qsTr("Jeu de pièces");font.bold:true}
             Flow {Layout.fillWidth:true;spacing:8
@@ -102,7 +102,7 @@ TDialog {
                         required property var modelData
                         Layout.columnSpan:3;Layout.fillWidth:true
                         Label {text:root.systemText(modelData.label);Layout.preferredWidth:180}
-                        TextField {Layout.fillWidth:true;text:root.backend.preferences[modelData.key]||root.backend.preferences.background;onEditingFinished:root.backend.setPreference(modelData.key,text);selectByMouse:true;maximumLength:7}
+                        TTextField {Layout.fillWidth:true;text:root.backend.preferences[modelData.key]||root.backend.preferences.background;onEditingFinished:root.backend.setPreference(modelData.key,text);selectByMouse:true;maximumLength:7}
                         Button {Layout.preferredWidth:46;implicitHeight:32
                             background:Rectangle {color:root.backend.preferences[modelData.key]||root.backend.preferences.background;radius:5;border.color:root.backend.preferences.foreground}
                             onClicked:{picker.key=modelData.key;picker.selectedColor=root.backend.preferences[modelData.key]||root.backend.preferences.background;picker.open()}
@@ -112,21 +112,21 @@ TDialog {
                 }
             }
             Flow {Layout.fillWidth:true;spacing:12
-                CheckBox {text:qsTr("Thème clair");checked:root.backend.preferences.lightTheme;onToggled:{root.backend.setPreference("lightTheme",checked);root.backend.setPreference("backgroundColor","")}}
-                CheckBox {text:qsTr("Coordonnées");checked:root.backend.preferences.coordinates;onToggled:root.backend.setPreference("coordinates",checked)}
-                CheckBox {text:qsTr("Coups possibles");checked:root.backend.preferences.legalMoves;onToggled:root.backend.setPreference("legalMoves",checked)}
-                CheckBox {text:qsTr("Dernier coup");checked:root.backend.preferences.lastMove;onToggled:root.backend.setPreference("lastMove",checked)}
-                CheckBox {text:qsTr("Flèches du moteur");checked:root.backend.preferences.engineArrows;onToggled:root.backend.setPreference("engineArrows",checked)}
-                CheckBox {text:qsTr("Analyse assistée");checked:root.backend.preferences.assistedAnalysis;onToggled:root.backend.setPreference("assistedAnalysis",checked)
+                TCheckBox {text:qsTr("Thème clair");checked:root.backend.preferences.lightTheme;onToggled:{root.backend.setPreference("lightTheme",checked);root.backend.setPreference("backgroundColor","")}}
+                TCheckBox {text:qsTr("Coordonnées");checked:root.backend.preferences.coordinates;onToggled:root.backend.setPreference("coordinates",checked)}
+                TCheckBox {text:qsTr("Coups possibles");checked:root.backend.preferences.legalMoves;onToggled:root.backend.setPreference("legalMoves",checked)}
+                TCheckBox {text:qsTr("Dernier coup");checked:root.backend.preferences.lastMove;onToggled:root.backend.setPreference("lastMove",checked)}
+                TCheckBox {text:qsTr("Flèches du moteur");checked:root.backend.preferences.engineArrows;onToggled:root.backend.setPreference("engineArrows",checked)}
+                TCheckBox {text:qsTr("Analyse assistée");checked:root.backend.preferences.assistedAnalysis;onToggled:root.backend.setPreference("assistedAnalysis",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, ses cases d’arrivée se colorent : vert pour le meilleur coup du moteur, vert clair à moins d’un demi-pion, rouge pour un coup qui perd du matériel ou que le moteur juge mauvais.")}
-                CheckBox {text:qsTr("Pièces en prise");checked:root.backend.preferences.showHanging;onToggled:root.backend.setPreference("showHanging",checked)
+                TCheckBox {text:qsTr("Pièces en prise");checked:root.backend.preferences.showHanging;onToggled:root.backend.setPreference("showHanging",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.")}
-                CheckBox {text:qsTr("Relations d’attaque");checked:root.backend.preferences.showAttacks;onToggled:root.backend.setPreference("showAttacks",checked)
+                TCheckBox {text:qsTr("Relations d’attaque");checked:root.backend.preferences.showAttacks;onToggled:root.backend.setPreference("showAttacks",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.")}
-                CheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
-                CheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
-                CheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}
-                CheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
+                TCheckBox {text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
+                TCheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
+                TCheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}
+                TCheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Bande verticale contre l’échiquier : la part claire est l’avantage des Blancs.")}
             }
             RowLayout {Layout.fillWidth:true;spacing:10

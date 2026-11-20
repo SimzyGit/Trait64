@@ -27,7 +27,7 @@ ColumnLayout {width:downloadsViewport.availableWidth;height:Math.max(downloadsVi
         spacing: 10
         Flow {Layout.fillWidth:true;spacing:8
             TComboBox { id: category; objectName:"contentCategory"; model: ["Moteurs", "Champions du monde", "Championnes du monde", "Histoire", "Ouvertures", "Historique des imports"]; width:Math.min(parent.width,245*controller.preferences.fontScale*controller.preferences.uiScale) }
-            TextField { id: search; width:Math.min(parent.width,260*controller.preferences.fontScale*controller.preferences.uiScale); placeholderText: qsTr("Chercher dans le catalogue…"); visible: category.currentIndex < 5 }
+            TTextField { id: search; width:Math.min(parent.width,260*controller.preferences.fontScale*controller.preferences.uiScale); placeholderText: qsTr("Chercher dans le catalogue…"); visible: category.currentIndex < 5 }
             TButton {text: qsTr("Profils moteurs"); onClicked: {root.close(); root.configureEngines()} }
         }
         Label {

@@ -17,7 +17,7 @@ TDialog {
     ColumnLayout {
         anchors.fill:parent;spacing:8
         RowLayout {Layout.fillWidth:true
-            TextField {id:filter;objectName:"tournamentFilter";Layout.fillWidth:true;placeholderText:qsTr("Nom du tournoi…");selectByMouse:true
+            TTextField {id:filter;objectName:"tournamentFilter";Layout.fillWidth:true;placeholderText:qsTr("Nom du tournoi…");selectByMouse:true
                 onTextChanged:typing.restart()}
             Timer {id:typing;interval:250;onTriggered:root.backend.findTournaments(filter.text)}
             Label {opacity:.7;text:root.backend.tournamentList.running?qsTr("Recherche…"):qsTr("%1 tournoi(s)").arg(root.rows.length)}

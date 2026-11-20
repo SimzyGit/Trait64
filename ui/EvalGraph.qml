@@ -37,7 +37,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 8
+        radius:6
         color: root.backend.preferences.panel
 
         Canvas {

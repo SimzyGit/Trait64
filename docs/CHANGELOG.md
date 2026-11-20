@@ -1,5 +1,20 @@
 # Changements
 
+## Contrôles d'interface — 20 novembre 2026
+
+Pas de nouvelle fonction : les contrôles communs reprennent tous la même mesure et le même dessin, au lieu des valeurs par défaut du thème Basic de Qt.
+
+- **Champs, listes et compteurs** à 28 px, la hauteur des boutons, avec un filet qui passe à l'accent sous le focus (`TTextField`, `TComboBox`, `TSpinBox`). Les champs blancs sans bord, plus hauts que les boutons voisins, cassaient chaque rangée d'outils ; les listes ont un seul chevron.
+- **Compteurs** : « − » et « + » de part et d'autre de la valeur, et des nombres à la française (« 2 048 », plus « 2,048 ») au-delà de 9 999.
+- **Cases à cocher** de 16 px, pleines d'accent une fois cochées (`TCheckBox`), au lieu de grandes cases qui dépassaient leur libellé.
+- **Dialogues** : titre plus lisible, coins arrondis, boutons du bas alignés à droite et à la taille des autres ; « Fermer » occupait jusque-là la moitié de la largeur sur 40 px de haut. Le bouton qui valide (OK, Oui, Enregistrer) porte l'accent.
+- **Onglets** soulignés d'un trait d'accent plutôt qu'en boîtes (notation, études, répertoires) ; les études ouvertes sont des onglets de document, titre et croix dans un même cadre.
+- **Coup courant** de la notation sur un fond teinté d'accent, sans cadre épais ; lignes de 28 px au lieu de 32.
+- **Barre d'évaluation** droite et franchement blanche et noire, comme l'échiquier qu'elle borde, au lieu d'une pilule grise. Les barres de résultats des **Ouvertures** prennent les mêmes tons, dans les deux thèmes.
+- **Barre latérale** plus compacte (entrées de 36 px, 204 px de large), une seule marque pour la page ouverte ; **marges** des pages portées à 14 px.
+- **Accueil** : les cartes d'une même rangée ont la même hauteur. **Entraînement** : compteurs plus ramassés, un seul bouton d'accent par rangée, état vide centré. **Joueurs** : le nom entier et le nombre de parties sur deux lignes (« Alpha, A… » auparavant), le joueur choisi surligné.
+- Arrondis harmonisés : 3 px pour les contrôles, 6 px pour les cartes et les dialogues.
+
 ## Nouvelle allure — 20 novembre 2026
 
 Trait64 a été comparé aux logiciels et sites d'échecs courants (ChessBase 18, Scid, En Croissant, ChessX, Lucas Chess, Nibbler, Lichess, Chess.com, Chessable) : voir [docs/COMPARISON.md](COMPARISON.md). Il en sort une apparence à lui et trois emprunts.

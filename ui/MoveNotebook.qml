@@ -39,7 +39,7 @@ Item {
         id: titleDialog; objectName: "titleDialog"
         title: qsTr("Titre de rubrique"); anchors.centerIn: Overlay.overlay; modal: true; width: 420
         standardButtons: Dialog.Ok | Dialog.Cancel
-        TextField { id: titleField; width: parent.width; placeholderText: qsTr("Ex. Le milieu de jeu, La finale…") }
+        TTextField { id: titleField; width: parent.width; placeholderText: qsTr("Ex. Le milieu de jeu, La finale…") }
         onAccepted: root.backend.setMoveTitle(titleField.text)
     }
     property bool forceFollow: false
@@ -235,8 +235,8 @@ Item {
                     }
                     background: Rectangle {
                         radius: 3
-                        color: fm.active || fm.hovered ? root.raised : "transparent"
-                        border.width: fm.active || fm.visualFocus ? 2 : 0
+                        color: fm.active ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, .2) : fm.hovered ? root.raised : "transparent"
+                        border.width: fm.visualFocus ? 2 : 0
                         border.color: root.accent
                     }
                     onClicked: root.backend.navigate(token.id)
@@ -336,8 +336,8 @@ Item {
                         font.bold: !!(!!row.modelData.initial && root.backend.state.node === 0)
                     }
                     background: Rectangle {
-                        color: (!!row.modelData.initial && root.backend.state.node === 0) || initialButton.hovered ? root.raised : "transparent"
-                        border.width: (!!row.modelData.initial && root.backend.state.node === 0) || initialButton.visualFocus ? 1 : 0
+                        color: !!row.modelData.initial && root.backend.state.node === 0 ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, .2) : initialButton.hovered ? root.raised : "transparent"
+                        border.width: initialButton.visualFocus ? 1 : 0
                         border.color: root.accent; radius: 3
                     }
                     onClicked: root.backend.navigate(0)
@@ -368,8 +368,8 @@ Item {
                         readonly property bool active: !!move.id && move.id === root.backend.state.node
                         objectName: move.id ? "notebookMove_" + move.id : "emptyMoveCell"
                         enabled: !!move.id
-                        implicitHeight: Math.max(32 * root.textScale, contentItem.implicitHeight + 12)
-                        padding: 6
+                        implicitHeight: Math.max(28 * root.textScale, contentItem.implicitHeight + 10)
+                        padding: 5
                         Accessible.name: (row.modelData.number || "") + (parent === whiteCell ? ". " : "… ") + (move.text || "")
                         Accessible.description: move.comment || ""
                         contentItem: Row {
@@ -397,8 +397,10 @@ Item {
                         }
                         background: Rectangle {
                             radius: 3
-                            color: cell.active || cell.hovered ? root.raised : "transparent"
-                            border.width: cell.active || cell.visualFocus ? 2 : 0
+                            // Le coup courant se lit à son fond teinté d'accent, comme une
+                            // ligne choisie ; le cadre épais est gardé pour le focus clavier.
+                            color: cell.active ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, .2) : cell.hovered ? root.raised : "transparent"
+                            border.width: cell.visualFocus ? 2 : 0
                             border.color: root.accent
                         }
                         onClicked: root.backend.navigate(move.id)
