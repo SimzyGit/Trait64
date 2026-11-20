@@ -1,18 +1,18 @@
-# Trait64 — état du projet au 19 novembre 2026
+# Trait64 — état du projet au 20 novembre 2026
 
-> **Alpha 0.3 · C++23 / Qt6/QML · SQLite · Linux, Windows et macOS · AGPL-3.0-or-later**
+> **Bêta 0.4 · C++23 / Qt6/QML · SQLite · Linux, Windows et macOS · AGPL-3.0-or-later**
 
 Ce document présente **le code fusionné dans `main` et les versions réellement publiées**. Le détail des changements est dans le [journal](CHANGELOG.md), ce qui reste à faire dans la [feuille de route](ROADMAP.md), les mesures dans [PERFORMANCE.md](PERFORMANCE.md). L'interface, le moteur et les données restent utilisables localement, sans compte ni connexion obligatoire.
 
 ## Dernière version publiée
 
-**[v0.3.0-dev.231](https://github.com/SimzyGit/Trait64/releases/tag/v0.3.0-dev.231)** — 19 novembre 2026. Construction, tests et publication Linux verts (Debian 12 et 13, sanitizers), constructions et tests Windows et macOS verts, lancement de l'AppImage vert sur les 12 distributions. Localement : 20 suites vertes.
+**[v0.4.0-beta.1](https://github.com/SimzyGit/Trait64/releases/tag/v0.4.0-beta.1)** — 20 novembre 2026. Première bêta : nouvelle allure (contrôles, dialogues et onglets redessinés), tournois de moteurs avec marge d'erreur et LOS, plantage du zoom de la bibliothèque corrigé. Avant publication : 20 suites réussies sous AddressSanitizer et UBSan, trois passages de suite sous charge, sonde de mise en page (164 vues de dialogues, 0 avertissement QML). Les préversions de développement continuent de sortir à chaque commit sur `main`, désormais en `0.4.0-dev.N`.
 
 ## Ce qui est intégré
 
 | Domaine | Capacités réellement développées |
 | --- | --- |
-| Interface | Navigation latérale, panneaux adaptables, clavier, thèmes, français/anglais |
+| Interface | Navigation latérale, panneaux adaptables, clavier, thèmes clair et sombre, contrôles communs à une seule mesure, français/anglais/espagnol |
 | Échiquier | Glisser ou clic-clic, pièces animées, sons des coups, flèches du moteur, menace, pièces prises et avance matérielle, lecture automatique, molette en option |
 | Études | Variantes, Chess960, titres de rubrique, diagrammes, questions d'entraînement, étiquettes à l'import, PGN annoté, onglets, explorateur de fichiers avec arbre, corbeille du système, export PGN, EPD et page HTML autonome |
 | Moteurs | UCI, détection des moteurs installés, catalogue téléchargeable, MultiPV, comparaison de 2 à 4 moteurs, recherche sans plafond de profondeur, de fils ni de mémoire autre que la machine |

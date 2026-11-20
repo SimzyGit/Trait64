@@ -1,5 +1,11 @@
 # Changements
 
+## 0.4.0-beta.1 — 20 novembre 2026
+
+- **Version 0.4**, première bêta. Le numéro affiché dans les paramètres suit désormais la version réelle au lieu d'un « 0.3.0 » écrit en dur.
+- **README** : captures refaites avec la nouvelle allure, sur une base de joueurs fictifs, comparaison et tournois de moteurs à jour (français et anglais).
+- **Signalement de bug** : Windows et macOS parmi les installations proposées.
+
 ## Tournois de moteurs mesurés — 20 novembre 2026
 
 - **Elo ± marge à 95 %** et **LOS** (probabilité d'être réellement plus fort) dans le classement des tournois de moteurs, calculés comme dans Cute Chess et fastchess. Un écart de 50 Elo sur dix parties ne se lit plus comme un résultat établi.

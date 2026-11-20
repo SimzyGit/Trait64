@@ -77,12 +77,12 @@ Les paquets ne sont pas signés : au premier lancement, Windows (SmartScreen) et
 - **Répertoires** — import d’un dossier entier venu d’En Croissant ou de Pawn Appétit, PGN compressés compris, et une comparaison avec vos propres parties : à quel coup vous quittez votre préparation, et ce qui était prévu à la place.
 - **Études** — notation avec titres de rubrique, diagrammes et questions d’entraînement, étiquettes à l’import, recueils d’études tenus à l’écart des statistiques de joueurs.
 - **Entraînement** — puzzles notés (base Lichess libre, vos propres gaffes, mats tirés de votre bibliothèque), cartes à répétition espacée, révision de répertoire, exercice de Stoyko.
-- **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs.
+- **Jeu** — contre le moteur à un Elo choisi, à deux avec pendule, tournois entre moteurs avec Elo, marge d’erreur et probabilité de supériorité (LOS).
 - **Confort** — thème clair ou sombre, taille d’interface réglable, français, anglais et espagnol, **Ctrl K** pour la palette de commandes.
 
 ![Bibliothèque de parties](docs/screenshots/library.png)
 
-Trait64 est en **alpha** et évolue vite : voir les [nouveautés](docs/CHANGELOG.md), l’[état du projet](docs/PROJECT-STATUS.md) et la [feuille de route](docs/ROADMAP.md).
+Trait64 est en **bêta** (0.4) et évolue vite : voir les [nouveautés](docs/CHANGELOG.md), l’[état du projet](docs/PROJECT-STATUS.md) et la [feuille de route](docs/ROADMAP.md).
 
 ## Premiers pas
 
@@ -98,7 +98,7 @@ Trait64 est en **alpha** et évolue vite : voir les [nouveautés](docs/CHANGELOG
 | --- | --- |
 | [Fonctions en détail](docs/FEATURES.md) | tout ce que fait Trait64, raccourcis, données et limites |
 | [Installer et compiler](docs/BUILDING.md) | paquets, AppImage, compilation depuis les sources |
-| [Comparaison](docs/COMPARISON.md) | Trait64 face à ChessBase, Scid vs. PC et En Croissant |
+| [Comparaison](docs/COMPARISON.md) | Trait64 face à ChessBase, Scid, En Croissant, Fritz, HIARCS, Lichess, Chess.com et une quinzaine d’autres outils |
 | [Moteurs et bases](docs/ENGINES-DATABASES.md) · [Mises à jour](docs/UPDATES.md) | catalogue vérifié et canaux de mise à jour |
 | [Architecture](docs/ARCHITECTURE.md) · [Tests](docs/TESTING.md) | pour contribuer au code |
 

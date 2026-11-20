@@ -66,12 +66,12 @@ The packages are unsigned: on first launch Windows (SmartScreen) and macOS (Gate
 - **Openings** — statistical tree of your own database, endgame odds and trends, Lichess cloud analysis, Polyglot books, repertoires with transpositions, novelty detection, a preparation file against a given opponent.
 - **Studies** — notation with section headings, diagrams and training questions, labels on import, study collections kept out of player statistics.
 - **Training** — rated puzzles (the free Lichess set, your own blunders, mates taken from your library), spaced-repetition cards, repertoire review, the Stoyko exercise.
-- **Playing** — against the engine at a chosen rating, two players with a clock, engine tournaments.
+- **Playing** — against the engine at a chosen rating, two players with a clock, engine tournaments with Elo, error margin and likelihood of superiority (LOS).
 - **Comfort** — light or dark theme, adjustable interface size, French, English and Spanish, **Ctrl K** for the command palette.
 
 ![Game library](docs/screenshots/library.png)
 
-Trait64 is **alpha** and moving fast: see the [changelog](docs/CHANGELOG.md), the [project status](docs/PROJECT-STATUS.md) and the [roadmap](docs/ROADMAP.md).
+Trait64 is in **beta** (0.4) and moving fast: see the [changelog](docs/CHANGELOG.md), the [project status](docs/PROJECT-STATUS.md) and the [roadmap](docs/ROADMAP.md).
 
 ## First steps
 
@@ -87,7 +87,7 @@ Trait64 is **alpha** and moving fast: see the [changelog](docs/CHANGELOG.md), th
 | --- | --- |
 | [Features in detail](docs/FEATURES.md) | everything Trait64 does, shortcuts, data and limits |
 | [Install and build](docs/BUILDING.md) | packages, AppImage, building from source |
-| [Comparison](docs/COMPARISON.md) | Trait64 against ChessBase, Scid vs. PC and En Croissant |
+| [Comparison](docs/COMPARISON.md) | Trait64 against ChessBase, Scid, En Croissant, Fritz, HIARCS, Lichess, Chess.com and some fifteen other tools |
 | [Engines and databases](docs/ENGINES-DATABASES.md) · [Updates](docs/UPDATES.md) | verified catalogue and update channels |
 | [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) | to contribute code |
 

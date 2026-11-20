@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(Trait64 VERSION 0.3.0 LANGUAGES CXX)
+project(Trait64 VERSION 0.4.0 LANGUAGES CXX)
 set(T64_RELEASE_VERSION "${PROJECT_VERSION}-dev.1" CACHE STRING "Published semantic version")
 add_compile_definitions(T64_VERSION="${T64_RELEASE_VERSION}")
 set(CMAKE_CXX_STANDARD 23)

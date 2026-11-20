@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish, e.g. 0.3.0-beta.1 or 0.3.0; empty = development'
+        description: 'Version to publish, e.g. 0.4.0-beta.1 or 0.4.0; empty = development'
         required: false
         type: string
 permissions:

@@ -12,13 +12,13 @@ body:
     id: install
     attributes:
       label: Installation
-      options: [AppImage, Paquet .deb, Compilé depuis les sources]
+      options: [AppImage, Paquet .deb, Windows (archive .zip), macOS (image .dmg), Compilé depuis les sources]
     validations: {required: true}
   - type: input
     id: system
     attributes:
       label: Système
-      placeholder: Debian 13, Ubuntu 24.04, Fedora 41…
+      placeholder: Debian 13, Ubuntu 24.04, Fedora 41, Windows 11, macOS 15…
     validations: {required: true}
   - type: textarea
     id: steps

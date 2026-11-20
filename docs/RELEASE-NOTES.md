@@ -1,3 +1,15 @@
+## 0.4.0-beta.1 — 20 novembre 2026
+
+**Première bêta.** Trait64 couvre désormais l'essentiel de ce que font ChessBase, Scid et En Croissant, et la comparaison s'étend à une quinzaine d'autres outils ([docs/COMPARISON.md](COMPARISON.md)).
+
+**Une interface tenue d'un bout à l'autre.** Champs, listes, compteurs, cases à cocher et boutons ont la même hauteur, le même filet et le même focus. Les dialogues ont leurs boutons en bas à droite, à taille normale. Les onglets sont soulignés, les études ouvertes sont des onglets de document et le coup courant de la notation se lit à son fond teinté. La barre d'évaluation est blanche et noire comme l'échiquier. Les nombres des compteurs s'écrivent à la française.
+
+**Des tournois de moteurs qu'on peut lire.** Le classement donne l'écart d'Elo avec sa marge d'erreur à 95 % et la probabilité que chaque moteur soit réellement plus fort (LOS), calculées comme dans Cute Chess et fastchess.
+
+**Un plantage en moins.** Ctrl + molette sur la bibliothèque pouvait fermer le programme ; c'est corrigé.
+
+Détail complet dans le [journal des changements](CHANGELOG.md).
+
 ## Ouvertures, analyse et mise à jour — 6 novembre 2026
 
 **Vos fichiers PGN se parcourent enfin partie par partie.** Une étude n'est pas
