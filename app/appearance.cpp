@@ -293,8 +293,12 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!QStringList{"table", "flow"}.contains(value.toString()))
                 return;
         } else if (key == "soundTheme") {
-            if (!t64::soundThemes().contains(value.toString()))
-                return;
+            // Un jeu livré, ou le dossier de sons personnels choisi par l'utilisateur.
+            if (!t64::soundThemes().contains(value.toString())) {
+                clean = QDir::cleanPath(localPath(value.toString()));
+                if (!QDir::isAbsolutePath(clean.toString()) || !QFileInfo(clean.toString()).isDir())
+                    return;
+            }
         } else if (key == "language") {
             if (!QStringList{"auto", "fr", "en", "es"}.contains(value.toString()))
                 return;

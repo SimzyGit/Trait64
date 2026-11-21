@@ -19,6 +19,9 @@ TDialog {
         property string key: ""
         onAccepted: root.backend.setPreference(key,selectedColor.toString())
     }
+    Native.FolderDialog {id: soundFolder;title:qsTr("Dossier de vos sons (WAV)")
+        onAccepted:{root.backend.setPreference("soundTheme",selectedFolder.toString());root.backend.previewSound(root.backend.preferences.soundTheme)}
+        onRejected:soundTheme.currentIndex=Qt.binding(function(){return soundTheme.shown})}
     Native.FolderDialog {id: customFolder;title:qsTr("Dossier contenant les 12 pièces SVG");onAccepted:root.backend.importPieceSet(selectedFolder.toString())}
     ScrollView {
         id:appearanceScroll
@@ -145,11 +148,14 @@ TDialog {
             Label {text:qsTr("Sons");font.bold:true}
             Flow {Layout.fillWidth:true;Layout.preferredWidth:1;spacing:10
                 TCheckBox {objectName:"soundsEnabled";text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
-                TComboBox {objectName:"soundTheme";width:150;enabled:root.backend.preferences.sounds
-                    readonly property var keys:["bois","feutre","clic","marbre","retro"]
-                    model:[qsTr("Bois"),qsTr("Feutre"),qsTr("Clic"),qsTr("Marbre"),qsTr("Rétro")];translateOptions:false
-                    currentIndex:Math.max(0,keys.indexOf(root.backend.preferences.soundTheme))
-                    onActivated:function(index){root.backend.setPreference("soundTheme",keys[index]);root.backend.previewSound(keys[index])}}
+                // Les quatre jeux libres de Lichess, puis « Mes sons » : un dossier de WAV à soi.
+                TComboBox {id:soundTheme;objectName:"soundTheme";width:170;enabled:root.backend.preferences.sounds
+                    readonly property var keys:["bois","feutre","clic","marbre","retro","lichess-sfx","lichess-piano","lichess-nes","lichess-futuriste"]
+                    readonly property int shown:{const i=keys.indexOf(root.backend.preferences.soundTheme);return i<0?keys.length:i}
+                    model:[qsTr("Bois"),qsTr("Feutre"),qsTr("Clic"),qsTr("Marbre"),qsTr("Rétro"),"Lichess SFX",qsTr("Lichess Piano"),"Lichess NES",qsTr("Lichess Futuriste"),qsTr("Mes sons…")];translateOptions:false
+                    currentIndex:shown
+                    onActivated:function(index){if(index===keys.length){soundFolder.open();return}
+                        root.backend.setPreference("soundTheme",keys[index]);root.backend.previewSound(keys[index])}}
                 Label {text:qsTr("Volume");height:28*root.backend.preferences.uiScale;verticalAlignment:Text.AlignVCenter;color:root.backend.preferences.muted}
                 Slider {objectName:"soundVolume";width:160;from:0;to:100;stepSize:5;enabled:root.backend.preferences.sounds
                     value:root.backend.preferences.soundVolume;onMoved:root.backend.setPreference("soundVolume",value)}
@@ -157,8 +163,10 @@ TDialog {
                 TButton {text:qsTr("Écouter");enabled:root.backend.preferences.sounds&&root.backend.preferences.soundVolume>0
                          onClicked:root.backend.previewSound(root.backend.preferences.soundTheme)}
             }
+            Label {visible:soundTheme.shown===soundTheme.keys.length;Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.backend.preferences.muted
+                text:qsTr("Sons lus dans %1 : move, capture, check, castle, promote et mate (ou Checkmate) en WAV 16 bits. Ceux qui manquent restent en bois.").arg(root.backend.preferences.soundTheme)}
             TButton {text:qsTr("Rétablir l’apparence par défaut");onClicked:root.backend.resetAppearance()}
-            Label {text:qsTr("Pièces : C. M. L. Burnett et A. Hernandez Marroquin (GPL-2.0+), Maurizio Monge (MIT), therealqtpi (AGPL-3.0+). Les choix sont enregistrés automatiquement.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);opacity:.7}
+            Label {text:qsTr("Pièces : C. M. L. Burnett et A. Hernandez Marroquin (GPL-2.0+), Maurizio Monge (MIT), therealqtpi (AGPL-3.0+). Sons Lichess : Enigmahack (AGPL-3.0+). Les choix sont enregistrés automatiquement.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);opacity:.7}
         }
     }
 }

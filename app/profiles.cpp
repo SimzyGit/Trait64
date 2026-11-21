@@ -152,6 +152,39 @@ void Controller::setAccountProfile(int accountIndex, const QString &profileName)
     }
 }
 
+void Controller::addProfileAccount(int profileIndex, const QString &site, const QString &user) {
+    try {
+        const auto profiles = settings_.value("profiles").toList();
+        require(profileIndex >= 0 && profileIndex < profiles.size(), "Profil introuvable.");
+        const auto name = user.trimmed();
+        require(QStringList{"lichess", "chesscom"}.contains(site) && t64::OnlineGames::validUser(name),
+                "Pseudo invalide : lettres, chiffres, - et _ uniquement.");
+        const auto owner = profiles[profileIndex].toMap()["name"].toString();
+        auto accounts = settings_.value("onlineAccounts").toList();
+        int found = -1;
+        for (int i = 0; i < accounts.size(); ++i) {
+            const auto account = accounts[i].toMap();
+            if (account["site"] == site && account["user"].toString().compare(name, Qt::CaseInsensitive) == 0)
+                found = i;
+        }
+        const bool created = found < 0;
+        if (created) {
+            accounts << QVariantMap{{"site", site}, {"user", name}, {"games", 0}};
+            found = int(accounts.size()) - 1;
+        }
+        auto account = accounts[found].toMap();
+        account["profile"] = owner;
+        accounts[found] = account;
+        settings_.setValue("onlineAccounts", accounts);
+        emit accountsChanged();
+        emit profilesChanged();
+        if (created)
+            syncOnlineAccount(found);
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
 void Controller::setProfilePhoto(int index, const QString &url) {
     try {
         auto list = settings_.value("profiles").toList();

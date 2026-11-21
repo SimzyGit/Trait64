@@ -88,13 +88,12 @@ ColumnLayout {
                         pointSize: 15
                         nameWeight: Font.Bold
                     }
+                    // Un seul bouton pour tout ce qui décrit le profil : nom, portrait,
+                    // fiche FIDE et comptes en ligne se modifient au même endroit.
                     TButton {
-                        text: qsTr("Renommer")
-                        onClicked: { rename.index = card.index; rename.proposed = card.modelData.name; rename.open() }
-                    }
-                    TButton {
-                        text: qsTr("Profil FIDE")
-                        onClicked: { fide.index = card.index; fide.load(card.modelData); fide.open() }
+                        objectName: "editProfile"
+                        text: qsTr("Modifier")
+                        onClicked: editor.edit(card.index, card.modelData)
                     }
                     TButton {
                         text: "×"; Accessible.name: qsTr("Retirer ce profil")
@@ -116,7 +115,7 @@ ColumnLayout {
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
                     font.pixelSize: Math.round(11 * root.uiZoom)
                     text: card.modelData.accounts.length === 0
-                          ? qsTr("Aucun compte rattaché : utilisez « Rattacher » sur un compte ci-dessous.")
+                          ? qsTr("Aucun compte en ligne : ajoutez-en avec « Modifier ».")
                           : qsTr("Comptes : ") + card.modelData.accounts.map(
                                 a => (a.site === "lichess" ? "Lichess" : "Chess.com") + " / " + a.user).join(" · ")
                 }
@@ -146,17 +145,133 @@ ColumnLayout {
         onAccepted: root.backend.setProfilePhoto(index, selectedFile.toString())
     }
 
+    // Le profil en entier : identité, fiche FIDE et comptes en ligne, autant qu'on veut
+    // de ces derniers (plusieurs comptes Lichess ou Chess.com pour une même personne).
     TDialog {
-        id: rename; parent: Overlay.overlay; modal: true; anchors.centerIn: parent
+        id: editor; objectName: "profileEditorDialog"; parent: Overlay.overlay; modal: true; anchors.centerIn: parent
         property int index: -1
-        property string proposed: ""
-        title: qsTr("Renommer le profil")
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onAccepted: root.backend.renameProfile(index, field.text)
-        onOpened: { field.text = proposed; field.selectAll(); field.forceActiveFocus() }
-        ColumnLayout {
-            anchors.fill: parent
-            TTextField { id: field; Layout.fillWidth: true; selectByMouse: true }
+        readonly property var current: index >= 0 && index < root.backend.profiles.length ? root.backend.profiles[index] : ({})
+        title: qsTr("Modifier le profil")
+        width: Math.min(560, parent ? parent.width - 32 : 560)
+        height: Math.min(720, parent ? parent.height - 32 : 720)
+        standardButtons: Dialog.Save | Dialog.Cancel
+        function edit(i, profile) {
+            index = i
+            editName.text = profile.name || ""
+            editFideId.text = profile.fideId || ""
+            editFideName.text = profile.fideName || ""
+            editTitle.text = profile.fideTitle || ""
+            editCountry.text = profile.fideCountry || ""
+            editStandard.value = profile.fideStandard || 0
+            editRapid.value = profile.fideRapid || 0
+            editBlitz.value = profile.fideBlitz || 0
+            newUser.text = ""
+            open()
+        }
+        onAccepted: {
+            // La fiche FIDE n'est réécrite que si elle a changé : l'enregistrer telle quelle
+            // effacerait la marque des classements lus dans une liste.
+            var p = current
+            if (editFideId.text !== (p.fideId || "") || editFideName.text !== (p.fideName || "")
+                    || editTitle.text !== (p.fideTitle || "") || editCountry.text !== (p.fideCountry || "")
+                    || editStandard.value !== (p.fideStandard || 0) || editRapid.value !== (p.fideRapid || 0)
+                    || editBlitz.value !== (p.fideBlitz || 0))
+                root.backend.setFideDetails(index, editFideId.text, editFideName.text, editStandard.value,
+                                            editRapid.value, editBlitz.value, editTitle.text, editCountry.text)
+            root.backend.renameProfile(index, editName.text)
+        }
+        ScrollView {
+            anchors.fill: parent; contentWidth: availableWidth; clip: true
+            ColumnLayout {
+                width: parent.width; spacing: 10
+                Label { text: qsTr("Identité"); font.bold: true }
+                GridLayout {
+                    Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 6
+                    Label { text: qsTr("Nom") }
+                    TTextField { id: editName; objectName: "editProfileName"; Layout.fillWidth: true; selectByMouse: true }
+                    Label { text: qsTr("Portrait") }
+                    RowLayout {
+                        spacing: 6
+                        TButton { text: editor.current.photo ? qsTr("Changer…") : qsTr("Choisir…"); onClicked: { photo.index = editor.index; photo.open() } }
+                        TButton { visible: !!editor.current.photo; text: qsTr("Retirer"); onClicked: root.backend.setProfilePhoto(editor.index, "") }
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
+                Label { text: qsTr("Fiche FIDE"); font.bold: true }
+                GridLayout {
+                    Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 6
+                    Label { text: qsTr("Identifiant") }
+                    TTextField { id: editFideId; Layout.fillWidth: true; selectByMouse: true; placeholderText: qsTr("chiffres seulement"); inputMethodHints: Qt.ImhDigitsOnly }
+                    Label { text: qsTr("Nom FIDE") }
+                    TTextField { id: editFideName; Layout.fillWidth: true; selectByMouse: true }
+                    Label { text: qsTr("Titre") }
+                    TTextField { id: editTitle; Layout.fillWidth: true; selectByMouse: true; placeholderText: qsTr("GM, IM, FM, WGM… laissez vide sans titre") }
+                    Label { text: qsTr("Fédération") }
+                    TTextField { id: editCountry; Layout.fillWidth: true; selectByMouse: true; placeholderText: qsTr("code à trois lettres, par exemple FRA") }
+                    Label { text: qsTr("Classique") }
+                    TSpinBox { id: editStandard; from: 0; to: 3000; editable: true }
+                    Label { text: qsTr("Rapide") }
+                    TSpinBox { id: editRapid; from: 0; to: 3000; editable: true }
+                    Label { text: qsTr("Blitz") }
+                    TSpinBox { id: editBlitz; from: 0; to: 3000; editable: true }
+                }
+                TButton {
+                    text: qsTr("Lire mes classements dans les listes FIDE…")
+                    onClicked: { fide.index = editor.index; fide.load(editor.current); fide.open() }
+                }
+                Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
+                Label { text: qsTr("Comptes en ligne"); font.bold: true }
+                Label {
+                    Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
+                    visible: (editor.current.accounts || []).length === 0
+                    text: qsTr("Aucun compte pour l’instant. Ajoutez-en autant que vous voulez : un compte Lichess, deux comptes Chess.com…")
+                }
+                Repeater {
+                    model: editor.current.accounts || []
+                    delegate: RowLayout {
+                        required property var modelData
+                        Layout.fillWidth: true; spacing: 8
+                        Label { text: modelData.site === "lichess" ? "Lichess" : "Chess.com"; color: palette.placeholderText; Layout.preferredWidth: 80 }
+                        Label { text: modelData.user; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                        TButton {
+                            text: qsTr("Détacher"); flat: true
+                            onClicked: root.backend.setAccountProfile(modelData.index, "")
+                            ToolTip.visible: hovered; ToolTip.delay: 400
+                            ToolTip.text: qsTr("Le compte et ses parties restent ; il n’appartient plus à ce profil.")
+                        }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+                    TComboBox { id: newSite; model: ["Lichess", "Chess.com"]; Layout.preferredWidth: 120 }
+                    TTextField {
+                        id: newUser; objectName: "profileNewAccount"; Layout.fillWidth: true; selectByMouse: true
+                        placeholderText: qsTr("Pseudo")
+                        onAccepted: if (addAccount.enabled) addAccount.clicked()
+                    }
+                    TButton {
+                        id: addAccount; text: qsTr("Ajouter"); enabled: newUser.text.trim().length > 0
+                        onClicked: { root.backend.addProfileAccount(editor.index, newSite.currentIndex === 0 ? "lichess" : "chesscom", newUser.text); newUser.text = "" }
+                    }
+                }
+                // Les comptes déjà enregistrés mais sans profil, à rattacher d'un clic.
+                Flow {
+                    Layout.fillWidth: true; Layout.preferredWidth: 1; spacing: 6
+                    readonly property var free: (root.backend.onlineAccounts || []).map(function(a, i) { return { index: i, site: a.site, user: a.user, profile: a.profile || "" } }).filter(function(a) { return a.profile !== editor.current.name })
+                    visible: free.length > 0
+                    Label { text: qsTr("Rattacher :"); color: palette.placeholderText; height: 26 * root.uiZoom; verticalAlignment: Text.AlignVCenter }
+                    Repeater {
+                        model: parent.free
+                        delegate: TButton {
+                            required property var modelData
+                            text: (modelData.site === "lichess" ? "Lichess" : "Chess.com") + " / " + modelData.user
+                            ToolTip.visible: hovered && modelData.profile !== ""; ToolTip.delay: 400
+                            ToolTip.text: qsTr("Actuellement rattaché à %1").arg(modelData.profile)
+                            onClicked: root.backend.setAccountProfile(modelData.index, editor.current.name)
+                        }
+                    }
+                }
+            }
         }
     }
 

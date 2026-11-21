@@ -10,7 +10,9 @@ enum class BoardSound { Move, Capture, Check, Castle, Promote, Mate };
 // Ce qu'un coup fait entendre, d'après sa notation : le mat prime sur l'échec, l'échec
 // sur la promotion, la promotion sur la prise.
 BoardSound soundFor(std::string_view san);
-// Les jeux de sons livrés (« bois » par défaut).
+// Les jeux de sons livrés (« bois » par défaut). Partout où un jeu est attendu, un chemin
+// absolu de dossier vaut aussi : ses WAV (move, capture, check, castle, promote, mate, ou
+// les noms de Lichess) remplacent les sons, le bois comblant ceux qui manquent.
 QStringList soundThemes();
 // Le fichier WAV d'un son, au volume voulu (0 à 100) : les échantillons sont mis à
 // l'échelle, PlaySound et AudioToolbox n'ayant pas de réglage de volume.

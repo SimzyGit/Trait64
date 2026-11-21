@@ -334,5 +334,173 @@
     "url": "https://raw.githubusercontent.com/lichess-org/chess-openings/65bb03f76c7f077984db01a2f2d0534e4181ddfe/README.md",
     "sha256": "c0bedd93a117f318a3bd087a3af640652f4369ca461429d4dfbeee4614dc5eae",
     "bytes": 2661
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/move.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/Move.mp3",
+    "sha256": "0b4bbf4b0bc0cd937f9661820da4f6e9c5b821913a32502d3b571e6730f7c984",
+    "bytes": 8028,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/castle.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/Move.mp3",
+    "sha256": "0b4bbf4b0bc0cd937f9661820da4f6e9c5b821913a32502d3b571e6730f7c984",
+    "bytes": 8028,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/capture.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/Capture.mp3",
+    "sha256": "59b9de82710ea30968312902bf7ac8334a1da620ee364e231ef9454f8648f2d2",
+    "bytes": 11581,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/check.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/Check.mp3",
+    "sha256": "efaa7ae9a88025b6678de680441d806ce55e1a49f9009305235c5cd63a226093",
+    "bytes": 17425,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/promote.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/GenericNotify.mp3",
+    "sha256": "128c00ae75c7b152e513cbd274a10e9acb28d3375388c2366936ed08d353ebdd",
+    "bytes": 34241,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-sfx/mate.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/sfx/Victory.mp3",
+    "sha256": "1821e541f533e3e6214d9b05a80b2edc3600ce1fbf8700d014315c9570b93d72",
+    "bytes": 53124,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/move.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/Move.mp3",
+    "sha256": "2c681c2638ddaf4e18deebc36e5a2ee481c69ef6c6435597e672b73c5c078715",
+    "bytes": 4223,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/castle.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/Move.mp3",
+    "sha256": "2c681c2638ddaf4e18deebc36e5a2ee481c69ef6c6435597e672b73c5c078715",
+    "bytes": 4223,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/capture.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/Capture.mp3",
+    "sha256": "3fe6ce347463fe2e1f31bdbcd936945b3e550c97569ac8d5e6b7ac3487a5f244",
+    "bytes": 8032,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/check.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/Check.mp3",
+    "sha256": "5f92c1c4b0e0d2af07de5d4b00702b16a4e77f83d4577cfce0d655b5acc1ccd0",
+    "bytes": 17321,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/promote.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/GenericNotify.mp3",
+    "sha256": "9ba65764ef6855e0af95ea1f313f6d04bc4b55ea59363d55fbc4def9e8cc21eb",
+    "bytes": 19163,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-piano/mate.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/piano/Victory.mp3",
+    "sha256": "71e06cd46e18fa9472b0fbd058ac88f4b1a07ecdff6bb45d413694fd23afa729",
+    "bytes": 37673,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/move.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/Move.mp3",
+    "sha256": "dd2537a1fe4e769cf81f2243a886869cecc747c03fc74302c26e82d1d30444f0",
+    "bytes": 4222,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/castle.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/Move.mp3",
+    "sha256": "dd2537a1fe4e769cf81f2243a886869cecc747c03fc74302c26e82d1d30444f0",
+    "bytes": 4222,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/capture.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/Capture.mp3",
+    "sha256": "db0fee5a96c0638548e2f2522dce6541ca0e6a3cf75b50e0092817d9e00ecbb9",
+    "bytes": 6257,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/check.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/Check.mp3",
+    "sha256": "0d7f8760ffafa45baf1a7e9deafa398bf3aedbe76ab5bd0dbf03055c2697d6ef",
+    "bytes": 6670,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/promote.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/GenericNotify.mp3",
+    "sha256": "b3eee508d3d69176cb6d336a12e9def5992621ddec135d349d4085be9252500e",
+    "bytes": 8461,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-nes/mate.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/nes/Victory.mp3",
+    "sha256": "902489d7f8fc96cd557040124e9b67c5095242f4af339c267e8ae3bb1851fc67",
+    "bytes": 18784,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/move.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/Move.mp3",
+    "sha256": "e68edeb6dfc9d0510b553c7d94adbb249c07e52c8e1c6ae1a207dea56c08195a",
+    "bytes": 9202,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/castle.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/Move.mp3",
+    "sha256": "e68edeb6dfc9d0510b553c7d94adbb249c07e52c8e1c6ae1a207dea56c08195a",
+    "bytes": 9202,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/capture.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/Capture.mp3",
+    "sha256": "d043743b359844536b991600253453de9d3f95d6ca4688f25ec3eebcf0316874",
+    "bytes": 12520,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/check.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/Check.mp3",
+    "sha256": "dcc348cfb2f84bfa12daab3ea40b2970c41e9b33df8818a7788774bf485c312d",
+    "bytes": 15649,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/promote.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/GenericNotify.mp3",
+    "sha256": "088b8c3b986dffe36b52c15e67dd36589a709c5457c8c7e2a626cf150fcd45d5",
+    "bytes": 31532,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
+  },
+  {
+    "path": "assets/sounds/lichess-futuriste/mate.wav",
+    "url": "https://raw.githubusercontent.com/lichess-org/lila/master/public/sound/futuristic/Victory.mp3",
+    "sha256": "43abe23ee2bce78b99ba1977429c7ddfe36b4f7f0dd41b37b5e2f341ca86607c",
+    "bytes": 97594,
+    "note": "converti en WAV mono 16 bits, 44,1 kHz"
   }
 ]

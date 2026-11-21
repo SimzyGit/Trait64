@@ -262,6 +262,9 @@ class Controller : public QObject {
     Q_INVOKABLE void removeProfile(int index);
     // profileName vide détache le compte sans rien supprimer.
     Q_INVOKABLE void setAccountProfile(int accountIndex, const QString &profileName);
+    // Ajoute un compte en ligne à un profil, autant qu'on veut : un compte déjà connu est
+    // simplement rattaché, un nouveau est enregistré puis synchronisé.
+    Q_INVOKABLE void addProfileAccount(int profileIndex, const QString &site, const QString &user);
     // Un classement à 0 se lit « pas classé dans cette cadence », ce qui est courant.
     // Range une copie réduite de l'image dans le dossier de données : le profil ne
     // dépend pas d'un fichier que l'on peut déplacer ou effacer. Une URL vide efface.
@@ -355,6 +358,10 @@ class Controller : public QObject {
     Q_INVOKABLE void setStudyPurpose(qint64 source, bool study);
     // Retire un recueil : ses parties vont à la corbeille, le fichier reste sur le disque.
     Q_INVOKABLE void removeStudyCollection(qint64 source);
+    // Supprime une base de la bibliothèque (un PGN importé, une base ChessBase ou SCID, un
+    // compte en ligne, un téléchargement) : ses parties vont à la corbeille, sauf celles
+    // qu'une autre base contient aussi.
+    Q_INVOKABLE void removeBase(qint64 source);
     // site: "lichess" or "chesscom". Lichess re-imports only games newer than the last import.
     Q_INVOKABLE void importOnline(const QString &site, const QString &user, int max);
     Q_INVOKABLE void cancelOnline();
@@ -794,7 +801,8 @@ class Controller : public QObject {
     std::vector<int> reviewNodes_;
     QVariantList reviewScores_;
     bool reviewing_ = false;
-    int reviewIndex_ = 0, reviewMilliseconds_ = 500, reviewDepth_ = 0, reviewEpoch_ = 0, reviewPass_ = 0, reviewDone_ = 0;
+    int reviewIndex_ = 0, reviewMilliseconds_ = 500, reviewDepth_ = 0, reviewEpoch_ = 0, reviewPass_ = 0,
+        reviewDone_ = 0;
     bool reviewTwoPasses_ = true;
     void rebuildReview();
     QString reviewError_;

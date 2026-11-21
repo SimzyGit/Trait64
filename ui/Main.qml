@@ -159,6 +159,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
             MenuItem {text: qsTr("Tournois de la bibliothèque…"); onTriggered: tournamentFinder.open()}
             MenuItem {text: qsTr("Graphiques de la sélection…"); onTriggered: libraryCharts.open()}
+            MenuItem {text: qsTr("Supprimer la base…"); enabled: win.selectedBaseId > 0; onTriggered: removeBaseDialog.ask(win.selectedBaseId)}
             MenuItem {text: qsTr("Fusionner les parties affichées en une étude"); enabled: controller.games.length > 1; onTriggered: controller.mergeShownGames()}
             MenuItem {text: qsTr("Tournois en direct…"); onTriggered: liveDialog.open()}
             MenuSeparator {}
@@ -258,6 +259,9 @@ ApplicationWindow {
                 // « Base » : onze boutons sur deux rangées écrasaient la recherche.
                 RowLayout {Layout.fillWidth:true;spacing:8
                     TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    // Supprimer la base choisie : visible seulement quand une base l'est.
+                    TButton {objectName:"removeBase";visible:win.selectedBaseId>0;text:qsTr("Supprimer…");onClicked:removeBaseDialog.ask(win.selectedBaseId)
+                        ToolTip.visible:hovered;ToolTip.delay:400;ToolTip.text:qsTr("Supprimer cette base et mettre ses parties à la corbeille")}
                     TTextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
                     TComboBox {id:resultBox;model:["Tous résultats","1-0","0-1","1/2-1/2","*"];onActivated:win.filterLibrary();Layout.preferredWidth:140*win.textScale}
                     TButton {text:qsTr("Recherche avancée");onClicked:advancedDialog.open()}
@@ -1066,6 +1070,22 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
     Plans {id:plansDialog;objectName:"plansDialog";backend:controller}
     Similar {id:similarDialog;objectName:"similarDialog";backend:controller}
+    // La suppression d'une base, confirmée : son nom, son nombre de parties, ce qui part à
+    // la corbeille et ce qui reste.
+    TDialog {id:removeBaseDialog;objectName:"removeBaseDialog";title:qsTr("Supprimer la base");anchors.centerIn:parent;modal:true
+        width:Math.min(480,parent.width-32);standardButtons:Dialog.Cancel|Dialog.Ok
+        property double baseId:0
+        property var base:({})
+        function ask(id){baseId=id;base=controller.sources.find(function(s){return s.id===id})||({});open()}
+        onAccepted:{controller.removeBase(baseId);win.selectedBaseId=0;baseBox.currentIndex=0;win.filterLibrary()}
+        ColumnLayout {width:parent.width;spacing:8
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;font.weight:Font.DemiBold;text:removeBaseDialog.base.title||""}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap
+                text:qsTr("Ses %1 partie(s) vont à la corbeille de la bibliothèque, d’où vous pouvez les restaurer. Celles qu’une autre base contient aussi restent en place.").arg(removeBaseDialog.base.games||0)}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted;visible:/^(lichess|chesscom):/.test(removeBaseDialog.base.slug||"")
+                text:qsTr("Cette base est alimentée par un compte en ligne : retirez aussi le compte, sinon ses parties reviendront à la prochaine synchronisation.")}
+        }
+    }
     Stoyko {id:stoykoDialog;objectName:"stoykoDialog";backend:controller}
     PositionQr {id:positionQr;objectName:"positionQrDialog";backend:controller}
     LibraryCharts {id:libraryCharts;objectName:"libraryChartsDialog";backend:controller}

@@ -164,6 +164,12 @@ https://stockfishchess.org/ et https://github.com/official-stockfish/Stockfish �
 
 Notices amont conservées dans `assets/pieces/LICHESS-COPYING.md`. Textes des licences GPL-2.0, AGPL-3.0 et MIT-Monge inclus dans ce dossier et installés avec le logiciel. Les SVG ne sont pas modifiés. `assets/UPSTREAM.json` donne URL, taille et SHA-256 des ressources copiées. La présence d’autres noms dans la notice amont complète n’indique pas leur incorporation dans Trait64.
 
+## Sons de Lichess
+
+Les jeux `sfx`, `piano`, `nes` et `futuristic` de [lichess-org/lila](https://github.com/lichess-org/lila) (`public/sound`, branche `master` au 21 novembre 2026 ; empreintes dans `assets/UPSTREAM.json`), créés par Enigmahack et publiés sous AGPL-3.0-or-later. Ils sont convertis en WAV mono 16 bits à 44,1 kHz dans `assets/sounds/lichess-*`. Le roque reprend le son du coup, la promotion le début de `GenericNotify` et le mat le début de `Victory`, avec un fondu.
+
+Le jeu standard de Lichess n'est pas libre et n'est donc pas livré. Le jeu `lisp` (CC BY-NC-SA) ne l'est pas non plus. Chacun peut placer ses propres fichiers dans un dossier et le choisir avec « Mes sons ».
+
 ## Dictionnaire d’ouvertures
 
 [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings), révision `65bb03f76c7f077984db01a2f2d0534e4181ddfe`, mise à disposition CC0-1.0. Sources `a.tsv` à `e.tsv`, notice amont et texte CC0 conservés dans `assets/openings`. `positions.tsv` est dérivé par `tools/build_opening_index.cpp` (3 865 positions). Les appellations d’ouverture restent celles de la source, généralement en anglais.

@@ -1,5 +1,11 @@
 # Changements
 
+## Bases supprimables, profils modifiables, sons de Lichess — 21 novembre 2026
+
+- **Supprimer une base** : *Base → Supprimer la base…*, ou le bouton « Supprimer… » de la bibliothèque quand une base est choisie. Ses parties partent à la corbeille, d'où elles se restaurent ; les autres bases n'y perdent rien. Pour une base de compte en ligne, le dialogue prévient que la prochaine synchronisation la recréera.
+- **Modifier un profil** en un seul dialogue : nom, portrait, fiche FIDE (identifiant, nom, titre, pays, classements) et comptes en ligne. Un profil reçoit autant de comptes Lichess et Chess.com qu'on veut : on en ajoute un par son pseudo, on rattache un compte existant, on en détache un sans perdre ses parties.
+- **Sons de Lichess** : les quatre jeux libres de Lichess (SFX, Piano, NES, Futuriste, d'Enigmahack, AGPL-3.0+) rejoignent les cinq jeux de Trait64. Le jeu standard de Lichess n'est pas libre : « Mes sons… » permet de choisir un dossier de WAV à soi (`move`, `capture`, `check`, `castle`, `promote`, `mate`, ou les noms de Lichess comme `Checkmate`), le bois comblant ce qui manque.
+
 ## Demandes des joueurs de compétition — 21 novembre 2026
 
 Trois demandes relevées chez les utilisateurs de ChessBase, Scid, En Croissant et Lichess (voir [docs/COMPARISON.md](COMPARISON.md)) :

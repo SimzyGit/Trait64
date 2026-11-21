@@ -1057,6 +1057,16 @@ void Controller::removeStudyCollection(qint64 source) {
         fail(e);
     }
 }
+void Controller::removeBase(qint64 source) {
+    try {
+        require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");
+        const int trashed = db_->removeSource(source);
+        refreshLibrary();
+        emit message(tr("Base supprimée : %n partie(s) mise(s) à la corbeille.", nullptr, trashed));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::importOnlineDownload(const QString &downloaded) {
     // Un autre traitement en cours (un import, un classement ECO) : on attend qu'il se
     // termine. Refusées sur le champ, les parties téléchargées étaient perdues et le

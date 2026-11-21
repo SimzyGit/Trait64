@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
             for (const auto &theme : t64::soundThemes())
                 for (int sound = 0; sound <= int(BoardSound::Mate); ++sound)
                     every &= t64::soundClip(BoardSound(sound), theme, 100).size() > 1000;
-            check(every && t64::soundThemes().size() == 5,
+            check(every && t64::soundThemes().size() == 9,
                   "Every sound of every theme is built into the program");
             // Le volume met les échantillons à l'échelle : à 50 %, le pic est divisé par deux.
             const auto peak = [](const QByteArray &wav) {
@@ -153,6 +153,29 @@ int main(int argc, char **argv) {
                       t64::soundClip(BoardSound::Move, "inconnu", 100) ==
                           t64::soundClip(BoardSound::Move, "bois", 100),
                   "Volume scales the samples, and an unknown theme falls back to wood");
+            // Un dossier personnel : ses WAV 16 bits remplacent les sons, sous les noms de
+            // Trait64 ou de Lichess ; le reste, et un fichier illisible, restent en bois.
+            QTemporaryDir mine;
+            const auto wood = [](const char *name) {
+                QFile in(QString(":/assets/sounds/feutre/%1.wav").arg(name));
+                in.open(QIODevice::ReadOnly);
+                return in.readAll();
+            };
+            const auto put = [&](const QString &name, const QByteArray &bytes) {
+                QFile out(mine.filePath(name));
+                out.open(QIODevice::WriteOnly);
+                out.write(bytes);
+            };
+            put("Move.wav", wood("move"));
+            put("Checkmate.WAV", wood("mate"));
+            put("capture.wav", "RIFF pas un son");
+            const auto folder = mine.path();
+            check(t64::soundClip(BoardSound::Move, folder, 100) == wood("move") &&
+                      t64::soundClip(BoardSound::Mate, folder, 100) == wood("mate") &&
+                      t64::soundClip(BoardSound::Castle, folder, 100) == wood("move") &&
+                      t64::soundClip(BoardSound::Capture, folder, 100) ==
+                          t64::soundClip(BoardSound::Capture, "bois", 100),
+                  "A folder of one's own sounds replaces them, wood filling the gaps");
         }
         {
             // Trouver un moteur déjà installé : par son nom, dans les dossiers du système
@@ -547,6 +570,23 @@ int main(int argc, char **argv) {
             shelf.removeStudyCollection(collection);
             check(shelf.studyCollections().isEmpty() && shelf.stats()["games"].toInt() == 0,
                   "The collection is removed and its game goes to the trash");
+            // Une base de parties ordinaire (sans étiquette d'étude) se supprime de même,
+            // depuis la liste des bases de la bibliothèque.
+            shelf.importLabeled(QUrl::fromLocalFile(course.fileName()).toString(), "Ma base", false);
+            wait.restart();
+            while (shelf.busy() && wait.elapsed() < 20000)
+                QTest::qWait(10);
+            qint64 base = 0;
+            for (const auto &row : shelf.sources())
+                if (row.toMap()["title"] == "Ma base")
+                    base = row.toMap()["id"].toLongLong();
+            check(base > 0 && shelf.stats()["games"].toInt() == 1, "A game database appears among the bases");
+            shelf.removeBase(base);
+            bool gone = true;
+            for (const auto &row : shelf.sources())
+                gone = gone && row.toMap()["id"].toLongLong() != base;
+            check(gone && shelf.stats()["games"].toInt() == 0,
+                  "Deleting a base trashes its games and drops it");
         }
         {
             // L'explorateur de plans : une partie de la bibliothèque sur la structure d4-d5.
@@ -885,6 +925,21 @@ int main(int argc, char **argv) {
             check(c.profiles()[0].toMap()["accounts"].toList().size() == 1 &&
                       c.onlineAccounts()[0].toMap()["profile"] == "Simon",
                   "Renaming a profile keeps its accounts attached");
+            // Autant de comptes qu'on veut pour un profil : un compte connu est rattaché,
+            // un nouveau est créé ; le même pseudo n'est pas compté deux fois.
+            c.addProfileAccount(0, "chesscom", "Kim_cc");
+            online->cancel();
+            settle();
+            c.addProfileAccount(0, "chesscom", "Kim_blitz");
+            online->cancel();
+            settle();
+            c.addProfileAccount(0, "lichess", "kim");
+            check(c.profiles()[0].toMap()["accounts"].toList().size() == 3 && c.onlineAccounts().size() == 3,
+                  "A profile gathers as many online accounts as wanted, without duplicates");
+            c.setAccountProfile(2, "");
+            check(c.profiles()[0].toMap()["accounts"].toList().size() == 2,
+                  "An account can be detached from a profile");
+            c.setAccountProfile(2, "Simon");
             // Analyser un profil qui n'existe pas doit le dire une fois, clairement,
             // plutôt que de parcourir la base pour ne rien trouver.
             const int before = messages.size();
@@ -958,8 +1013,10 @@ int main(int argc, char **argv) {
             check(c.profiles()[0].toMap()["fideId"] == "1503014" && messages.size() == 1,
                   "A FIDE identifier that is not a number is refused");
             c.removeProfile(0);
-            check(c.profiles().isEmpty() && c.onlineAccounts().size() == 1 &&
-                      c.onlineAccounts()[0].toMap()["profile"].toString().isEmpty(),
+            const auto left = c.onlineAccounts();
+            check(c.profiles().isEmpty() && left.size() == 3 &&
+                      std::ranges::all_of(
+                          left, [](const QVariant &a) { return a.toMap()["profile"].toString().isEmpty(); }),
                   "Removing a profile detaches its accounts without deleting them");
             c.removeOnlineAccount(0);
         }
