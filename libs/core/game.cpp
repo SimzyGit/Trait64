@@ -592,4 +592,50 @@ uint64_t perft(chess::Board &board, int depth) {
     }
     return n;
 }
+Game mergeGames(const std::vector<Game> &games, int *skipped) {
+    require(!games.empty(), "Aucune partie à fusionner.");
+    Game merged = games.front();
+    merged.tags.erase("Result");
+    int left = 0;
+    const auto tag = [](const Game &game, const char *name) {
+        const auto it = game.tags.find(name);
+        return it == game.tags.end() || it->second.empty() || it->second == "?" ? std::string("?")
+                                                                                : it->second;
+    };
+    for (size_t i = 1; i < games.size(); ++i) {
+        const auto &game = games[i];
+        if (game.nodes[0].fen != merged.nodes[0].fen || game.chess960 != merged.chess960) {
+            ++left;
+            continue;
+        }
+        int at = 0;
+        bool marked = false;
+        for (int node : game.mainline()) {
+            if (node == 0)
+                continue;
+            const auto before = merged.nodes[at].children.size();
+            at = merged.play(at, game.nodes[node].uci);
+            // Le premier coup nouveau dit d'où vient la variante.
+            if (!marked && merged.nodes[at].children.empty() &&
+                merged.nodes[merged.nodes[at].parent].children.size() > before &&
+                merged.nodes[at].comment.empty()) {
+                // L'année, si elle est connue : « ????.??.?? » est la date inconnue du PGN.
+                const auto year = tag(game, "Date").substr(0, 4);
+                merged.nodes[at].comment = tag(game, "White") + " – " + tag(game, "Black") +
+                                           (year.find('?') == std::string::npos ? ", " + year : "") + " (" +
+                                           tag(game, "Result") + ")";
+                marked = true;
+            }
+        }
+    }
+    // Le titre d'un onglet vient des noms des joueurs : « Fusion — 3 parties ».
+    const auto count = std::to_string(games.size() - left);
+    merged.tags["Event"] = "Fusion de " + count + " parties";
+    merged.tags["White"] = "Fusion";
+    merged.tags["Black"] = count + " parties";
+    merged.tags["Result"] = "*";
+    if (skipped)
+        *skipped = left;
+    return merged;
+}
 } // namespace t64

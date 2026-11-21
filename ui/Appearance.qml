@@ -123,6 +123,8 @@ TDialog {
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Entoure de rouge les pièces, des deux camps, qu’une prise gagnerait une fois les échanges joués.")}
                 TCheckBox {text:qsTr("Relations d’attaque");checked:root.backend.preferences.showAttacks;onToggled:root.backend.setPreference("showAttacks",checked)
                     ToolTip.visible:hovered;ToolTip.text:qsTr("Quand une pièce est choisie, une flèche rouge part de chaque pièce qui l’attaque, une verte de chaque pièce qui la défend.")}
+                TCheckBox {objectName:"autoFlip";text:qsTr("Mes parties de mon côté");checked:root.backend.preferences.autoFlip;onToggled:root.backend.setPreference("autoFlip",checked)
+                    ToolTip.visible:hovered;ToolTip.text:qsTr("Une partie où vous jouez les Noirs s’ouvre l’échiquier retourné. Vos noms sont ceux de vos profils et de vos comptes en ligne.")}
                 TCheckBox {text:qsTr("Molette : parcourir les coups");checked:root.backend.preferences.wheelMoves;onToggled:root.backend.setPreference("wheelMoves",checked)}
                 TCheckBox {objectName:"blindfold";text:qsTr("À l’aveugle : pièces masquées");checked:root.backend.preferences.blindfold;onToggled:root.backend.setPreference("blindfold",checked)}
                 TCheckBox {text:qsTr("Barre d’évaluation");checked:root.backend.preferences.evalBar;onToggled:root.backend.setPreference("evalBar",checked)

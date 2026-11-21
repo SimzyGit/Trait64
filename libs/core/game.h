@@ -47,6 +47,11 @@ void checkBoardCounters(const chess::Board &board);
 // Resolve forced endings before draws that a player may claim.
 std::pair<chess::GameResultReason, chess::GameResult> gameResult(const chess::Board &board);
 std::string chess960Fen(int number);
+// Plusieurs parties en une seule, comme le « Fusionner » de ChessBase : la première
+// donne la ligne principale, chaque autre y entre jusqu'à ce qu'elle s'en écarte, puis
+// devient une variante, annotée de ses joueurs et de son année. Les parties qui ne
+// partent pas de la même position que la première sont laissées de côté (*skipped).
+Game mergeGames(const std::vector<Game> &games, int *skipped = nullptr);
 std::vector<Game> parseEpd(const std::string &text);
 std::string exportEpd(const Game &game, int node = 0);
 void readPgn(std::istream &input, const std::function<void(Game &&)> &consume);

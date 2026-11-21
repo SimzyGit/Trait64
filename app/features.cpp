@@ -1647,3 +1647,25 @@ void Controller::stepGame(int delta) {
         fail(e);
     }
 }
+void Controller::mergeShownGames() {
+    try {
+        need(games_.size() > 1, "Affichez au moins deux parties à fusionner.");
+        std::vector<t64::Game> games;
+        games.reserve(games_.size());
+        for (const auto &row : games_)
+            games.push_back(db_->load(row.toMap()["id"].toLongLong()));
+        int skipped = 0;
+        auto merged = t64::mergeGames(games, &skipped);
+        merged.tags["Date"] = QDate::currentDate().toString("yyyy.MM.dd").toStdString();
+        replaceGame(std::move(merged));
+        dirty_ = true;
+        refresh();
+        writeSession();
+        emit message(
+            tr("%1 partie(s) fusionnée(s) en une étude.").arg(int(games.size()) - skipped) +
+            (skipped ? " " + tr("%1 partie(s) partant d’une autre position laissée(s) de côté.").arg(skipped)
+                     : QString()));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}

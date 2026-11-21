@@ -1758,5 +1758,12 @@
   "Lichess n’a pas délivré de jeton : ": "Lichess did not issue a token: ",
   "Jeton reçu, mais Lichess ne dit pas à quel compte il appartient.": "Token received, but Lichess does not say which account it belongs to.",
   "%1 partie(s) de variantes non prises en charge (Crazyhouse, Atomic…) ou illisibles mises de côté.": "%1 game(s) of unsupported variants (Crazyhouse, Atomic…) or unreadable set aside.",
-  "Aucune partie lisible : %1 partie(s) de variantes non prises en charge ou illisibles.": "No readable game: %1 game(s) of unsupported variants or unreadable."
+  "Aucune partie lisible : %1 partie(s) de variantes non prises en charge ou illisibles.": "No readable game: %1 game(s) of unsupported variants or unreadable.",
+  "Préparer la plus grande lacune : %1": "Prepare the biggest gap: %1",
+  "Mes parties de mon côté": "My games from my side",
+  "Une partie où vous jouez les Noirs s’ouvre l’échiquier retourné. Vos noms sont ceux de vos profils et de vos comptes en ligne.": "A game where you play Black opens with the board flipped. Your names are those of your profiles and online accounts.",
+  "Fusionner les parties affichées en une étude": "Merge the games shown into one study",
+  "%1 partie(s) fusionnée(s) en une étude.": "%1 game(s) merged into one study.",
+  "%1 partie(s) partant d’une autre position laissée(s) de côté.": "%1 game(s) starting from another position left aside.",
+  "Affichez au moins deux parties à fusionner.": "Show at least two games to merge."
 }

@@ -1,5 +1,13 @@
 # Changements
 
+## Demandes des joueurs de compétition — 21 novembre 2026
+
+Trois demandes relevées chez les utilisateurs de ChessBase, Scid, En Croissant et Lichess (voir [docs/COMPARISON.md](COMPARISON.md)) :
+
+- **Vos parties de votre côté** : une partie où l'un de vos profils ou de vos comptes en ligne joue les Noirs s'ouvre l'échiquier retourné, comme dans Scid vs. PC. Réglable dans *Affichage → Pièces, échiquier et couleurs* (« Mes parties de mon côté »).
+- **Fusionner les parties affichées en une étude**, comme le « Fusionner » de ChessBase, qu'En Croissant ne sait pas faire : la première partie donne la ligne principale, chaque autre devient une variante là où elle s'en écarte, annotée de ses joueurs, de son année et de son résultat. Les parties affichées sont celles de la recherche en cours (une ouverture, un adversaire, une position) : *Base → Fusionner les parties affichées en une étude*.
+- **Préparer la plus grande lacune** du répertoire d'un clic, comme le « Go to your biggest gap » de Chessbook : la réponse adverse la plus fréquente qui sort du répertoire s'ouvre, prête à être préparée.
+
 ## Parties des comptes enfin importées, connexion à Lichess — 20 novembre 2026
 
 - **Import des comptes en ligne réparé** : une seule partie d'une variante que Trait64 ne lit pas (Crazyhouse, Atomic, Antichess…) faisait échouer tout le fichier, et aucune partie du compte n'entrait dans la bibliothèque, donc aucune ne pouvait passer au bilan. Ces parties sont désormais mises de côté et comptées dans le message ; Lichess ne les envoie d'ailleurs plus. Une synchronisation qui arrive pendant un autre traitement attend son tour au lieu d'être perdue, le compte restant « en synchronisation ».

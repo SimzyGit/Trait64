@@ -858,11 +858,40 @@ void Controller::adoptGame(t64::Game game, qint64 id) {
     node_ = 0;
     selected_ = -1;
     dirty_ = false;
+    if (id > 0)
+        orientForOwnGame();
     forgetEngineLines();
     emit engineChanged();
     refresh();
     writeSession();
     emit showAnalysis();
+}
+// Une de vos parties s'ouvre de votre côté de l'échiquier, comme dans Scid vs. PC : vos
+// noms sont ceux des profils et des comptes en ligne. Une partie où l'on ne vous trouve
+// pas, ou des deux côtés, garde l'orientation choisie.
+void Controller::orientForOwnGame() {
+    if (!settings_.value("autoFlip", true).toBool())
+        return;
+    QStringList names;
+    for (const auto &value : profiles()) {
+        const auto profile = value.toMap();
+        names << profile["name"].toString();
+        for (const auto &account : profile["accounts"].toList())
+            names << account.toMap()["user"].toString();
+    }
+    for (const auto &value : settings_.value("onlineAccounts").toList())
+        names << value.toMap()["user"].toString();
+    names.removeAll(QString());
+    const auto plays = [&](const char *side) {
+        const auto it = game_.tags.find(side);
+        return it != game_.tags.end() &&
+               names.contains(QString::fromStdString(it->second).trimmed(), Qt::CaseInsensitive);
+    };
+    const bool white = plays("White"), black = plays("Black");
+    if (white == black || flipped_ == black)
+        return;
+    flipped_ = black;
+    settings_.setValue("flipped", flipped_);
 }
 void Controller::newGame() {
     try {

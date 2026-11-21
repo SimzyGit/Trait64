@@ -15,6 +15,7 @@ Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Traini
 - **Flip the board**: *F*.
 - **Annotate**: right-click and drag draws an arrow, right-click on a square draws a circle; Shift, Ctrl or Alt change the colour. A double click, left or right, clears every arrow and circle.
 - **Next to the players' names**, captured pieces and the material lead are shown.
+- **Your games** open from your side: if you play Black (according to your profiles and accounts), the board is flipped.
 - **Sounds**: move, capture, check, castling, promotion and mate each have their own, in five sets to choose from (wood, felt, click, marble, retro) and at the volume you like. *View → Mute sounds* silences them in one click.
 
 *View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys. *View → Hanging pieces* circles in red what a capture would win.
@@ -49,6 +50,7 @@ These explanations come from the lines the engine computed: a longer calculation
 Every game you save (*Ctrl+S*) lives in the library.
 
 - **Search**: by player, event, date, result, rating, opening; by exact position; by material; by pawn structure; by pieces on squares (*Ke1 Pd4 pd5*, uppercase for White — this last search replays every game and can be slow).
+- **Merge**: *Database → Merge the games shown into one study* turns a search result into a single study, each game becoming a variation where it leaves the others.
 - **Import** large databases: importing is parallel, resumable and checks integrity. *Database → Live tournaments* shows Lichess broadcasts: the boards of a round, and *Follow* opens a game in the analysis, where its moves arrive as it is played. The ⋮ menu of a game in the list opens the *Tournament crosstable*: standings, tie-breaks, performance, and a click on a result opens the game. En Croissant `.db3` databases and SCID format 4 databases (`.si4`, with their `.sn4` and `.sg4` alongside) can be read too.
 - **Duplicates**: *Database → Duplicate moves* finds games saved twice.
 - **Position dossier**: for the position shown, the moves played, results by level and the best games.

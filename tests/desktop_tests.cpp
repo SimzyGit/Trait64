@@ -807,6 +807,30 @@ int main(int argc, char **argv) {
             c.setAccountToken(0, "");
             check(!c.onlineAccounts()[0].toMap()["connected"].toBool() && !c.hasLichessToken(),
                   "Disconnecting an account removes its token");
+            {
+                // Une partie où Kim (le compte enregistré) a les Noirs s'ouvre de son côté.
+                c.importText("[White \"Ann\"]\n[Black \"Kim\"]\n\n1. e4 e5 *\n\n"
+                             "[White \"kim\"]\n[Black \"Bob\"]\n\n1. d4 d5 *\n");
+                settle();
+                qint64 asBlack = 0, asWhite = 0;
+                for (const auto &row : c.games()) {
+                    if (row.toMap()["black"] == "Kim")
+                        asBlack = row.toMap()["id"].toLongLong();
+                    if (row.toMap()["white"] == "kim")
+                        asWhite = row.toMap()["id"].toLongLong();
+                }
+                check(asBlack && asWhite, "Both games of the account are in the library");
+                c.loadGame(asBlack);
+                const bool flippedForBlack = c.state()["flipped"].toBool();
+                c.loadGame(asWhite);
+                check(flippedForBlack && !c.state()["flipped"].toBool(),
+                      "An account's games open from its own side of the board");
+                // La page affichée fondue en une étude : un onglet de plus, des variantes.
+                const auto tabs = c.tabs().size();
+                c.mergeShownGames();
+                check(c.tabs().size() == tabs + 1 && c.state()["title"].toString().contains("Fusion"),
+                      "The games shown merge into a new study");
+            }
             settle();
             const auto kim = c.onlineAccounts()[0].toMap();
             check(kim["lastSync"].toLongLong() > 0 && !kim["syncing"].toBool(),
@@ -830,7 +854,8 @@ int main(int argc, char **argv) {
                   "Sync all goes through every account even when one fails");
             c.removeOnlineAccount(1);
             c.removeOnlineAccount(0);
-            check(c.onlineAccounts().isEmpty() && c.games().size() == 2,
+            // Deux parties des comptes, deux de l'essai d'orientation plus haut.
+            check(c.onlineAccounts().isEmpty() && c.games().size() == 4,
                   "Removing accounts keeps their games");
             // Profils : un utilisateur rassemble ses comptes sous un seul nom. Le
             // rattachement se fait par nom, donc renommer et retirer doivent suivre.

@@ -331,6 +331,9 @@ class Controller : public QObject {
     Q_INVOKABLE void inspectPlayer(const QString &name);
     Q_INVOKABLE void rebuildIndexes();
     Q_INVOKABLE void findDuplicates();
+    // Les parties de la page affichée (au plus 200, celles d'une recherche) fondues en une
+    // étude avec variantes, dans un nouvel onglet.
+    Q_INVOKABLE void mergeShownGames();
     Q_INVOKABLE void nextDueCard();
     Q_INVOKABLE void saveEngineProfile(const QString &name);
     Q_INVOKABLE void loadEngineProfile(int index);
@@ -840,6 +843,7 @@ class Controller : public QObject {
     void requestEngine();
     QString positionCommand() const;
     void importOnlineDownload(const QString &downloaded);
+    void orientForOwnGame();
     // Fils et table de hachage des moteurs : le réglage s'il existe, sinon ce que la
     // machine peut donner (tous les cœurs moins un), bornés à ses cœurs et à sa mémoire.
     int engineThreads() const;

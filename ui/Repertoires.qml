@@ -111,6 +111,11 @@ ColumnLayout {width:repertoiresViewport.availableWidth;height:Math.max(repertoir
                 }
             }
             ColumnLayout {
+                // Comme le « Go to your biggest gap » de Chessbook : la réponse adverse la plus
+                // fréquente qui sort du répertoire, ouverte d'un clic pour la préparer.
+                TButton {objectName:"biggestGap";accent:true;visible:(root.detail.gaps||[]).length>0;enabled:root.editable
+                    text:qsTr("Préparer la plus grande lacune : %1").arg(((root.detail.gaps||[])[0]||{}).san||"")
+                    onClicked:{root.backend.openRepertoirePosition(root.selectedId,root.detail.gaps[0].fen);root.close()}}
                 Label {objectName:"repertoireCoverage";Layout.fillWidth:true;wrapMode:Text.WordWrap;font.bold:true;visible:root.detail.coverage!==undefined&&!!root.detail.gapsLoaded;text:qsTr("Couverture estimée : %1 % des parties de la bibliothèque restent dans le répertoire jusqu’au bout de la préparation.").arg(Math.round((root.detail.coverage||0)*1000)/10)}
                 Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Réponses adverses présentes dans la bibliothèque mais absentes du répertoire, de celle qui fait le plus souvent sortir à la moins fréquente (100 maximum). Une absence ne prouve pas une nouveauté théorique.")}
                 ListView {

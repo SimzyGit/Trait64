@@ -15,6 +15,7 @@ Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèq
 - **Retourner l'échiquier** : *F*.
 - **Annoter** : un clic droit glissé trace une flèche, un clic droit sur une case pose un cercle ; Maj, Ctrl ou Alt changent la couleur. Un double clic, gauche ou droit, efface toutes les flèches et tous les cercles.
 - **À côté des noms** des joueurs s'affichent les pièces prises et l'avance matérielle.
+- **Vos parties** s'ouvrent de votre côté : si vous jouez les Noirs (d'après vos profils et vos comptes), l'échiquier est retourné.
 - **Sons** : coup, prise, échec, roque, promotion et mat ont chacun le leur, dans cinq jeux au choix (bois, feutre, clic, marbre, rétro) et au volume voulu. *Affichage → Couper le son* les fait taire d'un clic.
 
 *Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.
@@ -49,6 +50,7 @@ Ces explications viennent des suites calculées par le moteur : un calcul plus l
 Toutes vos parties enregistrées (*Ctrl+S*) vivent dans la bibliothèque.
 
 - **Rechercher** : par joueur, tournoi, date, résultat, Elo, ouverture ; par position exacte ; par matériel ; par structure de pions ; par pièces sur des cases (*Ke1 Pd4 pd5*, majuscule pour les Blancs — cette dernière recherche rejoue toutes les parties et peut être lente).
+- **Fusionner** : *Base → Fusionner les parties affichées en une étude* fond le résultat d'une recherche en une seule étude, chaque partie devenant une variante là où elle s'écarte des autres.
 - **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. *Base → Tournois en direct* montre les retransmissions de Lichess : les échiquiers d'une ronde, et *Suivre* ouvre une partie dans l'analyse, où ses coups arrivent au fil du jeu. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages, performance, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
 - **Doublons** : *Base → Doublons de coups* repère les parties en double.
 - **Dossier de position** : pour la position affichée, les coups joués, les résultats par niveau et les meilleures parties.

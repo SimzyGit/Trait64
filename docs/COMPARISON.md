@@ -117,6 +117,23 @@ Le tour s'étend aux autres familles d'outils : interfaces de moteurs, suites co
 | **Adversaires « humains »** (réseaux Maia) | Lichess, Chessiverse, Fritz 20 | moyen (Lc0 et ses réseaux à télécharger) | à étudier : dépend de Lc0 sur la machine |
 | **SPRT** pour arrêter un match quand l'écart est établi | fastchess, OpenBench | moyen | pas prioritaire hors développement de moteurs |
 
+### Ce que demandent les joueurs — 21 novembre 2026
+
+Relevé sur les forums de Lichess, de Chess.com, les discussions sur En Croissant et les comparatifs d'utilisateurs de ChessBase et de Scid :
+
+| Demande | Où | Chez Trait64 |
+|---|---|---|
+| Ouvrir ses propres parties de son côté de l'échiquier | Scid vs. PC, cité comme manque ailleurs | fait (21 nov.) |
+| Fusionner des parties choisies en une seule, variantes comprises | ChessBase ; manque signalé chez En Croissant | fait (21 nov.) |
+| Aller droit à la plus grande lacune du répertoire | Chessbook ; manque signalé chez En Croissant | fait (21 nov.) |
+| Préparer un adversaire précis | réclamé face aux outils libres | déjà présent (Préparation, fiche joueur, parties en ligne) |
+| Éditer et supprimer des variantes, saisir les coups au clavier | forum Lichess | déjà présent |
+| Analyse d'une position FEN, partie suivante après l'analyse | forum Lichess | déjà présent |
+| Classement ECO qui suit les coups | Scid, cité face à ChessBase | déjà présent |
+| Taille d'échiquier distincte pour le jeu et l'analyse | forum Lichess | non : un seul échiquier, réglable à la molette |
+
+Sources : [idées les plus demandées sur Lichess](https://en.lichess.org/forum/lichess-feedback/most-popular-ideas-for-new-features), [modifier les variantes](https://lichess.org/forum/lichess-feedback/analysis-board-is-this-a-good-alternate-ui-design), [saisie au clavier](https://lichess.org/forum/lichess-feedback/input-moves-from-keyboard-on-analysis-board), [En Croissant sur Lichess](https://lichess.org/forum/community-blog-discussions/ublog-GwYz71GJ?page=13), [En Croissant sur Chess.com](https://www.chess.com/forum/view/chess-equipment/en-croissant), [alternatives à ChessBase](https://thechessmind.substack.com/p/alternatives-to-chessbase/comments).
+
 ### Ce que Trait64 prend ailleurs pour son apparence
 
 Le but n'est pas d'imiter un site d'échecs. Trait64 emprunte aux outils de travail qu'on garde ouverts des heures :

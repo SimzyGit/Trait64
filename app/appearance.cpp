@@ -176,6 +176,7 @@ QVariantMap Controller::preferences() const {
                          {"showAttacks", false},
                          {"assistedAnalysis", false},
                          {"sounds", true},
+                         {"autoFlip", true},
                          {"soundTheme", "bois"},
                          {"soundVolume", 80},
                          {"wheelMoves", false},
@@ -300,7 +301,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
                                "showHanging", "showAttacks", "assistedAnalysis", "sounds", "wheelMoves",
-                               "blindfold", "autoBackup"}
+                               "autoFlip", "blindfold", "autoBackup"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}

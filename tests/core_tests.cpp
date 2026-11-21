@@ -666,6 +666,30 @@ int main() {
             check((hash & (hash - 1)) == 0, "The advised hash is a power of two");
             check(t64::installedMemoryMb() >= 0, "Installed memory is never negative");
         }
+        {
+            // La fusion de parties (ChessBase) : un tronc commun, puis une variante par
+            // partie qui s'en écarte, annotée de ses joueurs ; une autre position de départ
+            // est laissée de côté.
+            const auto games =
+                t64::parsePgn("[White \"A\"]\n[Black \"B\"]\n[Date \"2024.01.01\"]\n[Result \"1-0\"]\n1.e4 "
+                              "e5 2.Nf3 Nc6 1-0\n\n"
+                              "[White \"C\"]\n[Black \"D\"]\n[Date \"2023.05.02\"]\n[Result \"0-1\"]\n1.e4 "
+                              "e5 2.Nf3 Nf6 0-1\n\n"
+                              "[White \"E\"]\n[Black \"F\"]\n[Result \"*\"]\n1.d4 d5 *\n\n"
+                              "[FEN \"4k3/8/8/8/8/8/8/4K3 w - - 0 1\"]\n[SetUp \"1\"]\n1.Kd2 *\n");
+            int skipped = -1;
+            const auto merged = t64::mergeGames(games, &skipped);
+            const auto main = merged.mainline();
+            const auto &afterNf3 = merged.nodes[main[3]];
+            check(skipped == 1 && main.size() == 5 && merged.nodes[main[4]].san == "Nc6" &&
+                      afterNf3.children.size() == 2 && merged.nodes[0].children.size() == 2,
+                  "Merged games share their common trunk and branch where they differ");
+            const auto &branch = merged.nodes[afterNf3.children[1]];
+            check(branch.san == "Nf6" && branch.comment == "C – D, 2023 (0-1)" &&
+                      merged.nodes[merged.nodes[0].children[1]].comment == "E – F (*)" &&
+                      merged.tags.at("Event") == "Fusion de 3 parties",
+                  "Each branch names the game it comes from");
+        }
         std::cout << checks << " core checks passed\n";
         return 0;
     } catch (const std::exception &e) {

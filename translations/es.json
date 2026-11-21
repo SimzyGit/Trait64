@@ -1758,5 +1758,12 @@
   "Lichess n’a pas délivré de jeton : ": "Lichess no entregó ningún token: ",
   "Jeton reçu, mais Lichess ne dit pas à quel compte il appartient.": "Token recibido, pero Lichess no indica a qué cuenta pertenece.",
   "%1 partie(s) de variantes non prises en charge (Crazyhouse, Atomic…) ou illisibles mises de côté.": "%1 partida(s) de variantes no compatibles (Crazyhouse, Atomic…) o ilegibles apartadas.",
-  "Aucune partie lisible : %1 partie(s) de variantes non prises en charge ou illisibles.": "Ninguna partida legible: %1 partida(s) de variantes no compatibles o ilegibles."
+  "Aucune partie lisible : %1 partie(s) de variantes non prises en charge ou illisibles.": "Ninguna partida legible: %1 partida(s) de variantes no compatibles o ilegibles.",
+  "Préparer la plus grande lacune : %1": "Preparar la mayor laguna: %1",
+  "Mes parties de mon côté": "Mis partidas desde mi lado",
+  "Une partie où vous jouez les Noirs s’ouvre l’échiquier retourné. Vos noms sont ceux de vos profils et de vos comptes en ligne.": "Una partida en la que juega con negras se abre con el tablero girado. Sus nombres son los de sus perfiles y cuentas en línea.",
+  "Fusionner les parties affichées en une étude": "Fusionar las partidas mostradas en un estudio",
+  "%1 partie(s) fusionnée(s) en une étude.": "%1 partida(s) fusionada(s) en un estudio.",
+  "%1 partie(s) partant d’une autre position laissée(s) de côté.": "%1 partida(s) que empiezan desde otra posición apartada(s).",
+  "Affichez au moins deux parties à fusionner.": "Muestre al menos dos partidas para fusionar."
 }

@@ -159,6 +159,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
             MenuItem {text: qsTr("Tournois de la bibliothèque…"); onTriggered: tournamentFinder.open()}
             MenuItem {text: qsTr("Graphiques de la sélection…"); onTriggered: libraryCharts.open()}
+            MenuItem {text: qsTr("Fusionner les parties affichées en une étude"); enabled: controller.games.length > 1; onTriggered: controller.mergeShownGames()}
             MenuItem {text: qsTr("Tournois en direct…"); onTriggered: liveDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Dossier de la position…"); onTriggered: openingReportDialog.open()}
@@ -291,6 +292,7 @@ ApplicationWindow {
                             MenuItem {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onTriggered:controller.classifyLibraryOpenings()}
                             MenuItem {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onTriggered:controller.groupLibraryByOpening()}
                             MenuItem {text:qsTr("Doublons de coups");onTriggered:controller.findDuplicates()}
+                            MenuItem {objectName:"mergeShown";text:qsTr("Fusionner les parties affichées en une étude");enabled:controller.games.length>1;onTriggered:controller.mergeShownGames()}
                             MenuItem {text:qsTr("Corriger les noms…");objectName:"showNames";onTriggered:namesDialog.open()}
                             MenuSeparator {}
                             MenuItem {text:qsTr("Mes compétences…");objectName:"showSkills";onTriggered:skillDialog.open()}
