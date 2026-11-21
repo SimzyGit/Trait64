@@ -166,6 +166,26 @@ int main(int argc, char **argv) {
                       t64::Tournament::likelihoodOfSuperiority(0, 0) == .5 &&
                       t64::Tournament::likelihoodOfSuperiority(3, 3) == .5,
                   "LOS comes from the decisive games only");
+            {
+                // La synthèse de plusieurs moteurs : le coup le plus choisi, l'accord,
+                // l'écart des évaluations en pions.
+                const auto row = [](const QString &name, const QString &san, double score) {
+                    return QVariantMap{
+                        {"name", name},
+                        {"lines", QVariantList{QVariantMap{
+                                      {"san", san + " e5"}, {"score", score}, {"scoreType", "cp"}}}}};
+                };
+                const auto summary =
+                    t64::Comparison::synthesis({row("A", "e4", .30), row("B", "e4", .45), row("C", "d4", .20),
+                                                QVariantMap{{"name", "D"}}});
+                check(summary["engines"] == 3 && summary["agree"] == 2 && summary["move"] == "e4" &&
+                          std::abs(summary["spread"].toDouble() - .25) < 1e-9 &&
+                          summary["others"].toList().first().toMap()["move"] == "d4",
+                      "Several engines are summed up: majority move, agreement and evaluation spread");
+                check(t64::Comparison::synthesis({row("A", "e4", .3)})["engines"] == 1 &&
+                          !t64::Comparison::synthesis({row("A", "e4", .3)}).contains("move"),
+                      "One engine alone is not a synthesis");
+            }
             QTemporaryDir dir;
             QFile fake(dir.path() + "/illegal-engine");
             check(fake.open(QIODevice::WriteOnly), "Create illegal-move fixture");

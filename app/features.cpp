@@ -734,10 +734,15 @@ void Controller::rebuildReview() {
             continue;
         scores[i] = {true, entry["cp"].toDouble()};
     }
+    // La perte du coup d'avant, celui de l'adversaire : une faute qui ne la punit pas
+    // est une occasion manquée, comme dans le bilan de Lichess.
+    double opponentLoss = 0;
     for (int i = 1; i < int(reviewNodes_.size()); ++i) {
         const auto previous = reviewScores_[i - 1].toMap(), score = reviewScores_[i].toMap();
-        if (previous.isEmpty() || score.isEmpty())
+        if (previous.isEmpty() || score.isEmpty()) {
+            opponentLoss = 0;
             continue;
+        }
         const int node = reviewNodes_[i], parent = reviewNodes_[i - 1];
         const bool white = reviewGame_.boardAt(parent).sideToMove() == chess::Color::WHITE;
         const bool lossKnown = previous["scoreType"] == "cp" && score["scoreType"] == "cp";
@@ -756,6 +761,9 @@ void Controller::rebuildReview() {
         const char *quality = t64::moveQuality(loss, lossKnown, playedBest);
         // Un sacrifice : le coup offre au moins deux points, et l'évaluation ne baisse pas.
         int offered = 0;
+        if (lossKnown && loss >= 100 && opponentLoss >= 100)
+            label = "Occasion manquée";
+        opponentLoss = lossKnown ? loss : 0;
         if (lossKnown && loss < 50) {
             const auto before = reviewGame_.boardAt(parent);
             offered =
@@ -1668,4 +1676,50 @@ void Controller::mergeShownGames() {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+QVariantMap Controller::reviewMarks(int node) const {
+    if (node <= 0 || node >= int(game_.nodes.size()))
+        return {};
+    const auto &here = game_.nodes[node];
+    for (const auto &value : review_) {
+        const auto row = value.toMap();
+        if (row["node"].toInt() != node)
+            continue;
+        // Le bilan peut porter sur une autre partie que celle affichée : on vérifie le coup
+        // et la position d'avant, pas seulement le numéro du nœud.
+        if (row["played"].toString() != qs(here.uci) ||
+            row["fen"].toString() != qs(game_.nodes[here.parent].fen))
+            return {};
+        const auto label = row["label"].toString();
+        if (!QStringList{"Imprécision", "Erreur", "Gaffe", "Occasion manquée"}.contains(label))
+            return {};
+        QVariantList marks;
+        const auto arrow = [&](const QString &uci, const char *color) {
+            if (uci.size() >= 4)
+                marks << QVariantMap{{"from", uci.left(2)}, {"to", uci.mid(2, 2)}, {"color", color}};
+        };
+        // « best » et « reply » portent toute la suite du moteur : seul le premier coup compte ici.
+        const auto played = row["played"].toString(), best = row["best"].toString().section(' ', 0, 0),
+                   reply = row["reply"].toString().section(' ', 0, 0);
+        arrow(played, "#d75050");
+        if (best != played)
+            arrow(best, "#3f9a5a");
+        arrow(reply, "#e08a2b");
+        // Les coups en notation lisible, rejoués depuis la position d'avant.
+        const auto san = [&](int from, const QString &uci) -> QString {
+            try {
+                auto copy = game_;
+                return qs(copy.nodes[copy.play(from, uci.toStdString())].san);
+            } catch (...) {
+                return uci;
+            }
+        };
+        QStringList parts{tr("%1 : %2").arg(tr(label.toUtf8().constData()), qs(here.san))};
+        if (best.size() >= 4 && best != played)
+            parts << tr("meilleur : %1").arg(san(here.parent, best));
+        if (reply.size() >= 4)
+            parts << tr("réfutation : %1").arg(san(node, reply));
+        return {{"marks", marks}, {"note", parts.join(" · ")}};
+    }
+    return {};
 }

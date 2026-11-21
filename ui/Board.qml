@@ -94,6 +94,9 @@ Item {
     property bool hintThreat: false
     onHintThreatChanged: drawing.requestPaint()
     onHintMovesChanged: drawing.requestPaint()
+    // Repères du bilan sur un coup fautif : coup joué, meilleur coup, réfutation.
+    property var reviewMarks: []
+    onReviewMarksChanged: drawing.requestPaint()
     property bool flipped: backend.state.flipped
     property string arrowFrom: ""
     property string draggedFrom: ""
@@ -187,6 +190,16 @@ Item {
                 ctx.strokeStyle=ctx.fillStyle=root.hintThreat?"#c9483a":"#3d7fc4";ctx.globalAlpha=h===0?.62:.3;ctx.lineWidth=root.cell*(h===0?0.12:0.07);ctx.lineCap="round"
                 ctx.beginPath();ctx.moveTo(hx1,hy1);ctx.lineTo(hx2-hhead*0.45*Math.cos(hang),hy2-hhead*0.45*Math.sin(hang));ctx.stroke()
                 ctx.beginPath();ctx.moveTo(hx2,hy2);ctx.lineTo(hx2-hhead*Math.cos(hang-0.5),hy2-hhead*Math.sin(hang-0.5));ctx.lineTo(hx2-hhead*Math.cos(hang+0.5),hy2-hhead*Math.sin(hang+0.5));ctx.closePath();ctx.fill()
+            }
+            // Les repères du bilan, sous les flèches de l'étude : un peu plus fins qu'elles.
+            var marks=root.reviewMarks||[]
+            for(var m=0;m<marks.length&&!root.blind;m++) {
+                var ma=root.displayIndex(marks[m].from),mb=root.displayIndex(marks[m].to)
+                var mx1=(ma%8+0.5)*root.cell,my1=(Math.floor(ma/8)+0.5)*root.cell,mx2=(mb%8+0.5)*root.cell,my2=(Math.floor(mb/8)+0.5)*root.cell
+                var mang=Math.atan2(my2-my1,mx2-mx1),mhead=root.cell*0.26
+                ctx.strokeStyle=ctx.fillStyle=marks[m].color;ctx.globalAlpha=.78;ctx.lineWidth=root.cell*0.1;ctx.lineCap="round"
+                ctx.beginPath();ctx.moveTo(mx1,my1);ctx.lineTo(mx2-mhead*0.45*Math.cos(mang),my2-mhead*0.45*Math.sin(mang));ctx.stroke()
+                ctx.beginPath();ctx.moveTo(mx2,my2);ctx.lineTo(mx2-mhead*Math.cos(mang-0.5),my2-mhead*Math.sin(mang-0.5));ctx.lineTo(mx2-mhead*Math.cos(mang+0.5),my2-mhead*Math.sin(mang+0.5));ctx.closePath();ctx.fill()
             }
             // Relations d'attaque de la pièce choisie : fines, sous les flèches de l'étude.
             var rel=root.relations

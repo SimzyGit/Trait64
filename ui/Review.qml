@@ -47,7 +47,7 @@ ColumnLayout {width:reviewViewport.availableWidth;height:Math.max(reviewViewport
         ListView {id:rows;Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:170;model:root.backend.review;clip:true;spacing:3;ScrollBar.vertical:ScrollBar{}
             currentIndex:-1
             delegate:ItemDelegate {required property var modelData;required property int index;width:rows.width;implicitHeight:36*controller.preferences.fontScale*controller.preferences.uiScale;highlighted:ListView.isCurrentItem
-                text:(index+1)+".  "+modelData.move+"    "+modelData.eval+"    "+modelData.label+(modelData.lossKnown?"    (−"+modelData.loss+" cp)":"");onClicked:{rows.currentIndex=index;root.backend.navigate(modelData.node)}
+                text:(index+1)+".  "+modelData.move+"    "+modelData.eval+"    "+root.backend.uiText(modelData.label)+(modelData.lossKnown?"    (−"+modelData.loss+" cp)":"");onClicked:{rows.currentIndex=index;root.backend.navigate(modelData.node)}
             }
         }
         Flow {Layout.fillWidth:true;spacing:8
@@ -68,7 +68,7 @@ TButton {objectName:"explainReviewButton";text:qsTr("Comprendre ce coup");enable
         ScrollView {id:explanationViewport;anchors.fill:parent;contentWidth:availableWidth;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
         ColumnLayout {
             width:explanationViewport.availableWidth;spacing:10
-            Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+explanation.details.label+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+qsTr(" (Blancs)"):explanation.details.error;wrapMode:Text.WordWrap}
+            Label {Layout.fillWidth:true;text:explanation.details.available?explanation.details.move+" · "+root.backend.uiText(explanation.details.label)+" · "+explanation.details.beforeEval+" → "+explanation.details.afterEval+qsTr(" (Blancs)"):explanation.details.error;wrapMode:Text.WordWrap}
             // Le pourquoi, avant le détail : c'est la question qu'on se pose en ouvrant ce panneau.
             Rectangle {
                 Layout.fillWidth:true;visible:explanation.details.available&&!!explanation.details.why

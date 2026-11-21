@@ -43,6 +43,8 @@ Chaque étude ouverte a son onglet, jusqu'à seize ; ils sont retrouvés au red�
 
  En ouvrant l'explication d'un coup, un encadré dit **pourquoi** il est moins bon que celui du moteur : mat permis ou manqué, matériel perdu ou manqué (avec la pièce, la case et le coup qui le montre), pièce laissée en prise, sinon écart positionnel. Les motifs (fourchette, clouage, attaque à la découverte, menace de mat…) et ce que le coup change aux pions et à l'abri du roi sont donnés à côté.
 
+Sur un coup fautif, l'échiquier montre le coup joué (flèche rouge), le meilleur coup (vert) et la réfutation du moteur (orange), nommés sous l'échiquier. Une faute qui laisse passer celle de l'adversaire est une *occasion manquée*.
+
 Ces explications viennent des suites calculées par le moteur : un calcul plus long peut dire autre chose.
 
 ## La bibliothèque

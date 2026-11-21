@@ -43,6 +43,8 @@ Each open study has its own tab, up to sixteen; they come back after a restart.
 
  Opening a move's explanation shows **why** it is worse than the engine's: mate allowed or missed, material lost or missed (with the piece, the square and the move that shows it), a piece left en prise, or otherwise a positional gap. Patterns (fork, pin, discovered attack, threat of mate…) and what the move changes to the pawns and the king's shelter are given alongside.
 
+On a faulty move, the board shows the move played (red arrow), the best move (green) and the engine's refutation (orange), named under the board. A mistake that lets the opponent's own mistake go unpunished is a *missed chance*.
+
 These explanations come from the lines the engine computed: a longer calculation may say otherwise.
 
 ## The library

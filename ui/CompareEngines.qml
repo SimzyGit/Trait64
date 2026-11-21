@@ -33,6 +33,19 @@ ColumnLayout {width:compareenginesViewport.availableWidth;height:Math.max(compar
             TButton {text:qsTr("Arrêter les moteurs");enabled:root.backend.comparison.running;onClicked:root.backend.comparison.stop()}
         }
         Label {text:qsTr("La comparaison suit la navigation de l’échiquier. Ressources plafonnées : 1 Gio de hash au total et partage des processeurs disponibles.");Layout.fillWidth:true;wrapMode:Text.WordWrap;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);opacity:0.7}
+        // La synthèse : le coup que choisissent le plus de moteurs, et l'écart de leurs
+        // évaluations. Un accord large sur un écart faible vaut plus qu'un moteur seul.
+        Label {
+            objectName: "comparisonSummary"
+            readonly property var s: root.backend.comparison.summary || ({})
+            visible: (s.engines || 0) >= 2
+            Layout.fillWidth: true; wrapMode: Text.WordWrap; font.bold: true
+            text: (s.agree === s.engines ? qsTr("Les %1 moteurs s’accordent sur %2.").arg(s.engines).arg(s.move)
+                                         : qsTr("%1 moteur(s) sur %2 choisissent %3 ; les autres : %4.").arg(s.agree).arg(s.engines).arg(s.move)
+                                               .arg((s.others || []).map(o => o.move + " (" + o.engines.join(", ") + ")").join(", ")))
+                  + " " + (s.mate ? qsTr("Un moteur au moins voit un mat.")
+                                  : qsTr("Écart d’évaluation : %1 pion(s).").arg(Number(s.spread || 0).toLocaleString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language), "f", 2)))
+        }
         ScrollView {
             id: comparisonScroll
             Layout.fillWidth:true;Layout.fillHeight:true;contentWidth:availableWidth;clip:true

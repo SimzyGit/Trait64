@@ -1915,5 +1915,14 @@
   "Journal de diagnostic…": "Registro de diagnóstico…",
   "Enregistrer le journal de diagnostic": "Guardar el registro de diagnóstico",
   "Texte (*.txt)": "Texto (*.txt)",
-  "Journal de diagnostic enregistré. Relisez-le avant de le joindre à un signalement.": "Registro de diagnóstico guardado. Reléalo antes de adjuntarlo a un informe."
+  "Journal de diagnostic enregistré. Relisez-le avant de le joindre à un signalement.": "Registro de diagnóstico guardado. Reléalo antes de adjuntarlo a un informe.",
+  "Les %1 moteurs s’accordent sur %2.": "Los %1 motores coinciden en %2.",
+  "%1 moteur(s) sur %2 choisissent %3 ; les autres : %4.": "%1 de %2 motor(es) eligen %3; los demás: %4.",
+  "Un moteur au moins voit un mat.": "Al menos un motor ve un mate.",
+  "Écart d’évaluation : %1 pion(s).": "Diferencia de evaluación: %1 peón(es).",
+  "Occasion manquée": "Ocasión perdida",
+  "%1 : %2": "%1: %2",
+  "meilleur : %1": "mejor: %1",
+  "réfutation : %1": "refutación: %1",
+  "Correct": "Correcta"
 }

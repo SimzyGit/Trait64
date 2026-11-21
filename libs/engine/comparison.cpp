@@ -27,6 +27,46 @@ QVariantList Comparison::rows() const {
         result << s->data;
     return result;
 }
+QVariantMap Comparison::synthesis(const QVariantList &rows) {
+    QMap<QString, QStringList> byMove;
+    QList<double> scores;
+    int engines = 0;
+    bool mate = false;
+    for (const auto &value : rows) {
+        const auto row = value.toMap();
+        const auto lines = row["lines"].toList();
+        if (lines.isEmpty())
+            continue;
+        const auto best = lines.first().toMap();
+        const auto move = best["san"].toString().section(' ', 0, 0);
+        if (move.isEmpty())
+            continue;
+        ++engines;
+        byMove[move] << row["name"].toString();
+        if (best["scoreType"] == "cp")
+            scores << best["score"].toDouble();
+        else
+            mate = true;
+    }
+    if (engines < 2)
+        return {{"engines", engines}};
+    QString chosen;
+    for (auto it = byMove.cbegin(); it != byMove.cend(); ++it)
+        if (chosen.isEmpty() || it.value().size() > byMove[chosen].size())
+            chosen = it.key();
+    double spread = 0;
+    if (scores.size() >= 2) {
+        const auto [low, high] = std::minmax_element(scores.cbegin(), scores.cend());
+        spread = *high - *low;
+    }
+    QVariantList others;
+    for (auto it = byMove.cbegin(); it != byMove.cend(); ++it)
+        if (it.key() != chosen)
+            others << QVariantMap{{"move", it.key()}, {"engines", it.value()}};
+    return {{"engines", engines}, {"agree", int(byMove[chosen].size())},
+            {"move", chosen},     {"spread", qRound(spread * 100) / 100.0},
+            {"mate", mate},       {"others", others}};
+}
 void Comparison::scheduleChanged() {
     if (!notify_.isActive())
         notify_.start();

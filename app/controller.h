@@ -337,6 +337,10 @@ class Controller : public QObject {
     // Les parties de la page affichée (au plus 200, celles d'une recherche) fondues en une
     // étude avec variantes, dans un nouvel onglet.
     Q_INVOKABLE void mergeShownGames();
+    // Les repères du bilan sur la position d'après un coup fautif : coup joué (rouge),
+    // meilleur coup (vert), réfutation du moteur (orange), et une phrase qui les nomme.
+    // Vide si le coup n'est pas une faute ou si le bilan porte sur une autre partie.
+    Q_INVOKABLE QVariantMap reviewMarks(int node) const;
     Q_INVOKABLE void nextDueCard();
     Q_INVOKABLE void saveEngineProfile(const QString &name);
     Q_INVOKABLE void loadEngineProfile(int index);

@@ -14,10 +14,10 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 - [ ] Comparaison de plusieurs bases, statistiques de tournoi avancées.
 
 **3. Analyse et bilan**
-- [ ] Erreur montrée avec sa réfutation sur l'échiquier ; coup joué et meilleur coup comparés visuellement.
+- [x] Erreur montrée avec sa réfutation sur l'échiquier ; coup joué et meilleur coup comparés visuellement. — 21 nov.
 - [ ] Explications : sécurité du roi, colonnes ouvertes et cases faibles, structure de pions, séquences forcées, déviations et surcharges.
-- [ ] Possibilités manquées et erreurs stratégiques relevées ; entraînement tiré des erreurs.
-- [ ] Synthèse des conclusions de plusieurs moteurs.
+- [ ] ◐ Possibilités manquées ✅ 21 nov. ; erreurs stratégiques relevées ; entraînement tiré des erreurs (cartes et puzzles des erreurs existent).
+- [x] Synthèse des conclusions de plusieurs moteurs. — 21 nov.
 
 **4. Préparation contre un adversaire**
 - [ ] Réponses les plus fréquentes, variantes régulières, évolution de ses choix dans le temps.

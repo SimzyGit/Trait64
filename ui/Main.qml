@@ -78,6 +78,8 @@ ApplicationWindow {
     function filterLibrary() {applyAdvanced()}
     // L'échiquier seul : la notation et le moteur s'effacent, l'échiquier prend la place.
     property bool boardOnly:false
+    // Le coup fautif sous les yeux, d'après le bilan : relu à chaque coup et à chaque bilan.
+    readonly property var reviewSpot:(controller.review,controller.reviewMarks(controller.state.node))
     function toggleFullScreen(){visibility=visibility===Window.FullScreen?Window.Windowed:Window.FullScreen}
     function bestGamesHere(){page=1;positionCheck.checked=true;pawnCheck.checked=false;trashCheck.checked=false;var f=Object.assign({},advanced);f.sort="elo";f.reverse=false;advanced=f;applyAdvanced()}
     // Une recherche enregistrée : tout ce que la bibliothèque filtre, sous un nom.
@@ -509,7 +511,8 @@ objectName:"analysisSplit"
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
-                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent}
+                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent
+                                        reviewMarks:win.reviewSpot.marks||[]}
                                 }
                             }
                         }
@@ -552,6 +555,7 @@ objectName:"analysisSplit"
                             }
                             TButton {text:controller.state.playing?qsTr("Arrêter"):qsTr("Jouer");visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
+                        Label {objectName:"reviewNote";visible:!!win.reviewSpot.note;text:win.reviewSpot.note||"";color:"#c0523f";Layout.alignment:Qt.AlignHCenter;wrapMode:Text.WordWrap;Layout.maximumWidth:boardArea.width;horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
                         Label {text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.

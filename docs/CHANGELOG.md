@@ -1,5 +1,11 @@
 # Changements
 
+## Bilan : la faute sur l'échiquier, occasions manquées, synthèse des moteurs — 21 novembre 2026
+
+- **La faute montrée sur l'échiquier** : sur un coup classé imprécision, erreur, gaffe ou occasion manquée, trois flèches s'affichent — le coup joué en rouge, le meilleur coup en vert, la réfutation du moteur en orange — et une ligne sous l'échiquier les nomme (« Gaffe : Qh4 · meilleur : Nc6 · réfutation : Nxh4 »). Rien ne s'affiche si le bilan porte sur une autre partie que celle à l'écran.
+- **Occasions manquées**, comme dans le bilan de Lichess : une faute qui répond à une faute de l'adversaire sans la punir est classée à part. Les libellés du bilan suivent désormais la langue de l'interface.
+- **Plusieurs moteurs, une conclusion** : la comparaison côte à côte dit le coup que choisissent le plus de moteurs, combien s'accordent, ce que jouent les autres et l'écart de leurs évaluations.
+
 ## Petits défauts — 21 novembre 2026
 
 - **Nombres à la française** dans les compteurs : en langue automatique (le réglage par défaut), ils s'affichaient à l'anglaise (« 1,024 »), Qt ne connaissant pas de langue « auto ». Les dates et nombres des pages Comptes, Sauvegardes, Accueil et Joueurs suivent aussi la langue de l'interface plutôt que celle du système.

@@ -1724,6 +1724,42 @@ int main(int argc, char **argv) {
                 check(c.review().size() == 2 && c.reviewState()["depth"] == 12 &&
                           c.reviewState()["reachedDepth"].toDouble() >= 12,
                       "A depth-targeted review reaches the requested depth and reports it");
+                {
+                    // Une gaffe montrée sur l'échiquier : 2…Dh4 offre la dame, Cxh4 la prend.
+                    // Le coup joué, le meilleur coup et la réfutation y sont fléchés, et une
+                    // phrase les nomme.
+                    c.newGame();
+                    for (const char *uci : {"e2e4", "e7e5", "g1f3", "d8h4"})
+                        c.move(uci);
+                    c.analyseGame(5000, false, 10);
+                    timer.restart();
+                    while (c.reviewState()["running"].toBool() && timer.elapsed() < 30000)
+                        QTest::qWait(20);
+                    int blunder = -1;
+                    for (const auto &row : c.review())
+                        if (row.toMap()["played"] == "d8h4")
+                            blunder = row.toMap()["node"].toInt();
+                    const auto spot = c.reviewMarks(blunder);
+                    const auto marks = spot["marks"].toList();
+                    check(blunder > 0 && marks.size() == 3 && marks[0].toMap()["from"] == "d8" &&
+                              marks[2].toMap()["from"] == "f3" && marks[2].toMap()["to"] == "h4" &&
+                              spot["note"].toString().contains("Nxh4"),
+                          "A blunder is shown with the move played, the best move and its refutation");
+                    check(c.reviewMarks(blunder - 1).isEmpty(), "A sound move carries no review marks");
+                    // Les Blancs ne prennent pas la dame et jouent une autre gaffe : occasion manquée.
+                    c.newGame();
+                    for (const char *uci : {"e2e4", "e7e5", "g1f3", "d8h4", "f1a6"})
+                        c.move(uci);
+                    c.analyseGame(5000, false, 10);
+                    timer.restart();
+                    while (c.reviewState()["running"].toBool() && timer.elapsed() < 30000)
+                        QTest::qWait(20);
+                    bool missed = false;
+                    for (const auto &row : c.review())
+                        missed |=
+                            row.toMap()["played"] == "f1a6" && row.toMap()["label"] == "Occasion manquée";
+                    check(missed, "Answering a blunder with another blunder is a missed chance");
+                }
                 c.analyseGame(100, false);
                 timer.restart();
                 while (c.reviewState()["running"].toBool() && timer.elapsed() < 12000)

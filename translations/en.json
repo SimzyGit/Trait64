@@ -1915,5 +1915,14 @@
   "Journal de diagnostic…": "Diagnostic log…",
   "Enregistrer le journal de diagnostic": "Save the diagnostic log",
   "Texte (*.txt)": "Text (*.txt)",
-  "Journal de diagnostic enregistré. Relisez-le avant de le joindre à un signalement.": "Diagnostic log saved. Read it through before attaching it to a report."
+  "Journal de diagnostic enregistré. Relisez-le avant de le joindre à un signalement.": "Diagnostic log saved. Read it through before attaching it to a report.",
+  "Les %1 moteurs s’accordent sur %2.": "All %1 engines agree on %2.",
+  "%1 moteur(s) sur %2 choisissent %3 ; les autres : %4.": "%1 of %2 engine(s) choose %3; the others: %4.",
+  "Un moteur au moins voit un mat.": "At least one engine sees a mate.",
+  "Écart d’évaluation : %1 pion(s).": "Evaluation spread: %1 pawn(s).",
+  "Occasion manquée": "Missed chance",
+  "%1 : %2": "%1: %2",
+  "meilleur : %1": "best: %1",
+  "réfutation : %1": "refutation: %1",
+  "Correct": "Correct"
 }
