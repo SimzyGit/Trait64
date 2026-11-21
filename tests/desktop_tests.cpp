@@ -844,6 +844,13 @@ int main(int argc, char **argv) {
             check(c.onlineAccounts()[0].toMap()["connected"].toBool() &&
                       !c.onlineAccounts()[0].toMap().contains("token") && c.hasLichessToken(),
                   "A pasted token links to an existing account and never reaches the interface");
+            {
+                // Le journal de diagnostic dit l'essentiel et ne livre jamais un jeton.
+                const auto report = c.diagnosticReport();
+                check(report.contains("Version") && report.contains("lichess:Kim (connecté)") &&
+                          !report.contains("lip_KimToken123"),
+                      "The diagnostic log describes the setup without any token");
+            }
             c.setAccountToken(0, "");
             check(!c.onlineAccounts()[0].toMap()["connected"].toBool() && !c.hasLichessToken(),
                   "Disconnecting an account removes its token");

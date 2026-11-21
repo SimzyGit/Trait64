@@ -21,7 +21,7 @@ TDialog {
         Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Trait64 sauvegarde la bibliothèque toutes les six heures (les quatorze dernières sont gardées), avant chaque mise à jour et avant chaque restauration. Restaurer remplace la bibliothèque actuelle, qui est d’abord sauvegardée à son tour.")}
         RowLayout {
             TButton {objectName:"backupNow";text:qsTr("Sauvegarder maintenant");enabled:!root.backend.busy;onClicked:{root.backend.automaticBackup(true);refreshLater.start()}}
-            Label {Layout.fillWidth:true;color:root.palette.placeholderText;text:root.backend.preferences.lastBackup?qsTr("Dernière sauvegarde automatique : %1").arg(new Date(root.backend.preferences.lastBackup).toLocaleString(Qt.locale(),Locale.ShortFormat)):""}
+            Label {Layout.fillWidth:true;color:root.palette.placeholderText;text:root.backend.preferences.lastBackup?qsTr("Dernière sauvegarde automatique : %1").arg(new Date(root.backend.preferences.lastBackup).toLocaleString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language),Locale.ShortFormat)):""}
         }
         Timer {id:refreshLater;interval:1500;onTriggered:root.refresh()}
         ListView {

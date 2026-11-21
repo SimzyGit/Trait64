@@ -54,7 +54,20 @@ public:
     QString language() const { QReadLocker lock(&lock_); return language_; }
     QString display(const QString &text) const {
         auto translated = translate("Trait64",text.toUtf8().constData());
-        return translated.isNull() || translated.isEmpty() ? text : translated;
+        if (!translated.isEmpty())
+            return translated;
+        // Les messages du cœur qui finissent par un détail (« Coup illégal : e2e5 ») :
+        // le début se traduit, le détail reste tel quel.
+        for (const char *separator : {": ", " : ", "≥ "}) {
+            const auto cut = text.indexOf(QString::fromUtf8(separator));
+            if (cut <= 0)
+                continue;
+            const auto head = text.left(cut + QString::fromUtf8(separator).size());
+            const auto start = translate("Trait64", head.toUtf8().constData());
+            if (!start.isEmpty())
+                return start + text.mid(head.size());
+        }
+        return text;
     }
 private:
     static QJsonObject load(const QString &code) {

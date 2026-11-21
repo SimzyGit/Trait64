@@ -184,9 +184,11 @@ ColumnLayout {
             anchors.fill: parent; contentWidth: availableWidth; clip: true
             ColumnLayout {
                 width: parent.width; spacing: 10
-                Label { text: qsTr("Identité"); font.bold: true }
+                // Une seule grille pour l'identité et la fiche FIDE : en deux grilles, chaque
+                // colonne d'intitulés prenait sa propre largeur et les champs ne s'alignaient pas.
                 GridLayout {
                     Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 6
+                    Label { text: qsTr("Identité"); font.bold: true; Layout.columnSpan: 2 }
                     Label { text: qsTr("Nom") }
                     TTextField { id: editName; objectName: "editProfileName"; Layout.fillWidth: true; selectByMouse: true }
                     Label { text: qsTr("Portrait") }
@@ -195,11 +197,8 @@ ColumnLayout {
                         TButton { text: editor.current.photo ? qsTr("Changer…") : qsTr("Choisir…"); onClicked: { photo.index = editor.index; photo.open() } }
                         TButton { visible: !!editor.current.photo; text: qsTr("Retirer"); onClicked: root.backend.setProfilePhoto(editor.index, "") }
                     }
-                }
-                Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
-                Label { text: qsTr("Fiche FIDE"); font.bold: true }
-                GridLayout {
-                    Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 6
+                    Rectangle { Layout.fillWidth: true; Layout.columnSpan: 2; Layout.topMargin: 4; height: 1; opacity: .4; color: palette.mid }
+                    Label { text: qsTr("Fiche FIDE"); font.bold: true; Layout.columnSpan: 2 }
                     Label { text: qsTr("Identifiant") }
                     TTextField { id: editFideId; Layout.fillWidth: true; selectByMouse: true; placeholderText: qsTr("chiffres seulement"); inputMethodHints: Qt.ImhDigitsOnly }
                     Label { text: qsTr("Nom FIDE") }

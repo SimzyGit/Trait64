@@ -93,6 +93,13 @@ Controller::Controller(const QString &path, QObject *parent)
                          {{"id", "tournament:" + QFileInfo(tournamentFile_).completeBaseName()},
                           {"title", tournamentTitle_}});
     });
+    // Les derniers messages, pour le journal de diagnostic.
+    connect(this, &Controller::message, this, [this](const QString &text, bool error) {
+        recentMessages_.push_back(QDateTime::currentDateTime().toString(Qt::ISODate) +
+                                  (error ? " [erreur] " : " ") + text);
+        if (recentMessages_.size() > 100)
+            recentMessages_.pop_front();
+    });
     online_ = new t64::OnlineGames(this);
     lichessLogin_ = new t64::LichessLogin(this);
     connect(lichessLogin_, &t64::LichessLogin::failed, this, [this](const QString &text) {

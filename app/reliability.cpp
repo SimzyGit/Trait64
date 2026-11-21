@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "controller.h"
+#include "hardware.h"
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QGuiApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QSysInfo>
 #include <QUrl>
 #include <QUuid>
 #include <QtConcurrent>
+#include <thread>
 namespace {
 void require(bool ok, const char *message) {
     if (!ok)
@@ -210,4 +215,64 @@ bool Controller::firstLaunch() {
         return false;
     settings_.setValue("guide/offered", true);
     return true;
+}
+QString Controller::diagnosticReport() const {
+    QStringList out;
+    const auto line = [&](const QString &key, const QVariant &value) {
+        out << key + " : " + value.toString();
+    };
+    out << "Journal de diagnostic de Trait64" << QString();
+    line("Version", QCoreApplication::applicationVersion());
+    line("Qt", QString::fromLatin1(qVersion()));
+    line("Système", QSysInfo::prettyProductName() + " (" + QSysInfo::kernelType() + " " +
+                        QSysInfo::kernelVersion() + ")");
+    line("Processeur", QSysInfo::currentCpuArchitecture() + ", " +
+                           QString::number(std::thread::hardware_concurrency()) + " cœurs");
+    line("Mémoire", QString::number(t64::installedMemoryMb()) + " Mo");
+    line("Affichage", QGuiApplication::platformName());
+    line("Dossier des données", dataPath_);
+    line("Bibliothèque",
+         db_->path() + " (" + QString::number(QFileInfo(db_->path()).size() / 1024 / 1024) + " Mo)");
+    const auto stats = db_->stats();
+    for (auto it = stats.cbegin(); it != stats.cend(); ++it)
+        if (it.value().canConvert<qlonglong>() || it.value().typeId() == QMetaType::QString)
+            line("  " + it.key(), it.value());
+    line("Analyses en attente", db_->pendingAnalyses());
+    line("Moteur", settings_.value("enginePath").toString());
+    line("  fils et mémoire",
+         QString::number(engineThreads()) + " fils, " + QString::number(engineHashMb()) + " Mo");
+    QStringList accounts;
+    for (const auto &value : onlineAccounts())
+        accounts << value.toMap()["site"].toString() + ":" + value.toMap()["user"].toString() +
+                        (value.toMap()["connected"].toBool() ? " (connecté)" : "");
+    line("Comptes", accounts.join(", "));
+    out << QString() << "Réglages" << QString();
+    // Les réglages, sauf ceux qui pourraient être secrets ou longs.
+    const auto prefs = preferences();
+    for (auto it = prefs.cbegin(); it != prefs.cend(); ++it) {
+        if (it.key().contains("token", Qt::CaseInsensitive) ||
+            it.key().contains("password", Qt::CaseInsensitive))
+            continue;
+        const auto value = it.value();
+        if (value.typeId() == QMetaType::QVariantList || value.typeId() == QMetaType::QVariantMap)
+            continue;
+        line("  " + it.key(), value.toString().left(200));
+    }
+    out << QString() << "Derniers messages" << QString();
+    for (const auto &text : recentMessages_)
+        out << "  " + text;
+    return out.join('\n') + '\n';
+}
+void Controller::exportDiagnostic(const QString &url) {
+    try {
+        const auto path = localPath(url);
+        QSaveFile file(path);
+        const auto data = diagnosticReport().toUtf8();
+        if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit())
+            throw std::runtime_error(file.errorString().toStdString());
+        emit message(
+            tr("Journal de diagnostic enregistré. Relisez-le avant de le joindre à un signalement."));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
 }

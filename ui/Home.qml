@@ -118,7 +118,7 @@ ScrollView {
                         Label {Layout.fillWidth:true;elide:Text.ElideRight
                             text:(modelData.site==="lichess"?"Lichess":"Chess.com")+" · "+modelData.user}
                         Label {color:root.p.muted;font.pixelSize:Math.round(11*root.p.fontScale*root.p.uiScale)
-                            text:modelData.syncing?qsTr("synchronisation…"):modelData.lastSync>0?new Date(modelData.lastSync).toLocaleDateString(Qt.locale(),Locale.ShortFormat):qsTr("jamais")}
+                            text:modelData.syncing?qsTr("synchronisation…"):modelData.lastSync>0?new Date(modelData.lastSync).toLocaleDateString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language),Locale.ShortFormat):qsTr("jamais")}
                     }
                 }
                 RowLayout {Layout.fillWidth:true

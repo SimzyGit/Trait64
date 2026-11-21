@@ -1,5 +1,48 @@
 # Périmètre livré et travaux restants
 
+## Ce qui reste à faire — 21 novembre 2026
+
+Liste confrontée au code du jour, du plus utile au moins urgent. Les sections qui suivent gardent l'historique des comparatifs ; en cas de désaccord, celle-ci fait foi.
+
+**1. Petits défauts** — tous corrigés le 21 novembre : nombres à la française dans les compteurs, intitulés alignés dans « Modifier le profil », messages du cœur traduits (121 phrases), journal de diagnostic exportable, feuille de route remise à jour.
+
+**2. Très grandes bases** (le point le plus faible face à ChessBase)
+- [ ] Import qualifié à 2, 5 et 10 millions de parties (vérifié jusqu'à un million).
+- [ ] Ouverture rapide des positions très courantes sur une grosse base.
+- [ ] Fusion intelligente des doublons, annotations comprises.
+- [ ] Réparation d'une base abîmée (sauvegarde et restauration existent).
+- [ ] Comparaison de plusieurs bases, statistiques de tournoi avancées.
+
+**3. Analyse et bilan**
+- [ ] Erreur montrée avec sa réfutation sur l'échiquier ; coup joué et meilleur coup comparés visuellement.
+- [ ] Explications : sécurité du roi, colonnes ouvertes et cases faibles, structure de pions, séquences forcées, déviations et surcharges.
+- [ ] Possibilités manquées et erreurs stratégiques relevées ; entraînement tiré des erreurs.
+- [ ] Synthèse des conclusions de plusieurs moteurs.
+
+**4. Préparation contre un adversaire**
+- [ ] Réponses les plus fréquentes, variantes régulières, évolution de ses choix dans le temps.
+- [ ] Nouveautés repérées au-delà de la base locale.
+- [ ] Dossier exporté en PDF (CSV seulement aujourd'hui).
+
+**5. Entraînement**
+- [ ] Exercices de calcul et de visualisation.
+- [ ] Entraînement sur les erreurs récurrentes, programme personnalisé.
+- [ ] Parcours complet après une erreur : rejouer, comprendre, voir la réfutation, continuer.
+- [ ] Répétition espacée adaptée à la difficulté.
+- [ ] Mode entraîneur (exercices pour des élèves).
+
+**6. Études**
+- [ ] Sous-chapitres, liens entre études, recherche dans le texte des commentaires.
+- [ ] Rapports PDF personnalisables.
+- [ ] Partie saisie depuis la photo d'une feuille de notation ; diagramme reconnu dans une image.
+
+**7. Diffusion et fiabilité**
+- [ ] Paquet Flatpak et publication sur Flathub.
+- [ ] Versions signées.
+- [ ] Essais sous Wayland et X11, essais de sécurité, installation sur une vraie machine.
+- [ ] Accessibilité : navigation complète au clavier, lecteurs d'écran.
+- [ ] Dispositions de travail enregistrables, panneaux détachables.
+
 ## Comparatif du 15 novembre 2026 : ChessBase 18, Scid vs. PC, chess.ceo
 
 Relevé fonction par fonction d'après l'aide de ChessBase 18, l'index de l'aide de Scid vs. PC et la fiche de chess.ceo (application iPhone/iPad de CHESSGM, gratuite avec abonnement). Colonne Trait64 vérifiée dans le code ce jour : ✅ fait, ◐ partiel, ✗ absent. La lettre renvoie à la priorité plus bas (A performances … K avancé, J ergonomie).
@@ -381,9 +424,9 @@ Ajouter :
 
 - [ ] ◐ Organisation des études en chapitres — partiel : un recueil PGN tient lieu de chapitres.
 - [ ] Sous-chapitres.
-- [ ] Titres et sous-titres.
-- [ ] Paragraphes pédagogiques.
-- [ ] Images et diagrammes.
+- [x] Titres et sous-titres. — titres de rubrique `[%title …]` 19 nov.
+- [x] Paragraphes pédagogiques. — commentaires longs, questions d'entraînement `[%tqu 1]`
+- [x] Images et diagrammes. — diagrammes `$220` dans la notation 16 nov., export PNG/SVG
 - [ ] Références vers des parties.
 - [ ] Liens entre plusieurs études.
 - [ ] Réutilisation d'analyses sans duplication inutile.

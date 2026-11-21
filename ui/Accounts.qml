@@ -18,7 +18,7 @@ TDialog {
         if (minutes < 1) return qsTr("synchronisé à l’instant")
         if (minutes < 60) return qsTr("synchronisé il y a %1 min").arg(minutes)
         if (minutes < 1440) return qsTr("synchronisé il y a %1 h").arg(Math.round(minutes / 60))
-        return qsTr("synchronisé le %1").arg(new Date(ms).toLocaleDateString(Qt.locale(), Locale.ShortFormat))
+        return qsTr("synchronisé le %1").arg(new Date(ms).toLocaleDateString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language), Locale.ShortFormat))
     }
     ScrollView {
         id: viewport; anchors.fill: parent; contentWidth: availableWidth; clip: true

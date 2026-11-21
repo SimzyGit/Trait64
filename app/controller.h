@@ -543,6 +543,10 @@ class Controller : public QObject {
     Q_INVOKABLE void deleteCard(qint64 id);
     Q_INVOKABLE void loadExamples();
     Q_INVOKABLE void verifyDatabase();
+    // Un journal à joindre à un signalement de bug : version, système, base, moteur,
+    // réglages et derniers messages. Sans jeton ni mot de passe.
+    Q_INVOKABLE QString diagnosticReport() const;
+    Q_INVOKABLE void exportDiagnostic(const QString &url);
     Q_INVOKABLE void runPerft(int depth);
     Q_INVOKABLE void openDataFolder();
   signals:
@@ -850,6 +854,7 @@ class Controller : public QObject {
     void importBytes(const QByteArray &bytes);
     void requestEngine();
     QString positionCommand() const;
+    std::deque<QString> recentMessages_;
     void importOnlineDownload(const QString &downloaded);
     void orientForOwnGame();
     // Fils et table de hachage des moteurs : le réglage s'il existe, sinon ce que la

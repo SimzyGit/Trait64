@@ -8,7 +8,10 @@ SpinBox {
     id: control
     readonly property real unit: controller.preferences.uiScale
     property bool grouping: to >= 10000
-    locale: Qt.locale(controller.preferences.language || "fr")
+    // « auto » n'est pas une langue : Qt.locale("auto") retombait sur la locale C, à
+    // l'anglaise (« 1,024 »). En automatique, c'est celle du système.
+    locale: controller.preferences.language && controller.preferences.language !== "auto"
+            ? Qt.locale(controller.preferences.language) : Qt.locale()
     textFromValue: function(value, locale) {
         return grouping ? Number(value).toLocaleString(locale, "f", 0) : String(value)
     }

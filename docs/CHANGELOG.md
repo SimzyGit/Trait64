@@ -1,5 +1,13 @@
 # Changements
 
+## Petits défauts — 21 novembre 2026
+
+- **Nombres à la française** dans les compteurs : en langue automatique (le réglage par défaut), ils s'affichaient à l'anglaise (« 1,024 »), Qt ne connaissant pas de langue « auto ». Les dates et nombres des pages Comptes, Sauvegardes, Accueil et Joueurs suivent aussi la langue de l'interface plutôt que celle du système.
+- **« Modifier le profil »** : identité et fiche FIDE dans une même grille, leurs intitulés alignés.
+- **Messages du cœur traduits** : 121 diagnostics (fichiers SCID et ChessBase, PGN, moteur, téléchargements, CQL…) ont leur version anglaise et espagnole ; un message qui finit par un détail (« Coup illégal : e2e5 ») se traduit par son début.
+- **Journal de diagnostic** à joindre à un signalement (*Outils → Intégrité & diagnostic*) : version, système, base, moteur, réglages et cent derniers messages ; jamais de jeton.
+- **Feuille de route** remise à jour : une liste de ce qui reste, confrontée au code, en tête de [docs/ROADMAP.md](ROADMAP.md).
+
 ## Bases supprimables, profils modifiables, sons de Lichess — 21 novembre 2026
 
 - **Supprimer une base** : *Base → Supprimer la base…*, ou le bouton « Supprimer… » de la bibliothèque quand une base est choisie. Ses parties partent à la corbeille, d'où elles se restaurent ; les autres bases n'y perdent rien. Pour une base de compte en ligne, le dialogue prévient que la prochaine synchronisation la recréera.

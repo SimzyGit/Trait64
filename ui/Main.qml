@@ -846,7 +846,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Label {text:qsTr("Intégrité & diagnostic");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
-                                Flow {Layout.fillWidth:true;spacing:8;TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
+                                Flow {Layout.fillWidth:true;spacing:8;TButton {objectName:"exportDiagnostic";text:qsTr("Journal de diagnostic…");onClicked:diagnosticDialog.open()} TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
                             }
                         }
                         Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
@@ -916,6 +916,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Native.FileDialog {id:sourceExportDialog;title:qsTr("Exporter cette base en PGN");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)"];onAccepted:controller.exportSource(selectedFile.toString(),baseBox.currentValue)}
     Native.FileDialog {id:importDialog;title:qsTr("Importer des parties");nameFilters:[qsTr("Parties, positions et bases (*.pgn *.t64 *.epd *.fen *.db3 *.si4 *.si5 *.cbh)"),qsTr("Tous les fichiers (*)")];onAccepted:labelImport.ask(selectedFile.toString())}
     Native.FileDialog {id:exportDialog;title:qsTr("Exporter en PGN ou archive T64 expérimentale");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pgn";nameFilters:["PGN (*.pgn)",qsTr("Page HTML autonome, étude ouverte (*.html)"),qsTr("Position EPD (*.epd)"),qsTr("Archive T64 expérimentale (*.t64)")];onAccepted:controller.exportFile(selectedFile.toString(),win.exportAll)}
+    Native.FileDialog {id:diagnosticDialog;title:qsTr("Enregistrer le journal de diagnostic");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"txt";nameFilters:[qsTr("Texte (*.txt)")];onAccepted:controller.exportDiagnostic(selectedFile.toString())}
     Native.FileDialog {id:backupDialog;title:qsTr("Créer une sauvegarde complète");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"sqlite";nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.backup(selectedFile.toString())}
     Native.FileDialog {id:openDatabaseDialog;title:qsTr("Ouvrir une bibliothèque Trait64");nameFilters:[qsTr("Bibliothèque Trait64 (*.sqlite)")];onAccepted:controller.openBackup(selectedFile.toString())}
     Native.FileDialog {id:engineFileDialog;title:qsTr("Choisir l’exécutable Stockfish ou UCI");onAccepted:{controller.setPreference("enginePath",selectedFile.toString());enginePathField.text=controller.preferences.enginePath}}
