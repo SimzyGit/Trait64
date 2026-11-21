@@ -7,6 +7,7 @@
 #include "html_export.h"
 #include "polyglot.h"
 #include "qr.h"
+#include "structure.h"
 #include "tactics.h"
 #include "themes.h"
 #include <algorithm>
@@ -689,6 +690,43 @@ int main() {
                       merged.nodes[merged.nodes[0].children[1]].comment == "E – F (*)" &&
                       merged.tags.at("Event") == "Fusion de 3 parties",
                   "Each branch names the game it comes from");
+        }
+        {
+            // Les explications de structure : colonnes ouvertes, cases faibles, îlots et
+            // pions arriérés, constatés en comparant les positions d'avant et d'après.
+            const auto changes = [](const char *fen, const char *uci) {
+                const auto before = t64::checkedBoard(fen);
+                auto after = before;
+                after.makeMove(chess::uci::uciToMove(before, uci));
+                return t64::structureChanges(before, after);
+            };
+            const auto has = [](const auto &list, t64::StructureKind kind, const std::string &where) {
+                return std::find(list.begin(), list.end(), t64::StructureChange{kind, where}) != list.end();
+            };
+            check(has(changes("4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1", "e4d5"), t64::StructureKind::OpenedFile,
+                      "e"),
+                  "Taking away the last pawn of a file opens it");
+            check(has(changes("4k3/8/8/8/8/8/2P1P3/4K3 w - - 0 1", "e2e4"), t64::StructureKind::WeakSquare,
+                      "f3"),
+                  "A pawn that leaves for good leaves a square no pawn can defend");
+            check(!has(changes("4k3/8/8/8/8/8/2P1P3/4K3 w - - 0 1", "e2e4"), t64::StructureKind::WeakSquare,
+                       "d3"),
+                  "A square another pawn still covers is not weak");
+            check(has(changes("4k3/8/8/8/8/2p5/PPP5/4K3 w - - 0 1", "b2c3"),
+                      t64::StructureKind::MorePawnIslands, "2"),
+                  "A capture that splits the pawns counts the islands");
+            check(has(changes("4k3/8/8/8/4P3/2PP4/8/4K3 w - - 0 1", "c3c4"), t64::StructureKind::BackwardPawn,
+                      "d3"),
+                  "A pawn left behind both its neighbours is backward");
+            // La surcharge : la dame d2 est seule à défendre deux cavaliers attaqués.
+            const auto before = t64::checkedBoard("4kb2/8/8/8/6n1/2N1N3/3Q4/6K1 b - - 0 1");
+            auto after = before;
+            after.makeMove(chess::uci::uciToMove(before, "f8b4"));
+            bool overloaded = false;
+            for (const auto &fact : t64::explainTactics(before, after))
+                overloaded |= fact.kind == t64::TacticalKind::Overloaded && fact.attackers.size() == 1 &&
+                              fact.attackers[0].square == "d2" && fact.targets.size() == 2;
+            check(overloaded, "A lone defender of two attacked pieces is overloaded");
         }
         std::cout << checks << " core checks passed\n";
         return 0;

@@ -15,7 +15,7 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 
 **3. Analyse et bilan**
 - [x] Erreur montrée avec sa réfutation sur l'échiquier ; coup joué et meilleur coup comparés visuellement. — 21 nov.
-- [ ] Explications : sécurité du roi, colonnes ouvertes et cases faibles, structure de pions, séquences forcées, déviations et surcharges.
+- [x] Explications : sécurité du roi, colonnes ouvertes et cases faibles, structure de pions, séquences forcées, déviations et surcharges. — 21 nov. (faits constatés sur les deux positions et la suite du moteur ; pas de plan stratégique)
 - [ ] ◐ Possibilités manquées ✅ 21 nov. ; erreurs stratégiques relevées ; entraînement tiré des erreurs (cartes et puzzles des erreurs existent).
 - [x] Synthèse des conclusions de plusieurs moteurs. — 21 nov.
 

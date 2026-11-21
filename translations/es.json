@@ -1924,5 +1924,11 @@
   "%1 : %2": "%1: %2",
   "meilleur : %1": "mejor: %1",
   "réfutation : %1": "refutación: %1",
-  "Correct": "Correcta"
+  "Correct": "Correcta",
+  "Surcharge (seul défenseur de plusieurs pièces attaquées)": "Sobrecarga (único defensor de varias piezas atacadas)",
+  "ouvre la colonne %1 aux tours": "abre la columna %1 a las torres",
+  "laisse la case %1 sans défense de pion": "deja la casilla %1 sin defensa de peón",
+  "rend le pion %1 arriéré": "deja retrasado el peón de %1",
+  "divise ses pions en %1 îlots": "divide sus peones en %1 islas",
+  "La réfutation est une suite forcée de %1 coups, échecs et prises : %2.": "La refutación es una secuencia forzada de %1 jugadas, jaques y capturas: %2."
 }

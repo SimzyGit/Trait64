@@ -1,5 +1,14 @@
 # Changements
 
+## Bilan : explications de structure, surcharges et suites forcées — 21 novembre 2026
+
+« Comprendre ce coup » dit davantage de ce que le coup change, toujours en faits constatés et non en jugements :
+- **colonnes ouvertes** : le coup qui retire le dernier pion d'une colonne l'ouvre aux tours ;
+- **cases faibles** : une case des 3e et 4e rangées, au centre élargi, qu'aucun pion ne pourra plus défendre (un avant-poste pour l'adversaire) ;
+- **structure d'ensemble** : pions arriérés, pions divisés en plus d'îlots ; s'ajoutent à l'isolé, au doublé, au passé, à l'abri du roi et à la colonne ouverte près du roi ;
+- **surcharge** : une pièce seule à défendre plusieurs pièces attaquées, qu'une déviation fait tomber ;
+- **suite forcée** : quand la réfutation enchaîne au moins trois échecs ou prises, l'explication le dit et donne les coups.
+
 ## Bilan : la faute sur l'échiquier, occasions manquées, synthèse des moteurs — 21 novembre 2026
 
 - **La faute montrée sur l'échiquier** : sur un coup classé imprécision, erreur, gaffe ou occasion manquée, trois flèches s'affichent — le coup joué en rouge, le meilleur coup en vert, la réfutation du moteur en orange — et une ligne sous l'échiquier les nomme (« Gaffe : Qh4 · meilleur : Nc6 · réfutation : Nxh4 »). Rien ne s'affiche si le bilan porte sur une autre partie que celle à l'écran.

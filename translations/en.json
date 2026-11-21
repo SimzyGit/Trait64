@@ -1924,5 +1924,11 @@
   "%1 : %2": "%1: %2",
   "meilleur : %1": "best: %1",
   "réfutation : %1": "refutation: %1",
-  "Correct": "Correct"
+  "Correct": "Correct",
+  "Surcharge (seul défenseur de plusieurs pièces attaquées)": "Overload (sole defender of several attacked pieces)",
+  "ouvre la colonne %1 aux tours": "opens the %1-file for the rooks",
+  "laisse la case %1 sans défense de pion": "leaves %1 with no pawn to defend it",
+  "rend le pion %1 arriéré": "makes the %1 pawn backward",
+  "divise ses pions en %1 îlots": "splits its pawns into %1 islands",
+  "La réfutation est une suite forcée de %1 coups, échecs et prises : %2.": "The refutation is a forced sequence of %1 moves, checks and captures: %2."
 }

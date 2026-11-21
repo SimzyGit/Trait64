@@ -2,6 +2,7 @@
 #include "tactics.h"
 #include <algorithm>
 #include <array>
+#include <map>
 #include <set>
 namespace t64 {
 namespace {
@@ -75,6 +76,24 @@ std::vector<TacticalFact> liabilities(const Board &board, Color us) {
         if (!fact.attackers.empty())
             result.push_back(std::move(fact));
     }
+    return result;
+}
+// Les pièces de `us` qui défendent seules deux pièces attaquées ou plus.
+std::vector<TacticalFact> overloads(const Board &board, Color us) {
+    std::vector<TacticalFact> result;
+    std::map<int, std::vector<TacticalPiece>> guarded;
+    auto pieces = board.us(us) & ~board.pieces(PieceType::KING, us);
+    while (pieces) {
+        const Square target(pieces.pop());
+        if (!(attackersTo(board, target, board.occ()) & board.us(~us)))
+            continue;
+        const auto defenders = attackersTo(board, target, board.occ()) & board.us(us);
+        if (defenders.count() == 1)
+            guarded[defenders.lsb()].push_back(describe(board, target));
+    }
+    for (const auto &[square, targets] : guarded)
+        if (targets.size() >= 2 && board.at(Square(square)).type() != PieceType::KING)
+            result.push_back({TacticalKind::Overloaded, {describe(board, Square(square))}, targets});
     return result;
 }
 // Les coups du camp `us`, supposé au trait, qui matent tout de suite.
@@ -219,10 +238,18 @@ std::vector<TacticalFact> explainTactics(const chess::Board &before, const chess
         result.push_back(std::move(fact));
     for (auto &&fact : matingMoves(after, us))
         result.push_back(std::move(fact));
+    for (auto &&fact : overloads(after, us))
+        result.push_back(std::move(fact));
+    for (auto &&fact : overloads(after, ~us))
+        result.push_back(std::move(fact));
     auto previous = patterns(before, us);
     for (auto &&fact : liabilities(before, us))
         previous.push_back(std::move(fact));
     for (auto &&fact : matingMoves(before, us))
+        previous.push_back(std::move(fact));
+    for (auto &&fact : overloads(before, us))
+        previous.push_back(std::move(fact));
+    for (auto &&fact : overloads(before, ~us))
         previous.push_back(std::move(fact));
     std::erase_if(result, [&](const auto &fact) {
         return std::find(previous.begin(), previous.end(), fact) != previous.end();
@@ -269,7 +296,8 @@ std::string tacticalAnnotations(const std::vector<TacticalFact> &facts) {
         } else if (fact.kind == TacticalKind::MateThreat) {
             for (const auto &p : fact.targets)
                 squares.insert("R" + p.square);
-        } else if (fact.kind == TacticalKind::AbsolutePin || fact.kind == TacticalKind::KingSkewer) {
+        } else if (fact.kind == TacticalKind::AbsolutePin || fact.kind == TacticalKind::KingSkewer ||
+                   fact.kind == TacticalKind::Overloaded) {
             // Alignment marks do not imply an attack through the front piece.
             for (const auto &p : fact.attackers)
                 squares.insert("Y" + p.square);

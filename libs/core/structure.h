@@ -8,12 +8,17 @@ namespace t64 {
 // d'après. Ce sont des faits de géométrie, pas des jugements : un pion isolé peut être
 // fort, un roque ouvert sans danger. Le verdict reste celui des suites du moteur.
 enum class StructureKind {
-    IsolatedPawn,    // un pion du joueur n'a plus de pion ami sur les colonnes voisines
-    DoubledPawns,    // deux pions du joueur sur la même colonne
-    PassedPawn,      // un pion du joueur n'a plus de pion adverse devant lui ni à côté
-    EnemyPassedPawn, // le coup laisse un pion passé à l'adversaire
-    WeakenedShield,  // moins de pions devant le roi du joueur
-    OpenFileNearKing // plus aucun pion du joueur sur une colonne du roi ou voisine
+    IsolatedPawn,     // un pion du joueur n'a plus de pion ami sur les colonnes voisines
+    DoubledPawns,     // deux pions du joueur sur la même colonne
+    PassedPawn,       // un pion du joueur n'a plus de pion adverse devant lui ni à côté
+    EnemyPassedPawn,  // le coup laisse un pion passé à l'adversaire
+    WeakenedShield,   // moins de pions devant le roi du joueur
+    OpenFileNearKing, // plus aucun pion du joueur sur une colonne du roi ou voisine
+    OpenedFile,       // une colonne n'a plus aucun pion : elle s'ouvre aux tours
+    WeakSquare,       // une case du camp du joueur (3e et 4e rangées, colonnes c à f) qu'aucun
+                      // de ses pions ne pourra plus défendre : un avant-poste pour l'adversaire
+    BackwardPawn,     // un pion du joueur que ses voisins ne peuvent plus soutenir
+    MorePawnIslands   // les pions du joueur se divisent en plus de groupes (where : leur nombre)
 };
 struct StructureChange {
     StructureKind kind;

@@ -898,6 +898,8 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 return tr("Attaque à la découverte");
             case t64::TacticalKind::MateThreat:
                 return tr("Menace de mat en un coup");
+            case t64::TacticalKind::Overloaded:
+                return tr("Surcharge (seul défenseur de plusieurs pièces attaquées)");
             }
             return QString();
         };
@@ -955,7 +957,8 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 return t64::explainLine(
                     t64::checkedBoard(row["fen"].toString().toStdString(), row["variant960"].toBool()), list);
             };
-            const auto verdict = t64::explainMistake(replay(playedLine), replay(bestLine));
+            const auto playedFacts = replay(playedLine);
+            const auto verdict = t64::explainMistake(playedFacts, replay(bestLine));
             const auto &piece = names[int(verdict.piece)], square = qs(verdict.square),
                        proof = qs(verdict.proof);
             switch (verdict.reason) {
@@ -990,6 +993,21 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                 motifs << motifName(kind);
             if (!motifs.isEmpty())
                 why += " " + tr("Motifs dans la suite : %1.").arg(motifs.join(", "));
+            // Une réfutation qui n'enchaîne que des échecs et des prises ne laisse pas le choix :
+            // c'est une suite forcée, et c'est pour cela qu'elle se calcule.
+            {
+                QStringList forcing;
+                for (size_t i = 1; i < playedFacts.moves.size(); ++i) {
+                    const auto &move = playedFacts.moves[i];
+                    if (!move.check && move.captured == chess::PieceType::NONE)
+                        break;
+                    forcing << qs(move.san);
+                }
+                if (forcing.size() >= 3)
+                    why += " " + tr("La réfutation est une suite forcée de %1 coups, échecs et prises : %2.")
+                                     .arg(forcing.size())
+                                     .arg(forcing.join(' '));
+            }
             // Ce que le coup change à la structure : des faits de géométrie, donnés à côté
             // du verdict et non à sa place.
             {
@@ -1018,6 +1036,18 @@ QVariantMap Controller::explainReview(int index, bool alternative) const {
                         break;
                     case t64::StructureKind::OpenFileNearKing:
                         changes << tr("ouvre la colonne %1 près du roi").arg(where);
+                        break;
+                    case t64::StructureKind::OpenedFile:
+                        changes << tr("ouvre la colonne %1 aux tours").arg(where);
+                        break;
+                    case t64::StructureKind::WeakSquare:
+                        changes << tr("laisse la case %1 sans défense de pion").arg(where);
+                        break;
+                    case t64::StructureKind::BackwardPawn:
+                        changes << tr("rend le pion %1 arriéré").arg(where);
+                        break;
+                    case t64::StructureKind::MorePawnIslands:
+                        changes << tr("divise ses pions en %1 îlots").arg(where);
                         break;
                     }
                 }

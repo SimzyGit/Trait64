@@ -28,8 +28,26 @@ std::string name(int f, int r) {
 }
 struct Facts {
     std::set<std::string> isolated, doubled, passed, bare; // cases, colonnes, cases, colonnes
-    int shield = 0;
+    std::set<std::string> holes, backward;                 // cases
+    int shield = 0, islands = 0;
 };
+// Les rangées où `side` a déjà joué ses pions : celles d'avant `rank`, de son point de vue.
+Bitboard behind(Color side, int rank) {
+    std::uint64_t mask = 0;
+    for (int r = 0; r < 8; ++r)
+        if (side == Color::WHITE ? r < rank : r > rank)
+            mask |= 0xFFULL << (8 * r);
+    return Bitboard(mask);
+}
+// Les colonnes sans aucun pion, des deux camps.
+std::set<std::string> openFiles(const chess::Board &board) {
+    std::set<std::string> result;
+    const auto pawns = board.pieces(PieceType::PAWN);
+    for (int f = 0; f < 8; ++f)
+        if (!(pawns & file(f)))
+            result.insert(std::string(1, char('a' + f)));
+    return result;
+}
 Facts facts(const chess::Board &board, Color side) {
     Facts result;
     const auto own = board.pieces(PieceType::PAWN, side), theirs = board.pieces(PieceType::PAWN, ~side);
@@ -43,6 +61,34 @@ Facts facts(const chess::Board &board, Color side) {
             result.doubled.insert(std::string(1, char('a' + f)));
         if (!(theirs & (file(f) | neighbours(f)) & ahead(side, r)))
             result.passed.insert(name(f, r));
+    }
+    // Les îlots : des groupes de colonnes voisines qui portent des pions.
+    bool inside = false;
+    for (int f = 0; f < 8; ++f) {
+        const bool here = bool(own & file(f));
+        if (here && !inside)
+            ++result.islands;
+        inside = here;
+    }
+    // Pion arriéré : aucun pion ami sur les colonnes voisines à sa hauteur ou derrière lui,
+    // donc plus personne pour le soutenir quand il avance (un pion isolé est compté à part).
+    pawns = own;
+    while (pawns) {
+        const Square square(pawns.pop());
+        const int f = int(square.file()), r = int(square.rank());
+        const auto level = Bitboard(0xFFULL << (8 * r));
+        if ((own & neighbours(f)) && !(own & neighbours(f) & (behind(side, r) | level)))
+            result.backward.insert(name(f, r));
+    }
+    // Cases faibles : sur les 3e et 4e rangées du joueur, au centre élargi (c à f), aucun
+    // pion ami ne peut plus venir les défendre (il en faudrait un, derrière, sur une
+    // colonne voisine).
+    for (int step = 2; step <= 3; ++step) {
+        const int r = side == Color::WHITE ? step : 7 - step;
+        for (int f = 2; f <= 5; ++f)
+            if (!(own & neighbours(f) & behind(side, r)) &&
+                board.at(Square(f + r * 8)).type() != PieceType::PAWN)
+                result.holes.insert(name(f, r));
     }
     const Square king = board.kingSq(side);
     const int kf = int(king.file()), kr = int(king.rank());
@@ -70,6 +116,11 @@ std::vector<StructureChange> structureChanges(const chess::Board &before, const 
     const auto mine = facts(before, us), now = facts(after, us);
     const auto theirs = facts(before, ~us), theirsNow = facts(after, ~us);
     std::vector<StructureChange> result;
+    added(openFiles(before), openFiles(after), StructureKind::OpenedFile, result);
+    added(mine.holes, now.holes, StructureKind::WeakSquare, result);
+    added(mine.backward, now.backward, StructureKind::BackwardPawn, result);
+    if (now.islands > mine.islands)
+        result.push_back({StructureKind::MorePawnIslands, std::to_string(now.islands)});
     added(mine.isolated, now.isolated, StructureKind::IsolatedPawn, result);
     added(mine.doubled, now.doubled, StructureKind::DoubledPawns, result);
     added(mine.passed, now.passed, StructureKind::PassedPawn, result);

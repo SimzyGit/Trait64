@@ -16,7 +16,10 @@ enum class TacticalKind {
     // ouverte, une pièce qu'elle gagnerait.
     DiscoveredAttack,
     // Si l'adversaire passait son tour, `attackers` donnerait mat en un coup.
-    MateThreat
+    MateThreat,
+    // Surcharge : `attackers` est la seule pièce à défendre plusieurs pièces attaquées de son
+    // camp (`targets`) ; elle ne peut pas toutes les reprendre, et la dévier en gagne une.
+    Overloaded
 };
 struct TacticalPiece {
     std::string square;
