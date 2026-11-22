@@ -1,3 +1,17 @@
+## 0.5.0-beta.2 — novembre 2026
+
+**La synchronisation des comptes est réparée (Lichess comme Chess.com).** Après le premier compte, le classement ECO qui suit l'import bloquait la file : avec « Tout synchroniser », seul le premier compte se téléchargeait. La file repart désormais d'elle-même. Une base de compte supprimée se retélécharge entièrement au lieu d'être déclarée à jour.
+
+**Les parties d'une position, comme dans ChessBase.** Le panneau *Parties* de l'analyse liste les parties de la bibliothèque passées par la position affichée, les mieux classées d'abord ; un double-clic ouvre la partie sur le coup où elle l'atteint.
+
+**Jusqu'à 100 lignes du moteur** (5 auparavant), réglables en direct par − et + dans le panneau Moteur.
+
+**Beaucoup plus fluide.** Parcourir une longue partie annotée coûte 40 fois moins (15,3 ms → 0,36 ms par coup sur 400 coups et 199 variantes), et les mises à jour du moteur sont regroupées à dix par seconde au lieu de saturer l'interface.
+
+**Étiquettes** sur les bases, recueils et répertoires, avec un filtre par étiquette dans la page Études.
+
+La bibliothèque passe au schéma 17 (une colonne ajoutée) : une version antérieure de Trait64 ne l'ouvrira plus.
+
 ## 0.5.0-beta.1 — novembre 2026
 
 **L'analyse se range comme on veut.** Notation, arbre, livre, Lichess, notes, moteur et courbe sont des panneaux à onglets : on les glisse d'une pile à l'autre ou sur un bord pour ouvrir une colonne, à la manière de Scid vs. PC. Les dispositions s'enregistrent sous un nom ; échiquier, notation et courbe s'ouvrent aussi dans une fenêtre à part.
