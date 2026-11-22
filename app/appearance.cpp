@@ -303,7 +303,7 @@ void Controller::removeLayout(int index) {
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
         const QMap<QString, QPair<int, int>> limits{{"threads", {1, 1024}},     {"hash", {16, 262144}},
-                                                    {"multiPV", {1, 5}},        {"skill", {0, 20}},
+                                                    {"multiPV", {1, 100}},      {"skill", {0, 20}},
                                                     {"playElo", {0, 4000}},     {"moveTime", {100, 10000}},
                                                     {"analysisDepth", {0, 99}}, {"dailyGoal", {1, 1000}},
                                                     {"importWorkers", {1, 8}},  {"soundVolume", {0, 100}}};

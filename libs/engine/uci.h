@@ -10,6 +10,9 @@ namespace t64 {
 class Uci : public QObject {
     Q_OBJECT
   public:
+    // Autant de variantes que ChessBase en montre : au-delà, le moteur perd en profondeur
+    // plus qu'il n'apprend.
+    static constexpr int maxLines = 100;
     explicit Uci(QObject *parent = nullptr);
     ~Uci() override;
     void start(const QString &executable, int threads = 1, int hash = 128, int multiPV = 3, int skill = 20,
@@ -57,7 +60,15 @@ class Uci : public QObject {
     bool pending960_ = false, active960_ = false;
     int depth_ = 24;
     int threads_ = 1, hash_ = 128, multiPV_ = 3, skill_ = 20, moveTime_ = 800;
-    QMap<int, QVariantMap> variations_, exactVariations_;
+    // Les dernières lignes « info » reçues, brutes, par rang : le moteur en envoie des
+    // centaines par seconde avec beaucoup de variantes. Elles ne sont décodées (coups
+    // légaux, SAN) qu'au moment de les montrer, dix fois par seconde au plus.
+    QMap<int, QString> rawLines_, rawExact_;
+    QMap<int, QPair<QString, QVariantMap>> parsed_;
+    QTimer publish_;
+    void clearLines();
+    QVariantMap decoded(int rank, const QString &line);
+    void publishLines();
     QSet<QString> options_;
     QVariantList descriptors_;
     QVariantMap customOptions_;

@@ -204,7 +204,7 @@ class Controller : public QObject {
     QVariantMap state() const { return state_; }
     QQmlPropertyMap *stateObject() const { return stateObject_; }
     QVariantList squares() const { return squares_; }
-    QVariantList notation() const { return notation_; }
+    QVariantList notation() const;
     QVariantList moveRows() const { return moveRows_; }
     QVariantList moveFlow() const { return moveFlow_; }
     QQmlPropertyMap *cells() const { return cells_; }
@@ -541,6 +541,9 @@ class Controller : public QObject {
     static const QList<QPair<QString, QString>> &defaultShortcuts();
     Q_INVOKABLE void startEngine();
     Q_INVOKABLE void toggleAnalysis();
+    // Le nombre de variantes du moteur (1 à 100), appliqué tout de suite : l'analyse en
+    // cours repart avec ce nombre.
+    Q_INVOKABLE void setEngineLines(int count);
     Q_INVOKABLE void toggleThreat();
     Q_INVOKABLE void addEngineLine(int index);
     Q_INVOKABLE void playComputer(bool humanWhite);
@@ -745,7 +748,8 @@ class Controller : public QObject {
     QString query_, resultFilter_;
     bool favoritesOnly_ = false, positionFilter_ = false, trashFilter_ = false;
     QVariantMap state_, stats_;
-    QVariantList squares_, notation_, games_, openings_, bookMoves_, cards_, engineLines_;
+    size_t notationSignature_ = 0;
+    QVariantList squares_, games_, openings_, bookMoves_, cards_, engineLines_;
     QVariantMap heldEval_;
     t64::PolyglotBook book_;
     qint64 puzzleId_ = 0, puzzleStarted_ = 0;

@@ -352,6 +352,29 @@ int main(int argc, char **argv) {
             check(replies.empty(), "Stopping in a completion callback cancels move delivery");
             stopped.shutdown();
         }
+        {
+            // Beaucoup de variantes, comme ChessBase : 30 lignes distinctes, chacune légale,
+            // et des mises à jour regroupées plutôt qu'une par ligne « info ».
+            t64::Uci wide;
+            QSignalSpy updates(&wide, &t64::Uci::lines);
+            QVariantList last;
+            QObject::connect(&wide, &t64::Uci::lines, &app, [&](const QVariantList &l) {
+                if (!l.isEmpty())
+                    last = l;
+            });
+            wide.start(path, 1, 16, 30);
+            wide.analyse(start, "position startpos", false, 1500);
+            check(waitFor([&] { return last.size() >= 20; }), "Up to 30 engine lines are shown");
+            QSet<QString> first;
+            for (const auto &line : last)
+                first.insert(line.toMap()["uci"].toString().section(' ', 0, 0));
+            check(first.size() == last.size(), "Every engine line starts with a different move");
+            check(t64::Uci::parseInfo("info depth 10 multipv 42 score cp 10 pv e2e4", start, false)["rank"] ==
+                      42,
+                  "A line ranked beyond five is read");
+            check(updates.size() < 100, "Engine updates are grouped, not sent once per info line");
+            wide.shutdown();
+        }
         t64::Comparison comparison;
         QVariantMap profile{{"name", "Stockfish A"},
                             {"enginePath", path},

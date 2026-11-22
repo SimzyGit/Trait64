@@ -672,37 +672,6 @@ void Controller::refresh(bool content) {
             {"hanging", hanging.contains(i)},
             {"assist", assist.value(i)}};
     }
-    notation_.clear();
-    notation_ << QVariantMap{{"id", 0},
-                             {"text", "Position initiale"},
-                             {"depth", 0},
-                             {"comment", s(game_.nodes[0].comment)},
-                             {"active", node_ == 0}};
-    std::function<void(int, int)> visit = [&](int n, int depth) {
-        if (depth > 128)
-            return;
-        while (n > 0 && notation_.size() < 10000) {
-            const auto &v = game_.nodes[n];
-            auto b = t64::checkedBoard(game_.nodes[v.parent].fen, game_.chess960);
-            QString label = QString::number(b.fullMoveNumber()) +
-                            (b.sideToMove() == chess::Color::WHITE ? ". " : "… ") + s(v.san);
-            static const QStringList nags = {"", "!", "?", "!!", "??", "!?", "?!"};
-            for (int nag : v.nags)
-                label += " " + (nag < 7 ? nags[nag] : "$" + QString::number(nag));
-            notation_ << QVariantMap{{"id", n},
-                                     {"text", label},
-                                     {"depth", depth},
-                                     {"comment", s(v.comment)},
-                                     {"active", n == node_}};
-            const auto &siblings = game_.nodes[v.parent].children;
-            if (siblings[0] == n)
-                for (size_t k = 1; k < siblings.size(); ++k)
-                    visit(siblings[k], depth + 1);
-            n = v.children.empty() ? -1 : v.children[0];
-        }
-    };
-    if (!game_.nodes[0].children.empty())
-        visit(game_.nodes[0].children[0], 0);
     try {
         openings_ = db_->explorer(s(current.fen));
         // En finale, ce qu'est devenu ce même matériel dans la bibliothèque. Au-delà de six
@@ -827,7 +796,60 @@ int Controller::frenchNotation() const {
 // Le coup courant n'entre pas dans ces listes : l'affichage le compare lui-même au nœud
 // actif. Parcourir une partie ne change donc rien ici, et la notation n'est redessinée
 // que lorsqu'un coup, un commentaire ou une annotation a réellement bougé.
+// La liste plate des coups (export PDF) : calculée à la demande. Rebâtie à chaque pas,
+// elle coûtait autant que l'affichage de toute la notation.
+QVariantList Controller::notation() const {
+    QVariantList notation_;
+    notation_ << QVariantMap{{"id", 0},
+                             {"text", "Position initiale"},
+                             {"depth", 0},
+                             {"comment", s(game_.nodes[0].comment)},
+                             {"active", node_ == 0}};
+    std::function<void(int, int)> visit = [&](int n, int depth) {
+        if (depth > 128)
+            return;
+        while (n > 0 && notation_.size() < 10000) {
+            const auto &v = game_.nodes[n];
+            const auto turn = t64::fenTurn(game_.nodes[v.parent].fen);
+            QString label = QString::number(turn.number) + (turn.white ? ". " : "… ") + s(v.san);
+            static const QStringList nags = {"", "!", "?", "!!", "??", "!?", "?!"};
+            for (int nag : v.nags)
+                label += " " + (nag < 7 ? nags[nag] : "$" + QString::number(nag));
+            notation_ << QVariantMap{{"id", n},
+                                     {"text", label},
+                                     {"depth", depth},
+                                     {"comment", s(v.comment)},
+                                     {"active", n == node_}};
+            const auto &siblings = game_.nodes[v.parent].children;
+            if (siblings[0] == n)
+                for (size_t k = 1; k < siblings.size(); ++k)
+                    visit(siblings[k], depth + 1);
+            n = v.children.empty() ? -1 : v.children[0];
+        }
+    };
+    if (!game_.nodes[0].children.empty())
+        visit(game_.nodes[0].children[0], 0);
+    return notation_;
+}
 void Controller::refreshNotation() {
+    // La notation ne dépend que du contenu de la partie, pas du coup affiché : une
+    // empreinte des coups, commentaires et symboles évite de la rebâtir à chaque pas.
+    size_t signature = std::hash<int>{}(frenchNotation()) ^ (game_.nodes.size() << 1);
+    for (const auto &node : game_.nodes) {
+        signature = signature * 1099511628211ull ^ std::hash<std::string>{}(node.uci);
+        signature = signature * 1099511628211ull ^ std::hash<std::string>{}(node.comment);
+        signature = signature * 1099511628211ull ^ size_t(node.parent + 1);
+        for (int nag : node.nags)
+            signature = signature * 31 + size_t(nag);
+        // L'arbre lui-même : un coup supprimé est seulement détaché de son parent, une
+        // variante promue change l'ordre des enfants.
+        for (int child : node.children)
+            signature = signature * 1099511628211ull ^ size_t(child + 7);
+        signature = signature * 1099511628211ull ^ size_t(0x5bd1e995);
+    }
+    if (signature == notationSignature_ && !moveRows_.isEmpty())
+        return;
+    notationSignature_ = signature;
     auto rows = t64::moveRows(game_, -1, frenchNotation());
     auto flow = t64::moveFlow(game_, -1, frenchNotation());
     if (rows == moveRows_ && flow == moveFlow_)
@@ -1872,6 +1894,14 @@ void Controller::startEngine() {
                   settings_.value("syzygyPath").toString(), options);
     if (analysis_ || playing_)
         requestEngine();
+}
+void Controller::setEngineLines(int count) {
+    const int lines = std::clamp(count, 1, t64::Uci::maxLines);
+    if (settings_.value("multiPV", 3).toInt() == lines)
+        return;
+    setPreference("multiPV", lines);
+    if (analysis_ && !playing_)
+        startEngine();
 }
 int Controller::engineThreads() const {
     // Plus de fils que de cœurs ralentit le moteur : on borne à ce que la machine a.

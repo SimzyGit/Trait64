@@ -2047,5 +2047,9 @@
   "Par exemple : ouvertures, Sicilienne, à revoir": "Por ejemplo: aperturas, Siciliana, por repasar",
   "Séparez les étiquettes par des virgules ; douze au plus.": "Separe las etiquetas con comas; doce como máximo.",
   "Étiquettes : élément inconnu.": "Etiquetas: elemento desconocido.",
-  "Étiquettes : table inconnue.": "Etiquetas: tabla desconocida."
+  "Étiquettes : table inconnue.": "Etiquetas: tabla desconocida.",
+  "Une ligne de moins": "Una línea menos",
+  "Une ligne de plus": "Una línea más",
+  "%1 l.": "%1 l.",
+  "Lignes du moteur (1 à 100). Plus de lignes coûtent de la profondeur.": "Líneas del motor (1 a 100). Más líneas cuestan profundidad."
 }

@@ -2047,5 +2047,9 @@
   "Par exemple : ouvertures, Sicilienne, à revoir": "For example: openings, Sicilian, to review",
   "Séparez les étiquettes par des virgules ; douze au plus.": "Separate tags with commas; twelve at most.",
   "Étiquettes : élément inconnu.": "Tags: unknown item.",
-  "Étiquettes : table inconnue.": "Tags: unknown table."
+  "Étiquettes : table inconnue.": "Tags: unknown table.",
+  "Une ligne de moins": "One line fewer",
+  "Une ligne de plus": "One more line",
+  "%1 l.": "%1 l.",
+  "Lignes du moteur (1 à 100). Plus de lignes coûtent de la profondeur.": "Engine lines (1 to 100). More lines cost depth."
 }

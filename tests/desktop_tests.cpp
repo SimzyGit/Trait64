@@ -114,6 +114,34 @@ int main(int argc, char **argv) {
             return moveNotebookProbe(dir.path());
         if (app.arguments().contains("--ui-layout"))
             return uiLayoutProbe(dir.path());
+        // Le coût d'un coup parcouru sur une longue partie annotée, variantes comprises.
+        if (app.arguments().contains("--navigation-timing")) {
+            Controller c(dir.path() + "/timing");
+            QString pgn = "[White \"A\"]\n[Black \"B\"]\n\n";
+            const QStringList cycle{"g1f3", "g8f6", "f3g1", "f6g8"};
+            QStringList moves;
+            for (int i = 0; i < 400; ++i)
+                moves << cycle[i % 4];
+            c.newGame();
+            for (const auto &m : moves)
+                c.move(m);
+            // Une variante tous les deux coups, de quatre coups chacune.
+            for (int node = 2; node < 400; node += 2) {
+                c.navigate(node);
+                c.move("b1c3");
+                c.move("b8c6");
+                c.move("c3b1");
+                c.move("c6b8");
+            }
+            c.navigate(0);
+            QElapsedTimer t;
+            t.start();
+            for (int i = 0; i < 200; ++i)
+                c.step(1);
+            qInfo("navigation: %.2f ms par coup parcouru (400 coups, 199 variantes)",
+                  t.nsecsElapsed() / 1e6 / 200);
+            return 0;
+        }
         if (app.arguments().contains("--explorer-walk"))
             return explorerProbeMain(dir.path());
         if (app.arguments().contains("--board-walk"))

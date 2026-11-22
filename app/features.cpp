@@ -1569,7 +1569,7 @@ void Controller::exportStudyPdf(const QString &url, const QVariantMap &options) 
                             paragraph + "</p>";
                 paragraph.clear();
             };
-            for (const auto &v : notation_) {
+            for (const auto &v : notation()) {
                 const auto n = v.toMap();
                 const int id = n["id"].toInt(), level = n["depth"].toInt();
                 if (level > 0 && !variations)

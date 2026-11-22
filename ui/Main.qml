@@ -387,6 +387,19 @@ ApplicationWindow {
                                              // D'abord chercher : la plupart du temps Stockfish est déjà là.
                                              onClicked:{if(controller.useDetectedEngine()==="")settingsDialog.open()}
                                              ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
+                                    // Le nombre de lignes, comme les boutons − / + de ChessBase.
+                                    RowLayout {visible:!!controller.preferences.enginePath;spacing:0
+                                        TButton {objectName:"fewerLines";text:"−";flat:true;implicitWidth:26;enabled:controller.preferences.multiPV>1
+                                                 onClicked:controller.setEngineLines(controller.preferences.multiPV-1)
+                                                 ToolTip.visible:hovered;ToolTip.text:qsTr("Une ligne de moins")}
+                                        Label {objectName:"engineLineCount";text:qsTr("%1 l.").arg(controller.preferences.multiPV);color:win.muted
+                                               font.pixelSize:Math.round(11*win.textScale);Layout.minimumWidth:Math.round(30*win.textScale);horizontalAlignment:Text.AlignHCenter
+                                               ToolTip.visible:countHover.hovered;ToolTip.text:qsTr("Lignes du moteur (1 à 100). Plus de lignes coûtent de la profondeur.")
+                                               HoverHandler {id:countHover}}
+                                        TButton {objectName:"moreLines";text:"+";flat:true;implicitWidth:26;enabled:controller.preferences.multiPV<100
+                                                 onClicked:controller.setEngineLines(controller.preferences.multiPV+1)
+                                                 ToolTip.visible:hovered;ToolTip.text:qsTr("Une ligne de plus")}
+                                    }
                                     TButton {objectName:"toggleThreat";visible:!!controller.preferences.enginePath;text:qsTr("Menace");accent:!!controller.state.threat;enabled:!controller.state.training&&!controller.state.playing;onClicked:controller.toggleThreat();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ce que jouerait l’adversaire si vous passiez votre tour (touche M).")}
                                     TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
                                 }
@@ -1433,7 +1446,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                 TSpinBox {from:1;to:1024;value:controller.preferences.threads;onValueModified:controller.setPreference("threads",value)}
                 Label {text:qsTr("Mémoire (Mio)");color:win.muted;ToolTip.visible:hashHover.hovered;ToolTip.text:qsTr("Table de hachage du moteur. Votre machine dispose de %1 Mio.").arg(Math.round(controller.preferences.memoryMb));HoverHandler {id:hashHover}}
                 TSpinBox {from:16;to:262144;stepSize:64;value:controller.preferences.hash;onValueModified:controller.setPreference("hash",value)}
-                Label {text:qsTr("Variantes");color:win.muted} TSpinBox {from:1;to:5;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
+                Label {text:qsTr("Variantes");color:win.muted} TSpinBox {objectName:"multiPV";from:1;to:100;editable:true;value:controller.preferences.multiPV;onValueModified:controller.setPreference("multiPV",value)}
                 Label {text:qsTr("Niveau de jeu");color:win.muted} TSpinBox {from:0;to:20;value:controller.preferences.skill;onValueModified:controller.setPreference("skill",value)}
                 Label {text:qsTr("Réflexion (ms)");color:win.muted} TSpinBox {from:100;to:10000;stepSize:100;value:controller.preferences.moveTime;onValueModified:controller.setPreference("moveTime",value)}
             }

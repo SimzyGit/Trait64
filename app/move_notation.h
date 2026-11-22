@@ -4,6 +4,7 @@
 #include <QRegularExpression>
 #include <QVariant>
 #include <algorithm>
+#include <cstdlib>
 #include <functional>
 
 namespace t64 {
@@ -132,6 +133,8 @@ struct CommentParts {
 inline CommentParts splitComment(const std::string &raw) {
     static const QRegularExpression command("\\[%(\\w+)\\s+([^\\]]*)\\]");
     CommentParts parts;
+    if (raw.empty()) // la plupart des coups : rien à découper
+        return parts;
     QString text = QString::fromStdString(raw);
     for (auto it = command.globalMatch(text); it.hasNext();) {
         const auto match = it.next();
@@ -157,6 +160,28 @@ inline CommentParts splitComment(const std::string &raw) {
     text.remove(command);
     parts.text = text.simplified();
     return parts;
+}
+
+// Le camp au trait et le numéro du coup, lus dans les champs 2 et 6 de la FEN : la
+// notation en a besoin pour chaque coup, et rebâtir un échiquier par coup coûtait plus
+// que tout le reste à chaque pas dans une longue partie annotée.
+struct Turn {
+    int number = 1;
+    bool white = true;
+};
+inline Turn fenTurn(const std::string &fen) {
+    Turn turn;
+    size_t field = 0, start = 0;
+    for (size_t i = 0; i <= fen.size(); ++i)
+        if (i == fen.size() || fen[i] == ' ') {
+            if (field == 1)
+                turn.white = fen.compare(start, i - start, "b") != 0;
+            else if (field == 5 && i > start)
+                turn.number = std::max(1, std::atoi(fen.c_str() + start));
+            ++field;
+            start = i + 1;
+        }
+    return turn;
 }
 
 inline QVariantList moveRows(const Game &game, int current, int french) {
@@ -193,9 +218,9 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
         bool start = true;
         while (id > 0 && visited < 10000) {
             const auto &node = game.nodes[id];
-            const auto board = game.boardAt(node.parent);
-            const int number = board.fullMoveNumber();
-            const bool white = board.sideToMove() == chess::Color::WHITE;
+            const auto turn = fenTurn(game.nodes[node.parent].fen);
+            const int number = turn.number;
+            const bool white = turn.white;
             int last = id;
             QVariantMap row{{"initial", false},       {"depth", depth},         {"number", number},
                             {"white", QVariantMap()}, {"black", QVariantMap()}, {"start", start}};
@@ -244,8 +269,8 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
         bool numbered = true; // a black move needs "N..." after a break in the flow
         while (id > 0 && visited++ < 10000) {
             const auto &node = game.nodes[id];
-            const auto board = game.boardAt(node.parent);
-            const bool white = board.sideToMove() == chess::Color::WHITE;
+            const auto turn = fenTurn(game.nodes[node.parent].fen);
+            const bool white = turn.white;
             QString text = displaySan(node.san, french);
             for (int nag : node.nags)
                 if (nag != diagramNag)
@@ -257,8 +282,8 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
                     {"kind", "heading"}, {"id", id}, {"depth", depth}, {"text", parts.title}};
                 numbered = true;
             }
-            const QString shownNumber = white      ? QString::number(board.fullMoveNumber()) + "."
-                                        : numbered ? QString::number(board.fullMoveNumber()) + "…"
+            const QString shownNumber = white      ? QString::number(turn.number) + "."
+                                        : numbered ? QString::number(turn.number) + "…"
                                                    : QString();
             tokens << QVariantMap{{"kind", "move"},        {"id", id},          {"depth", depth},
                                   {"number", shownNumber}, {"text", text},      {"active", current == id},

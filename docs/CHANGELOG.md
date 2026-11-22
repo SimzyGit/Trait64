@@ -1,5 +1,12 @@
 # Changements
 
+## Fluidité et lignes du moteur — 22 novembre 2026
+
+- **Jusqu'à 100 lignes du moteur** (5 auparavant), réglables en direct par − et + dans le panneau Moteur.
+- **Parcourir une partie est 40 fois plus rapide** : sur une partie de 400 coups et 199 variantes, un coup parcouru coûtait 15,3 ms côté logique (presque une image entière à 60 i/s), il en coûte 0,36. La notation n'est plus rebâtie à chaque pas mais seulement quand la partie change ; numéro de coup et camp au trait se lisent dans la FEN au lieu de reconstruire un échiquier par coup ; un commentaire vide n'est plus passé à l'expression régulière ; la liste plate des coups n'est calculée que pour l'export PDF.
+- **Le moteur ne sature plus l'interface** : les lignes « info » (des centaines par seconde avec beaucoup de variantes) sont gardées brutes et décodées au plus dix fois par seconde, au lieu d'être chacune décodée puis affichée.
+- Mesure reproductible : `desktop_tests --navigation-timing`.
+
 ## Synchronisation des comptes, parties d'une position, étiquettes — 22 novembre 2026
 
 - **Synchronisation réparée (Lichess comme Chess.com)** : après le premier compte, l'import lançait le classement ECO et le compte suivant de la file n'était jamais lancé ; avec « Tout synchroniser », seul le premier compte se téléchargeait. La file repart désormais d'elle-même dès que le traitement en cours se termine, y compris quand on synchronise pendant un autre traitement. Une base de compte supprimée se retélécharge entièrement au lieu d'être déclarée « déjà à jour ».

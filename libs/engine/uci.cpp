@@ -83,6 +83,9 @@ bool Uci::pressOption(const QString &name) {
 }
 Uci::Uci(QObject *parent) : QObject(parent) {
     timeout_.setSingleShot(true);
+    publish_.setSingleShot(true);
+    publish_.setInterval(100);
+    connect(&publish_, &QTimer::timeout, this, &Uci::publishLines);
     connect(&timeout_, &QTimer::timeout, this, [this] {
         shutdown();
         emit status("Le moteur ne répond pas. Vérifiez l’exécutable UCI.");
@@ -126,7 +129,7 @@ void Uci::start(const QString &executable, int threads, int hash, int multiPV, i
     customOptions_ = customOptions;
     threads_ = std::clamp(threads, 1, 32);
     hash_ = std::clamp(hash, 16, 4096);
-    multiPV_ = std::clamp(multiPV, 1, 5);
+    multiPV_ = std::clamp(multiPV, 1, maxLines);
     skill_ = std::clamp(skill, 0, 20);
     syzygyPath_ = syzygyPath.contains('\n') || syzygyPath.contains('\r') ? QString() : syzygyPath;
     if (!QFileInfo(executable).isExecutable()) {
@@ -136,8 +139,7 @@ void Uci::start(const QString &executable, int threads, int hash, int multiPV, i
     }
     buffer_.clear();
     options_.clear();
-    variations_.clear();
-    exactVariations_.clear();
+    clearLines();
     pending_ = false;
     name_ = "Moteur UCI";
     state_ = Handshake;
@@ -225,8 +227,7 @@ void Uci::beginSearch() {
     activePlay_ = pendingPlay_;
     activeDepthCeiling_ = pendingDepthCeiling_;
     pending_ = false;
-    variations_.clear();
-    exactVariations_.clear();
+    clearLines();
     emit lines({});
     command(pendingPosition_);
     state_ = Searching;
@@ -329,10 +330,16 @@ void Uci::parse(const QString &line) {
         const auto completedFen = activeFen_;
         timeout_.stop();
         state_ = Ready;
+        // Les dernières lignes reçues s'affichent avant que la recherche suivante ne les efface.
+        if (publish_.isActive()) {
+            publish_.stop();
+            publishLines();
+        }
         if (complete) {
             QVariantList result;
-            for (const auto &v : exactVariations_)
-                result << v;
+            for (auto it = rawExact_.cbegin(); it != rawExact_.cend(); ++it)
+                if (const auto info = decoded(it.key(), it.value()); !info.isEmpty())
+                    result << info;
             emit completed(completedFen, result);
         }
         // La comparaison n'est pas tautologique : « completed » est émis juste au-dessus,
@@ -345,17 +352,41 @@ void Uci::parse(const QString &line) {
     }
     if (!line.startsWith("info ") || state_ != Searching || !line.contains(" pv "))
         return;
-    auto info = parseInfo(line, activeFen_, active960_);
-    if (info.isEmpty())
+    // Le rang seul, sans rien décoder : « multipv N » avant « pv ».
+    int rank = 1;
+    if (const int at = line.indexOf(" multipv "); at >= 0 && at < line.indexOf(" pv ")) {
+        bool ok = false;
+        rank = line.mid(at + 9, line.indexOf(' ', at + 9) - at - 9).toInt(&ok);
+        if (!ok)
+            return;
+    }
+    if (rank < 1 || rank > maxLines)
         return;
-    const int rank = info["rank"].toInt();
-    variations_[rank] = info;
-    if (!info["bound"].toBool() && !info["uci"].toString().isEmpty())
-        exactVariations_[rank] = info;
+    rawLines_[rank] = line;
+    if (!line.contains("lowerbound") && !line.contains("upperbound"))
+        rawExact_[rank] = line;
+    if (!publish_.isActive())
+        publish_.start();
+}
+void Uci::clearLines() {
+    publish_.stop();
+    rawLines_.clear();
+    rawExact_.clear();
+    parsed_.clear();
+}
+QVariantMap Uci::decoded(int rank, const QString &line) {
+    auto &cached = parsed_[rank];
+    if (cached.first != line)
+        cached = {line, parseInfo(line, activeFen_, active960_)};
+    return cached.second;
+}
+void Uci::publishLines() {
     QVariantList list;
-    for (const auto &v : variations_)
-        list << v;
-    emit lines(list);
+    for (auto it = rawLines_.cbegin(); it != rawLines_.cend(); ++it)
+        if (const auto info = decoded(it.key(), it.value()); !info.isEmpty())
+            list << info;
+    if (!list.isEmpty())
+        emit lines(list);
 }
 QVariantMap Uci::parseInfo(const QString &line, const QString &fen, bool chess960) {
     if (!line.startsWith("info ") || line.startsWith("info string ") || line.size() > 65536)
@@ -370,7 +401,7 @@ QVariantMap Uci::parseInfo(const QString &line, const QString &fen, bool chess96
     };
     bool rankOk, scoreOk;
     const int rank = value("multipv", "1").toInt(&rankOk);
-    if (!rankOk || rank < 1 || rank > 5)
+    if (!rankOk || rank < 1 || rank > maxLines)
         return {};
     const int sign = fen.section(' ', 1, 1) == "w" ? 1 : -1;
     const int si = parts.indexOf("score");
