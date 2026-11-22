@@ -1565,6 +1565,9 @@ int main(int argc, char **argv) {
                     QTest::qWait(10);
                 };
                 wheel(120, Qt::ControlModifier);
+                // Sur un exécuteur chargé, la préférence peut se poser un peu après l'événement.
+                for (int i = 0; i < 50 && c.preferences()["fontScale"].toDouble() == scale; ++i)
+                    QTest::qWait(20);
                 const auto bigger = c.preferences()["fontScale"].toDouble();
                 wheel(120, Qt::NoModifier);
                 check(list && std::abs(bigger - scale - .05) < 1e-6 &&
