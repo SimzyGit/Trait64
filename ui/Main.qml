@@ -78,6 +78,303 @@ ApplicationWindow {
     function filterLibrary() {applyAdvanced()}
     // L'échiquier seul : la notation et le moteur s'effacent, l'échiquier prend la place.
     property bool boardOnly:false
+
+    // ---- Panneaux ancrés -------------------------------------------------------------
+    // La disposition : trois zones (gauche, droite, sous l'échiquier), chacune une liste de
+    // piles {panels, current, size}. Elle se garde dans les préférences, en JSON.
+    readonly property var dockDefault: ({left: [], bottom: [],
+        right: [{panels: ["notation", "tree", "book", "online"], current: 0},
+                {panels: ["notes"], current: 0}, {panels: ["engine", "graph"], current: 0}]})
+    // Lue une fois : liée aux préférences, elle recréerait tous les panneaux au moindre
+    // réglage changé (la langue, une couleur), et chacun perdrait son défilement.
+    property var dockLayout: dockDefault
+    Component.onCompleted: dockLayout = parseDock(controller.preferences.dockLayout)
+    property bool dockDragging: false
+    property string dockDragged: ""
+    property var dockHandler: null
+    property var dockPending: null
+    property rect dockArea: Qt.rect(0, 0, 0, 0)
+    signal dockSelect(string panel)
+    function parseDock(text) {
+        try {
+            var d = JSON.parse(text)
+            if (d && (d.left || d.right || d.bottom))
+                return {left: d.left || [], right: d.right || [], bottom: d.bottom || []}
+        } catch (e) {}
+        return JSON.parse(JSON.stringify(dockDefault))
+    }
+    function saveDock(d) { dockLayout = d; controller.setPreference("dockLayout", JSON.stringify(d)) }
+    function copyDock() { return JSON.parse(JSON.stringify(dockLayout)) }
+    function panelTitle(id) {
+        return ({notation: qsTr("Notation"), tree: qsTr("Arbre"), book: qsTr("Livre"), online: qsTr("Lichess"),
+                 notes: qsTr("Notes"), graph: qsTr("Courbe"), engine: qsTr("Moteur")})[id] || id
+    }
+    function panelComponent(id) {
+        return ({notation: panelNotation, tree: panelTree, book: panelBook, online: panelOnline,
+                 notes: panelNotes, graph: panelGraph, engine: panelEngine})[id] || null
+    }
+    function panelHeight(id) { return Math.round((({notes: 104, graph: 140, engine: 200})[id] || 280) * win.textScale) }
+    function detachable(id) { return id === "notation" || id === "graph" }
+    function detachName(id) { return id }
+    function locate(d, id) {
+        for (var zone of ["left", "right", "bottom"])
+            for (var i = 0; i < d[zone].length; ++i) {
+                var at = d[zone][i].panels.indexOf(id)
+                if (at >= 0) return {zone: zone, stack: i, index: at}
+            }
+        return null
+    }
+    function removePanel(d, id) {
+        var at = locate(d, id)
+        if (!at) return
+        var s = d[at.zone][at.stack]
+        s.panels.splice(at.index, 1)
+        s.current = Math.max(0, Math.min(s.current || 0, s.panels.length - 1))
+        if (!s.panels.length) d[at.zone].splice(at.stack, 1)
+    }
+    // L'onglet choisi et la taille d'une pile changent sans tout redessiner : l'objet est
+    // modifié en place, puis seulement enregistré.
+    function rememberCurrent(zone, position, index) {
+        var s = dockLayout[zone] && dockLayout[zone][position]
+        if (!s) return
+        s.current = index
+        controller.setPreference("dockLayout", JSON.stringify(dockLayout))
+    }
+    function rememberSizes(zone, column) {
+        var list = dockLayout[zone] || []
+        for (var i = 0; i < list.length && i < column.count; ++i) {
+            var item = column.itemAt(i)
+            if (item) list[i].size = Math.round(column.orientation === Qt.Vertical ? item.height : item.width)
+        }
+        controller.setPreference("dockLayout", JSON.stringify(dockLayout))
+    }
+    function selectPanel(id) {
+        var at = locate(dockLayout, id)
+        if (!at) return
+        rememberCurrent(at.zone, at.stack, at.index)
+        dockSelect(id)
+    }
+    function closePanel(id) { var d = copyDock(); removePanel(d, id); saveDock(d) }
+    function showPanel(id) {
+        if (locate(dockLayout, id)) { win.page = 2; selectPanel(id); return }
+        var d = copyDock()
+        d.right.push({panels: [id], current: 0})
+        saveDock(d)
+        win.page = 2
+    }
+    function togglePanel(id) { if (locate(dockLayout, id)) closePanel(id); else showPanel(id) }
+    function resetDock() { saveDock(JSON.parse(JSON.stringify(dockDefault))) }
+    function beginDockDrag(id, handler) {
+        var r = analysisSplit.mapToItem(dockOverlay, 0, 0)
+        dockArea = Qt.rect(r.x, r.y, analysisSplit.width, analysisSplit.height)
+        dockDragged = id; dockHandler = handler; dockPending = null; dockDragging = true
+    }
+    function endDockDrag() {
+        if (!dockDragging) return
+        dockGhost.Drag.drop()
+        dockDragging = false; dockHandler = null
+        // Appliqué après coup : l'onglet qu'on lâche appartient à une pile que le
+        // déplacement va recréer, et elle ne doit pas disparaître dans son propre signal.
+        Qt.callLater(commitDock)
+    }
+    function dropPanel(zone, position, where) { dockPending = {id: dockDragged, zone: zone, position: position, where: where} }
+    function commitDock() {
+        var p = dockPending
+        dockPending = null; dockDragged = ""
+        if (!p) return
+        var d = copyDock(), list = d[p.zone], target = p.position >= 0 ? list[p.position] : null
+        if (target && target.panels.indexOf(p.id) >= 0 && (p.where === "tab" || target.panels.length === 1)) return
+        if (target) target.mark = true
+        removePanel(d, p.id)
+        var index = -1
+        for (var i = 0; i < list.length; ++i) if (list[i].mark) { index = i; delete list[i].mark }
+        if (p.where === "tab" && index >= 0) {
+            list[index].panels.push(p.id)
+            list[index].current = list[index].panels.length - 1
+        } else {
+            if (index < 0) index = p.where === "start" ? 0 : list.length
+            else if (p.where === "after") index += 1
+            for (var j = 0; j < list.length; ++j) delete list[j].size
+            list.splice(index, 0, {panels: [p.id], current: 0})
+        }
+        saveDock(d)
+    }
+
+    // Les panneaux de l'analyse. Chacun vit dans une pile (DockStack.qml) que l'on place
+    // à la souris ; ces composants en sont le contenu, créé là où le panneau est rangé.
+    Component {id:panelNotation
+        Item {
+                                    MoveNotebook {anchors.fill:parent;anchors.margins:6;
+                                        backend: controller; textScale: win.textScale; outerViewport: analysisViewport
+                                        foreground: win.fg; muted: win.muted; accent: win.accent
+                                        raised: win.raised; lineColor: win.line
+                                    }
+        }
+    }
+    Component {id:panelTree
+        Item {
+                                    // Opening tree: move, games, result bar (White / draws / Black), score.
+                                    ListView {id:miniExplorer;anchors.fill:parent;anchors.margins:6;objectName:"openingTree";model:controller.openings;clip:true;spacing:0
+                                        // Les parties qui passent par ici, les mieux classées d'abord : la
+                                        // bibliothèque filtrée sur la position, triée par Elo.
+                                        // En finale, le score de ce matériel dans la bibliothèque, quelle
+                                        // que soit la place des pièces.
+                                        footer:Column {width:miniExplorer.width
+                                            Label {objectName:"endgameOdds";width:parent.width;padding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var odds:controller.state.endgame||({})
+                                                visible:(odds.games||0)>0
+                                                text:qsTr("Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %").arg(odds.games||0)
+                                                    .arg(Math.round(100*(odds.white||0)/Math.max(1,odds.games||0))).arg(Math.round(100*(odds.draws||0)/Math.max(1,odds.games||0)))
+                                                    .arg(Math.round(100*(odds.black||0)/Math.max(1,odds.games||0)))}
+                                            // Les clés stratégiques de la position.
+                                            Label {objectName:"positionThemes";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var keys:controller.state.themes||[]
+                                                visible:keys.length>0
+                                                text:qsTr("Clés stratégiques : %1").arg(keys.map(function(k){return win.themeNames[win.themeKeys.indexOf(k)]||k}).join(" · "))}
+                                            // La tendance : le score des Blancs selon l'écart d'Elo, quand il est connu.
+                                            Label {objectName:"endgameTrend";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
+                                                readonly property var rows:(controller.state.endgame||{}).byElo||[]
+                                                readonly property var names:[qsTr("Blancs plus forts"),qsTr("Elo proches"),qsTr("Noirs plus forts")]
+                                                visible:rows.some(function(r){return r.games>0})
+                                                text:qsTr("Score des Blancs selon l’Elo : %1").arg(rows.map(function(r,i){return r.games>0?names[i]+" "+r.score+" % ("+r.games+")":""}).filter(function(t){return t}).join(" · "))
+                                                ToolTip.visible:trendHover.hovered;ToolTip.delay:500
+                                                ToolTip.text:qsTr("« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.")
+                                                HoverHandler {id:trendHover}}
+                                            TButton {objectName:"bestGamesHere";width:parent.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
+                                            TButton {objectName:"plansHere";width:parent.width;flat:true;text:qsTr("Plans de cette structure")+"  →";onClicked:plansDialog.open()}
+                                            TButton {objectName:"similarHere";width:parent.width;flat:true;text:qsTr("Positions semblables")+"  →";onClicked:similarDialog.open()}
+                                        }
+                                        header:RowLayout {width:miniExplorer.width;spacing:8
+                                            Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                            Label {text:qsTr("Parties");Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                            Label {text:qsTr("Blancs · nulles · Noirs");Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                            Label {text:qsTr("Score");Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                        }
+                                        delegate:ItemDelegate {
+                                            id:treeRow
+                                            required property var modelData
+                                            readonly property real total:Math.max(1,modelData.white+modelData.draw+modelData.black)
+                                            width:miniExplorer.width;padding:3;onClicked:controller.move(modelData.uci)
+                                            Accessible.name:modelData.san+", "+modelData.count+qsTr(" partie(s)")
+                                            contentItem:RowLayout {spacing:8
+                                                Label {text:modelData.san;Layout.preferredWidth:58;font.weight:Font.DemiBold}
+                                                Label {text:modelData.count;Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight}
+                                                Row {Layout.fillWidth:true;height:10;Layout.alignment:Qt.AlignVCenter
+                                                    Rectangle {width:parent.width*treeRow.modelData.white/treeRow.total;height:10;color:"#f4f4f1";border.color:win.line}
+                                                    Rectangle {width:parent.width*treeRow.modelData.draw/treeRow.total;height:10;color:"#a3a8ad"}
+                                                    Rectangle {width:parent.width*treeRow.modelData.black/treeRow.total;height:10;color:"#2c3035"}
+                                                }
+                                                Label {text:Math.round(100*(treeRow.modelData.white+treeRow.modelData.draw/2)/treeRow.total)+" %";Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted}
+                                            }
+                                        }
+                                        Label {anchors.centerIn:parent;width:parent.width-16;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    }
+        }
+    }
+    Component {id:panelBook
+        Item {
+                                    ListView {id:bookList;anchors.fill:parent;anchors.margins:6;objectName:"bookMoves";model:controller.bookMoves;clip:true;spacing:0
+                                        delegate:ItemDelegate {
+                                            required property var modelData
+                                            width:bookList.width;padding:3;onClicked:controller.move(modelData.uci)
+                                            Accessible.name:modelData.san+", "+modelData.percent+qsTr(" % du livre")
+                                            contentItem:RowLayout {spacing:8
+                                                Label {text:modelData.san;Layout.preferredWidth:58;font.weight:Font.DemiBold}
+                                                Rectangle {Layout.preferredWidth:Math.max(2,140*modelData.percent/100);height:8;color:win.accent;opacity:.7}
+                                                Label {text:modelData.percent+" %";color:win.muted;Layout.fillWidth:true}
+                                            }
+                                        }
+                                        Label {anchors.centerIn:parent;width:parent.width-24;horizontalAlignment:Text.AlignHCenter;wrapMode:Text.Wrap;visible:controller.bookMoves.length===0
+                                            text:controller.preferences.bookPath?qsTr("Position absente du livre."):qsTr("Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.")
+                                            color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    }
+        }
+    }
+    Component {id:panelOnline
+        Item {
+            OnlineExplorer {objectName:"onlineExplorer";backend:controller;anchors.fill:parent;anchors.margins:6
+                            active:!!parent.parent&&!!parent.parent.panelActive&&win.page===2}
+        }
+    }
+    Component {id:panelNotes
+        Item {
+            ColumnLayout {anchors.fill:parent;spacing:0
+                                RowLayout {Layout.fillWidth:true;Layout.margins:4;spacing:4;visible:!controller.state.training
+                                    TComboBox {id:nagBox;model:["Annotation","! Bon coup","? Erreur","!! Excellent","?? Gaffe","!? Intéressant","?! Douteux"];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    TButton {text:"↑";enabled:controller.state.node>0;onClicked:controller.promote();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Promouvoir en ligne principale")}
+                                }
+                                ScrollView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.leftMargin:4;Layout.rightMargin:4;Layout.bottomMargin:4
+                                    TextArea {id:note;objectName:"positionNote";text:controller.state.comment;readOnly:controller.state.training;placeholderText:qsTr("Une idée, un plan, une question…");wrapMode:TextEdit.Wrap;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale);selectByMouse:true
+                                        onTextChanged:if(activeFocus&&text!==controller.state.comment)controller.setComment(text)
+                                    }
+                                }
+            }
+        }
+    }
+    Component {id:panelGraph
+        Item {
+                            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4;visible:controller.review.length>0
+                                RowLayout {Layout.fillWidth:true;spacing:6
+                                    Label {text:qsTr("Évaluations du point de vue des Blancs");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    TButton {text:qsTr("Détails");flat:true;onClicked:reviewDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ouvrir le bilan complet : précision par phase, fautes expliquées, exercices.")}
+                                }
+                                EvalGraph {Layout.fillWidth:true;Layout.fillHeight:true;backend:controller}
+                            }
+            Label {anchors.centerIn:parent;width:parent.width-24;visible:controller.review.length===0;wrapMode:Text.Wrap
+                   horizontalAlignment:Text.AlignHCenter;color:win.muted
+                   text:qsTr("La courbe paraît après le bilan de la partie (bouton Bilan).")}
+        }
+    }
+    Component {id:panelEngine
+        Item {
+                            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4
+                                RowLayout {Layout.fillWidth:true;spacing:6
+                                    Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                    // Sans moteur configuré, « Analyser » ne mène nulle part et rien
+                                    // ne dit où en choisir un : premier mur venu pour qui découvre.
+                                    TButton {visible:!controller.preferences.enginePath;text:qsTr("Choisir un moteur…");accent:true
+                                             // D'abord chercher : la plupart du temps Stockfish est déjà là.
+                                             onClicked:{if(controller.useDetectedEngine()==="")settingsDialog.open()}
+                                             ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
+                                    TButton {objectName:"toggleThreat";visible:!!controller.preferences.enginePath;text:qsTr("Menace");accent:!!controller.state.threat;enabled:!controller.state.training&&!controller.state.playing;onClicked:controller.toggleThreat();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ce que jouerait l’adversaire si vous passiez votre tour (touche M).")}
+                                    TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
+                                }
+                                ListView {
+                                    Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:2
+                                    delegate:RowLayout {
+                                        required property var modelData
+                                        required property int index
+                                        width:ListView.view.width;spacing:8
+                                        // L'évaluation en pastille, claire si les Blancs sont mieux, sombre sinon, comme
+                                        // sur Lichess : le signe se lit avant le chiffre.
+                                        Rectangle {Layout.preferredWidth:Math.round(56*win.textScale);Layout.preferredHeight:Math.round(20*win.textScale);radius:3
+                                            readonly property bool black:String(modelData.eval).indexOf("-")===0||String(modelData.eval).indexOf("#-")===0
+                                            color:black?"#2a2926":"#f4f1ea";border.color:win.line
+                                            Label {anchors.centerIn:parent;text:modelData.eval;font.weight:Font.DemiBold;color:parent.black?"#f4f1ea":"#2a2926"
+                                                   font.pixelSize:Math.round(12*win.textScale)}}
+                                        // Gain, nulle, perte selon le moteur (vus des Blancs), comme dans
+                                        // Nibbler : une évaluation de +1 ne dit pas si la nulle reste probable.
+                                        Item {objectName:"engineWdl";visible:!!modelData.wdl;Layout.preferredWidth:44;Layout.preferredHeight:8
+                                            readonly property var w:modelData.wdl||[0,1000,0]
+                                            Row {anchors.fill:parent
+                                                Rectangle {width:parent.width*parent.parent.w[0]/1000;height:parent.height;color:"#f4f1ea"}
+                                                Rectangle {width:parent.width*parent.parent.w[1]/1000;height:parent.height;color:"#9a958b"}
+                                                Rectangle {width:parent.width*parent.parent.w[2]/1000;height:parent.height;color:"#2a2926"}}
+                                            Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line;radius:1}
+                                            HoverHandler {id:wdlHover}
+                                            ToolTip.visible:wdlHover.hovered;ToolTip.delay:300
+                                            ToolTip.text:qsTr("Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)").arg(Math.round(w[0]/10)).arg(Math.round(w[1]/10)).arg(Math.round(w[2]/10))}
+                                        Label {text:modelData.san;elide:Text.ElideRight;Layout.fillWidth:true}
+                                        Label {text:"d"+modelData.depth+" · "+Math.round(Number(modelData.nps)/1000)+" kN/s";color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                        TButton {text:"+";flat:true;implicitWidth:24;implicitHeight:22;onClicked:controller.addEngineLine(index);ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ajouter cette ligne à l’étude")}
+                                    }
+                                }
+                                Label {Layout.fillWidth:true;Layout.fillHeight:true;visible:!controller.state.analysis&&!!controller.preferences.enginePath
+                                       verticalAlignment:Text.AlignTop;topPadding:6;wrapMode:Text.Wrap;color:win.muted;font.pixelSize:Math.round(11*win.textScale)
+                                       text:qsTr("« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.")}
+                            }
+        }
+    }
     // Les panneaux détachés : une fenêtre par demande, détruite à sa fermeture.
     function detach(panel) {
         var component = Qt.createComponent("PanelWindow.qml")
@@ -88,15 +385,14 @@ ApplicationWindow {
     // Une disposition : la place de l'échiquier, les hauteurs du panneau de droite,
     // l'échiquier seul ou non, et l'onglet de notation ouvert.
     function currentLayout(name) {
-        return {name: name, ratio: boardPanel.width / Math.max(1, analysisSplit.width), panel: analysisPanel.saveState(),
-                boardOnly: win.boardOnly, tab: notationTabs.currentIndex}
+        return {name: name, ratio: boardPanel.width / Math.max(1, analysisSplit.width),
+                dock: JSON.stringify(dockLayout), boardOnly: win.boardOnly}
     }
     function applyLayout(layout) {
         win.page = 2
         win.boardOnly = !!layout.boardOnly
         controller.setPreference("analysisPanelRatio", layout.ratio)
-        if (layout.panel) analysisPanel.restoreState(layout.panel)
-        notationTabs.currentIndex = layout.tab || 0
+        if (layout.dock) saveDock(parseDock(layout.dock))
     }
     // Le coup fautif sous les yeux, d'après le bilan : relu à chaque coup et à chaque bilan.
     readonly property var reviewSpot:(controller.review,controller.reviewMarks(controller.state.node))
@@ -213,6 +509,16 @@ ApplicationWindow {
                 MenuItem {objectName: "detachBoard"; text: qsTr("Échiquier"); onTriggered: win.detach("board")}
                 MenuItem {text: qsTr("Notation"); onTriggered: win.detach("notation")}
                 MenuItem {text: qsTr("Courbe du bilan"); onTriggered: win.detach("graph")}
+            }
+            Menu { title: qsTr("Panneaux")
+                Repeater {
+                    model: ["notation", "tree", "book", "online", "notes", "engine", "graph"]
+                    MenuItem {required property string modelData
+                        text: win.panelTitle(modelData); checkable: true
+                        checked: !!win.locate(win.dockLayout, modelData); onTriggered: win.togglePanel(modelData)}
+                }
+                MenuSeparator {}
+                MenuItem {objectName: "resetDock"; text: qsTr("Disposition d’origine"); onTriggered: win.resetDock()}
             }
             MenuItem {text: qsTr("Dispositions de travail…"); onTriggered: layoutsDialog.open()}
             MenuItem {text: qsTr("Plein écran"); checkable: true; checked: win.visibility === Window.FullScreen; onTriggered: win.toggleFullScreen()}
@@ -521,6 +827,11 @@ objectName:"analysisSplit"
                     Layout.fillWidth:true;Layout.fillHeight:true;orientation:Qt.Horizontal
                     onResizingChanged:if(!resizing&&width>0)controller.setPreference("analysisPanelRatio",boardPanel.width/width)
                     handle:Rectangle {implicitWidth:5;color:SplitHandle.hovered||SplitHandle.pressed?win.line:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:win.line}}
+                    DockColumn {
+                        objectName:"leftDock";dock:win;zone:"left"
+                        visible:!win.boardOnly&&stacks.length>0
+                        SplitView.preferredWidth:Math.round(300*win.uiScale);SplitView.minimumWidth:220
+                    }
                     ColumnLayout {
                         id:boardPanel;objectName:"boardPanel";SplitView.preferredWidth:analysisSplit.fittedBoardWidth;SplitView.minimumWidth:290;spacing:win.height<820?5:10
                         RowLayout {Layout.fillWidth:true;Layout.leftMargin:Math.max(0,(parent.width-chessboard.width)/2);Layout.rightMargin:Layout.leftMargin
@@ -591,176 +902,19 @@ objectName:"analysisSplit"
                         }
                         Label {objectName:"reviewNote";visible:!!((controller.state.mistake||{}).note||win.reviewSpot.note);text:(controller.state.mistake||{}).note||win.reviewSpot.note||"";color:"#c0523f";Layout.alignment:Qt.AlignHCenter;wrapMode:Text.WordWrap;Layout.maximumWidth:boardArea.width;horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
                         Label {text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
+                        DockColumn {
+                            objectName:"bottomDock";dock:win;zone:"bottom"
+                            visible:!win.boardOnly&&stacks.length>0
+                            Layout.fillWidth:true;Layout.preferredHeight:Math.round(190*win.textScale)
+                        }
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.
-                    SplitView {
-                        id:analysisPanel;objectName:"analysisPanel";visible:!win.boardOnly
-                        SplitView.fillWidth:true;SplitView.minimumWidth:300;orientation:Qt.Vertical
-                        handle:Rectangle {implicitHeight:5;color:SplitHandle.hovered||SplitHandle.pressed?win.line:"transparent";Rectangle {anchors.verticalCenter:parent.verticalCenter;height:1;width:parent.width;color:win.line}}
-                        Rectangle {
-                            SplitView.fillHeight:true;SplitView.minimumHeight:180;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:1;spacing:0
-                                Rectangle {Layout.fillWidth:true;implicitHeight:notationTabs.implicitHeight;color:win.panel
-                                    TabBar {id:notationTabs;objectName:"notationTabs";anchors.left:parent.left;anchors.bottom:parent.bottom;background:Item {}
-                                        TTabButton {text:qsTr("Notation");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
-                                        TTabButton {text:qsTr("Arbre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
-                                        TTabButton {objectName:"bookTab";text:qsTr("Livre");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
-                                        TTabButton {objectName:"onlineTab";text:qsTr("Lichess");width:implicitWidth;implicitWidth:contentItem.implicitWidth+18}
-                                    }
-                                    Rectangle {anchors.bottom:parent.bottom;width:parent.width;height:1;color:win.line;z:-1}
-                                }
-                                StackLayout {
-                                    Layout.fillWidth:true;Layout.fillHeight:true;Layout.margins:6;currentIndex:notationTabs.currentIndex
-                                    MoveNotebook {
-                                        backend: controller; textScale: win.textScale; outerViewport: analysisViewport
-                                        foreground: win.fg; muted: win.muted; accent: win.accent
-                                        raised: win.raised; lineColor: win.line
-                                    }
-                                    // Opening tree: move, games, result bar (White / draws / Black), score.
-                                    ListView {id:miniExplorer;objectName:"openingTree";model:controller.openings;clip:true;spacing:0
-                                        // Les parties qui passent par ici, les mieux classées d'abord : la
-                                        // bibliothèque filtrée sur la position, triée par Elo.
-                                        // En finale, le score de ce matériel dans la bibliothèque, quelle
-                                        // que soit la place des pièces.
-                                        footer:Column {width:miniExplorer.width
-                                            Label {objectName:"endgameOdds";width:parent.width;padding:6;wrapMode:Text.WordWrap;color:win.muted
-                                                readonly property var odds:controller.state.endgame||({})
-                                                visible:(odds.games||0)>0
-                                                text:qsTr("Ce matériel dans la bibliothèque : %1 partie(s) · Blancs %2 % · nulles %3 % · Noirs %4 %").arg(odds.games||0)
-                                                    .arg(Math.round(100*(odds.white||0)/Math.max(1,odds.games||0))).arg(Math.round(100*(odds.draws||0)/Math.max(1,odds.games||0)))
-                                                    .arg(Math.round(100*(odds.black||0)/Math.max(1,odds.games||0)))}
-                                            // Les clés stratégiques de la position.
-                                            Label {objectName:"positionThemes";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
-                                                readonly property var keys:controller.state.themes||[]
-                                                visible:keys.length>0
-                                                text:qsTr("Clés stratégiques : %1").arg(keys.map(function(k){return win.themeNames[win.themeKeys.indexOf(k)]||k}).join(" · "))}
-                                            // La tendance : le score des Blancs selon l'écart d'Elo, quand il est connu.
-                                            Label {objectName:"endgameTrend";width:parent.width;leftPadding:6;rightPadding:6;bottomPadding:6;wrapMode:Text.WordWrap;color:win.muted
-                                                readonly property var rows:(controller.state.endgame||{}).byElo||[]
-                                                readonly property var names:[qsTr("Blancs plus forts"),qsTr("Elo proches"),qsTr("Noirs plus forts")]
-                                                visible:rows.some(function(r){return r.games>0})
-                                                text:qsTr("Score des Blancs selon l’Elo : %1").arg(rows.map(function(r,i){return r.games>0?names[i]+" "+r.score+" % ("+r.games+")":""}).filter(function(t){return t}).join(" · "))
-                                                ToolTip.visible:trendHover.hovered;ToolTip.delay:500
-                                                ToolTip.text:qsTr("« Plus forts » : au moins 100 points d’Elo d’avance. Les parties sans Elo ne comptent pas ici.")
-                                                HoverHandler {id:trendHover}}
-                                            TButton {objectName:"bestGamesHere";width:parent.width;flat:true;text:qsTr("Meilleures parties de cette position")+"  →";onClicked:win.bestGamesHere()}
-                                            TButton {objectName:"plansHere";width:parent.width;flat:true;text:qsTr("Plans de cette structure")+"  →";onClicked:plansDialog.open()}
-                                            TButton {objectName:"similarHere";width:parent.width;flat:true;text:qsTr("Positions semblables")+"  →";onClicked:similarDialog.open()}
-                                        }
-                                        header:RowLayout {width:miniExplorer.width;spacing:8
-                                            Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                            Label {text:qsTr("Parties");Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                            Label {text:qsTr("Blancs · nulles · Noirs");Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                            Label {text:qsTr("Score");Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                        }
-                                        delegate:ItemDelegate {
-                                            id:treeRow
-                                            required property var modelData
-                                            readonly property real total:Math.max(1,modelData.white+modelData.draw+modelData.black)
-                                            width:miniExplorer.width;padding:3;onClicked:controller.move(modelData.uci)
-                                            Accessible.name:modelData.san+", "+modelData.count+qsTr(" partie(s)")
-                                            contentItem:RowLayout {spacing:8
-                                                Label {text:modelData.san;Layout.preferredWidth:58;font.weight:Font.DemiBold}
-                                                Label {text:modelData.count;Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight}
-                                                Row {Layout.fillWidth:true;height:10;Layout.alignment:Qt.AlignVCenter
-                                                    Rectangle {width:parent.width*treeRow.modelData.white/treeRow.total;height:10;color:"#f4f4f1";border.color:win.line}
-                                                    Rectangle {width:parent.width*treeRow.modelData.draw/treeRow.total;height:10;color:"#a3a8ad"}
-                                                    Rectangle {width:parent.width*treeRow.modelData.black/treeRow.total;height:10;color:"#2c3035"}
-                                                }
-                                                Label {text:Math.round(100*(treeRow.modelData.white+treeRow.modelData.draw/2)/treeRow.total)+" %";Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted}
-                                            }
-                                        }
-                                        Label {anchors.centerIn:parent;width:parent.width-16;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    }
-                                    ListView {id:bookList;objectName:"bookMoves";model:controller.bookMoves;clip:true;spacing:0
-                                        delegate:ItemDelegate {
-                                            required property var modelData
-                                            width:bookList.width;padding:3;onClicked:controller.move(modelData.uci)
-                                            Accessible.name:modelData.san+", "+modelData.percent+qsTr(" % du livre")
-                                            contentItem:RowLayout {spacing:8
-                                                Label {text:modelData.san;Layout.preferredWidth:58;font.weight:Font.DemiBold}
-                                                Rectangle {Layout.preferredWidth:Math.max(2,140*modelData.percent/100);height:8;color:win.accent;opacity:.7}
-                                                Label {text:modelData.percent+" %";color:win.muted;Layout.fillWidth:true}
-                                            }
-                                        }
-                                        Label {anchors.centerIn:parent;width:parent.width-24;horizontalAlignment:Text.AlignHCenter;wrapMode:Text.Wrap;visible:controller.bookMoves.length===0
-                                            text:controller.preferences.bookPath?qsTr("Position absente du livre."):qsTr("Aucun livre Polyglot (.bin) : indiquez-le dans Paramètres.")
-                                            color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    }
-                                    // Le livre de Lichess, en direct : il suit la position affichée.
-                                    OnlineExplorer {objectName:"onlineExplorer";backend:controller
-                                                    active:notationTabs.currentIndex===3&&win.page===2}
-                                }
-                                Rectangle {Layout.fillWidth:true;height:1;color:win.line}
-                                RowLayout {Layout.fillWidth:true;Layout.margins:4;spacing:4;visible:!controller.state.training
-                                    TComboBox {id:nagBox;model:["Annotation","! Bon coup","? Erreur","!! Excellent","?? Gaffe","!? Intéressant","?! Douteux"];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    TButton {text:"↑";enabled:controller.state.node>0;onClicked:controller.promote();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Promouvoir en ligne principale")}
-                                }
-                                ScrollView {Layout.fillWidth:true;Layout.preferredHeight:(win.height<760?44:64)*win.textScale;Layout.leftMargin:4;Layout.rightMargin:4;Layout.bottomMargin:4
-                                    TextArea {id:note;objectName:"positionNote";text:controller.state.comment;readOnly:controller.state.training;placeholderText:qsTr("Une idée, un plan, une question…");wrapMode:TextEdit.Wrap;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale);selectByMouse:true
-                                        onTextChanged:if(activeFocus&&text!==controller.state.comment)controller.setComment(text)
-                                    }
-                                }
-                            }
-                        }
-                        // Courbe du bilan, à côté de l'échiquier : on suit la partie sans
-                        // rouvrir la boîte de dialogue. Absente tant qu'aucun bilan n'existe,
-                        // pour ne pas prendre une place qu'elle ne saurait remplir.
-                        Rectangle {
-                            visible:controller.review.length>0
-                            SplitView.preferredHeight:112*win.textScale;SplitView.minimumHeight:74;SplitView.maximumHeight:210
-                            color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4
-                                RowLayout {Layout.fillWidth:true;spacing:6
-                                    Label {text:qsTr("Bilan");font.weight:Font.DemiBold}
-                                    Label {text:qsTr("Évaluations du point de vue des Blancs");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    TButton {text:qsTr("Détails");flat:true;onClicked:reviewDialog.open();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ouvrir le bilan complet : précision par phase, fautes expliquées, exercices.")}
-                                }
-                                EvalGraph {Layout.fillWidth:true;Layout.fillHeight:true;backend:controller}
-                            }
-                        }
-                        // Engine pane.
-                        Rectangle {
-                            SplitView.preferredHeight:(controller.state.analysis?170:64)*win.textScale;SplitView.minimumHeight:58;color:win.panel;border.color:win.line
-                            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4
-                                RowLayout {Layout.fillWidth:true;spacing:6
-                                    Label {text:qsTr("Moteur");font.weight:Font.DemiBold}
-                                    Label {text:win.systemText(controller.engineStatus)+(controller.state.opening?" · "+controller.state.opening:"");elide:Text.ElideRight;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                    // Sans moteur configuré, « Analyser » ne mène nulle part et rien
-                                    // ne dit où en choisir un : premier mur venu pour qui découvre.
-                                    TButton {visible:!controller.preferences.enginePath;text:qsTr("Choisir un moteur…");accent:true
-                                             // D'abord chercher : la plupart du temps Stockfish est déjà là.
-                                             onClicked:{if(controller.useDetectedEngine()==="")settingsDialog.open()}
-                                             ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Stockfish depuis votre distribution, ou un moteur du catalogue dans Bibliothèque → Téléchargements.")}
-                                    TButton {objectName:"toggleThreat";visible:!!controller.preferences.enginePath;text:qsTr("Menace");accent:!!controller.state.threat;enabled:!controller.state.training&&!controller.state.playing;onClicked:controller.toggleThreat();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ce que jouerait l’adversaire si vous passiez votre tour (touche M).")}
-                                    TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
-                                }
-                                ListView {
-                                    Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:2
-                                    delegate:RowLayout {
-                                        required property var modelData
-                                        required property int index
-                                        width:ListView.view.width;spacing:8
-                                        Label {text:modelData.eval;Layout.preferredWidth:52;font.weight:Font.DemiBold;horizontalAlignment:Text.AlignRight}
-                                        // Gain, nulle, perte selon le moteur (vus des Blancs), comme dans
-                                        // Nibbler : une évaluation de +1 ne dit pas si la nulle reste probable.
-                                        Item {objectName:"engineWdl";visible:!!modelData.wdl;Layout.preferredWidth:44;Layout.preferredHeight:8
-                                            readonly property var w:modelData.wdl||[0,1000,0]
-                                            Row {anchors.fill:parent
-                                                Rectangle {width:parent.width*parent.parent.w[0]/1000;height:parent.height;color:"#f4f1ea"}
-                                                Rectangle {width:parent.width*parent.parent.w[1]/1000;height:parent.height;color:"#9a958b"}
-                                                Rectangle {width:parent.width*parent.parent.w[2]/1000;height:parent.height;color:"#2a2926"}}
-                                            Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line;radius:1}
-                                            HoverHandler {id:wdlHover}
-                                            ToolTip.visible:wdlHover.hovered;ToolTip.delay:300
-                                            ToolTip.text:qsTr("Blancs %1 % · nulle %2 % · Noirs %3 % (estimation du moteur)").arg(Math.round(w[0]/10)).arg(Math.round(w[1]/10)).arg(Math.round(w[2]/10))}
-                                        Label {text:modelData.san;elide:Text.ElideRight;Layout.fillWidth:true}
-                                        Label {text:"d"+modelData.depth+" · "+Math.round(Number(modelData.nps)/1000)+" kN/s";color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                        TButton {text:"+";flat:true;implicitWidth:24;implicitHeight:22;onClicked:controller.addEngineLine(index);ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ajouter cette ligne à l’étude")}
-                                    }
-                                }
-                            }
-                        }
+                    // Les colonnes de panneaux, à la manière de Scid vs. PC : chaque panneau se
+                    // glisse par son onglet d'une pile à l'autre ou sur un bord (DockStack.qml).
+                    DockColumn {
+                        id:analysisPanel;objectName:"analysisPanel";dock:win;zone:"right"
+                        visible:!win.boardOnly&&stacks.length>0
+                        SplitView.fillWidth:true;SplitView.minimumWidth:300
                     }
                 }
             }
@@ -1136,7 +1290,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         width:Math.min(460,parent.width-32);standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:8
             Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted
-                text:qsTr("Une disposition retient la place de l’échiquier, la hauteur des panneaux de l’analyse et l’onglet de notation ouvert.")}
+                text:qsTr("Une disposition retient la place de l’échiquier et celle de chaque panneau de l’analyse.")}
             RowLayout {Layout.fillWidth:true;spacing:6
                 TTextField {id:layoutName;objectName:"layoutName";Layout.fillWidth:true;placeholderText:qsTr("Nom, par exemple « Préparation »")}
                 TButton {objectName:"saveLayout";text:qsTr("Enregistrer");accent:true;enabled:layoutName.text.trim().length>0
@@ -1436,4 +1590,35 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:win.keyFor("undo");enabled:win.navigationKeys()&&controller.state.canUndo;onActivated:controller.undo()}
     Shortcut {sequence:win.keyFor("deleteMove");enabled:win.navigationKeys()&&controller.state.node>0&&!controller.state.training;onActivated:controller.deleteVariation()}
     Shortcut {sequence:win.keyFor("redo");enabled:win.navigationKeys()&&controller.state.canRedo;onActivated:controller.redo()}
+    // Pendant le glisser d'un panneau : son fantôme sous le pointeur, et les bords de
+    // l'analyse où il peut ouvrir une nouvelle colonne.
+    Item {
+        id:dockOverlay;anchors.fill:parent;z:1000;visible:win.dockDragging
+        Repeater {
+            model:[{zone:"left",where:"start",label:qsTr("Colonne de gauche")},{zone:"right",where:"end",label:qsTr("Colonne de droite")},{zone:"bottom",where:"end",label:qsTr("Sous l’échiquier")}]
+            DropArea {
+                required property var modelData
+                readonly property real edge:Math.round(44*win.uiScale)
+                x:modelData.zone==="right"?win.dockArea.x+win.dockArea.width-edge:win.dockArea.x
+                y:modelData.zone==="bottom"?win.dockArea.y+win.dockArea.height-edge:win.dockArea.y
+                width:modelData.zone==="bottom"?win.dockArea.width:edge
+                height:modelData.zone==="bottom"?edge:win.dockArea.height-(modelData.zone==="bottom"?0:edge)
+                keys:["t64panel"]
+                onDropped:win.dropPanel(modelData.zone,-1,modelData.where)
+                Rectangle {anchors.fill:parent;radius:4;color:Qt.rgba(win.accent.r,win.accent.g,win.accent.b,parent.containsDrag?.28:.08)
+                           border.color:win.accent;border.width:parent.containsDrag?2:1}
+                Label {anchors.centerIn:parent;text:parent.modelData.label;visible:parent.containsDrag;color:win.fg;font.weight:Font.DemiBold
+                       rotation:parent.modelData.zone==="bottom"?0:-90}
+            }
+        }
+        Rectangle {
+            id:dockGhost
+            readonly property point at:win.dockHandler?dockOverlay.mapFromItem(null,win.dockHandler.centroid.scenePosition.x,win.dockHandler.centroid.scenePosition.y):Qt.point(0,0)
+            x:at.x-width/2;y:at.y-height/2
+            width:ghostLabel.implicitWidth+28;height:Math.round(30*win.uiScale);radius:6
+            color:win.raised;border.color:win.accent;border.width:2;opacity:.94
+            Drag.active:win.dockDragging;Drag.keys:["t64panel"];Drag.hotSpot.x:width/2;Drag.hotSpot.y:height/2
+            Label {id:ghostLabel;anchors.centerIn:parent;text:win.panelTitle(win.dockDragged);font.weight:Font.DemiBold;color:win.fg}
+        }
+    }
 }

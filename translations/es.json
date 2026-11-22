@@ -2024,5 +2024,18 @@
   "Nom, par exemple « Préparation »": "Nombre, por ejemplo «Preparación»",
   "Appliquer": "Aplicar",
   "Donnez un nom à la disposition.": "Dé un nombre a la disposición.",
-  "Disposition « %1 » enregistrée.": "Disposición «%1» guardada."
+  "Disposition « %1 » enregistrée.": "Disposición «%1» guardada.",
+  "Glissez l’onglet pour déplacer le panneau.": "Arrastre la pestaña para mover el panel.",
+  "Options du panneau": "Opciones del panel",
+  "Fermer le panneau": "Cerrar el panel",
+  "Disposition d’origine": "Disposición original",
+  "Panneaux": "Paneles",
+  "Notes": "Notas",
+  "Courbe": "Curva",
+  "La courbe paraît après le bilan de la partie (bouton Bilan).": "La curva aparece tras el análisis de la partida (botón Análisis).",
+  "Colonne de gauche": "Columna izquierda",
+  "Colonne de droite": "Columna derecha",
+  "Sous l’échiquier": "Bajo el tablero",
+  "Une disposition retient la place de l’échiquier et celle de chaque panneau de l’analyse.": "Una disposición recuerda dónde están el tablero y cada panel del análisis.",
+  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "«Analizar» lanza el motor en la posición mostrada; sigue cada jugada jugada o recorrida."
 }

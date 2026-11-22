@@ -360,13 +360,16 @@ Item {
                     width: row.width - row.indent
                     height: visible ? Math.max(whiteCell.item ? whiteCell.item.implicitHeight : 0,
                                               blackCell.item ? blackCell.item.implicitHeight : 0,
-                                              32 * root.textScale) : 0
+                                              26 * root.textScale) : 0
+                    // Les numéros sur une bande à peine teintée, comme la notation de Lichess :
+                    // l'œil suit les coups sans lire les chiffres.
                     Label {
                         width: root.numberWidth
                         height: cells.height
-                        text: (row.modelData.number || "") + "."
-                        verticalAlignment: Text.AlignVCenter
+                        text: row.modelData.number || ""
+                        verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignHCenter
                         color: root.muted; font.pixelSize: 11 * root.textScale
+                        background: Rectangle { color: root.raised; opacity: .55 }
                     }
                     Loader { id: whiteCell; width: root.cellWidth(cells.width); height: cells.height; property var move: row.modelData.white || ({}); sourceComponent: moveCell }
                     Loader { id: blackCell; width: root.cellWidth(cells.width); height: cells.height; property var move: row.modelData.black || ({}); sourceComponent: moveCell }
@@ -379,8 +382,8 @@ Item {
                         readonly property bool active: !!move.id && move.id === root.backend.state.node
                         objectName: move.id ? "notebookMove_" + move.id : "emptyMoveCell"
                         enabled: !!move.id
-                        implicitHeight: Math.max(28 * root.textScale, contentItem.implicitHeight + 10)
-                        padding: 5
+                        implicitHeight: Math.max(24 * root.textScale, contentItem.implicitHeight + 6)
+                        padding: 3; leftPadding: 8
                         Accessible.name: (row.modelData.number || "") + (parent === whiteCell ? ". " : "… ") + (move.text || "")
                         Accessible.description: move.comment || ""
                         contentItem: Row {
@@ -401,8 +404,8 @@ Item {
                                 textFormat: Text.PlainText
                                 wrapMode: Text.WrapAnywhere
                                 verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: 12 * root.textScale
-                                font.bold: !!cell.active
+                                font.pixelSize: 13 * root.textScale
+                                font.weight: cell.active ? Font.Bold : Font.Medium
                                 color: root.foreground
                             }
                         }

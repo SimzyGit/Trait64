@@ -1,5 +1,11 @@
 # Changements
 
+## Panneaux déplaçables à la souris et notation plus dense — 22 novembre 2026
+
+- **Disposition libre de l'analyse, à la manière de Scid vs. PC** : sept panneaux (notation, arbre, livre, Lichess, notes, moteur, courbe) rangés en piles à onglets. Un onglet se glisse vers une autre pile (en onglet), au-dessus ou au-dessous d'elle, ou sur un bord de l'analyse pour ouvrir une colonne à gauche, à droite ou sous l'échiquier ; les cibles s'éclairent pendant le glisser. Hauteurs réglables, panneaux à fermer, à détacher ou à réafficher (*Affichage → Panneaux*), disposition retenue d'une séance à l'autre et dans les *Dispositions de travail*.
+- **Notation plus dense** : lignes plus basses, numéros sur une bande teintée, coups en graisse moyenne, comme sur Lichess.
+- **Moteur** : évaluations en pastilles claires ou sombres selon le camp favorisé ; le titre n'est plus répété dans le panneau, et une phrase dit ce que fait *Analyser* tant que le moteur est arrêté.
+
 ## Diffusion et fiabilité : Flatpak, signatures, Wayland, clavier, dispositions — 22 novembre 2026
 
 - **Paquet Flatpak** (`packaging/flatpak/`) : manifeste sur l'environnement KDE 6.10 et fiche AppStream ; construit à chaque envoi sur `main`.

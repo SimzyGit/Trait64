@@ -9,6 +9,9 @@
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QImageReader>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QKeySequence>
 #include <QQmlEngine>
 #include <QUuid>
@@ -156,6 +159,9 @@ QVariantMap Controller::preferences() const {
                          {"language", "auto"},
                          {"analysisPanelRatio", .58},
                          {"notebookLayout", "table"},
+                         // Les panneaux de l'analyse, déplacés à la souris (DockStack.qml) :
+                         // un texte JSON, vide pour la disposition d'origine.
+                         {"dockLayout", ""},
                          {"coordinates", true},
                          {"boardScale", 1.0},
                          {"evalBar", true},
@@ -274,9 +280,8 @@ void Controller::saveLayout(const QVariantMap &layout) {
     auto list = layouts();
     QVariantMap clean{{"name", name},
                       {"ratio", std::clamp(layout.value("ratio").toDouble(), 0.2, 0.85)},
-                      {"panel", layout.value("panel").toByteArray().left(4096)},
-                      {"boardOnly", layout.value("boardOnly").toBool()},
-                      {"tab", std::clamp(layout.value("tab").toInt(), 0, 8)}};
+                      {"dock", layout.value("dock").toString().left(8192)},
+                      {"boardOnly", layout.value("boardOnly").toBool()}};
     list.erase(std::remove_if(list.begin(), list.end(),
                               [&](const QVariant &row) { return row.toMap()["name"].toString() == name; }),
                list.end());
@@ -319,6 +324,23 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         } else if (key == "fontFamily") {
             clean = QFontDatabase::families().contains(value.toString()) ? value.toString()
                                                                          : QGuiApplication::font().family();
+        } else if (key == "dockLayout") {
+            // {left, right, bottom} : des piles, chacune [{panels : [noms connus], current}].
+            // Un texte mal formé ou un panneau inconnu ne passe pas : l'interface
+            // retomberait sur une disposition qu'elle ne sait pas dessiner.
+            const auto text = value.toString();
+            if (!text.isEmpty()) {
+                static const QStringList known{"notation", "tree",  "book",  "online",
+                                               "notes",    "graph", "engine"};
+                const auto doc = QJsonDocument::fromJson(text.toUtf8());
+                if (text.size() > 8192 || !doc.isObject())
+                    return;
+                for (const auto &zone : doc.object())
+                    for (const auto &stack : zone.toArray())
+                        for (const auto &panel : stack.toObject()["panels"].toArray())
+                            if (!known.contains(panel.toString()))
+                                return;
+            }
         } else if (key == "notebookLayout") {
             if (!QStringList{"table", "flow"}.contains(value.toString()))
                 return;
@@ -433,10 +455,11 @@ void Controller::retranslateUi(QObject *window) {
         engine->retranslate();
 }
 void Controller::resetAppearance() {
-    for (const auto &key : QStringList{
-             "fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion",
-             "analysisPanelRatio", "lightTheme", "pieceStyle", "boardLight", "boardDark", "boardHighlight",
-             "backgroundColor", "accentColor", "coordinates", "legalMoves", "lastMove", "engineArrows"})
+    for (const auto &key :
+         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion",
+                     "analysisPanelRatio", "dockLayout", "lightTheme", "pieceStyle", "boardLight",
+                     "boardDark", "boardHighlight", "backgroundColor", "accentColor", "coordinates",
+                     "legalMoves", "lastMove", "engineArrows"})
         settings_.remove(key);
     emit preferencesChanged();
 }

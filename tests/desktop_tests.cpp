@@ -11,6 +11,9 @@
 #include <QGuiApplication>
 #include <QImage>
 #include <QImageReader>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QNetworkProxy>
 #include <QProcess>
 #include <QQmlApplicationEngine>
@@ -1195,13 +1198,38 @@ int main(int argc, char **argv) {
                                           Q_ARG(QVariant, "Essai"));
                 c.saveLayout(layout.toMap());
                 check(c.layouts().size() == 1 && c.layouts().first().toMap()["name"] == "Essai" &&
-                          !c.layouts().first().toMap()["panel"].toByteArray().isEmpty(),
+                          c.layouts().first().toMap()["dock"].toString().contains("notation"),
                       "A work layout is saved with the panel sizes");
+                // Glisser l'onglet « Moteur » sur le bord gauche : il ouvre une colonne à gauche.
+                auto *engineTab = visualItem(window->contentItem(), "engineTab");
+                auto *split = visualItem(window->contentItem(), "analysisSplit");
+                check(engineTab && split, "The engine panel has a draggable tab");
+                if (engineTab && split) {
+                    const auto from =
+                        engineTab->mapToScene(QPointF(engineTab->width() / 2, engineTab->height() / 2))
+                            .toPoint();
+                    const auto to = split->mapToScene(QPointF(12, split->height() / 2)).toPoint();
+                    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+                    for (int step = 1; step <= 12; ++step)
+                        QTest::mouseMove(window, from + (to - from) * step / 12, 15);
+                    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+                    QTest::qWait(80);
+                    const auto dock =
+                        QJsonDocument::fromJson(c.preferences()["dockLayout"].toString().toUtf8()).object();
+                    check(dock["left"].toArray().size() == 1 &&
+                              dock["left"].toArray().first().toObject()["panels"].toArray().first() ==
+                                  "engine" &&
+                              visualItem(window->contentItem(), "leftDock")->isVisible(),
+                          "Dragging a panel tab to the left edge opens a left column with it");
+                }
                 QMetaObject::invokeMethod(window, "applyLayout", Q_ARG(QVariant, c.layouts().first()));
+                QTest::qWait(30);
+                check(!visualItem(window->contentItem(), "leftDock")->isVisible(),
+                      "Applying the saved layout puts the panel back");
                 c.removeLayout(0);
                 check(c.layouts().isEmpty(), "A work layout is removed");
             }
-            auto *note = window->findChild<QQuickItem *>("positionNote");
+            auto *note = visualItem(window->contentItem(), "positionNote");
             check(note != nullptr, "Note editor exists");
             note->forceActiveFocus();
             note->setProperty("text", "Plan: develop the knight");

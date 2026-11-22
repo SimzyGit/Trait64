@@ -2024,5 +2024,18 @@
   "Nom, par exemple « Préparation »": "Name, for example “Preparation”",
   "Appliquer": "Apply",
   "Donnez un nom à la disposition.": "Give the layout a name.",
-  "Disposition « %1 » enregistrée.": "Layout “%1” saved."
+  "Disposition « %1 » enregistrée.": "Layout “%1” saved.",
+  "Glissez l’onglet pour déplacer le panneau.": "Drag the tab to move the panel.",
+  "Options du panneau": "Panel options",
+  "Fermer le panneau": "Close the panel",
+  "Disposition d’origine": "Default layout",
+  "Panneaux": "Panels",
+  "Notes": "Notes",
+  "Courbe": "Graph",
+  "La courbe paraît après le bilan de la partie (bouton Bilan).": "The graph appears after the game review (Review button).",
+  "Colonne de gauche": "Left column",
+  "Colonne de droite": "Right column",
+  "Sous l’échiquier": "Below the board",
+  "Une disposition retient la place de l’échiquier et celle de chaque panneau de l’analyse.": "A layout remembers where the board and each analysis panel sit.",
+  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "“Analyse” starts the engine on the position shown; it follows every move played or browsed."
 }

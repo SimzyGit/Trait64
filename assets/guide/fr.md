@@ -21,6 +21,7 @@ Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèq
 *Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.
 
 - **Clavier et lecteurs d'écran** : *Tab* amène le focus sur l'échiquier ; les flèches promènent un cadre de case en case, *Entrée* ou *Espace* choisissent la pièce puis sa case d'arrivée, *Échap* rend la main. Chaque case est annoncée (« e4, pion blanc »).
+- **Panneaux à la souris, comme dans Scid** : chaque panneau de l'analyse (notation, arbre, livre, Lichess, notes, moteur, courbe) a un onglet. Glissez-le sur une autre pile pour l'y ranger en onglet, au-dessus ou au-dessous d'elle pour l'empiler, ou sur le bord gauche, le bord droit ou le bas de l'analyse pour ouvrir une nouvelle colonne. Les poignées entre les piles règlent leur hauteur. Le menu ⋯ d'une pile ferme ou détache le panneau ; *Affichage → Panneaux* les réaffiche et rétablit la disposition d'origine.
 - **Fenêtres détachées et dispositions** : *Affichage → Détacher dans une fenêtre* ouvre l'échiquier, la notation ou la courbe du bilan dans une fenêtre à part, pour un second écran. *Affichage → Dispositions de travail…* enregistre la place de l'échiquier, la hauteur des panneaux et l'onglet de notation sous un nom, et les réapplique.
 
 ## La notation et les variantes

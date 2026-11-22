@@ -138,7 +138,8 @@ int moveNotebookProbe(const QString &directory) {
         black=visualItem(window->contentItem(),"notebookMove_"+QString::number(blackId));
         QTest::mouseClick(window,Qt::RightButton,Qt::NoModifier,black->mapToScene(QPointF(black->width()/2,black->height()/2)).toPoint());
         QTest::qWait(150);
-        auto *menu=window->findChild<QObject *>("moveMenu");
+        auto *notebook = visualItem(window->contentItem(), "notebookRoot");
+        auto *menu = notebook ? notebook->findChild<QObject *>("moveMenu") : nullptr;
         check(menu && menu->property("visible").toBool() && c.state()["node"].toInt()==blackId,"Right-clicking a move selects it and opens its menu");
         QMetaObject::invokeMethod(menu,"close");QTest::qWait(250);
         QTest::keyClick(window,Qt::Key_Delete);QTest::qWait(50);
