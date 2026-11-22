@@ -64,6 +64,12 @@ Every game you save (*Ctrl+S*) lives in the library.
 
 The *Studies* page shows the tree of your PGN folder: folders to expand, search, creating, renaming and moving files. Deleting moves files to the system trash, never permanently.
 
+- **Sub-chapters**: a chapter titled “Section / Chapter” is filed under its section in the collection.
+- **Links between studies**: write `[[Title]]` in a comment; clicking the link opens the chapter (or collection) of that name.
+- **Search**: the tab of that name looks for text in the comments of every collection, with the excerpt found.
+- **PDF report** (*File → Export study as PDF…*): headers, comments and variations to tick; diagrams at the position shown, at moves marked with a diagram (symbol 220 or `[#]` in the comment), or also every ten moves.
+- **Diagram from an image**: in the position editor, *Read an image…* or *Paste an image* reads a screenshot or a digital diagram cropped to the board; check the position before creating the study. A photo taken at an angle or a handwritten scoresheet cannot be read.
+
 *Export this study* (in the analysis ⋮ menu or through Ctrl+K) writes the study as PGN, the position as EPD, or the study as a **standalone HTML page** that opens in any browser, without Trait64.
 
 ## Openings and repertoires

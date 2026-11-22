@@ -552,7 +552,9 @@ int main(int argc, char **argv) {
             Controller shelf(dir.path() + "/labels");
             QFile course(dir.path() + "/cours.pgn");
             check(course.open(QIODevice::WriteOnly), "Write the course PGN");
-            course.write("[White \"Chapitre 1\"]\n[Black \"Chapitre 2\"]\n1.e4 *\n");
+            course.write(
+                "[White \"Chapitre 1\"]\n[Black \"Chapitre 2\"]\n1.e4 *\n\n"
+                "[Event \"Finales / Tours\"]\n\n1.d4 {Voir [[Finales / Pions]], la règle du carré} *\n");
             course.close();
             shelf.importLabeled(QUrl::fromLocalFile(course.fileName()).toString(), "Cours de finales", true);
             QElapsedTimer wait;
@@ -565,8 +567,24 @@ int main(int argc, char **argv) {
                     collection = row.toMap()["id"].toLongLong();
             check(collection > 0 && shelf.players().isEmpty(),
                   "A labelled study becomes a collection, its chapter names stay out of the players");
+            const auto hits = shelf.searchStudyComments("règle du carré");
+            check(hits.size() == 1 && hits.first().toMap()["excerpt"].toString().contains("règle du carré"),
+                  "Comment text is searched across studies, with an excerpt");
+            QSignalSpy linkMessages(&shelf, &Controller::message);
+            shelf.openStudyLink("Tours");
+            check(linkMessages.isEmpty() &&
+                      shelf.state()["savedId"].toLongLong() == hits.first().toMap()["id"].toLongLong(),
+                  "A study link opens the chapter it names, sub-chapter title included");
+            shelf.openStudyLink("Nulle part");
+            check(!linkMessages.isEmpty() && linkMessages.last()[1].toBool(), "A dead study link says so");
+            const auto report = dir.path() + "/report.pdf";
+            shelf.exportStudyPdf(report, {{"headers", false}, {"variations", false}, {"diagrams", "every"}});
+            QFile reportFile(report);
+            check(reportFile.open(QIODevice::ReadOnly) && reportFile.read(5) == "%PDF-",
+                  "A composed PDF report is written");
             shelf.setStudyPurpose(collection, false);
             check(shelf.players().size() == 2, "Marked as played games, its names count as players");
+            shelf.newGame();
             shelf.removeStudyCollection(collection);
             check(shelf.studyCollections().isEmpty() && shelf.stats()["games"].toInt() == 0,
                   "The collection is removed and its game goes to the trash");
@@ -580,7 +598,7 @@ int main(int argc, char **argv) {
             for (const auto &row : shelf.sources())
                 if (row.toMap()["title"] == "Ma base")
                     base = row.toMap()["id"].toLongLong();
-            check(base > 0 && shelf.stats()["games"].toInt() == 1, "A game database appears among the bases");
+            check(base > 0 && shelf.stats()["games"].toInt() == 2, "A game database appears among the bases");
             shelf.removeBase(base);
             bool gone = true;
             for (const auto &row : shelf.sources())
@@ -2175,6 +2193,36 @@ int main(int argc, char **argv) {
             c.exportDiagram(dir.path() + "/diagram.png");
             QImage diagram(dir.path() + "/diagram.png");
             check(!diagram.isNull() && diagram.size() == QSize(832, 832), "Styled PNG diagram exported");
+            {
+                // Un diagramme exporté se relit, quel que soit le jeu de pièces et le sens.
+                Controller reader(dir.path() + "/diagram-reader");
+                QStringList misread;
+                QSignalSpy readerMessages(&reader, &Controller::message);
+                for (const auto *fen : {"r1bq1rk1/pp2bppp/2n1pn2/3p4/2PP4/2N2N2/PP2BPPP/R2QKB1R w KQ - 0 1",
+                                        "8/5pk1/6p1/3R4/1r5P/6P1/5PK1/8 w - - 0 1"}) {
+                    reader.setFen(fen);
+                    for (const bool flipped : {false, true}) {
+                        if (flipped)
+                            reader.flip();
+                        for (const auto *set : {"cburnett", "merida", "pixel", "spatial"}) {
+                            reader.setPreference("pieceStyle", set);
+                            reader.exportDiagram(dir.path() + "/read.png");
+                            const auto read = reader.readDiagramImage(dir.path() + "/read.png");
+                            if (read.section(' ', 0, 0) != QString(fen).section(' ', 0, 0))
+                                misread << QString("%1 %2 %3: %4 %5")
+                                               .arg(fen, set, flipped ? "flipped" : "", read,
+                                                    readerMessages.isEmpty()
+                                                        ? QString()
+                                                        : readerMessages.last()[0].toString());
+                        }
+                        if (flipped)
+                            reader.flip();
+                    }
+                }
+                if (!misread.isEmpty())
+                    qWarning() << misread;
+                check(misread.isEmpty(), "An exported diagram is read back into the same position");
+            }
             c.identifyOpening();
             check(!c.state()["tags"].toMap()["ECO"].toString().isEmpty(), "Opening tags persisted");
             c.newChess960(518);

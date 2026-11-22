@@ -17,6 +17,14 @@ Item {
     property int followedNode: -1
     readonly property real numberWidth: Math.max(32, 40 * textScale)
     // A move pair reads at a glance: cells stop growing on wide panels (long annotations wrap).
+    // Un commentaire qui cite « [[Titre]] » renvoie au chapitre d'étude de ce titre.
+    function linked(text) {
+        text = String(text || "")
+        if (text.indexOf("[[") < 0) return text
+        var escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+        return escaped.replace(/\[\[([^\]]{1,120})\]\]/g, function(all, title) {
+            return "<a href=\"study:" + encodeURIComponent(title) + "\">" + title + "</a>" })
+    }
     function cellWidth(available) { return Math.max(0, Math.min((available - numberWidth) / 2, 170 * textScale)) }
     readonly property bool flowMode: backend.preferences.notebookLayout === "flow"
 
@@ -276,8 +284,11 @@ Item {
                 Label {
                     width: Math.min(implicitWidth, flow.width)
                     topPadding: 3; leftPadding: 2; rightPadding: 4
-                    text: parent.token.text; textFormat: Text.PlainText; wrapMode: Text.Wrap
+                    text: root.linked(parent.token.text)
+                    textFormat: text === parent.token.text ? Text.PlainText : Text.StyledText; wrapMode: Text.Wrap
                     font.italic: true; color: root.muted; font.pixelSize: 11 * root.textScale
+                    onLinkActivated: link => root.backend.openStudyLink(decodeURIComponent(link.slice(6)))
+                    HoverHandler { cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor }
                 }
             }
         }
@@ -415,8 +426,11 @@ Item {
                         visible: !!modelData.comment
                         width: row.width - row.indent - 8
                         x: row.indent + 4
-                        text: (modelData.text ? modelData.text + " — " : "") + (modelData.comment || "")
-                        textFormat: Text.PlainText
+                        readonly property string plain: (modelData.text ? modelData.text + " — " : "") + (modelData.comment || "")
+                        text: root.linked(plain)
+                        textFormat: text === plain ? Text.PlainText : Text.StyledText
+                        onLinkActivated: link => root.backend.openStudyLink(decodeURIComponent(link.slice(6)))
+                        HoverHandler { cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor }
                         wrapMode: Text.Wrap
                         color: root.muted; font.pixelSize: 10 * root.textScale
                     }

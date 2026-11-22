@@ -64,6 +64,12 @@ Toutes vos parties enregistrées (*Ctrl+S*) vivent dans la bibliothèque.
 
 La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à déplier, recherche, création, renommage et déplacement de fichiers. Supprimer met à la corbeille du système, jamais définitivement.
 
+- **Sous-chapitres** : un chapitre titré « Section / Chapitre » se range sous sa section dans le recueil.
+- **Liens entre études** : écrivez `[[Titre]]` dans un commentaire ; un clic sur le lien ouvre le chapitre (ou le recueil) de ce nom.
+- **Rechercher** : l'onglet du même nom cherche un texte dans les commentaires de tous les recueils, avec l'extrait trouvé.
+- **Rapport PDF** (*Fichier → Exporter l'étude en PDF…*) : en-têtes, commentaires et variantes à cocher ; diagrammes à la position affichée, aux coups marqués d'un diagramme (symbole 220 ou `[#]` dans le commentaire) ou en plus tous les dix coups.
+- **Diagramme depuis une image** : dans l'éditeur de position, *Lire une image…* ou *Coller une image* lit une capture d'écran ou un diagramme numérique recadré sur l'échiquier ; vérifiez la position avant de créer l'étude. Une photo prise de biais ou une feuille de notation manuscrite ne se lisent pas.
+
 *Exporter cette étude* (dans le menu ⋮ de l'analyse ou par Ctrl+K) écrit l'étude en PGN, la position en EPD, ou l'étude en **page HTML autonome** qui se consulte dans n'importe quel navigateur, sans Trait64.
 
 ## Ouvertures et répertoires

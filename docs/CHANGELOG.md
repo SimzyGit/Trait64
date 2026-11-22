@@ -1,5 +1,13 @@
 # Changements
 
+## Études : sous-chapitres, liens, recherche, rapport PDF, diagramme depuis une image — 22 novembre 2026
+
+- **Sous-chapitres** : un chapitre titré « Section / Chapitre » (l'usage de Lichess et d'En Croissant) se range sous sa section, en retrait.
+- **Liens entre études** : `[[Titre]]` dans un commentaire devient un lien ; il ouvre le chapitre de ce titre, ou le premier d'un recueil de ce nom.
+- **Recherche dans les commentaires** : un onglet *Rechercher* de la page Études trouve un texte dans tous les recueils et montre l'extrait.
+- **Rapport PDF à composer** : en-têtes, commentaires et variantes au choix ; diagrammes à la position affichée, aux coups marqués (NAG 220 ou `[#]`), ou en plus tous les dix coups. La notation coule en paragraphes, chaque variante en retrait.
+- **Diagramme lu dans une image** (éditeur de position : *Lire une image…*, *Coller une image*) : la marge est retirée, chaque case séparée de son fond, la silhouette comparée aux quatre jeux de pièces fournis, et les deux camps départagés par la méthode d'Otsu sur la teinte des pièces ; un échiquier retourné est remis à l'endroit. Vérifié sur les diagrammes exportés par Trait64 dans les deux sens et avec chaque jeu de pièces ; une photo de biais ou une feuille de notation manuscrite ne se lisent pas.
+
 ## Grandes bases : fusion des doublons, réparation, comparaison, tournois — 22 novembre 2026
 
 - **Fusionner les doublons** (*Base*) : les parties aux mêmes coups **et** aux mêmes joueurs et résultat — deux nulles rapides de joueurs différents ne sont pas confondues. La plus annotée reste et reçoit commentaires, variantes et en-têtes manquants (date, tournoi…) des autres, qui vont à la corbeille.

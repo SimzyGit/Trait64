@@ -2,6 +2,7 @@
 #include "controller.h"
 #include "unpack.h"
 #include <QDate>
+#include <QRegularExpression>
 #include <functional>
 
 namespace {
@@ -437,6 +438,66 @@ QVariantList Controller::studyGames(qint64 sourceId) const {
     }
 }
 
+QVariantList Controller::searchStudyComments(const QString &text) const {
+    const auto wanted = text.simplified();
+    if (wanted.size() < 2)
+        return {};
+    try {
+        auto rows =
+            db_->search({}, {}, false, {}, false, {{"studies", true}, {"comment", wanted}, {"limit", 200}});
+        // L'extrait : le premier commentaire qui contient le texte, coupé autour.
+        static const QRegularExpression braces("\\{([^}]*)\\}");
+        for (auto &row : rows) {
+            auto map = row.toMap();
+            const auto pgn = QString::fromStdString(db_->load(map["id"].toLongLong()).pgn());
+            for (auto it = braces.globalMatch(pgn); it.hasNext();) {
+                const auto comment = it.next().captured(1).simplified();
+                const int at = comment.indexOf(wanted, 0, Qt::CaseInsensitive);
+                if (at < 0)
+                    continue;
+                const int from = std::max(0, at - 60);
+                map["excerpt"] = (from ? "…" : "") + comment.mid(from, wanted.size() + 120) +
+                                 (from + wanted.size() + 120 < comment.size() ? "…" : "");
+                break;
+            }
+            row = map;
+        }
+        return rows;
+    } catch (const std::exception &) {
+        return {};
+    }
+}
+void Controller::openStudyLink(const QString &title) {
+    const auto wanted = title.simplified();
+    const auto same = [&](const QString &name) {
+        return name.simplified().compare(wanted, Qt::CaseInsensitive) == 0;
+    };
+    qint64 found = 0;
+    try {
+        for (const auto &row :
+             db_->search(wanted, {}, false, {}, false, {{"studies", true}, {"limit", 200}})) {
+            const auto event = row.toMap()["event"].toString();
+            if (same(event) || same(event.section('/', -1))) {
+                found = row.toMap()["id"].toLongLong();
+                break;
+            }
+        }
+        if (!found)
+            for (const auto &source : studyCollections())
+                if (same(source.toMap()["title"].toString())) {
+                    const auto games = studyGames(source.toMap()["id"].toLongLong());
+                    if (!games.isEmpty())
+                        found =
+                            games.last().toMap()["id"].toLongLong(); // le plus ancien : le premier chapitre
+                    break;
+                }
+    } catch (const std::exception &) {
+    }
+    if (found)
+        loadGame(found);
+    else
+        emit message(tr("Aucune étude ni aucun chapitre ne s’appelle « %1 ».").arg(wanted), true);
+}
 QVariantMap Controller::browseStudies(const QString &path) const {
     // L'explorateur d'un seul dossier à la fois : la liste complète d'une arborescence
     // d'études se compte en milliers de fichiers, et personne ne la lit d'un bloc.

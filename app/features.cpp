@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "accuracy.h"
 #include "controller.h"
+#include "diagram_reader.h"
 #include "explanation.h"
+#include "move_notation.h"
 #include "structure.h"
+#include <QClipboard>
 #include <QDate>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
+#include <QGuiApplication>
 #include <QImageReader>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -301,6 +305,27 @@ void Controller::initFeatures() {
     });
     clock_.setInterval(100);
     connect(&clock_, &QTimer::timeout, this, &Controller::tickClock);
+}
+QString Controller::readDiagramImage(const QString &url) {
+    QString why;
+    QImageReader reader(localPath(url));
+    reader.setAutoTransform(true);
+    const auto fen = t64::readDiagram(reader.read(), &why);
+    if (fen.isEmpty())
+        emit message(why, true);
+    return fen;
+}
+QString Controller::pasteDiagramImage() {
+    const auto image = QGuiApplication::clipboard()->image();
+    if (image.isNull()) {
+        emit message(tr("Le presse-papiers ne contient pas d’image."), true);
+        return {};
+    }
+    QString why;
+    const auto fen = t64::readDiagram(image, &why);
+    if (fen.isEmpty())
+        emit message(why, true);
+    return fen;
 }
 void Controller::setPosition(const QString &fen, bool frc) {
     try {
@@ -1473,9 +1498,16 @@ void Controller::exportPlayerPdf(const QString &url) {
         fail(e);
     }
 }
-void Controller::exportStudyPdf(const QString &url) {
+// Le rapport d'une étude, à composer : en-têtes, commentaires, variantes, et des
+// diagrammes nulle part, à la position affichée, aux coups marqués [#] ou de plus tous
+// les dix coups.
+void Controller::exportStudyPdf(const QString &url, const QVariantMap &options) {
     try {
         db_->validateOutputPath(localPath(url));
+        const bool headers = options.value("headers", true).toBool();
+        const bool comments = options.value("comments", true).toBool();
+        const bool variations = options.value("variations", true).toBool();
+        const auto diagrams = options.value("diagrams", "current").toString();
         QSaveFile file(localPath(url));
         need(file.open(QIODevice::WriteOnly), file.errorString());
         {
@@ -1485,32 +1517,84 @@ void Controller::exportStudyPdf(const QString &url) {
             writer.setTitle(state_["title"].toString());
             QTextDocument doc;
             doc.setDefaultFont(QFont("DejaVu Sans", 10));
-            QString html = "<h1>" + state_["title"].toString().toHtmlEscaped() + "</h1><p>" +
-                           state_["opening"].toString().toHtmlEscaped() +
-                           "</p><table cellspacing='0' cellpadding='0'>";
-            auto board = game_.boardAt(node_);
-            const QString glyphs = "♙♘♗♖♕♔♟♞♝♜♛♚";
-            for (int row = 7; row >= 0; --row) {
-                html += "<tr>";
-                for (int col = 0; col < 8; ++col) {
-                    auto p = board.at(chess::Square(row * 8 + col));
-                    QString piece =
-                        p == chess::Piece::NONE
-                            ? " "
-                            : QString(glyphs[int(p.type()) + (p.color() == chess::Color::WHITE ? 0 : 6)]);
-                    html += QString("<td width='35' height='35' align='center' bgcolor='%1' "
-                                    "style='font-size:24pt;color:#111'>%2</td>")
-                                .arg((row + col) % 2 ? "#eee4d0" : "#9ca88e", piece);
+            const auto boardHtml = [&](int node, int cell) {
+                const auto board = game_.boardAt(node);
+                const QString glyphs = "♙♘♗♖♕♔♟♞♝♜♛♚";
+                QString html = "<table cellspacing='0' cellpadding='0' style='margin:6px 0'>";
+                for (int row = 7; row >= 0; --row) {
+                    html += "<tr>";
+                    for (int col = 0; col < 8; ++col) {
+                        const int square = flipped_ ? (7 - row) * 8 + 7 - col : row * 8 + col;
+                        const auto p = board.at(chess::Square(square));
+                        const QString piece =
+                            p == chess::Piece::NONE
+                                ? " "
+                                : QString(glyphs[int(p.type()) + (p.color() == chess::Color::WHITE ? 0 : 6)]);
+                        html += QString("<td width='%1' height='%1' align='center' bgcolor='%2' "
+                                        "style='font-size:%3pt;color:#111'>%4</td>")
+                                    .arg(cell)
+                                    .arg((row + col) % 2 ? "#eee4d0" : "#9ca88e")
+                                    .arg(cell * 2 / 3)
+                                    .arg(piece);
+                    }
+                    html += "</tr>";
                 }
-                html += "</tr>";
+                return html + "</table>";
+            };
+            QString html = "<h1>" + state_["title"].toString().toHtmlEscaped() + "</h1>";
+            if (headers) {
+                html += "<table cellpadding='2'>";
+                for (const auto &[tag, label] : {std::pair{"White", tr("Blancs")},
+                                                 {"Black", tr("Noirs")},
+                                                 {"Event", tr("Tournoi")},
+                                                 {"Date", tr("Date")},
+                                                 {"Result", tr("Résultat")}}) {
+                    const auto it = game_.tags.find(tag);
+                    if (it != game_.tags.end() && !it->second.empty() &&
+                        it->second.find('?') == std::string::npos)
+                        html += "<tr><td><b>" + label.toHtmlEscaped() + "</b></td><td>" +
+                                qs(it->second).toHtmlEscaped() + "</td></tr>";
+                }
+                html += "</table><p>" + state_["opening"].toString().toHtmlEscaped() + "</p>";
             }
-            html += "</table><p>" + qs(game_.nodes[node_].fen).toHtmlEscaped() + "</p>";
+            if (diagrams == "current")
+                html += boardHtml(node_, 35) + "<p>" + qs(game_.nodes[node_].fen).toHtmlEscaped() + "</p>";
+            // La notation coule en paragraphes : la ligne principale d'un bloc, chaque
+            // variante en retrait, un diagramme coupant le paragraphe là où il tombe.
+            QString paragraph;
+            int depth = 0;
+            const auto flush = [&] {
+                if (!paragraph.isEmpty())
+                    html += "<p style='margin-left:" + QString::number(std::min(8, depth) * 14) + "px'>" +
+                            paragraph + "</p>";
+                paragraph.clear();
+            };
             for (const auto &v : notation_) {
-                auto n = v.toMap();
-                html += "<p style='margin-left:" + QString::number(std::min(8, n["depth"].toInt()) * 12) +
-                        "px'><b>" + n["text"].toString().toHtmlEscaped() + "</b> " +
-                        n["comment"].toString().toHtmlEscaped().replace("\n", "<br>") + "</p>";
+                const auto n = v.toMap();
+                const int id = n["id"].toInt(), level = n["depth"].toInt();
+                if (level > 0 && !variations)
+                    continue;
+                if (level != depth)
+                    flush();
+                depth = level;
+                if (id > 0)
+                    paragraph +=
+                        (level ? "" : "<b>") + n["text"].toString().toHtmlEscaped() + (level ? " " : "</b> ");
+                if (comments && !n["comment"].toString().isEmpty())
+                    paragraph +=
+                        "<i>" + n["comment"].toString().toHtmlEscaped().replace("\n", "<br>") + "</i> ";
+                const bool marked = id > 0 && (t64::hasDiagram(game_.nodes[id]) ||
+                                               game_.nodes[id].comment.find("[#]") != std::string::npos);
+                const bool tenth =
+                    diagrams == "every" && level == 0 && id > 0 &&
+                    t64::checkedBoard(game_.nodes[id].fen, game_.chess960).fullMoveNumber() % 10 == 0 &&
+                    game_.boardAt(id).sideToMove() == chess::Color::WHITE;
+                if ((diagrams == "marked" || diagrams == "every") && (marked || tenth)) {
+                    flush();
+                    html += boardHtml(id, 26);
+                }
             }
+            flush();
             doc.setHtml(html);
             doc.print(&writer);
         }

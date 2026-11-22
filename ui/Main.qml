@@ -144,7 +144,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Tableau du tournoi"); enabled: controller.state.savedId > 0; onTriggered: crosstableDialog.show(controller.state.savedId)}
             MenuSeparator {}
             MenuItem {text: qsTr("Exporter le diagramme…"); onTriggered: diagramDialog.open()}
-            MenuItem {text: qsTr("Exporter l’étude en PDF…"); onTriggered: pdfDialog.open()}
+            MenuItem {text: qsTr("Exporter l’étude en PDF…"); onTriggered: pdfOptions.open()}
         }
         Menu { title: qsTr("&Moteur")
             MenuItem {text: controller.state.analysis ? qsTr("Arrêter l’analyse") : qsTr("Analyser la position"); enabled: !controller.state.training; onTriggered: controller.toggleAnalysis()}
@@ -1035,7 +1035,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
         MenuItem {text:qsTr("Identifier et renseigner l’ouverture");onTriggered:controller.identifyOpening()}
         MenuItem {text:qsTr("Chercher la nouveauté");onTriggered:controller.findNovelty()}
         MenuItem {text:qsTr("Exporter le diagramme (PNG ou SVG)");onTriggered:diagramDialog.open()}
-        MenuItem {text:qsTr("Exporter l’étude en PDF");onTriggered:pdfDialog.open()}
+        MenuItem {text:qsTr("Exporter l’étude en PDF");onTriggered:pdfOptions.open()}
         MenuItem {text:qsTr("Effacer les flèches et cercles");onTriggered:controller.clearAnnotations()}
         MenuItem {text:qsTr("Abandonner la partie");visible:controller.state.playing;onTriggered:controller.resignGame()}
         MenuItem {text:qsTr("Réclamer la nulle");visible:controller.state.playing;onTriggered:controller.claimDraw()}
@@ -1147,7 +1147,21 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     SkillDashboard {id:skillDialog;objectName:"skillDashboardDialog";backend:controller}
     Native.FileDialog {id:polyglotDialog;title:qsTr("Exporter un livre Polyglot");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"bin";nameFilters:[qsTr("Livre Polyglot (*.bin)")];onAccepted:controller.exportPolyglot(selectedFile,2)}
     Native.FileDialog {id:diagramDialog;title:qsTr("Exporter le diagramme");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"png";nameFilters:["Image PNG (*.png)","Image vectorielle SVG (*.svg)"];onAccepted:controller.exportDiagram(selectedFile.toString())}
-    Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString())}
+    // Ce que le rapport PDF contient, choisi avant le fichier.
+    TDialog {id:pdfOptions;objectName:"pdfOptions";title:qsTr("Rapport PDF de l’étude");modal:true;anchors.centerIn:parent;width:Math.min(420,parent.width-32)
+        standardButtons:Dialog.Ok|Dialog.Cancel
+        readonly property var options:({headers:pdfHeaders.checked,comments:pdfComments.checked,variations:pdfVariations.checked,diagrams:["none","current","marked","every"][pdfDiagrams.currentIndex]})
+        onAccepted:pdfDialog.open()
+        ColumnLayout {anchors.fill:parent;spacing:8
+            TCheckBox {id:pdfHeaders;text:qsTr("En-têtes de la partie");checked:true}
+            TCheckBox {id:pdfComments;text:qsTr("Commentaires");checked:true}
+            TCheckBox {id:pdfVariations;text:qsTr("Variantes");checked:true}
+            Label {text:qsTr("Diagrammes")}
+            TComboBox {id:pdfDiagrams;objectName:"pdfDiagrams";Layout.fillWidth:true;currentIndex:1
+                model:[qsTr("Aucun"),qsTr("La position affichée"),qsTr("Aux coups marqués d’un diagramme"),qsTr("Aux coups marqués et tous les dix coups")]}
+        }
+    }
+    Native.FileDialog {id:pdfDialog;title:qsTr("Exporter l’étude en PDF");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:controller.exportStudyPdf(selectedFile.toString(),pdfOptions.options)}
     TDialog {id:chess960Dialog;objectName:"chess960Dialog";title:qsTr("Nouvelle étude Chess960");anchors.centerIn:parent;modal:true;standardButtons:Dialog.Ok|Dialog.Cancel
         ColumnLayout {Label {text:qsTr("Numéro de la position (518 = position classique)")} TSpinBox {id:frcNumber;from:0;to:959;value:518;editable:true}}
         onAccepted:controller.newChess960(frcNumber.value)
@@ -1319,7 +1333,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Guide de l’utilisateur"),run:function(){guideDialog.openAt(0)}},
             {title:qsTr("Exporter cette étude"),run:function(){win.openExport(false)}},
             {title:qsTr("Exporter le diagramme en PNG"),run:function(){diagramDialog.open()}},
-            {title:qsTr("Exporter l’étude en PDF"),run:function(){pdfDialog.open()}},
+            {title:qsTr("Exporter l’étude en PDF"),run:function(){pdfOptions.open()}},
             {title:qsTr("Mises à jour"),run:function(){updatesDialog.open()}},
             {title:qsTr("Aide & raccourcis"),run:function(){helpDialog.open()}}
         ]

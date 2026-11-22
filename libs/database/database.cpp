@@ -412,6 +412,11 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
         statement += " AND g.id IN(SELECT game_id FROM source_games WHERE source_id=?)";
         args << filters["sourceId"].toLongLong();
     }
+    // Les parties rangées dans un recueil de l'onglet Études.
+    if (filters.value("studies").toBool())
+        statement +=
+            " AND g.id IN(SELECT sg.game_id FROM source_games sg JOIN sources s ON s.id=sg.source_id "
+            "WHERE s.kind IN('study','import'))";
     if (!filters.value("player").toString().isEmpty()) {
         const auto name = filters["player"].toString();
         const auto colour = filters["colour"].toString();

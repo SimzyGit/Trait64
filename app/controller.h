@@ -158,6 +158,12 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList studyCollections READ studyCollections NOTIFY sourcesChanged)
     QVariantList studyCollections() const;
     Q_INVOKABLE QVariantList studyGames(qint64 sourceId) const;
+    // Les chapitres de tous les recueils dont un commentaire contient `text` (au plus 200),
+    // chacun avec l'extrait du commentaire trouvé.
+    Q_INVOKABLE QVariantList searchStudyComments(const QString &text) const;
+    // Suit un lien « [[Titre]] » d'un commentaire : le chapitre de ce titre (ou le premier
+    // d'un recueil de ce nom) s'ouvre dans Analyse.
+    Q_INVOKABLE void openStudyLink(const QString &title);
     // Un aperçu : les cases d'une position quelconque, et la ligne principale d'une
     // partie. Ni l'un ni l'autre ne touche à l'étude ouverte.
     Q_INVOKABLE QVariantList squaresForFen(const QString &fen, const QString &lastUci = {}) const;
@@ -328,7 +334,7 @@ class Controller : public QObject {
     Q_INVOKABLE QVariantMap explainReview(int index, bool alternative = false) const;
     Q_INVOKABLE bool openReviewLine(int index, bool alternative = false);
     Q_INVOKABLE void createMistakeCards();
-    Q_INVOKABLE void exportStudyPdf(const QString &url);
+    Q_INVOKABLE void exportStudyPdf(const QString &url, const QVariantMap &options = {});
     Q_INVOKABLE void exportDiagram(const QString &url);
     Q_INVOKABLE void exportPolyglot(const QString &url, int minGames);
     QByteArray diagramSvg() const;
@@ -361,6 +367,10 @@ class Controller : public QObject {
     Q_INVOKABLE void loadGame(qint64 id);
     Q_INVOKABLE void saveGame(bool copy = false);
     Q_INVOKABLE void setFen(const QString &fen);
+    // Un diagramme lu dans une image (fichier ou presse-papiers) : sa FEN, à vérifier dans
+    // l'éditeur de position, ou une chaîne vide et un message.
+    Q_INVOKABLE QString readDiagramImage(const QString &url);
+    Q_INVOKABLE QString pasteDiagramImage();
     Q_INVOKABLE void importText(const QString &text);
     Q_INVOKABLE void importFile(const QString &url);
     // Un PGN importé sous une étiquette : elle devient la collection de ses parties et un

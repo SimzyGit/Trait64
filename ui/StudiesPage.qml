@@ -125,6 +125,7 @@ ColumnLayout {
                     Component.onCompleted: currentIndex = root.studies.length === 0 ? 1 : 0
                     TTabButton { objectName: "studiesTabList"; text: qsTr("Mes études") }
                     TTabButton { objectName: "studiesTabFiles"; text: qsTr("Explorateur") }
+                    TTabButton { objectName: "studiesTabSearch"; text: qsTr("Rechercher") }
                 }
                 StackLayout {
                     Layout.fillWidth: true
@@ -261,6 +262,50 @@ ColumnLayout {
                                 }
                         }
                     }
+                    // Le texte des commentaires de tous les recueils : un double-clic ouvre le
+                    // chapitre dans Analyse.
+                    ColumnLayout {
+                        spacing: 6
+                        TTextField {
+                            id: commentQuery
+                            objectName: "studyCommentSearch"
+                            Layout.fillWidth: true; Layout.margins: 8
+                            placeholderText: qsTr("Chercher dans les commentaires des études")
+                            onTextChanged: commentTimer.restart()
+                        }
+                        Timer { id: commentTimer; interval: 300
+                                onTriggered: commentHits.model = root.backend.searchStudyComments(commentQuery.text) }
+                        Label {
+                            Layout.fillWidth: true; Layout.leftMargin: 8; Layout.rightMargin: 8
+                            visible: commentQuery.text.trim().length >= 2 && commentHits.count === 0
+                            wrapMode: Text.WordWrap; color: root.preferences.muted
+                            text: qsTr("Aucun commentaire ne contient ce texte.")
+                        }
+                        ListView {
+                            id: commentHits
+                            objectName: "studyCommentHits"
+                            Layout.fillWidth: true; Layout.fillHeight: true
+                            clip: true; spacing: 2
+                            ScrollBar.vertical: ScrollBar {}
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: ListView.view.width
+                                height: hitText.implicitHeight + 12
+                                color: hitHover.hovered ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
+                                                                  root.preferences.accentColor.b, .12) : "transparent"
+                                HoverHandler { id: hitHover; cursorShape: Qt.PointingHandCursor }
+                                TapHandler { onDoubleTapped: root.backend.loadGame(modelData.id) }
+                                Column {
+                                    id: hitText
+                                    x: 8; y: 6; width: parent.width - 16; spacing: 2
+                                    Label { width: parent.width; elide: Text.ElideRight; font.weight: Font.DemiBold
+                                            text: modelData.event || ((modelData.white || "?") + " — " + (modelData.black || "?")) }
+                                    Label { width: parent.width; wrapMode: Text.WordWrap; color: root.preferences.muted
+                                            text: modelData.excerpt || "" }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -297,6 +342,27 @@ ColumnLayout {
                 property int revision: 0
                 readonly property var games: root.collection && revision >= 0
                                              ? root.backend.studyGames(root.collection.id) : []
+                // Les sous-chapitres : un titre « Section / Chapitre » range le chapitre
+                // sous sa section, à la première place où elle paraît.
+                readonly property var chapters: {
+                    var sections = {}, out = []
+                    for (var i = 0; i < games.length; ++i) {
+                        var g = games[i], parts = String(g.event || "").split(/\s*\/\s*/)
+                        if (parts.length < 2 || !parts[parts.length - 1]) { out.push(g); continue }
+                        var section = parts.slice(0, -1).join(" / ")
+                        if (!sections[section]) {
+                            sections[section] = []
+                            out.push({header: true, section: section, items: sections[section]})
+                        }
+                        sections[section].push(Object.assign({}, g, {chapter: parts[parts.length - 1]}))
+                    }
+                    var rows = []
+                    for (var j = 0; j < out.length; ++j) {
+                        rows.push(out[j])
+                        if (out[j].header) rows = rows.concat(out[j].items)
+                    }
+                    return rows
+                }
                 Connections {
                     target: root.backend
                     function onSourcesChanged() { collectionPane.revision++ }
@@ -345,7 +411,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        model: collectionPane.games
+                        model: collectionPane.chapters
                         reuseItems: true
                         ScrollBar.vertical: ScrollBar {}
                         delegate: Rectangle {
@@ -356,20 +422,30 @@ ColumnLayout {
                                    ? Qt.rgba(root.preferences.accentColor.r, root.preferences.accentColor.g,
                                              root.preferences.accentColor.b, .12)
                                    : "transparent"
-                            HoverHandler { id: gameHover; cursorShape: Qt.PointingHandCursor }
+                            HoverHandler { id: gameHover; enabled: !modelData.header; cursorShape: Qt.PointingHandCursor }
                             // Un clic montre la partie à côté, un double-clic l'ouvre dans
                             // Analyse : parcourir un recueil ne doit pas coûter l'étude ouverte.
-                            TapHandler { onSingleTapped: studyPreview.gameId = modelData.id
+                            TapHandler { enabled: !modelData.header
+                                         onSingleTapped: studyPreview.gameId = modelData.id
                                          onDoubleTapped: root.backend.loadGame(modelData.id) }
+                            Label {
+                                visible: !!modelData.header
+                                anchors.fill: parent; anchors.leftMargin: 8
+                                verticalAlignment: Text.AlignBottom; bottomPadding: 4
+                                elide: Text.ElideRight; font.weight: Font.DemiBold
+                                text: modelData.section || ""
+                            }
                             RowLayout {
+                                visible: !modelData.header
                                 anchors.fill: parent
-                                anchors.leftMargin: 8; anchors.rightMargin: 8
+                                anchors.leftMargin: modelData.chapter ? 24 : 8; anchors.rightMargin: 8
                                 spacing: 10
                                 Label {
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
-                                    text: (modelData.white || "?") + " — " + (modelData.black || "?")
-                                          + (modelData.event ? "   " + modelData.event : "")
+                                    text: modelData.chapter ? modelData.chapter
+                                          : (modelData.white || "?") + " — " + (modelData.black || "?")
+                                            + (modelData.event ? "   " + modelData.event : "")
                                 }
                                 Label {
                                     text: modelData.result || "*"

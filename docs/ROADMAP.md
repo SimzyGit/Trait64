@@ -32,9 +32,9 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 - [ ] ◐ Mode entraîneur — partiel : questions d'entraînement `[%tqu]` dans une étude, exportée en PGN ou en page HTML pour l'élève.
 
 **6. Études**
-- [ ] Sous-chapitres, liens entre études, recherche dans le texte des commentaires.
-- [ ] Rapports PDF personnalisables.
-- [ ] Partie saisie depuis la photo d'une feuille de notation ; diagramme reconnu dans une image.
+- [x] Sous-chapitres, liens entre études, recherche dans le texte des commentaires. — 22 nov.
+- [x] Rapports PDF personnalisables. — 22 nov.
+- [ ] ◐ Diagramme reconnu dans une image numérique ✅ 22 nov. ; feuille de notation manuscrite et photo de biais : demanderaient un modèle de reconnaissance d'écriture, hors de portée sans service en ligne.
 
 **7. Diffusion et fiabilité**
 - [ ] Paquet Flatpak et publication sur Flathub.

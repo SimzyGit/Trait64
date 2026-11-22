@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Native
 TDialog {
     id: root
     property var backend
@@ -76,8 +77,17 @@ TDialog {
                 TSpinBox {id:half;from:0;to:255;editable:true;Layout.fillWidth:true}
                 Label {text:qsTr("Numéro du coup");font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                 TSpinBox {id:full;from:1;to:32000;value:1;editable:true;Layout.fillWidth:true}
+                // Un diagramme d'une capture d'écran ou d'un livre numérisé : la position lue
+                // remplit l'éditeur, à vérifier avant de créer l'étude.
+                RowLayout {Layout.fillWidth:true;spacing:6
+                    TButton {objectName:"readDiagramFile";text:qsTr("Lire une image…");Layout.fillWidth:true;onClicked:diagramFile.open()}
+                    TButton {objectName:"pasteDiagram";text:qsTr("Coller une image");Layout.fillWidth:true
+                        onClicked:{var f=root.backend.pasteDiagramImage();if(f)root.loadFen(f)}}
+                }
                 TButton {text:qsTr("Créer l’étude");accent:true;Layout.fillWidth:true;onClicked:root.backend.setPosition(root.fen(),variant.checked)}
             }
         }
     }
+    Native.FileDialog {id:diagramFile;title:qsTr("Image d’un diagramme");nameFilters:[qsTr("Images (*.png *.jpg *.jpeg *.webp *.bmp)")]
+        onAccepted:{var f=root.backend.readDiagramImage(selectedFile.toString());if(f)root.loadFen(f)}}
 }
