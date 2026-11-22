@@ -2,7 +2,7 @@
 
 ## Diffusion et fiabilité : Flatpak, signatures, Wayland, clavier, dispositions — 22 novembre 2026
 
-- **Paquet Flatpak** (`packaging/flatpak/`) : manifeste sur l'environnement KDE 6.8 et fiche AppStream ; construit à chaque envoi sur `main`.
+- **Paquet Flatpak** (`packaging/flatpak/`) : manifeste sur l'environnement KDE 6.10 et fiche AppStream ; construit à chaque envoi sur `main`.
 - **Versions signées** : chaque fichier publié reçoit une attestation de provenance Sigstore, vérifiable par `gh attestation verify`.
 - **Essais sous X11 et Wayland** en CI (Xvfb, weston sans écran). Ils ont révélé un plantage de Qt 6.4 sur un compositeur sans saisie de texte, contourné par `QT_IM_MODULE=compose` (documenté).
 - **L'échiquier au clavier** : Tab, flèches, Entrée/Espace, Échap ; chaque case est annoncée aux lecteurs d'écran.

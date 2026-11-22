@@ -10,7 +10,7 @@ L’installation rapide est décrite dans [Télécharger](../README.md#télécha
 gh attestation verify Trait64-…AppImage --repo SimzyGit/Trait64
 ```
 
-**Flatpak.** Le manifeste `packaging/flatpak/io.github.simzygit.Trait64.yml` (environnement KDE 6.8) construit un paquet à chaque envoi sur `main` (travail *Display servers and Flatpak*, artefact `Trait64.flatpak`). Localement :
+**Flatpak.** Le manifeste `packaging/flatpak/io.github.simzygit.Trait64.yml` (environnement KDE 6.10) construit un paquet à chaque envoi sur `main` (travail *Display servers and Flatpak*, artefact `Trait64.flatpak`). Localement :
 
 ```bash
 flatpak-builder --user --install --force-clean build-flatpak packaging/flatpak/io.github.simzygit.Trait64.yml
