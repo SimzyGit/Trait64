@@ -539,9 +539,16 @@ int main(int argc, char **argv) {
         check(db.stats()["reviews"].toInt() == 1, "Training persists");
         check(db.cards()[0].toMap()["interval"].toInt() == 1, "First SRS interval");
         db.review(cardId, true);
-        check(db.cards()[0].toMap()["interval"].toInt() == 2, "SRS interval doubles");
+        check(db.cards()[0].toMap()["interval"].toInt() == 3, "Second SRS step is three days");
+        db.review(cardId, true);
+        check(db.cards()[0].toMap()["interval"].toInt() == 8, "An always-known card grows by 2.5");
         db.review(cardId, false);
         check(db.cards()[0].toMap()["interval"].toInt() == 1, "Failure resets interval");
+        db.review(cardId, true);
+        db.review(cardId, true);
+        // Après l'échec : 1 → 3 jours, puis 5 réussites sur 6, facteur 1,3 + 1,2 × 5/6 = 2,3,
+        // donc 3 → 7 jours au lieu de 8 pour une carte jamais ratée.
+        check(db.cards()[0].toMap()["interval"].toInt() == 7, "A card once failed grows more slowly");
         rejects([&] { db.addCard("bad", QString::fromStdString(chess::constants::STARTPOS), "e2e5"); });
         db.backup(dir.path() + "/backup.sqlite");
         t64::Database backup(dir.path() + "/backup.sqlite");
@@ -600,9 +607,9 @@ int main(int argc, char **argv) {
         rejects([&] { db.rebuildIndexes([](int count) { return count < 4; }); });
         check(db.exportPgn() == beforeCanceledRebuild && db.integrity() == "ok",
               "Cancellation at the final reindex checkpoint preserves the library");
-        check(db.stats()["todayReviews"].toInt() == 3, "Review history tracks today's work");
+        check(db.stats()["todayReviews"].toInt() == 6, "Review history tracks today's work");
         db.deleteCard(cardId);
-        check(db.stats()["todayReviews"].toInt() == 3, "Deleting card preserves activity history");
+        check(db.stats()["todayReviews"].toInt() == 6, "Deleting card preserves activity history");
         // Migration of a genuine v1 layout must back up, preserve data and rebuild variant indexes.
         // Schema 7 -> 8: FEN text keys become Zobrist keys, with a backup and identical results.
         {

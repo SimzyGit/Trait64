@@ -25,11 +25,11 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 - [ ] Dossier exporté en PDF (CSV seulement aujourd'hui).
 
 **5. Entraînement**
-- [ ] Exercices de calcul et de visualisation.
-- [ ] Entraînement sur les erreurs récurrentes, programme personnalisé.
-- [ ] Parcours complet après une erreur : rejouer, comprendre, voir la réfutation, continuer.
-- [ ] Répétition espacée adaptée à la difficulté.
-- [ ] Mode entraîneur (exercices pour des élèves).
+- [x] Exercices de calcul et de visualisation. — Stoyko, puzzle à l'aveugle (21 nov.)
+- [x] Entraînement sur les erreurs récurrentes, programme personnalisé. — programme du jour (21 nov.)
+- [x] Parcours complet après une erreur : rejouer, comprendre, voir la réfutation, continuer. — 21 nov.
+- [x] Répétition espacée adaptée à la difficulté. — 21 nov.
+- [ ] ◐ Mode entraîneur — partiel : questions d'entraînement `[%tqu]` dans une étude, exportée en PGN ou en page HTML pour l'élève.
 
 **6. Études**
 - [ ] Sous-chapitres, liens entre études, recherche dans le texte des commentaires.

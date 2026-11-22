@@ -672,6 +672,13 @@ int main(int argc, char **argv) {
             check(!c.state()["trainingComplete"].toBool(), "A wrong move does not finish the puzzle");
             c.finishTraining();
             check(c.state()["fen"] == study, "Leaving a puzzle restores the study");
+            // Visualisation : un puzzle pièces masquées, et le réglage revient en sortant.
+            c.setPreference("blindfold", false);
+            c.startBlindPuzzle("mateIn1", "lichess");
+            check(c.puzzles()["active"].toBool() && c.preferences()["blindfold"].toBool(),
+                  "A blind puzzle hides the pieces");
+            c.finishTraining();
+            check(!c.preferences()["blindfold"].toBool(), "Leaving the blind puzzle restores the setting");
             c.startPuzzle("mateIn1", "lichess");
             const bool rooks = c.state()["fen"].toString().startsWith("6k1/r4ppp/8/8/8/8/5PPP/3RR1K1");
             c.move(rooks ? "e1e8" : "d1d8");
@@ -1154,8 +1161,20 @@ int main(int argc, char **argv) {
             check(c.state()["training"].toBool(), "Start training");
             c.move("d2d4");
             check(c.state()["node"].toInt() == 0, "Wrong training move not applied");
+            {
+                // Le parcours après l'erreur : le coup tenté reste fléché avec une phrase, puis
+                // « Réessayer » l'efface ; un bon coup ensuite l'efface aussi.
+                const auto mistake = c.state()["mistake"].toMap();
+                check(mistake["move"] == "d2d4" && mistake["marks"].toList().size() == 1 &&
+                          mistake["note"].toString().contains("d4"),
+                      "A wrong training move is shown with what it allows");
+                c.retryTraining();
+                check(c.state()["mistake"].toMap().isEmpty(), "Trying again clears the mistake marks");
+                c.move("d2d4");
+            }
             c.move("e2e4");
-            check(c.state()["trainingComplete"].toBool(), "Training plays opponent reply and completes");
+            check(c.state()["trainingComplete"].toBool() && c.state()["mistake"].toMap().isEmpty(),
+                  "Training plays opponent reply and completes");
             check(c.stats()["reviews"].toInt() == 1 && c.stats()["successes"].toInt() == 0,
                   "Training error counted");
             c.move("e2e4");

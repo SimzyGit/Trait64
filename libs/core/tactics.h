@@ -40,6 +40,11 @@ std::vector<TacticalFact> explainTactics(const chess::Board &before, const chess
 // camp reprenant par sa pièce la moins chère et s'arrêtant quand cela lui coûte. Les
 // pièces alignées derrière comptent ; les clouages sont ignorés.
 int exchangeValue(const chess::Board &board, chess::Square from, chess::Square target);
+// La réponse qui punit tout de suite le dernier coup, pour le camp au trait : un mat en un
+// coup d'abord, sinon la prise qui gagne le plus une fois les échanges joués. Vide si rien
+// de tel n'existe (la faute est alors plus lente à se voir). `gain` reçoit les points gagnés
+// (0 pour un mat), `mate` dit si c'est un mat.
+std::string immediateRefutation(const chess::Board &board, int *gain = nullptr, bool *mate = nullptr);
 // Les pièces de `side` (roi exclu) qu'une prise adverse gagnerait, échanges joués : ce
 // que ChessBase appelle les relations d'attaque, réduites à ce qui compte. Le camp au trait
 // n'importe pas : une pièce en prise l'est aussi pour celui qui doit jouer.

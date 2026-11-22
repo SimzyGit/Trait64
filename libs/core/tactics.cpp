@@ -376,4 +376,34 @@ std::optional<std::vector<chess::Move>> forcedMates(const chess::Board &start, i
     }
     return found;
 }
+std::string immediateRefutation(const chess::Board &board, int *gain, bool *mate) {
+    Movelist moves;
+    movegen::legalmoves(moves, board);
+    std::string best;
+    int bestGain = 0;
+    for (const auto move : moves) {
+        Board next = board;
+        next.makeMove(move);
+        Movelist replies;
+        movegen::legalmoves(replies, next);
+        if (replies.empty() && next.inCheck()) {
+            if (gain)
+                *gain = 0;
+            if (mate)
+                *mate = true;
+            return uci::moveToUci(move, board.chess960());
+        }
+        if (move.typeOf() == Move::CASTLING || board.at(move.to()) == Piece::NONE)
+            continue;
+        if (const int won = exchangeValue(board, move.from(), move.to()); won > bestGain) {
+            bestGain = won;
+            best = uci::moveToUci(move, board.chess960());
+        }
+    }
+    if (gain)
+        *gain = bestGain;
+    if (mate)
+        *mate = false;
+    return best;
+}
 } // namespace t64

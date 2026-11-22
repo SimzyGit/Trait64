@@ -207,6 +207,9 @@ class Controller : public QObject {
     // Puzzles: theme is a Lichess theme tag ("fork", "mateIn2"…), source "lichess", "mine" or "".
     Q_INVOKABLE void startPuzzle(const QString &theme = {}, const QString &source = {});
     Q_INVOKABLE void nextPuzzle();
+    // Visualisation : un puzzle les pièces masquées ; l'option « À l'aveugle » revient à son
+    // réglage d'avant quand on quitte l'exercice.
+    Q_INVOKABLE void startBlindPuzzle(const QString &theme = {}, const QString &source = {});
     Q_INVOKABLE void puzzleHint();
     Q_INVOKABLE void importPuzzles(const QString &url, int max, int minRating, int maxRating);
     Q_INVOKABLE void createMistakePuzzles();
@@ -543,6 +546,10 @@ class Controller : public QObject {
     Q_INVOKABLE void stopStoyko();
     Q_INVOKABLE void startQuestions();
     Q_INVOKABLE void revealCard();
+    // Après une erreur : effacer ses repères pour réessayer, ou jouer le bon coup et
+    // poursuivre l'exercice (il reste compté comme manqué).
+    Q_INVOKABLE void retryTraining();
+    Q_INVOKABLE void continueTraining();
     Q_INVOKABLE void finishTraining();
     Q_INVOKABLE void deleteCard(qint64 id);
     Q_INVOKABLE void loadExamples();
@@ -691,6 +698,10 @@ class Controller : public QObject {
     void advanceQuestions();
     int guessFound_ = 0, guessAsked_ = 0;
     bool trainingFailed_ = false, trainingComplete_ = false, beforeDirty_ = false;
+    // Le dernier coup faux d'un exercice : le coup, la réponse qui le punit, une phrase et
+    // les flèches qui les montrent. Vidé au coup suivant, ou par « Réessayer ».
+    QVariantMap trainingMistake_;
+    bool blindSession_ = false, blindBefore_ = false;
     bool flipped_ = false, dirty_ = false, busy_ = false, analysis_ = false, playing_ = false,
          humanWhite_ = true;
     QString query_, resultFilter_;

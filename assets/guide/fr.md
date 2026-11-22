@@ -80,6 +80,8 @@ La page *Études* montre l'arborescence de votre dossier de PGN : dossiers à d�
 - **Coordonnées** : trente secondes pour cliquer les cases nommées.
 - **À l'aveugle** : les pièces disparaissent, les coups se jouent toujours.
 
+Après un mauvais coup dans un puzzle ou une carte, le coup tenté est fléché en rouge et ce qui le punit en orange ; *Réessayer* efface, *Continuer* joue le bon coup. La page *Entraînement* propose un **programme du jour** : vos cartes dues, vos erreurs, votre thème le plus faible, du calcul et de la visualisation (un puzzle pièces masquées).
+
 ## Vos progrès
 
 La page *Profils* réunit sous un seul nom vos comptes Lichess et Chess.com (*Fichier → Comptes Lichess et Chess.com*) et votre fiche FIDE. Une synchronisation récupère jusqu'à 5 000 parties par compte, puis seulement les nouvelles ; les parties de variantes (Crazyhouse, Atomic…) sont laissées de côté.

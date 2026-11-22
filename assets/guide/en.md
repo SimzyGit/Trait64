@@ -80,6 +80,8 @@ The *Studies* page shows the tree of your PGN folder: folders to expand, search,
 - **Coordinates**: thirty seconds to click the named squares.
 - **Blindfold**: the pieces disappear, moves are still played.
 
+After a wrong move in a puzzle or card, the move tried is drawn in red and what punishes it in orange; *Try again* clears them, *Continue* plays the right move. The *Training* page offers a **plan for today**: your due cards, your mistakes, your weakest theme, calculation and visualisation (a puzzle with the pieces hidden).
+
 ## Your progress
 
 The *Profiles* page gathers your Lichess and Chess.com accounts (*File → Lichess and Chess.com accounts*) and your FIDE record under one name. A sync fetches up to 5,000 games per account, then only the new ones; variant games (Crazyhouse, Atomic…) are left aside.

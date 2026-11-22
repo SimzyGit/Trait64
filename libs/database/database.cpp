@@ -1258,11 +1258,27 @@ QVariantList Database::cards() const {
 void Database::review(qint64 id, bool success) {
     sql("SAVEPOINT review_card");
     try {
+        QSqlQuery read(db_);
+        read.prepare("SELECT interval,reviews,successes FROM cards WHERE id=?");
+        read.addBindValue(id);
+        run(read);
+        check(read.next(), "Carte introuvable.");
+        const int interval = read.value(0).toInt(), reviews = read.value(1).toInt() + 1,
+                  successes = read.value(2).toInt() + (success ? 1 : 0);
+        read.finish();
+        // Répétition adaptée à la difficulté, à la manière d'Anki : l'intervalle croît d'un
+        // facteur qui va de 1,3 pour une carte souvent ratée à 2,5 pour une carte toujours
+        // réussie. Un échec ramène à un jour. Les deux premiers pas sont fixes : 1, puis 3 jours.
+        const double ease = 1.3 + 1.2 * double(successes) / double(reviews);
+        const int next = !success       ? 1
+                         : interval < 1 ? 1
+                         : interval < 3 ? 3
+                                        : std::min(365, int(std::lround(interval * ease)));
         QSqlQuery q(db_);
-        q.prepare("UPDATE cards SET interval=CASE WHEN ? THEN MIN(365,MAX(1,interval*2)) ELSE 1 "
-                  "END,reviews=reviews+1,successes=successes+? WHERE id=?");
-        q.addBindValue(success);
-        q.addBindValue(success ? 1 : 0);
+        q.prepare("UPDATE cards SET interval=?,reviews=?,successes=? WHERE id=?");
+        q.addBindValue(next);
+        q.addBindValue(reviews);
+        q.addBindValue(successes);
         q.addBindValue(id);
         run(q);
         check(q.numRowsAffected() == 1, "Carte introuvable.");

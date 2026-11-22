@@ -75,6 +75,7 @@ void Controller::startPuzzle(const QString &theme, const QString &source) {
         solution_ = next["solution"].toString().split(' ', Qt::SkipEmptyParts);
         solutionIndex_ = 0;
         trainingComplete_ = trainingFailed_ = false;
+        trainingMistake_.clear();
         game_ = t64::Game(next["fen"].toString().toStdString());
         node_ = 0;
         selected_ = -1;
@@ -287,4 +288,12 @@ void Controller::createMistakePuzzles() {
     } catch (const std::exception &e) {
         fail(e);
     }
+}
+void Controller::startBlindPuzzle(const QString &theme, const QString &source) {
+    if (!blindSession_) {
+        blindBefore_ = settings_.value("blindfold", false).toBool();
+        blindSession_ = true;
+    }
+    setPreference("blindfold", true);
+    startPuzzle(theme, source);
 }

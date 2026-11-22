@@ -126,6 +126,7 @@ void Controller::startRepertoireTraining(qint64 id, bool includeFuture) {
         repertoireExercise_ = exercise;
         selectedRepertoire_ = id;
         trainingComplete_ = trainingFailed_ = false;
+        trainingMistake_.clear();
         solutionIndex_ = 0;
         game_ = t64::Game(exercise["fen"].toString().toStdString(), exercise["chess960"].toBool());
         game_.tags["Event"] = exercise["name"].toString().toStdString();

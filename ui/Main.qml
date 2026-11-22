@@ -468,6 +468,11 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                     Label {visible:controller.state.training;Layout.maximumWidth:420;elide:Text.ElideRight;color:win.fg;font.weight:Font.DemiBold
                         text:controller.puzzles.active?(controller.puzzles.current.review?qsTr("Révision d’un puzzle manqué · "):"")+qsTr("Puzzle %1 · votre classement %2").arg(controller.puzzles.current.rating).arg(controller.puzzles.rating):(controller.state.questions?qsTr("Questions · %1 point(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):controller.state.guessing?qsTr("Deviner le coup · %1 trouvé(s) sur %2").arg(controller.state.guessFound).arg(controller.state.guessAsked):(controller.state.repertoireTraining>0?qsTr("Retrouver le coup"):qsTr("Retrouver la ligne"))+" · "+controller.state.trainingProgress)}
                     TButton {objectName:"guessReveal";text:qsTr("Montrer le coup");visible:!!controller.state.guessing&&!controller.state.trainingComplete;onClicked:controller.revealCard()}
+                    // Après une erreur : effacer ses flèches et réessayer, ou jouer le bon coup et
+                    // continuer l'exercice (il reste compté comme manqué).
+                    TButton {objectName:"retryTraining";text:qsTr("Réessayer");visible:controller.state.training&&!!(controller.state.mistake||{}).move;onClicked:controller.retryTraining()}
+                    TButton {objectName:"continueTraining";text:qsTr("Continuer");visible:controller.state.training&&!controller.state.trainingComplete&&!!(controller.state.mistake||{}).move&&!controller.state.guessing
+                             ToolTip.visible:hovered;ToolTip.text:qsTr("Joue le bon coup et poursuit l’exercice ; il reste compté comme manqué.");onClicked:controller.continueTraining()}
                     TButton {objectName:"puzzleHint";text:qsTr("Indice");visible:controller.puzzles.active&&!controller.state.trainingComplete;onClicked:controller.puzzleHint();ToolTip.visible:hovered;ToolTip.text:qsTr("Montre la pièce à jouer ; compte comme un échec.")}
                     TButton {objectName:"nextPuzzle";text:qsTr("Puzzle suivant");accent:true;visible:controller.puzzles.active&&controller.state.trainingComplete;onClicked:controller.nextPuzzle()}
                     TButton {text:qsTr("Position suivante");visible:controller.state.repertoireTraining>0;enabled:controller.state.trainingComplete && controller.state.repertoireDue>0;onClicked:controller.startRepertoireTraining(controller.state.repertoireTraining)}
@@ -512,7 +517,7 @@ objectName:"analysisSplit"
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
                                     Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent
-                                        reviewMarks:win.reviewSpot.marks||[]}
+                                        reviewMarks:(controller.state.mistake||{}).marks||win.reviewSpot.marks||[]}
                                 }
                             }
                         }
@@ -555,7 +560,7 @@ objectName:"analysisSplit"
                             }
                             TButton {text:controller.state.playing?qsTr("Arrêter"):qsTr("Jouer");visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
-                        Label {objectName:"reviewNote";visible:!!win.reviewSpot.note;text:win.reviewSpot.note||"";color:"#c0523f";Layout.alignment:Qt.AlignHCenter;wrapMode:Text.WordWrap;Layout.maximumWidth:boardArea.width;horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
+                        Label {objectName:"reviewNote";visible:!!((controller.state.mistake||{}).note||win.reviewSpot.note);text:(controller.state.mistake||{}).note||win.reviewSpot.note||"";color:"#c0523f";Layout.alignment:Qt.AlignHCenter;wrapMode:Text.WordWrap;Layout.maximumWidth:boardArea.width;horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
                         Label {text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.
@@ -802,6 +807,33 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     Label {text:qsTr("Objectif");height:28*win.uiScale;verticalAlignment:Text.AlignVCenter;leftPadding:8*win.uiScale} TSpinBox {from:1;to:1000;value:controller.preferences.dailyGoal;onValueModified:controller.setPreference("dailyGoal",value)}
                 }
                 ProgressBar {Layout.fillWidth:true;from:0;to:controller.preferences.dailyGoal;value:controller.stats.todayReviews||0}
+                // Le programme du jour, tiré de vos données : vos cartes dues, vos propres
+                // erreurs, votre thème tactique le plus faible, puis calcul et visualisation.
+                ColumnLayout {objectName:"trainingPlan";Layout.fillWidth:true;spacing:6
+                    readonly property var items:{
+                        const list=[], p=controller.puzzles||{}, due=controller.stats.due||0
+                        if(due>0)list.push({title:qsTr("Réviser vos cartes"),detail:qsTr("%1 carte(s) à revoir aujourd’hui").arg(due),run:function(){controller.nextDueCard()}})
+                        if((p.mine||0)>0)list.push({title:qsTr("Vos erreurs"),detail:qsTr("%1 puzzle(s) tirés de vos parties").arg(p.mine),run:function(){controller.startPuzzle("","mine")}})
+                        const weak=(p.themes||[]).filter(t=>t.attempts>=5&&t.success<70).sort((x,y)=>x.success-y.success)[0]
+                        if(weak)list.push({title:qsTr("Votre point faible"),detail:qsTr("%1 : %2 % de réussite").arg(puzzlesDialog.themeLabel(weak.tag)).arg(weak.success),run:function(){controller.startPuzzle(weak.tag,"")}})
+                        else if((p.total||0)>0)list.push({title:qsTr("Puzzles variés"),detail:qsTr("pour situer vos points faibles"),run:function(){controller.startPuzzle("","")}})
+                        list.push({title:qsTr("Calcul"),detail:qsTr("vérifier une variante sans bouger les pièces (exercice de Stoyko)"),run:function(){stoykoDialog.open()}})
+                        if((p.total||0)>0)list.push({title:qsTr("Visualisation"),detail:qsTr("un puzzle les pièces masquées"),run:function(){controller.startBlindPuzzle()}})
+                        return list
+                    }
+                    Label {text:qsTr("Programme du jour");font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
+                    Repeater {model:parent.items.length
+                        delegate:Rectangle {required property int index;readonly property var item:parent.items[index]||({})
+                            Layout.fillWidth:true;implicitHeight:planRow.implicitHeight+12;radius:4;color:win.panel;border.color:win.line
+                            RowLayout {id:planRow;anchors.fill:parent;anchors.leftMargin:10;anchors.rightMargin:6;spacing:10
+                                Label {text:(index+1)+".";color:win.muted}
+                                Label {text:item.title||"";font.weight:Font.DemiBold}
+                                Label {text:item.detail||"";color:win.muted;elide:Text.ElideRight;Layout.fillWidth:true}
+                                TButton {text:qsTr("Commencer");enabled:!controller.busy&&!controller.state.training;onClicked:item.run()}
+                            }
+                        }
+                    }
+                }
                 Label {text:qsTr("Mes cartes");font.pixelSize:Math.round(13*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold;Layout.topMargin:4}
                 ListView {id:trainingList;Layout.minimumHeight:180;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:8;model:controller.cards;ScrollBar.vertical:ScrollBar {}
                     delegate:Rectangle {required property var modelData;width:trainingList.width;height:64*win.textScale;radius:6;color:win.panel;border.color:win.line

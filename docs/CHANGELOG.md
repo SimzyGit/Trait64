@@ -1,5 +1,11 @@
 # Changements
 
+## Entraînement : après l'erreur, programme du jour, répétition adaptée — 21 novembre 2026
+
+- **Le parcours après une erreur** (puzzles et cartes) : le coup tenté reste fléché en rouge, la réponse qui le punit tout de suite en orange — un mat, sinon la prise qui gagne le plus —, et une phrase les nomme (« Bf4 ? Qxf4 gagne 3 point(s) de matériel. »). *Réessayer* efface ces repères ; *Continuer* joue le bon coup et poursuit l'exercice, qui reste compté comme manqué.
+- **Programme du jour** sur la page Entraînement, tiré de vos données : vos cartes dues, vos puzzles tirés de vos erreurs, votre thème tactique le plus faible (moins de 70 % de réussite sur cinq essais au moins), puis un exercice de calcul (Stoyko) et un de **visualisation** — un puzzle pièces masquées, l'option « À l'aveugle » revenant d'elle-même à son réglage en sortant.
+- **Répétition espacée adaptée à la difficulté**, à la manière d'Anki : après 1 puis 3 jours, l'intervalle croît d'un facteur qui va de 1,3 pour une carte souvent ratée à 2,5 pour une carte toujours réussie ; un échec ramène à un jour. Il doublait jusqu'ici, quelle que soit la carte.
+
 ## Bilan : explications de structure, surcharges et suites forcées — 21 novembre 2026
 
 « Comprendre ce coup » dit davantage de ce que le coup change, toujours en faits constatés et non en jugements :

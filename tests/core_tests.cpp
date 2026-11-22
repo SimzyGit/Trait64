@@ -727,6 +727,20 @@ int main() {
                 overloaded |= fact.kind == t64::TacticalKind::Overloaded && fact.attackers.size() == 1 &&
                               fact.attackers[0].square == "d2" && fact.targets.size() == 2;
             check(overloaded, "A lone defender of two attacked pieces is overloaded");
+            // La réfutation immédiate d'un coup faux : un mat d'abord, sinon la meilleure prise.
+            int gain = -1;
+            bool mate = false;
+            check(t64::immediateRefutation(t64::checkedBoard("4k3/8/4p3/3Q4/8/8/8/4K3 b - - 0 1"), &gain,
+                                           &mate) == "e6d5" &&
+                      gain == 9 && !mate,
+                  "A hanging queen is refuted by taking it");
+            check(t64::immediateRefutation(t64::checkedBoard("6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1"), &gain,
+                                           &mate) == "a1a8" &&
+                      mate,
+                  "A back-rank mate is the refutation before any capture");
+            check(
+                t64::immediateRefutation(t64::checkedBoard(std::string(chess::constants::STARTPOS))).empty(),
+                "A quiet position has no immediate refutation");
         }
         std::cout << checks << " core checks passed\n";
         return 0;

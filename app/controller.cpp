@@ -549,6 +549,7 @@ void Controller::refresh(bool content) {
         {"moveTitle", t64::splitComment(current.comment).title},
         {"question", QString::fromStdString(current.comment).contains("[%tqu")},
         {"trainingComplete", trainingComplete_},
+        {"mistake", trainingMistake_},
         {"repertoireTraining", repertoireExercise_.value("repertoire", 0)},
         {"repertoireDue", repertoireState_.value("due", 0)},
         {"trainingProgress", QString::number(solutionIndex_) + " / " +
@@ -1433,10 +1434,39 @@ void Controller::move(const QString &uci) {
             const bool mate = acceptPuzzleMate(uci);
             if (!mate && (solutionIndex_ >= solution_.size() || uci != solution_[solutionIndex_])) {
                 trainingFailed_ = true;
+                // Le parcours après une erreur : le coup tenté, ce qui le punit tout de suite
+                // (un mat, sinon la meilleure prise), puis réessayer ou continuer.
+                trainingMistake_.clear();
+                try {
+                    auto copy = game_;
+                    const int tried = copy.play(node_, uci.toStdString());
+                    int gain = 0;
+                    bool mated = false;
+                    const auto reply =
+                        QString::fromStdString(t64::immediateRefutation(copy.boardAt(tried), &gain, &mated));
+                    QVariantList marks{
+                        QVariantMap{{"from", uci.left(2)}, {"to", uci.mid(2, 2)}, {"color", "#d75050"}}};
+                    QString note;
+                    if (!reply.isEmpty()) {
+                        const auto answer = s(copy.nodes[copy.play(tried, reply.toStdString())].san);
+                        marks << QVariantMap{
+                            {"from", reply.left(2)}, {"to", reply.mid(2, 2)}, {"color", "#e08a2b"}};
+                        note = mated ? tr("%1 ? %2 donne mat.").arg(s(copy.nodes[tried].san), answer)
+                                     : tr("%1 ? %2 gagne %3 point(s) de matériel.")
+                                           .arg(s(copy.nodes[tried].san), answer)
+                                           .arg(gain);
+                    } else
+                        note = tr("%1 n’est pas puni tout de suite, mais la solution est plus forte.")
+                                   .arg(s(copy.nodes[tried].san));
+                    trainingMistake_ = {{"move", uci}, {"reply", reply}, {"note", note}, {"marks", marks}};
+                } catch (...) {
+                }
+                refresh();
                 emit message(puzzleId_ ? tr("Pas le bon coup. Essaie encore.")
                                        : tr("Ce n’est pas le coup du répertoire. Essaie encore."));
                 return;
             }
+            trainingMistake_.clear();
             node_ = game_.play(node_, uci.toStdString());
             ++solutionIndex_;
             if (solutionIndex_ < solution_.size()) {
@@ -1960,6 +1990,7 @@ void Controller::startCard(qint64 id) {
         solution_ = card["moves"].toString().split(' ', Qt::SkipEmptyParts);
         solutionIndex_ = 0;
         trainingComplete_ = trainingFailed_ = false;
+        trainingMistake_.clear();
         game_ = t64::Game(card["fen"].toString().toStdString());
         node_ = 0;
         selected_ = -1;
@@ -2006,6 +2037,7 @@ void Controller::startGuessing(bool white) {
         guessing_ = true;
         guessFound_ = guessAsked_ = 0;
         trainingComplete_ = trainingFailed_ = false;
+        trainingMistake_.clear();
         flipped_ = !white;
         if (white != whiteStarts) {
             node_ = game_.play(node_, solution_[0].toStdString());
@@ -2139,6 +2171,7 @@ void Controller::startQuestions() {
         guessFound_ = guessAsked_ = 0;
         questionTries_ = 0;
         trainingComplete_ = trainingFailed_ = false;
+        trainingMistake_.clear();
         forgetEngineLines();
         emit engineChanged();
         advanceQuestions();
@@ -2172,7 +2205,23 @@ void Controller::revealCard() {
     }
     emit message(tr("Solution : ") + san.join(' '));
 }
+void Controller::retryTraining() {
+    trainingMistake_.clear();
+    refresh();
+}
+void Controller::continueTraining() {
+    if (!trainingActive() || trainingComplete_ || guessing_ || !repertoireExercise_.isEmpty() ||
+        solutionIndex_ >= solution_.size())
+        return;
+    trainingFailed_ = true;
+    move(solution_[solutionIndex_]);
+}
 void Controller::finishTraining() {
+    trainingMistake_.clear();
+    if (blindSession_) {
+        blindSession_ = false;
+        setPreference("blindfold", blindBefore_);
+    }
     if (!trainingActive())
         return;
     game_ = beforeTraining_;
