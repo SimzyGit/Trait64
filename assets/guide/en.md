@@ -22,6 +22,8 @@ Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Traini
 
 - **Keyboard and screen readers**: *Tab* moves focus to the board; the arrow keys move a frame from square to square, *Enter* or *Space* picks the piece then its destination, *Esc* leaves. Each square is announced (“e4, white pawn”).
 - **Panels by mouse, as in Scid**: each analysis panel (notation, tree, book, Lichess, notes, engine, graph) has a tab. Drag it onto another stack to file it as a tab, above or below a stack to stack it, or onto the left edge, right edge or bottom of the analysis to open a new column. The handles between stacks set their height. A stack's ⋯ menu closes or detaches the panel; *View → Panels* shows them again and restores the default layout.
+- **Games from a position**: the analysis *Games* panel (tab next to *Tree*) lists the library games that reached the position shown, strongest first, like ChessBase's reference list. It follows every move; a double-click opens the game in a tab, at the move where it reaches the position.
+- **Tags**: *Tags…* (Studies page, or Library once a database is chosen) puts free tags on a database, a collection or a repertoire. On the Studies page, clicking a tag filters the list.
 - **Detached windows and layouts**: *View → Detach into a window* opens the board, the notation or the review graph in a separate window, for a second screen. *View → Work layouts…* saves the board's width, the panel heights and the notation tab under a name, and applies them again.
 
 ## Notation and variations

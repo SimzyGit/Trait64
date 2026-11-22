@@ -570,6 +570,14 @@ int main(int argc, char **argv) {
                     collection = row.toMap()["id"].toLongLong();
             check(collection > 0 && shelf.players().isEmpty(),
                   "A labelled study becomes a collection, its chapter names stay out of the players");
+            shelf.setTags("base", collection, "Finales, finales ,  Tours, ");
+            QStringList tags;
+            for (const auto &row : shelf.studyCollections())
+                if (row.toMap()["id"].toLongLong() == collection)
+                    tags = row.toMap()["tags"].toStringList();
+            check(tags == QStringList{"Finales", "Tours"} &&
+                      shelf.allTags() == QStringList{"Finales", "Tours"},
+                  "A collection takes tags, tidied and without duplicates");
             const auto hits = shelf.searchStudyComments("règle du carré");
             check(hits.size() == 1 && hits.first().toMap()["excerpt"].toString().contains("règle du carré"),
                   "Comment text is searched across studies, with an excerpt");
@@ -918,6 +926,15 @@ int main(int argc, char **argv) {
             check(c.onlineAccounts().size() == 2 &&
                       c.onlineAccounts()[1].toMap()["lastSync"].toLongLong() == 0,
                   "A failed sync does not pretend to be up to date");
+            // Demandée pendant un traitement (ici une vérification de la base), la
+            // synchronisation attend, puis part seule quand la voie est libre.
+            c.verifyDatabase();
+            c.syncOnlineAccount(1);
+            check(c.busy() && !c.onlineFetching(), "A sync asked during a task waits for it");
+            check(waitUntil([&] { return c.onlineFetching(); }, 10000),
+                  "The waiting sync starts by itself once the task ends");
+            online->cancel();
+            settle();
             c.syncAllAccounts();
             for (int i = 0; i < 2; ++i) {
                 waitUntil([&] { return c.onlineFetching(); }, 3000);
@@ -1113,6 +1130,36 @@ int main(int argc, char **argv) {
                       messages[0][0].toString() == c.uiText("Vérification interrompue.") &&
                       messages[1][0].toString() == c.uiText("Vérification SQLite : ") + "ok",
                   "Reentrant restart retains the distinct results of both verifications");
+        }
+        {
+            // Panneau « Parties » : les parties passées par la position, les mieux classées
+            // d'abord, et l'ouverture sur le coup où la position est atteinte.
+            Controller c(dir.path() + "/position-games");
+            c.importText("[White \"Fort\"]\n[Black \"Fort\"]\n[WhiteElo \"2700\"]\n[BlackElo "
+                         "\"2700\"]\n[Result \"1-0\"]\n\n"
+                         "1.d4 d5 2.e4 1-0\n\n"
+                         "[White \"Club\"]\n[Black \"Club\"]\n[WhiteElo \"1500\"]\n[BlackElo "
+                         "\"1500\"]\n[Result \"0-1\"]\n\n"
+                         "1.d4 d5 2.c4 0-1\n\n"
+                         "[White \"Autre\"]\n[Black \"Autre\"]\n[Result \"1/2-1/2\"]\n\n1.e4 e5 1/2-1/2\n\n");
+            QElapsedTimer wait;
+            wait.start();
+            while (c.busy() && wait.elapsed() < 10000)
+                QTest::qWait(10);
+            c.move("d2d4");
+            c.move("d7d5");
+            const auto fen = c.state()["fen"].toString();
+            c.requestPositionGames();
+            wait.restart();
+            while ((c.positionGames()["running"].toBool() || c.positionGames()["fen"] != fen) &&
+                   wait.elapsed() < 10000)
+                QTest::qWait(10);
+            const auto rows = c.positionGames()["games"].toList();
+            check(rows.size() == 2 && rows.first().toMap()["white"] == "Fort",
+                  "The games panel lists the games through the position, strongest first");
+            c.loadGameAt(rows.first().toMap()["id"].toLongLong(), fen);
+            check(c.state()["node"].toInt() == 2 && c.state()["fen"] == fen,
+                  "A game opens on the move where it reaches the position");
         }
         {
             // Fusion des doublons puis réparation, de bout en bout.

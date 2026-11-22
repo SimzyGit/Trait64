@@ -135,6 +135,16 @@ Controller::Controller(const QString &path, QObject *parent)
         if (syncingAccount_ >= 0)
             accountSynced(0);
     });
+    // Un compte en file attend la fin du traitement en cours (l'import du compte
+    // précédent, puis le classement ECO qui le suit) : il part dès que la voie est libre.
+    // Sans cela, seul le premier compte d'un « Tout synchroniser » se téléchargeait.
+    connect(this, &Controller::busyChanged, this, [this] {
+        if (!busy() && syncingAccount_ < 0 && !syncQueue_.isEmpty())
+            QTimer::singleShot(0, this, [this] {
+                if (!busy() && syncingAccount_ < 0)
+                    nextAccountSync();
+            });
+    });
     connect(online_, &t64::OnlineGames::upToDate, this, [this] {
         settings_.setValue(onlineSyncKey_, onlineSyncTime_);
         emit busyChanged();
@@ -414,6 +424,10 @@ Controller::~Controller() {
     // pendant la destruction toucherait des membres déjà détruits.
     disconnect(&classifier_, nullptr, this, nullptr);
     classifier_.waitForFinished();
+    disconnect(&positionGamesWorker_, nullptr, this, nullptr);
+    if (cancelPositionGames_)
+        cancelPositionGames_->store(true);
+    positionGamesWorker_.waitForFinished();
     disconnect(&reportWorker_, nullptr, this, nullptr);
     if (cancelReport_)
         cancelReport_->store(true);
@@ -940,6 +954,17 @@ void Controller::loadGame(qint64 id) {
         fail(e);
     }
 }
+void Controller::loadGameAt(qint64 id, const QString &fen) {
+    loadGame(id);
+    if (gameId_ != id)
+        return;
+    const auto wanted = t64::positionKey(fen.toStdString());
+    for (int node : game_.mainline())
+        if (t64::positionKey(game_.nodes[node].fen) == wanted) {
+            navigate(node);
+            return;
+        }
+}
 void Controller::saveGame(bool copy) {
     try {
         require(!trainingActive(), "Terminez l’entraînement avant de sauvegarder.");
@@ -1025,7 +1050,17 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         onlineSyncTime_ = QDateTime::currentMSecsSinceEpoch();
         QDir().mkpath(dataPath_ + "/downloads");
         onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
-        const qint64 since = settings_.value(onlineSyncKey_, 0).toLongLong();
+        qint64 since = settings_.value(onlineSyncKey_, 0).toLongLong();
+        // La date de la dernière synchronisation ne vaut que si ses parties sont encore là :
+        // une base de compte supprimée se retéléchargeait sinon « déjà à jour », vide.
+        if (since > 0) {
+            bool present = false;
+            for (const auto &row : db_->sources())
+                present = present || (row.toMap()["slug"].toString() == site + ":" + name &&
+                                      row.toMap()["games"].toLongLong() > 0);
+            if (!present)
+                since = 0;
+        }
         online_->setToken(site == "lichess" ? accountToken(user.trimmed()) : QString());
         online_->fetch(site, user.trimmed(), max, onlineFile_, since);
         emit busyChanged();

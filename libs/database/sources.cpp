@@ -193,14 +193,20 @@ void Database::recordImport(qint64 source, const QString &file, const QString &d
 }
 QVariantList Database::sources() const {
     QSqlQuery q(db_);
-    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games,s.kind,s.purpose FROM sources s ORDER BY "
-              "s.title");
+    q.prepare("SELECT s.id,s.slug,s.title,s.url,s.license,s.games,s.kind,s.purpose,s.tags FROM sources s "
+              "ORDER BY s.title");
     run(q);
     QVariantList rows;
     while (q.next())
-        rows << QVariantMap{{"id", q.value(0)},     {"slug", q.value(1)},    {"title", q.value(2)},
-                            {"source", q.value(3)}, {"license", q.value(4)}, {"games", q.value(5)},
-                            {"kind", q.value(6)},   {"purpose", q.value(7)}};
+        rows << QVariantMap{{"id", q.value(0)},
+                            {"slug", q.value(1)},
+                            {"title", q.value(2)},
+                            {"source", q.value(3)},
+                            {"license", q.value(4)},
+                            {"games", q.value(5)},
+                            {"kind", q.value(6)},
+                            {"purpose", q.value(7)},
+                            {"tags", q.value(8).toString().split(',', Qt::SkipEmptyParts)}};
     return rows;
 }
 QVariantList Database::importHistory() const {

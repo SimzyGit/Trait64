@@ -83,7 +83,7 @@ ApplicationWindow {
     // La disposition : trois zones (gauche, droite, sous l'échiquier), chacune une liste de
     // piles {panels, current, size}. Elle se garde dans les préférences, en JSON.
     readonly property var dockDefault: ({left: [], bottom: [],
-        right: [{panels: ["notation", "tree", "book", "online"], current: 0},
+        right: [{panels: ["notation", "tree", "games", "book", "online"], current: 0},
                 {panels: ["notes"], current: 0}, {panels: ["engine", "graph"], current: 0}]})
     // Lue une fois : liée aux préférences, elle recréerait tous les panneaux au moindre
     // réglage changé (la langue, une couleur), et chacun perdrait son défilement.
@@ -106,11 +106,11 @@ ApplicationWindow {
     function saveDock(d) { dockLayout = d; controller.setPreference("dockLayout", JSON.stringify(d)) }
     function copyDock() { return JSON.parse(JSON.stringify(dockLayout)) }
     function panelTitle(id) {
-        return ({notation: qsTr("Notation"), tree: qsTr("Arbre"), book: qsTr("Livre"), online: qsTr("Lichess"),
+        return ({notation: qsTr("Notation"), tree: qsTr("Arbre"), games: qsTr("Parties"), book: qsTr("Livre"), online: qsTr("Lichess"),
                  notes: qsTr("Notes"), graph: qsTr("Courbe"), engine: qsTr("Moteur")})[id] || id
     }
     function panelComponent(id) {
-        return ({notation: panelNotation, tree: panelTree, book: panelBook, online: panelOnline,
+        return ({notation: panelNotation, tree: panelTree, games: panelGames, book: panelBook, online: panelOnline,
                  notes: panelNotes, graph: panelGraph, engine: panelEngine})[id] || null
     }
     function panelHeight(id) { return Math.round((({notes: 104, graph: 140, engine: 200})[id] || 280) * win.textScale) }
@@ -269,6 +269,57 @@ ApplicationWindow {
                                         }
                                         Label {anchors.centerIn:parent;width:parent.width-16;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     }
+        }
+    }
+    // Les parties de la bibliothèque passées par la position affichée, les mieux classées
+    // d'abord, comme la liste de référence de ChessBase. Un double-clic ouvre la partie
+    // dans un onglet, sur le coup où elle atteint la position.
+    Component {id:panelGames
+        Item {
+            id:gamesPanel
+            readonly property bool shown:!!parent&&!!parent.panelActive&&win.page===2
+            readonly property string fen:controller.state.fen||""
+            readonly property var found:controller.positionGames
+            readonly property var rows:found.fen===fen?(found.games||[]):[]
+            function refresh(){if(shown)controller.requestPositionGames()}
+            onShownChanged:refresh()
+            onFenChanged:refresh()
+            Connections {target:controller;function onLibraryChanged(){gamesPanel.refresh()}}
+            Component.onCompleted:refresh()
+            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:4
+                RowLayout {Layout.fillWidth:true;spacing:6
+                    Label {objectName:"positionGamesCount";Layout.fillWidth:true;elide:Text.ElideRight;color:win.muted
+                        font.pixelSize:Math.round(11*win.textScale)
+                        text:gamesPanel.found.running&&gamesPanel.rows.length===0?qsTr("Recherche des parties…")
+                            :gamesPanel.rows.length>=400?qsTr("Au moins 400 parties passées par cette position")
+                            :qsTr("%1 partie(s) passée(s) par cette position").arg(gamesPanel.rows.length)}
+                    BusyIndicator {running:!!gamesPanel.found.running;visible:running;implicitWidth:18;implicitHeight:18}
+                }
+                ListView {
+                    id:positionGameList;objectName:"positionGames"
+                    Layout.fillWidth:true;Layout.fillHeight:true;clip:true;model:gamesPanel.rows;reuseItems:true
+                    ScrollBar.vertical:ScrollBar {}
+                    delegate:Rectangle {
+                        required property var modelData
+                        required property int index
+                        width:positionGameList.width;height:Math.round(26*win.textScale)
+                        color:rowHover.hovered?win.raised:index%2?"transparent":Qt.rgba(win.fg.r,win.fg.g,win.fg.b,.025)
+                        HoverHandler {id:rowHover;cursorShape:Qt.PointingHandCursor}
+                        TapHandler {onDoubleTapped:controller.loadGameAt(modelData.id,gamesPanel.fen)}
+                        ToolTip.visible:rowHover.hovered;ToolTip.delay:700
+                        ToolTip.text:qsTr("Double-cliquez pour ouvrir la partie sur cette position.")
+                        RowLayout {anchors.fill:parent;anchors.leftMargin:6;anchors.rightMargin:6;spacing:8
+                            Label {Layout.fillWidth:true;elide:Text.ElideRight;font.pixelSize:Math.round(12*win.textScale)
+                                text:(modelData.white||"?")+(modelData.whiteElo>0?" "+modelData.whiteElo:"")+" – "+(modelData.black||"?")+(modelData.blackElo>0?" "+modelData.blackElo:"")}
+                            Label {text:modelData.result||"*";font.pixelSize:Math.round(12*win.textScale);font.weight:Font.DemiBold}
+                            Label {Layout.preferredWidth:Math.round(36*win.textScale);horizontalAlignment:Text.AlignRight;color:win.muted
+                                font.pixelSize:Math.round(11*win.textScale);text:String(modelData.date||"").slice(0,4).replace(/\?/g,"")}
+                            Label {Layout.preferredWidth:Math.round(120*win.textScale);elide:Text.ElideRight;color:win.muted
+                                font.pixelSize:Math.round(11*win.textScale);text:modelData.event||""}
+                        }
+                    }
+                }
+            }
         }
     }
     Component {id:panelBook
@@ -512,7 +563,7 @@ ApplicationWindow {
             }
             Menu { title: qsTr("Panneaux")
                 Repeater {
-                    model: ["notation", "tree", "book", "online", "notes", "engine", "graph"]
+                    model: ["notation", "tree", "games", "book", "online", "notes", "engine", "graph"]
                     MenuItem {required property string modelData
                         text: win.panelTitle(modelData); checkable: true
                         checked: !!win.locate(win.dockLayout, modelData); onTriggered: win.togglePanel(modelData)}
@@ -594,8 +645,9 @@ ApplicationWindow {
                 // la base (exports, classements, comptes, téléchargements) attend dans le menu
                 // « Base » : onze boutons sur deux rangées écrasaient la recherche.
                 RowLayout {Layout.fillWidth:true;spacing:8
-                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:"Toutes les bases"}].concat(controller.sources);onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
+                    TComboBox {id:baseBox;onlyFirstOption:true;objectName:"baseSelector";Layout.preferredWidth:200*win.textScale;Layout.minimumWidth:120*win.textScale;textRole:"title";valueRole:"id";model:[{id:0,title:qsTr("Toutes les bases")}].concat(controller.sources.map(b=>({id:b.id,title:b.title+((b.tags||[]).length?"   #"+b.tags.join("  #"):""),tags:b.tags||[],name:b.title})));onActivated:{win.selectedBaseId=currentValue;win.filterLibrary()} onModelChanged:currentIndex=Math.max(0,indexOfValue(win.selectedBaseId))}
                     // Supprimer la base choisie : visible seulement quand une base l'est.
+                    TButton {objectName:"baseTags";visible:win.selectedBaseId>0;text:qsTr("Étiquettes…");onClicked:{var b=controller.sources.find(x=>Number(x.id)===Number(win.selectedBaseId));if(b)baseTagsDialog.ask("base",b.id,b.title,b.tags)}}
                     TButton {objectName:"removeBase";visible:win.selectedBaseId>0;text:qsTr("Supprimer…");onClicked:removeBaseDialog.ask(win.selectedBaseId)
                         ToolTip.visible:hovered;ToolTip.delay:400;ToolTip.text:qsTr("Supprimer cette base et mettre ses parties à la corbeille")}
                     TTextField {id:searchField;objectName:"librarySearch";placeholderText:qsTr("Rechercher un joueur, un code ECO, un tournoi…");Layout.fillWidth:true;Layout.minimumWidth:0;onTextChanged:searchTimer.restart();onAccepted:{searchTimer.stop();win.filterLibrary()}}
@@ -1286,6 +1338,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
+    TagsDialog {id:baseTagsDialog;backend:controller}
     TDialog {id:layoutsDialog;objectName:"layoutsDialog";title:qsTr("Dispositions de travail");modal:true;anchors.centerIn:parent
         width:Math.min(460,parent.width-32);standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:8

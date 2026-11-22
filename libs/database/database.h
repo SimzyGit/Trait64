@@ -90,6 +90,10 @@ class Database {
     qint64 createRepertoire(const QString &name, bool white, const Game &root,
                             const RepertoireProgress &progress = {}, qint64 model = 0);
     QVariantList repertoires() const;
+    // Étiquettes libres d'une base ou d'un recueil (« sources ») ou d'un répertoire : au plus
+    // douze, sans doublon à la casse près, sans virgule, quarante caractères chacune.
+    void setTags(const QString &table, qint64 id, const QStringList &tags);
+    static QStringList cleanTags(const QStringList &tags);
     QVariantMap repertoire(qint64 id) const;
     void renameRepertoire(qint64 id, const QString &name);
     void deleteRepertoire(qint64 id);
@@ -269,6 +273,7 @@ class Database {
     void upgradeV14(int originalVersion);
     void upgradeV15(int originalVersion);
     void upgradeV16(int originalVersion);
+    void upgradeV17(int originalVersion);
     QVariantMap computeOpeningReport(qint64 key, int models,
                                      const std::shared_ptr<std::atomic_bool> &canceled) const;
     // Schéma 12 : index allégé. Voir lightindex.cpp.

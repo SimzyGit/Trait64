@@ -79,7 +79,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 16, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 17, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -158,6 +158,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV14(v);
         upgradeV15(v);
         upgradeV16(v);
+        upgradeV17(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
@@ -915,6 +916,41 @@ void Database::upgradeV16(int originalVersion) {
         sql("RELEASE schema16");
         throw;
     }
+}
+// Les étiquettes des bases, recueils et répertoires : un texte « a,b,c », sans copie de
+// sauvegarde puisque rien d'existant ne change.
+void Database::upgradeV17(int originalVersion) {
+    if (originalVersion >= 17)
+        return;
+    sql("SAVEPOINT schema17");
+    try {
+        for (const char *table : {"sources", "repertoires"})
+            if (!db_.record(table).contains("tags"))
+                sql(QString("ALTER TABLE %1 ADD COLUMN tags TEXT NOT NULL DEFAULT ''").arg(table));
+        sql("PRAGMA user_version=17");
+        sql("RELEASE schema17");
+    } catch (...) {
+        sql("ROLLBACK TO schema17");
+        sql("RELEASE schema17");
+        throw;
+    }
+}
+QStringList Database::cleanTags(const QStringList &tags) {
+    QStringList out;
+    for (auto tag : tags) {
+        tag = tag.simplified().remove(',').left(40);
+        if (!tag.isEmpty() && !out.contains(tag, Qt::CaseInsensitive) && out.size() < 12)
+            out << tag;
+    }
+    return out;
+}
+void Database::setTags(const QString &table, qint64 id, const QStringList &tags) {
+    check(table == "sources" || table == "repertoires", "Étiquettes : table inconnue.");
+    QSqlQuery q(db_);
+    q.prepare(QString("UPDATE %1 SET tags=? WHERE id=?").arg(table));
+    q.addBindValue(cleanTags(tags).join(','));
+    q.addBindValue(id);
+    run(q);
 }
 QVariantMap Database::openingReport(const QString &fen, int models,
                                     const std::shared_ptr<std::atomic_bool> &canceled) const {

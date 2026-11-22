@@ -2037,5 +2037,15 @@
   "Colonne de droite": "Right column",
   "Sous l’échiquier": "Below the board",
   "Une disposition retient la place de l’échiquier et celle de chaque panneau de l’analyse.": "A layout remembers where the board and each analysis panel sit.",
-  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "“Analyse” starts the engine on the position shown; it follows every move played or browsed."
+  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "“Analyse” starts the engine on the position shown; it follows every move played or browsed.",
+  "Recherche des parties…": "Looking for games…",
+  "Au moins 400 parties passées par cette position": "At least 400 games reached this position",
+  "%1 partie(s) passée(s) par cette position": "%1 game(s) reached this position",
+  "Double-cliquez pour ouvrir la partie sur cette position.": "Double-click to open the game at this position.",
+  "Étiquettes": "Tags",
+  "Étiquettes…": "Tags…",
+  "Par exemple : ouvertures, Sicilienne, à revoir": "For example: openings, Sicilian, to review",
+  "Séparez les étiquettes par des virgules ; douze au plus.": "Separate tags with commas; twelve at most.",
+  "Étiquettes : élément inconnu.": "Tags: unknown item.",
+  "Étiquettes : table inconnue.": "Tags: unknown table."
 }

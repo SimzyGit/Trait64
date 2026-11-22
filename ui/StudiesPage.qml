@@ -28,15 +28,37 @@ ColumnLayout {
         var rows = []
         for (var i = 0; i < backend.repertoires.length; ++i) {
             var r = backend.repertoires[i]
-            rows.push({kind: "repertoire", id: r.id, name: r.name, white: r.white,
+            rows.push({kind: "repertoire", id: r.id, name: r.name, white: r.white, tags: r.tags || [],
                        positions: r.positions, reviews: r.reviews, success: r.success, due: r.due})
         }
         var collections = backend.studyCollections
         for (var j = 0; j < collections.length; ++j) {
             var c = collections[j]
-            rows.push({kind: "collection", id: c.id, name: c.title, games: c.games, purpose: c.purpose})
+            rows.push({kind: "collection", id: c.id, name: c.title, games: c.games, purpose: c.purpose,
+                       tags: c.tags || []})
         }
         return rows
+    }
+    // Les étiquettes : toutes celles des études, et celle qui filtre la liste (vide : aucune).
+    property string tagFilter: ""
+    readonly property var studyTags: {
+        var tags = []
+        for (var i = 0; i < studies.length; ++i)
+            for (var t of studies[i].tags)
+                if (!tags.some(k => k.toLowerCase() === t.toLowerCase())) tags.push(t)
+        return tags.sort((a, b) => a.localeCompare(b))
+    }
+    readonly property var shownStudies: tagFilter === "" ? studies
+        : studies.filter(r => r.tags.some(t => t.toLowerCase() === tagFilter.toLowerCase()))
+    // L'étude choisie à gauche, recueil ou répertoire, pour lui poser des étiquettes.
+    readonly property var chosen: {
+        for (var i = 0; i < studies.length; ++i) {
+            var r = studies[i]
+            if (collection ? r.kind === "collection" && Number(r.id) === Number(collection.id)
+                           : r.kind === "repertoire" && Number(r.id) === Number(selectedId))
+                return r
+        }
+        return null
     }
     spacing: 10
 
@@ -80,6 +102,13 @@ ColumnLayout {
             text: qsTr("Supprimer…")
             enabled: root.editable && (!!root.collection || root.selectedId > 0)
             onClicked: deleteDialog.open()
+        }
+        TButton {
+            objectName: "studiesTags"
+            text: qsTr("Étiquettes…")
+            enabled: root.editable && !!root.chosen
+            onClicked: tagsDialog.ask(root.chosen.kind === "collection" ? "base" : "repertoire",
+                                      root.chosen.id, root.chosen.name, root.chosen.tags)
         }
         TButton {
             text: qsTr("Détails…")
@@ -149,8 +178,24 @@ ColumnLayout {
                 objectName: "studiesList"
                 anchors.fill: parent
                 clip: true
-                model: root.studies
+                model: root.shownStudies
                 ScrollBar.vertical: ScrollBar {}
+                // Le filtre par étiquette, au-dessus de la liste quand il y a des étiquettes.
+                header: Flow {
+                    width: list.width; padding: root.studyTags.length ? 8 : 0; spacing: 6
+                    height: root.studyTags.length ? implicitHeight : 0
+                    visible: root.studyTags.length > 0
+                    Repeater {
+                        model: root.studyTags
+                        TChip {
+                            required property string modelData
+                            objectName: "studyTag_" + modelData
+                            text: "#" + modelData
+                            checked: root.tagFilter.toLowerCase() === modelData.toLowerCase()
+                            onToggled: root.tagFilter = checked ? modelData : ""
+                        }
+                    }
+                }
                 delegate: Rectangle {
                     id: studyRow
                     required property var modelData
@@ -215,13 +260,14 @@ ColumnLayout {
                                                            * controller.preferences.uiScale)
                                 // Un recueil se compte en parties, un répertoire en positions :
                                 // ce ne sont pas les mêmes objets.
-                                text: studyRow.isCollection
+                                text: (studyRow.isCollection
                                       ? qsTr("Recueil · %1 partie(s)").arg(modelData.games || 0)
                                       : qsTr("%1 position(s)").arg(modelData.positions || 0)
                                         + ((modelData.reviews || 0) > 0
                                            ? qsTr(" · %1 % de réussite")
                                              .arg(Math.round(100 * (modelData.successes || 0) / modelData.reviews))
-                                           : "")
+                                           : ""))
+                                      + (modelData.tags.length ? "   #" + modelData.tags.join("  #") : "")
                             }
                         }
                         // La marque de ce qui est dû : c'est elle qu'on cherche en arrivant.
@@ -755,4 +801,5 @@ ColumnLayout {
                 root.backend.deleteRepertoire(root.selectedId)
         }
     }
+    TagsDialog { id: tagsDialog; backend: root.backend }
 }

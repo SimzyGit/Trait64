@@ -1,5 +1,11 @@
 # Changements
 
+## Synchronisation des comptes, parties d'une position, étiquettes — 22 novembre 2026
+
+- **Synchronisation réparée (Lichess comme Chess.com)** : après le premier compte, l'import lançait le classement ECO et le compte suivant de la file n'était jamais lancé ; avec « Tout synchroniser », seul le premier compte se téléchargeait. La file repart désormais d'elle-même dès que le traitement en cours se termine, y compris quand on synchronise pendant un autre traitement. Une base de compte supprimée se retélécharge entièrement au lieu d'être déclarée « déjà à jour ».
+- **Panneau Parties dans l'analyse** : les parties de la bibliothèque passées par la position affichée, les mieux classées d'abord, recherchées en arrière-plan à chaque coup ; un double-clic ouvre la partie sur le coup où elle atteint la position.
+- **Étiquettes** sur les bases, recueils et répertoires (schéma 17) : affichées dans les listes, filtre par étiquette dans la page Études.
+
 ## Panneaux déplaçables à la souris et notation plus dense — 22 novembre 2026
 
 - **Disposition libre de l'analyse, à la manière de Scid vs. PC** : sept panneaux (notation, arbre, livre, Lichess, notes, moteur, courbe) rangés en piles à onglets. Un onglet se glisse vers une autre pile (en onglet), au-dessus ou au-dessous d'elle, ou sur un bord de l'analyse pour ouvrir une colonne à gauche, à droite ou sous l'échiquier ; les cibles s'éclairent pendant le glisser. Hauteurs réglables, panneaux à fermer, à détacher ou à réafficher (*Affichage → Panneaux*), disposition retenue d'une séance à l'autre et dans les *Dispositions de travail*.

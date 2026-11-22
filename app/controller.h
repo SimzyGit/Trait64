@@ -80,6 +80,8 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
     // Les dispositions de travail enregistrées : [{name, ratio, panel, boardOnly, tab}].
     Q_PROPERTY(QVariantList layouts READ layouts NOTIFY layoutsChanged)
+    // {fen, games : [rangées de la bibliothèque], running} pour la position affichée.
+    Q_PROPERTY(QVariantMap positionGames READ positionGames NOTIFY positionGamesChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
     Q_PROPERTY(QVariantList onlineAccounts READ onlineAccounts NOTIFY accountsChanged)
@@ -311,6 +313,10 @@ class Controller : public QObject {
     QVariantList players() const { return players_; }
     QVariantMap playerProfile() const { return playerProfile_; }
     QVariantList layouts() const { return settings_.value("layouts").toList(); }
+    QVariantMap positionGames() const { return positionGames_; }
+    // Relance la recherche pour la position affichée ; le panneau l'appelle quand il est
+    // visible et que la position change. Une recherche déjà faite pour cette FEN ne repart pas.
+    Q_INVOKABLE void requestPositionGames();
     // Une disposition du même nom est remplacée ; douze au plus.
     Q_INVOKABLE void saveLayout(const QVariantMap &layout);
     Q_INVOKABLE void removeLayout(int index);
@@ -371,6 +377,8 @@ class Controller : public QObject {
     Q_INVOKABLE void claimDraw();
     Q_INVOKABLE void newGame();
     Q_INVOKABLE void loadGame(qint64 id);
+    // Ouvre la partie dans un onglet, placée sur le coup où elle atteint `fen`.
+    Q_INVOKABLE void loadGameAt(qint64 id, const QString &fen);
     Q_INVOKABLE void saveGame(bool copy = false);
     Q_INVOKABLE void setFen(const QString &fen);
     // Un diagramme lu dans une image (fichier ou presse-papiers) : sa FEN, à vérifier dans
@@ -384,6 +392,11 @@ class Controller : public QObject {
     // n'entrent pas dans l'onglet Joueurs.
     Q_INVOKABLE void importLabeled(const QString &url, const QString &label, bool study);
     // Un recueil compté comme études (true) ou comme parties jouées.
+    // Étiquettes d'une base ou d'un recueil (kind « base ») ou d'un répertoire (« repertoire »),
+    // séparées par des virgules dans `text`.
+    Q_INVOKABLE void setTags(const QString &kind, qint64 id, const QString &text);
+    // Toutes les étiquettes employées, pour les filtres et la saisie.
+    Q_INVOKABLE QStringList allTags() const;
     Q_INVOKABLE void setStudyPurpose(qint64 source, bool study);
     // Retire un recueil : ses parties vont à la corbeille, le fichier reste sur le disque.
     Q_INVOKABLE void removeStudyCollection(qint64 source);
@@ -586,6 +599,7 @@ class Controller : public QObject {
     void changed();
     void libraryChanged();
     void layoutsChanged();
+    void positionGamesChanged();
     void sourcesChanged();
     void notationChanged();
     void importsChanged();
@@ -835,6 +849,12 @@ class Controller : public QObject {
     QFutureWatcher<int> classifier_;
     bool classifyAnnounces_ = false;
     QFutureWatcher<QVariantMap> reportWorker_;
+    // Les parties passées par la position affichée (panneau « Parties » de l'analyse).
+    QFutureWatcher<QVariantMap> positionGamesWorker_;
+    QVariantMap positionGames_;
+    qint64 positionGamesGeneration_ = 0;
+    bool positionGamesPending_ = false;
+    std::shared_ptr<std::atomic_bool> cancelPositionGames_;
     std::shared_ptr<std::atomic_bool> cancelReport_;
     qint64 reportGeneration_ = 0;
     bool reportPending_ = false;

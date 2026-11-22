@@ -6,6 +6,16 @@
 #include <QtConcurrent>
 
 void Controller::initPreparation() {
+    connect(&positionGamesWorker_, &QFutureWatcher<QVariantMap>::finished, this, [this] {
+        auto result = positionGamesWorker_.result();
+        if (result["generation"].toLongLong() == positionGamesGeneration_) {
+            result["running"] = false;
+            positionGames_ = result;
+            emit positionGamesChanged();
+        }
+        if (positionGamesPending_)
+            requestPositionGames();
+    });
     connect(&reportWorker_, &QFutureWatcher<QVariantMap>::finished, this, [this] {
         auto result = reportWorker_.result();
         // Une réponse d'une position qu'on a déjà quittée ne doit pas s'afficher.
@@ -240,5 +250,45 @@ void Controller::buildOpeningReport() {
             result["error"] = QString::fromUtf8(e.what());
         }
         return result;
+    }));
+}
+
+void Controller::requestPositionGames() {
+    const auto fen = QString::fromStdString(game_.nodes[node_].fen);
+    if (positionGamesWorker_.isRunning()) {
+        // La recherche en cours est périmée : on l'arrête et on repart à sa fin.
+        positionGamesPending_ = true;
+        if (cancelPositionGames_)
+            cancelPositionGames_->store(true);
+        return;
+    }
+    positionGamesPending_ = false;
+    if (positionGames_["fen"] == fen && !positionGames_["running"].toBool() &&
+        positionGames_["stamp"] == reportStamp())
+        return;
+    const auto generation = ++positionGamesGeneration_;
+    cancelPositionGames_ = std::make_shared<std::atomic_bool>(false);
+    positionGames_ = {{"fen", fen}, {"running", true}, {"games", positionGames_.value("games")}};
+    emit positionGamesChanged();
+    const auto path = db_->path(), stamp = reportStamp();
+    const auto canceled = cancelPositionGames_;
+    positionGamesWorker_.setFuture(QtConcurrent::run([=] {
+        QVariantMap out{{"generation", generation}, {"fen", fen}, {"stamp", stamp}};
+        try {
+            t64::Database db(path);
+            auto rows = db.search({}, {}, false, fen, false, {{"limit", 400}}, canceled);
+            // Les parties des meilleurs joueurs d'abord, comme la liste de référence de
+            // ChessBase ; à force égale, les plus récentes.
+            std::stable_sort(rows.begin(), rows.end(), [](const QVariant &a, const QVariant &b) {
+                const auto x = a.toMap(), y = b.toMap();
+                const int left = x["whiteElo"].toInt() + x["blackElo"].toInt(),
+                          right = y["whiteElo"].toInt() + y["blackElo"].toInt();
+                return left != right ? left > right : x["date"].toString() > y["date"].toString();
+            });
+            out["games"] = rows;
+        } catch (const std::exception &e) {
+            out["error"] = QString::fromUtf8(e.what());
+        }
+        return out;
     }));
 }

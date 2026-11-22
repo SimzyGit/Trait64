@@ -57,6 +57,32 @@ void Controller::renameRepertoire(qint64 id, const QString &name) {
         fail(e);
     }
 }
+void Controller::setTags(const QString &kind, qint64 id, const QString &text) {
+    try {
+        require(!busy_, "Attendez la fin du traitement.");
+        require(kind == "base" || kind == "repertoire", "Étiquettes : élément inconnu.");
+        db_->setTags(kind == "base" ? "sources" : "repertoires", id, text.split(','));
+        if (kind == "base")
+            refreshLibrary();
+        else
+            refreshRepertoires();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+QStringList Controller::allTags() const {
+    QStringList tags;
+    try {
+        for (const auto &list : {db_->sources(), db_->repertoires()})
+            for (const auto &row : list)
+                for (const auto &tag : row.toMap()["tags"].toStringList())
+                    if (!tags.contains(tag, Qt::CaseInsensitive))
+                        tags << tag;
+    } catch (const std::exception &) {
+    }
+    tags.sort(Qt::CaseInsensitive);
+    return tags;
+}
 void Controller::deleteRepertoire(qint64 id) {
     try {
         require(!busy_ && !trainingActive(), "Terminez le traitement ou l’entraînement.");

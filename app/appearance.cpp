@@ -330,8 +330,8 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             // retomberait sur une disposition qu'elle ne sait pas dessiner.
             const auto text = value.toString();
             if (!text.isEmpty()) {
-                static const QStringList known{"notation", "tree",  "book",  "online",
-                                               "notes",    "graph", "engine"};
+                static const QStringList known{"notation", "tree",  "games", "book",
+                                               "online",   "notes", "graph", "engine"};
                 const auto doc = QJsonDocument::fromJson(text.toUtf8());
                 if (text.size() > 8192 || !doc.isObject())
                     return;

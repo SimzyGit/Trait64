@@ -2037,5 +2037,15 @@
   "Colonne de droite": "Columna derecha",
   "Sous l’échiquier": "Bajo el tablero",
   "Une disposition retient la place de l’échiquier et celle de chaque panneau de l’analyse.": "Una disposición recuerda dónde están el tablero y cada panel del análisis.",
-  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "«Analizar» lanza el motor en la posición mostrada; sigue cada jugada jugada o recorrida."
+  "« Analyser » lance le moteur sur la position affichée ; il suit chaque coup joué ou parcouru.": "«Analizar» lanza el motor en la posición mostrada; sigue cada jugada jugada o recorrida.",
+  "Recherche des parties…": "Buscando partidas…",
+  "Au moins 400 parties passées par cette position": "Al menos 400 partidas pasaron por esta posición",
+  "%1 partie(s) passée(s) par cette position": "%1 partida(s) pasaron por esta posición",
+  "Double-cliquez pour ouvrir la partie sur cette position.": "Haga doble clic para abrir la partida en esta posición.",
+  "Étiquettes": "Etiquetas",
+  "Étiquettes…": "Etiquetas…",
+  "Par exemple : ouvertures, Sicilienne, à revoir": "Por ejemplo: aperturas, Siciliana, por repasar",
+  "Séparez les étiquettes par des virgules ; douze au plus.": "Separe las etiquetas con comas; doce como máximo.",
+  "Étiquettes : élément inconnu.": "Etiquetas: elemento desconocido.",
+  "Étiquettes : table inconnue.": "Etiquetas: tabla desconocida."
 }

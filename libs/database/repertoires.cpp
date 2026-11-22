@@ -116,15 +116,21 @@ QVariantList Database::repertoires() const {
     QSqlQuery q(db_);
     q.prepare("SELECT r.id,r.name,r.white,r.variant,COUNT(p.key),"
               "COALESCE(SUM(p.due<=date('now','localtime')),0),COALESCE(SUM(p.reviews),0),"
-              "COALESCE(SUM(p.successes),0) FROM repertoires r LEFT JOIN repertoire_positions p ON "
+              "COALESCE(SUM(p.successes),0),r.tags FROM repertoires r LEFT JOIN repertoire_positions p ON "
               "p.repertoire=r.id AND p.white=r.white AND EXISTS(SELECT 1 FROM repertoire_moves m WHERE "
               "m.repertoire=p.repertoire AND m.key=p.key) GROUP BY r.id ORDER BY r.name,r.id");
     run(q);
     QVariantList rows;
     while (q.next())
-        rows << QVariantMap{{"id", q.value(0)},       {"name", q.value(1)},      {"white", q.value(2)},
-                            {"chess960", q.value(3)}, {"positions", q.value(4)}, {"due", q.value(5)},
-                            {"reviews", q.value(6)},  {"successes", q.value(7)}};
+        rows << QVariantMap{{"id", q.value(0)},
+                            {"name", q.value(1)},
+                            {"white", q.value(2)},
+                            {"chess960", q.value(3)},
+                            {"positions", q.value(4)},
+                            {"due", q.value(5)},
+                            {"reviews", q.value(6)},
+                            {"successes", q.value(7)},
+                            {"tags", q.value(8).toString().split(',', Qt::SkipEmptyParts)}};
     return rows;
 }
 

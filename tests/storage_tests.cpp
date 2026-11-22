@@ -443,6 +443,9 @@ int main(int argc, char **argv) {
                 t64::parsePgn(game("K", "L", "1-0", "0", "0", "1.e4 c5 2.Nf3", "2025").toStdString()));
             check(desk.openingReport(sicilian)["total"].toLongLong() == 6,
                   "A new game drops the cached report");
+            check(t64::Database::cleanTags({" a  b ", "A B", "c,d", "", QString(60, 'x')}) ==
+                      QStringList({"a b", "cd", QString(40, 'x')}),
+                  "Tags are tidied: spaces, case-insensitive duplicates, commas and length");
         }
         {
             // Doublons : même suite de coups et mêmes joueurs, l'un annoté, l'autre daté.
@@ -735,7 +738,7 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 16,
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 17,
                       "Schema version 15");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
