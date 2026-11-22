@@ -1,3 +1,19 @@
+## 0.5.0-beta.1 — novembre 2026
+
+**L'analyse se range comme on veut.** Notation, arbre, livre, Lichess, notes, moteur et courbe sont des panneaux à onglets : on les glisse d'une pile à l'autre ou sur un bord pour ouvrir une colonne, à la manière de Scid vs. PC. Les dispositions s'enregistrent sous un nom ; échiquier, notation et courbe s'ouvrent aussi dans une fenêtre à part.
+
+**Préparer un adversaire.** Sa fiche montre ses lignes régulières avec chaque couleur, l'évolution de ses choix année par année, et s'exporte en PDF.
+
+**Les grandes bases.** Fusion des doublons avec leurs annotations, réparation d'une bibliothèque abîmée (l'original est gardé), comparaison de deux bases, tableau de tournoi avec Buchholz, variation d'Elo et catégorie FIDE ; la position de départ d'une base d'un million de parties s'ouvre aussitôt.
+
+**Les études.** Sous-chapitres, liens `[[Titre]]` entre chapitres, recherche dans les commentaires, rapport PDF à composer, et diagramme lu dans une capture d'écran.
+
+**Diffusion.** Paquet Flatpak, fichiers signés (vérifiables par `gh attestation verify <fichier> --repo SimzyGit/Trait64`), essais sous X11 et Wayland, échiquier jouable au clavier et annoncé aux lecteurs d'écran.
+
+**Limites connues.** La lecture d'image ne lit que des diagrammes numériques nets, pas une photo prise de biais ni une feuille de notation manuscrite. Sous Wayland, hors GNOME et KDE, Qt 6.4 peut planter au démarrage : lancer avec `QT_IM_MODULE=compose`. L'import n'est mesuré que jusqu'à un million de parties.
+
+Détail complet dans le [journal des changements](CHANGELOG.md).
+
 ## 0.4.0-beta.1 — 20 novembre 2026
 
 **Première bêta.** Trait64 couvre désormais l'essentiel de ce que font ChessBase, Scid et En Croissant, et la comparaison s'étend à une quinzaine d'autres outils ([docs/COMPARISON.md](COMPARISON.md)).
