@@ -938,12 +938,16 @@ QVariantMap Database::openingReport(const QString &fen, int models,
         QByteArray payload;
         QDataStream out(&payload, QIODevice::WriteOnly);
         out << report;
+        // Sans attendre : pendant un import, le verrou d'écriture est pris pour longtemps et
+        // le dossier doit s'afficher tout de suite ; il sera gardé la fois suivante.
         QSqlQuery store(db_);
+        store.exec("PRAGMA busy_timeout=0");
         store.prepare("INSERT OR REPLACE INTO report_cache(key,models,payload) VALUES(?,?,?)");
         store.addBindValue(key);
         store.addBindValue(models);
         store.addBindValue(payload);
-        store.exec(); // une base occupée par un import n'empêche pas de rendre le dossier
+        store.exec();
+        store.exec("PRAGMA busy_timeout=5000");
     }
     return report;
 }

@@ -42,13 +42,15 @@ QVariantMap Database::salvage(const QString &source, const QString &target,
     { Database fresh(target); } // le schéma courant, vide
     const auto name = "repair-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     qint64 rows = 0, lost = 0;
+    // La connexion de travail est rendue quoi qu'il arrive, échec compris.
+    struct Release {
+        QString name;
+        ~Release() { QSqlDatabase::removeDatabase(name); }
+    } release{name};
     {
         auto db = QSqlDatabase::addDatabase("QSQLITE", name);
         db.setDatabaseName(target);
-        const auto fail = [&](const QString &message) {
-            db.close();
-            throw std::runtime_error(message.toStdString());
-        };
+        const auto fail = [&](const QString &message) { throw std::runtime_error(message.toStdString()); };
         if (!db.open())
             fail(db.lastError().text());
         QSqlQuery q(db);
@@ -105,9 +107,7 @@ QVariantMap Database::salvage(const QString &source, const QString &target,
         }
         if (!q.exec("COMMIT") || !q.exec("DETACH DATABASE old"))
             fail(q.lastError().text());
-        db.close();
     }
-    QSqlDatabase::removeDatabase(name);
     Database fixed(target);
     const int games = fixed.rebuildIndexes(progress);
     return {{"games", games}, {"rows", rows}, {"lost", lost}, {"integrity", fixed.integrity()}};
