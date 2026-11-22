@@ -20,6 +20,9 @@ Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèq
 
 *Affichage → Pièces, échiquier et couleurs* règle les pièces, les couleurs, la taille, les sons, les flèches du moteur et le mode *À l'aveugle*. *Affichage → Raccourcis clavier* change les touches. *Affichage → Pièces en prise* entoure de rouge ce qu'une prise gagnerait.
 
+- **Clavier et lecteurs d'écran** : *Tab* amène le focus sur l'échiquier ; les flèches promènent un cadre de case en case, *Entrée* ou *Espace* choisissent la pièce puis sa case d'arrivée, *Échap* rend la main. Chaque case est annoncée (« e4, pion blanc »).
+- **Fenêtres détachées et dispositions** : *Affichage → Détacher dans une fenêtre* ouvre l'échiquier, la notation ou la courbe du bilan dans une fenêtre à part, pour un second écran. *Affichage → Dispositions de travail…* enregistre la place de l'échiquier, la hauteur des panneaux et l'onglet de notation sous un nom, et les réapplique.
+
 ## La notation et les variantes
 
 Jouer un autre coup que celui de la partie crée une variante. La notation se lit en tableau ou en texte continu.

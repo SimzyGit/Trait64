@@ -1,0 +1,33 @@
+# Paquet Flatpak de Trait64. Construire et installer :
+#   flatpak-builder --user --install --force-clean build-flatpak packaging/flatpak/io.github.simzygit.Trait64.yml
+# Stockfish n'est pas inclus : Trait64 propose de le télécharger, ou lit un moteur choisi.
+app-id: io.github.simzygit.Trait64
+runtime: org.kde.Platform
+runtime-version: '6.8'
+sdk: org.kde.Sdk
+command: trait64
+rename-desktop-file: trait64.desktop
+rename-icon: trait64
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Comptes Lichess et Chess.com, explorateur, mises à jour des bases.
+  - --share=network
+  # Les PGN, bases et moteurs se choisissent par le portail de fichiers ; le dossier
+  # d'études est un dossier ordinaire de l'utilisateur.
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-download
+modules:
+  - name: trait64
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: dir
+        path: ../..
+        skip: [build, build-asan, build-flatpak, .flatpak-builder, .git]
+    post-install:
+      - install -Dm644 packaging/flatpak/io.github.simzygit.Trait64.metainfo.xml /app/share/metainfo/io.github.simzygit.Trait64.metainfo.xml

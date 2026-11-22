@@ -1,0 +1,53 @@
+name: Display servers and Flatpak
+# Essais sous X11 et sous Wayland, puis le paquet Flatpak. Rien n'est publié ici : la
+# livraison reste celle de linux.yml.
+on:
+  push:
+    branches: ['main']
+    paths-ignore: ['docs/**', '*.md']
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: trait64-display-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  display:
+    name: X11 and Wayland
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build and display dependencies
+        run: |
+          packaging/ci-apt.sh cmake ninja-build libarchive-dev libsqlite3-dev qt6-base-dev qt6-declarative-dev libpulse-dev qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs qml6-module-qtquick-templates qml6-module-qtquick-window libqt6sql6-sqlite libqt6svg6 qt6-wayland fonts-dejavu-core xvfb xauth weston
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --parallel 3
+      - name: X11 (Xvfb)
+        run: xvfb-run -a env QT_QPA_PLATFORM=xcb build/trait64 --smoke-test
+      - name: Wayland (weston without a screen)
+        # Qt 6.4 plante dans QWaylandInputDevice::textInput() quand le compositeur n'offre
+        # pas la saisie de texte, ce que fait weston sans écran ; GNOME et KDE l'offrent.
+        env:
+          QT_IM_MODULE: compose
+        run: |
+          export XDG_RUNTIME_DIR="$RUNNER_TEMP/xdg" && mkdir -m 700 "$XDG_RUNTIME_DIR"
+          weston --backend=headless --socket=wayland-t64 --width=1280 --height=800 &
+          for i in $(seq 50); do [ -S "$XDG_RUNTIME_DIR/wayland-t64" ] && break; sleep 0.2; done
+          WAYLAND_DISPLAY=wayland-t64 QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software build/trait64 --smoke-test
+  flatpak:
+    name: Flatpak bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.8
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v7
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: Trait64.flatpak
+          manifest-path: packaging/flatpak/io.github.simzygit.Trait64.yml
+          cache-key: flatpak-builder-${{ github.sha }}

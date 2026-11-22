@@ -288,4 +288,42 @@ Item {
     onArrowsChanged: drawing.requestPaint()
     onRelationsChanged: drawing.requestPaint()
     onWidthChanged: drawing.requestPaint()
+    // Au clavier : Tab amène le focus sur l'échiquier, les flèches promènent un curseur de
+    // case en case, Entrée ou Espace choisissent la pièce puis la case d'arrivée, Échap
+    // rend la main. Un lecteur d'écran annonce chaque case et ce qu'elle porte.
+    property int cursor: 12 // e2
+    readonly property string cursorName: String.fromCharCode(97 + cursor % 8) + String.fromCharCode(49 + Math.floor(cursor / 8))
+    function pieceName(code) {
+        if (!code) return qsTr("vide")
+        var names = {P: qsTr("pion"), N: qsTr("cavalier"), B: qsTr("fou"), R: qsTr("tour"), Q: qsTr("dame"), K: qsTr("roi")}
+        return (names[code[1]] || code) + " " + (code[0] === "w" ? qsTr("blanc") : qsTr("noir"))
+    }
+    activeFocusOnTab: interactive
+    Accessible.role: Accessible.Table
+    Accessible.name: activeFocus ? qsTr("%1, %2").arg(cursorName).arg(pieceName(cellAt(cursor).code))
+                                 : qsTr("Échiquier")
+    Accessible.description: qsTr("Flèches pour changer de case, Entrée pour choisir une pièce puis sa case d’arrivée.")
+    Keys.onShortcutOverride: event => event.accepted = [Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down,
+                                                        Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space].indexOf(event.key) >= 0
+    Keys.onPressed: event => {
+        // Les flèches suivent l'échiquier tel qu'il est affiché.
+        var step = root.flipped ? -1 : 1, file = cursor % 8, rank = Math.floor(cursor / 8)
+        if (event.key === Qt.Key_Left) file = Math.max(0, Math.min(7, file - step))
+        else if (event.key === Qt.Key_Right) file = Math.max(0, Math.min(7, file + step))
+        else if (event.key === Qt.Key_Up) rank = Math.max(0, Math.min(7, rank + step))
+        else if (event.key === Qt.Key_Down) rank = Math.max(0, Math.min(7, rank - step))
+        else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.backend.clickSquare(cursorName); event.accepted = true; return
+        } else if (event.key === Qt.Key_Escape) { root.nextItemInFocusChain(true).forceActiveFocus(); event.accepted = true; return }
+        else return
+        cursor = rank * 8 + file
+        event.accepted = true
+    }
+    Rectangle {
+        objectName: "boardCursor"
+        visible: root.activeFocus
+        x: root.place(root.cursor).x; y: root.place(root.cursor).y
+        width: root.cell; height: root.cell
+        color: "transparent"; border.color: root.prefs.accentColor || "#3d7be0"; border.width: Math.max(3, root.cell * .07)
+    }
 }

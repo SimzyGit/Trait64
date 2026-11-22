@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>io.github.simzygit.Trait64</id>
+  <name>Trait64</name>
+  <summary>Study, analyse and prepare your chess offline</summary>
+  <summary xml:lang="fr">Étudier, analyser et préparer ses échecs hors ligne</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+  <developer id="io.github.simzygit">
+    <name>Sïmzy</name>
+  </developer>
+  <description>
+    <p>Trait64 is a free chess database: import large PGN collections, search by position, material or pawn structure, analyse with UCI engines, review your games and train on your own mistakes.</p>
+    <p xml:lang="fr">Trait64 est une base de données d’échecs libre : importez de grandes collections PGN, cherchez par position, matériel ou structure de pions, analysez avec des moteurs UCI, faites le bilan de vos parties et entraînez-vous sur vos propres erreurs.</p>
+  </description>
+  <launchable type="desktop-id">io.github.simzygit.Trait64.desktop</launchable>
+  <url type="homepage">https://github.com/SimzyGit/Trait64</url>
+  <url type="bugtracker">https://github.com/SimzyGit/Trait64/issues</url>
+  <categories>
+    <category>Game</category>
+    <category>BoardGame</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/SimzyGit/Trait64/main/docs/screenshots/analysis.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="0.4.0~beta1" date="2026-11-20"/>
+  </releases>
+</component>

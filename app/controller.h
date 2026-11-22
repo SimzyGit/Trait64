@@ -78,6 +78,8 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap heldEvaluation READ heldEvaluation NOTIFY engineChanged)
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
     Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
+    // Les dispositions de travail enregistrées : [{name, ratio, panel, boardOnly, tab}].
+    Q_PROPERTY(QVariantList layouts READ layouts NOTIFY layoutsChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool onlineFetching READ onlineFetching NOTIFY busyChanged)
     Q_PROPERTY(QVariantList onlineAccounts READ onlineAccounts NOTIFY accountsChanged)
@@ -308,6 +310,10 @@ class Controller : public QObject {
     QVariantMap reviewQuality() const { return reviewQuality_; }
     QVariantList players() const { return players_; }
     QVariantMap playerProfile() const { return playerProfile_; }
+    QVariantList layouts() const { return settings_.value("layouts").toList(); }
+    // Une disposition du même nom est remplacée ; douze au plus.
+    Q_INVOKABLE void saveLayout(const QVariantMap &layout);
+    Q_INVOKABLE void removeLayout(int index);
     Q_INVOKABLE void switchTab(int index);
     Q_INVOKABLE void closeTab(int index);
     Q_INVOKABLE void duplicateStudy();
@@ -579,6 +585,7 @@ class Controller : public QObject {
   signals:
     void changed();
     void libraryChanged();
+    void layoutsChanged();
     void sourcesChanged();
     void notationChanged();
     void importsChanged();

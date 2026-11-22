@@ -37,11 +37,11 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 - [ ] ◐ Diagramme reconnu dans une image numérique ✅ 22 nov. ; feuille de notation manuscrite et photo de biais : demanderaient un modèle de reconnaissance d'écriture, hors de portée sans service en ligne.
 
 **7. Diffusion et fiabilité**
-- [ ] Paquet Flatpak et publication sur Flathub.
-- [ ] Versions signées.
-- [ ] Essais sous Wayland et X11, essais de sécurité, installation sur une vraie machine.
-- [ ] Accessibilité : navigation complète au clavier, lecteurs d'écran.
-- [ ] Dispositions de travail enregistrables, panneaux détachables.
+- [ ] ◐ Paquet Flatpak ✅ 22 nov. (manifeste, AppStream, construit en CI) ; publication sur Flathub : demande à déposer par le mainteneur.
+- [x] Versions signées. — 22 nov. (attestations Sigstore, `gh attestation verify`)
+- [ ] ◐ Essais sous X11 et Wayland ✅ 22 nov. (CI) ; sécurité : ASan/UBSan déjà en CI ; installation sur une vraie machine : à faire par une personne.
+- [x] Accessibilité : échiquier au clavier et annoncé aux lecteurs d'écran. — 22 nov.
+- [x] Dispositions de travail enregistrables, panneaux détachables. — 22 nov.
 
 ## Comparatif du 15 novembre 2026 : ChessBase 18, Scid vs. PC, chess.ceo
 

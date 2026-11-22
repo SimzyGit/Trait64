@@ -265,6 +265,36 @@ QVariantMap Controller::preferences() const {
     defaults["shortcuts"] = keys;
     return defaults;
 }
+void Controller::saveLayout(const QVariantMap &layout) {
+    const auto name = layout.value("name").toString().simplified().left(60);
+    if (name.isEmpty()) {
+        emit message(tr("Donnez un nom à la disposition."), true);
+        return;
+    }
+    auto list = layouts();
+    QVariantMap clean{{"name", name},
+                      {"ratio", std::clamp(layout.value("ratio").toDouble(), 0.2, 0.85)},
+                      {"panel", layout.value("panel").toByteArray().left(4096)},
+                      {"boardOnly", layout.value("boardOnly").toBool()},
+                      {"tab", std::clamp(layout.value("tab").toInt(), 0, 8)}};
+    list.erase(std::remove_if(list.begin(), list.end(),
+                              [&](const QVariant &row) { return row.toMap()["name"].toString() == name; }),
+               list.end());
+    list.prepend(clean);
+    while (list.size() > 12)
+        list.removeLast();
+    settings_.setValue("layouts", list);
+    emit layoutsChanged();
+    emit message(tr("Disposition « %1 » enregistrée.").arg(name));
+}
+void Controller::removeLayout(int index) {
+    auto list = layouts();
+    if (index < 0 || index >= list.size())
+        return;
+    list.removeAt(index);
+    settings_.setValue("layouts", list);
+    emit layoutsChanged();
+}
 void Controller::setPreference(const QString &key, const QVariant &value) {
     try {
         const QMap<QString, QPair<int, int>> limits{{"threads", {1, 1024}},     {"hash", {16, 262144}},

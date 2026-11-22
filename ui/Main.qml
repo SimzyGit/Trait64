@@ -78,6 +78,26 @@ ApplicationWindow {
     function filterLibrary() {applyAdvanced()}
     // L'échiquier seul : la notation et le moteur s'effacent, l'échiquier prend la place.
     property bool boardOnly:false
+    // Les panneaux détachés : une fenêtre par demande, détruite à sa fermeture.
+    function detach(panel) {
+        var component = Qt.createComponent("PanelWindow.qml")
+        var w = component.createObject(win, {backend: controller, panel: panel})
+        if (w) w.show()
+        return w
+    }
+    // Une disposition : la place de l'échiquier, les hauteurs du panneau de droite,
+    // l'échiquier seul ou non, et l'onglet de notation ouvert.
+    function currentLayout(name) {
+        return {name: name, ratio: boardPanel.width / Math.max(1, analysisSplit.width), panel: analysisPanel.saveState(),
+                boardOnly: win.boardOnly, tab: notationTabs.currentIndex}
+    }
+    function applyLayout(layout) {
+        win.page = 2
+        win.boardOnly = !!layout.boardOnly
+        controller.setPreference("analysisPanelRatio", layout.ratio)
+        if (layout.panel) analysisPanel.restoreState(layout.panel)
+        notationTabs.currentIndex = layout.tab || 0
+    }
     // Le coup fautif sous les yeux, d'après le bilan : relu à chaque coup et à chaque bilan.
     readonly property var reviewSpot:(controller.review,controller.reviewMarks(controller.state.node))
     function toggleFullScreen(){visibility=visibility===Window.FullScreen?Window.Windowed:Window.FullScreen}
@@ -189,6 +209,12 @@ ApplicationWindow {
             MenuItem {text: win.light ? qsTr("Thème sombre") : qsTr("Thème clair"); onTriggered: {controller.setPreference("lightTheme", !win.light); controller.setPreference("backgroundColor", "")}}
             MenuItem {text: qsTr("Pièces, échiquier et couleurs…"); onTriggered: appearanceDialog.open()}
             MenuItem {text: qsTr("Échiquier seul"); checkable: true; checked: win.boardOnly; onTriggered: {win.boardOnly = checked; win.page = 2}}
+            Menu { title: qsTr("Détacher dans une fenêtre")
+                MenuItem {objectName: "detachBoard"; text: qsTr("Échiquier"); onTriggered: win.detach("board")}
+                MenuItem {text: qsTr("Notation"); onTriggered: win.detach("notation")}
+                MenuItem {text: qsTr("Courbe du bilan"); onTriggered: win.detach("graph")}
+            }
+            MenuItem {text: qsTr("Dispositions de travail…"); onTriggered: layoutsDialog.open()}
             MenuItem {text: qsTr("Plein écran"); checkable: true; checked: win.visibility === Window.FullScreen; onTriggered: win.toggleFullScreen()}
             MenuItem {text: qsTr("Analyse assistée"); checkable: true; checked: !!controller.preferences.assistedAnalysis; onTriggered: controller.setPreference("assistedAnalysis", checked)}
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
@@ -568,7 +594,7 @@ objectName:"analysisSplit"
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.
                     SplitView {
-                        objectName:"analysisPanel";visible:!win.boardOnly
+                        id:analysisPanel;objectName:"analysisPanel";visible:!win.boardOnly
                         SplitView.fillWidth:true;SplitView.minimumWidth:300;orientation:Qt.Vertical
                         handle:Rectangle {implicitHeight:5;color:SplitHandle.hovered||SplitHandle.pressed?win.line:"transparent";Rectangle {anchors.verticalCenter:parent.verticalCenter;height:1;width:parent.width;color:win.line}}
                         Rectangle {
@@ -1106,6 +1132,25 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
+    TDialog {id:layoutsDialog;objectName:"layoutsDialog";title:qsTr("Dispositions de travail");modal:true;anchors.centerIn:parent
+        width:Math.min(460,parent.width-32);standardButtons:Dialog.Close
+        ColumnLayout {anchors.fill:parent;spacing:8
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;color:win.muted
+                text:qsTr("Une disposition retient la place de l’échiquier, la hauteur des panneaux de l’analyse et l’onglet de notation ouvert.")}
+            RowLayout {Layout.fillWidth:true;spacing:6
+                TTextField {id:layoutName;objectName:"layoutName";Layout.fillWidth:true;placeholderText:qsTr("Nom, par exemple « Préparation »")}
+                TButton {objectName:"saveLayout";text:qsTr("Enregistrer");accent:true;enabled:layoutName.text.trim().length>0
+                    onClicked:{controller.saveLayout(win.currentLayout(layoutName.text));layoutName.text=""}}
+            }
+            Repeater {model:controller.layouts
+                RowLayout {required property var modelData;required property int index;Layout.fillWidth:true;spacing:6
+                    Label {text:modelData.name;Layout.fillWidth:true;elide:Text.ElideRight}
+                    TButton {text:qsTr("Appliquer");onClicked:{win.applyLayout(modelData);layoutsDialog.close()}}
+                    TButton {text:qsTr("Supprimer");flat:true;onClicked:controller.removeLayout(index)}
+                }
+            }
+        }
+    }
     Native.FileDialog {id:compareLibraryDialog;title:qsTr("Base Trait64 à comparer");nameFilters:[qsTr("Bibliothèques Trait64 (*.sqlite)"),qsTr("Tous les fichiers (*)")];onAccepted:controller.compareLibrary(selectedFile.toString())}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}

@@ -158,6 +158,9 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: write
+      # Signature des paquets publiés : attestation de provenance Sigstore, sans clé à garder.
+      id-token: write
+      attestations: write
     concurrency:
       group: trait64-delivery-${{ needs.version.outputs.publish == 'true' && 'publish' || github.ref }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -194,6 +197,11 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: python3 scripts/publish-release.py packages "$RELEASE_VERSION" --check-only
+      - name: Sign the packages (Sigstore build provenance)
+        if: needs.version.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'packages/*'
       - name: Publish tested version directly to GitHub Releases
         if: needs.version.outputs.publish == 'true'
         env:

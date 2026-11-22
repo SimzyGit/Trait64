@@ -1170,6 +1170,37 @@ int main(int argc, char **argv) {
             QTest::mouseMove(window, center(4, 3), 30);
             QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, center(4, 3));
             check(c.state()["node"].toInt() == 2 && c.state()["whiteTurn"].toBool(), "Drag e7-e5");
+            // Au clavier : le curseur part de e2, Cg1-f3 se joue aux flèches et à Entrée.
+            board->forceActiveFocus();
+            for (auto key : {Qt::Key_Right, Qt::Key_Right, Qt::Key_Down, Qt::Key_Return, Qt::Key_Up,
+                             Qt::Key_Up, Qt::Key_Left, Qt::Key_Return})
+                QTest::keyClick(window, key);
+            check(c.state()["node"].toInt() == 3 && board->property("cursorName") == "f3",
+                  "A move is played from the keyboard on the board");
+            c.undo();
+            check(c.state()["node"].toInt() == 2, "The keyboard move is undone");
+            {
+                // Un panneau détaché suit l'étude ; une disposition enregistrée se réapplique.
+                QVariant detached;
+                QMetaObject::invokeMethod(window, "detach", Q_RETURN_ARG(QVariant, detached),
+                                          Q_ARG(QVariant, "board"));
+                auto *panel = qobject_cast<QQuickWindow *>(detached.value<QObject *>());
+                QTest::qWait(50);
+                check(panel && panel->isVisible() && panel->findChild<QQuickItem *>("detachedBoard"),
+                      "The board opens in its own window");
+                if (panel)
+                    panel->close();
+                QVariant layout;
+                QMetaObject::invokeMethod(window, "currentLayout", Q_RETURN_ARG(QVariant, layout),
+                                          Q_ARG(QVariant, "Essai"));
+                c.saveLayout(layout.toMap());
+                check(c.layouts().size() == 1 && c.layouts().first().toMap()["name"] == "Essai" &&
+                          !c.layouts().first().toMap()["panel"].toByteArray().isEmpty(),
+                      "A work layout is saved with the panel sizes");
+                QMetaObject::invokeMethod(window, "applyLayout", Q_ARG(QVariant, c.layouts().first()));
+                c.removeLayout(0);
+                check(c.layouts().isEmpty(), "A work layout is removed");
+            }
             auto *note = window->findChild<QQuickItem *>("positionNote");
             check(note != nullptr, "Note editor exists");
             note->forceActiveFocus();

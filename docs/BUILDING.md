@@ -4,6 +4,22 @@
 
 L’installation rapide est décrite dans [Télécharger](../README.md#télécharger). Les fichiers publiés : une **AppImage x86_64** (glibc ≥ 2.36) et deux paquets **.deb**, pour Debian 12 et Debian 13, accompagnés de leurs empreintes `SHA256SUMS`. Sans FUSE, l’AppImage se lance avec `APPIMAGE_EXTRACT_AND_RUN=1 ./Trait64-…AppImage` ; l’installateur le règle tout seul. Sur Debian, `install.sh --deb` installe le paquet correspondant à votre version.
 
+**Vérifier la signature.** Chaque fichier publié est signé par une attestation de provenance Sigstore, émise par le travail GitHub Actions qui l’a construit et testé — sans clé privée à garder ni à perdre. Avec l’outil `gh` :
+
+```bash
+gh attestation verify Trait64-…AppImage --repo SimzyGit/Trait64
+```
+
+**Flatpak.** Le manifeste `packaging/flatpak/io.github.simzygit.Trait64.yml` (environnement KDE 6.8) construit un paquet à chaque envoi sur `main` (travail *Display servers and Flatpak*, artefact `Trait64.flatpak`). Localement :
+
+```bash
+flatpak-builder --user --install --force-clean build-flatpak packaging/flatpak/io.github.simzygit.Trait64.yml
+```
+
+La publication sur Flathub passe par une demande d’ajout sur le dépôt `flathub/flathub`, à faire par la personne qui maintient le projet.
+
+**X11 et Wayland.** Le même travail lance l’essai de démarrage sous Xvfb (X11) et sous weston sans écran (Wayland). Qt 6.4 plante sur un compositeur Wayland qui n’offre pas la saisie de texte (`QWaylandInputDevice::textInput`) ; GNOME et KDE l’offrent. Sur un autre compositeur, lancer Trait64 avec `QT_IM_MODULE=compose` contourne le défaut.
+
 Après l’installation, **Aide → Mises à jour** vérifie les nouvelles versions (canaux Stable, Bêta, Développement), télécharge le fichier, vérifie son empreinte et installe après une sauvegarde. Voir [UPDATES.md](UPDATES.md).
 
 ## Compiler et installer depuis les sources

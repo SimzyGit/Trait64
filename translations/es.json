@@ -2009,5 +2009,20 @@
   "Recadrez l’image sur l’échiquier : il doit être carré.": "Recorte la imagen al tablero: debe ser cuadrado.",
   "Une case n’a pas pu être lue : essayez une image plus nette ou mieux recadrée.": "No se pudo leer una casilla: pruebe una imagen más nítida o mejor recortada.",
   "Il faut un roi de chaque camp sur l’image.": "La imagen necesita un rey de cada bando.",
-  "Un pion lu sur la première ou la dernière rangée : l’image est mal reconnue.": "Se leyó un peón en la primera o la última fila: la imagen no se reconoció bien."
+  "Un pion lu sur la première ou la dernière rangée : l’image est mal reconnue.": "Se leyó un peón en la primera o la última fila: la imagen no se reconoció bien.",
+  "vide": "vacía",
+  "blanc": "blanco",
+  "noir": "negro",
+  "%1, %2": "%1, %2",
+  "Échiquier": "Tablero",
+  "Flèches pour changer de case, Entrée pour choisir une pièce puis sa case d’arrivée.": "Flechas para cambiar de casilla; Intro elige una pieza y luego su casilla de destino.",
+  "Courbe du bilan": "Curva del análisis",
+  "Détacher dans une fenêtre": "Separar en una ventana",
+  "Dispositions de travail…": "Disposiciones de trabajo…",
+  "Dispositions de travail": "Disposiciones de trabajo",
+  "Une disposition retient la place de l’échiquier, la hauteur des panneaux de l’analyse et l’onglet de notation ouvert.": "Una disposición recuerda el ancho del tablero, la altura de los paneles de análisis y la pestaña de notación abierta.",
+  "Nom, par exemple « Préparation »": "Nombre, por ejemplo «Preparación»",
+  "Appliquer": "Aplicar",
+  "Donnez un nom à la disposition.": "Dé un nombre a la disposición.",
+  "Disposition « %1 » enregistrée.": "Disposición «%1» guardada."
 }

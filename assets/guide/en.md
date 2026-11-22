@@ -20,6 +20,9 @@ Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Traini
 
 *View → Pieces, board and colours* sets the pieces, colours, size, sounds, engine arrows and *Blindfold* mode. *View → Keyboard shortcuts* changes the keys. *View → Hanging pieces* circles in red what a capture would win.
 
+- **Keyboard and screen readers**: *Tab* moves focus to the board; the arrow keys move a frame from square to square, *Enter* or *Space* picks the piece then its destination, *Esc* leaves. Each square is announced (“e4, white pawn”).
+- **Detached windows and layouts**: *View → Detach into a window* opens the board, the notation or the review graph in a separate window, for a second screen. *View → Work layouts…* saves the board's width, the panel heights and the notation tab under a name, and applies them again.
+
 ## Notation and variations
 
 Playing a different move from the game's creates a variation. The notation can be read as a table or as continuous text.
