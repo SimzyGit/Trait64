@@ -18,7 +18,7 @@ TDialog {
     readonly property real narrow:Math.round(44*backend.preferences.uiScale)
     title:table.event?(table.year?qsTr("%1 · %2").arg(table.event).arg(table.year):table.event):qsTr("Tableau du tournoi")
     anchors.centerIn:parent;modal:true;standardButtons:Dialog.Close
-    width:Math.min(parent.width-32,Math.max(560,nameWidth+narrow*5+middle*unit+60));height:Math.min(parent.height-32,180+rows.length*26)
+    width:Math.min(parent.width-32,Math.max(560,nameWidth+narrow*7.6+middle*unit+60));height:Math.min(parent.height-32,180+rows.length*26)
     function show(gameId){table=backend.tournamentTable(gameId);if(rows.length)open()}
     function number(value){return value%1?(Math.floor(value)>0?Math.floor(value):"")+"½":String(value)}
     ColumnLayout {
@@ -26,6 +26,12 @@ TDialog {
         Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.75
             text:root.matrix?qsTr("%1 joueurs · départage Sonneborn-Berger, puis victoires. Un clic sur un résultat ouvre la partie.").arg(root.rows.length)
                             :qsTr("%1 joueurs, %2 rondes · par ronde : rang de l’adversaire, ○ Blancs ● Noirs, résultat.").arg(root.rows.length).arg(root.table.rounds||0)}
+        // Le tournoi d'un coup d'œil : force moyenne, catégorie FIDE, partage des résultats.
+        Label {objectName:"tournamentSummary";Layout.fillWidth:true;wrapMode:Text.WordWrap;opacity:.75
+            readonly property var sum:root.table.summary||({})
+            visible:(sum.games||0)>0
+            text:(sum.averageElo>0?qsTr("Elo moyen %1").arg(sum.averageElo)+(sum.category>0?" · "+qsTr("catégorie %1").arg(sum.category):"")+" · ":"")
+                 +qsTr("%1 parties : %2 gains des Blancs, %3 nulles, %4 gains des Noirs (%5 % décisives)").arg(sum.games).arg(sum.whiteWins).arg(sum.draws).arg(sum.blackWins).arg(sum.decisive)}
         Flickable {
             id:sheet;Layout.fillWidth:true;Layout.fillHeight:true;clip:true
             contentWidth:Math.max(width,body.width);contentHeight:body.height
@@ -74,6 +80,15 @@ TDialog {
                                 text:header?qsTr("Perf."):(row.performance>0?row.performance:"");opacity:.7
                                 ToolTip.visible:header&&perfHover.hovered;ToolTip.text:qsTr("Performance : Elo moyen des adversaires + 400 × (victoires − défaites) / parties, quand tous les adversaires sont classés.")
                                 HoverHandler {id:perfHover}}
+                            Label {width:root.narrow*1.2;height:parent.height;verticalAlignment:Text.AlignVCenter;horizontalAlignment:Text.AlignRight;rightPadding:6
+                                text:header?"Bu":root.number(row.buchholz);opacity:.7
+                                ToolTip.visible:header&&buHover.hovered;ToolTip.text:qsTr("Buchholz : la somme des points des adversaires rencontrés.")
+                                HoverHandler {id:buHover}}
+                            Label {width:root.narrow*1.4;height:parent.height;verticalAlignment:Text.AlignVCenter;horizontalAlignment:Text.AlignRight;rightPadding:6
+                                text:header?"±Elo":(row.change===undefined||row.change===null?"":(row.change>0?"+":"")+row.change.toLocaleString(Qt.locale(root.backend.preferences.language==="auto"?"":root.backend.preferences.language),"f",1))
+                                opacity:header?.7:1
+                                ToolTip.visible:header&&eloHover.hovered;ToolTip.text:qsTr("Variation d’Elo à la manière de la FIDE : K × (points − points attendus), K = 10 à partir de 2400, 20 en dessous.")
+                                HoverHandler {id:eloHover}}
                         }
                     }
                 }

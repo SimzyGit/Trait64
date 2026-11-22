@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "cancellation.h"
 #include "database.h"
+#include <QFileInfo>
 #include <QHash>
 #include <QRegularExpression>
 #include <QSqlError>
@@ -582,6 +583,139 @@ QVariantList Database::duplicates() const {
         out << QVariantMap{
             {"ids", q.value(0)}, {"count", q.value(1)}, {"white", q.value(2)}, {"black", q.value(3)}};
     return out;
+}
+QVariantMap Database::compareWith(const QString &other) const {
+    check(QFileInfo(other).isFile(), "Base introuvable.");
+    check(QFileInfo(other).canonicalFilePath() != QFileInfo(path_).canonicalFilePath(),
+          "Choisissez une autre base que la bibliothèque ouverte.");
+    QSqlQuery q(db_);
+    q.prepare("ATTACH DATABASE ? AS other");
+    q.addBindValue(other);
+    check(q.exec(), "Base illisible : " + q.lastError().text());
+    QVariantMap out;
+    try {
+        const auto count = [&](const QString &query) {
+            QSqlQuery c(db_);
+            check(c.exec(query) && c.next(), "Ce fichier n’est pas une bibliothèque Trait64.");
+            return c.value(0).toLongLong();
+        };
+        const QString live = "deleted=0 AND fingerprint<>''";
+        const auto mine = count("SELECT count(*) FROM main.games WHERE " + live);
+        const auto theirs = count("SELECT count(*) FROM other.games WHERE " + live);
+        const auto onlyTheirs =
+            count("SELECT count(*) FROM other.games o WHERE " + live +
+                  " AND NOT EXISTS(SELECT 1 FROM main.games g WHERE g.fingerprint=o.fingerprint "
+                  "AND g.deleted=0)");
+        const auto onlyMine =
+            count("SELECT count(*) FROM main.games g WHERE " + live +
+                  " AND NOT EXISTS(SELECT 1 FROM other.games o WHERE o.fingerprint=g.fingerprint "
+                  "AND o.deleted=0)");
+        QVariantList players;
+        QSqlQuery top(db_);
+        check(top.exec(
+                  "SELECT name,count(*) n FROM (SELECT white name FROM other.games o WHERE " + live +
+                  " AND NOT EXISTS(SELECT 1 FROM main.games g WHERE g.fingerprint=o.fingerprint AND "
+                  "g.deleted=0) UNION ALL SELECT black FROM other.games o WHERE " +
+                  live +
+                  " AND NOT EXISTS(SELECT 1 FROM main.games g WHERE g.fingerprint=o.fingerprint AND "
+                  "g.deleted=0)) WHERE name<>'' AND name<>'?' GROUP BY name ORDER BY n DESC,name LIMIT 10"),
+              top.lastError().text());
+        while (top.next())
+            players << QVariantMap{{"name", top.value(0)}, {"games", top.value(1)}};
+        out = {{"mine", mine},         {"theirs", theirs},         {"common", theirs - onlyTheirs},
+               {"onlyMine", onlyMine}, {"onlyTheirs", onlyTheirs}, {"players", players}};
+    } catch (...) {
+        QSqlQuery(db_).exec("DETACH DATABASE other");
+        throw;
+    }
+    QSqlQuery(db_).exec("DETACH DATABASE other");
+    return out;
+}
+QVariantMap Database::mergeDuplicates(const std::function<bool(int)> &progress) {
+    // Une même suite de coups ne suffit pas : deux nulles rapides de joueurs différents
+    // ont la même empreinte. Les noms et le résultat départagent, sans casse.
+    QSqlQuery q(db_);
+    q.setForwardOnly(true);
+    check(q.exec("SELECT id FROM games g WHERE deleted=0 AND fingerprint<>'' AND fingerprint IN (SELECT "
+                 "fingerprint FROM games WHERE deleted=0 AND fingerprint<>'' GROUP BY fingerprint HAVING "
+                 "COUNT(*)>1) ORDER BY fingerprint,lower(white),lower(black),result,id"),
+          q.lastError().text());
+    QList<qint64> ids;
+    while (q.next())
+        ids << q.value(0).toLongLong();
+    q.finish();
+    // Un en-tête vide, inconnu (« ? ») ou laissé à sa valeur par défaut se complète.
+    const Game blank;
+    const auto known = [&](const std::string &name, const std::string &value) {
+        const auto fallback = blank.tags.find(name);
+        return !value.empty() && value.find('?') == std::string::npos &&
+               (fallback == blank.tags.end() || fallback->second != value);
+    };
+    const auto identity = [](const Game &g) {
+        const auto tag = [&](const char *name) {
+            const auto it = g.tags.find(name);
+            return it == g.tags.end() ? QString() : QString::fromStdString(it->second).toLower().simplified();
+        };
+        return tag("White") + '\n' + tag("Black") + '\n' + tag("Result");
+    };
+    qint64 groups = 0, removed = 0;
+    sql("SAVEPOINT merge_duplicates");
+    try {
+        std::vector<std::pair<qint64, Game>> group;
+        QString groupKey;
+        const auto flush = [&] {
+            if (group.size() > 1) {
+                // La partie la plus fournie (nœuds, puis commentaires) sert de base.
+                const auto weight = [](const Game &g) {
+                    size_t text = 0;
+                    for (const auto &n : g.nodes)
+                        text += n.comment.size() + n.nags.size();
+                    return std::pair(g.nodes.size(), text);
+                };
+                std::stable_sort(group.begin(), group.end(), [&](const auto &a, const auto &b) {
+                    return weight(a.second) > weight(b.second);
+                });
+                auto &base = group.front().second;
+                for (size_t i = 1; i < group.size(); ++i) {
+                    const auto &other = group[i].second;
+                    base.merge(other);
+                    for (const auto &[name, value] : other.tags)
+                        if (known(name, value) && !known(name, base.tags[name]))
+                            base.tags[name] = value;
+                    trash(group[i].first, true);
+                    ++removed;
+                }
+                save(base, group.front().first);
+                ++groups;
+            }
+            group.clear();
+        };
+        int seen = 0;
+        QByteArray fingerprint;
+        QSqlQuery print(db_);
+        print.prepare("SELECT fingerprint FROM games WHERE id=?");
+        for (auto id : ids) {
+            check(!progress || progress(seen++), "Fusion interrompue : aucune partie modifiée.");
+            print.bindValue(0, id);
+            run(print);
+            const auto current = print.next() ? print.value(0).toByteArray() : QByteArray();
+            print.finish();
+            Game game = load(id);
+            const auto key = identity(game);
+            if (current != fingerprint || key != groupKey)
+                flush();
+            fingerprint = current;
+            groupKey = key;
+            group.emplace_back(id, std::move(game));
+        }
+        flush();
+        sql("RELEASE merge_duplicates");
+    } catch (...) {
+        sql("ROLLBACK TO merge_duplicates");
+        sql("RELEASE merge_duplicates");
+        throw;
+    }
+    return {{"groups", groups}, {"removed", removed}};
 }
 int Database::rebuildIndexes(const std::function<bool(int)> &progress) {
     QSqlQuery ids(db_);

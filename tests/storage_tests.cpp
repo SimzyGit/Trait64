@@ -12,6 +12,7 @@
 #include "scid.h"
 #include <QBuffer>
 #include <QCoreApplication>
+#include <QDataStream>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
@@ -421,6 +422,91 @@ int main(int argc, char **argv) {
             check(empty["total"].toLongLong() == 0 && empty["moves"].toList().isEmpty() &&
                       empty["models"].toList().isEmpty(),
                   "A position no game reached reports nothing rather than failing");
+            // Le dossier gardé en base sert tel quel, et disparaît dès qu'une partie change.
+            {
+                auto raw = QSqlDatabase::addDatabase("QSQLITE", "report-cache");
+                raw.setDatabaseName(dir.filePath("report.sqlite"));
+                check(raw.open(), "Open the library a second time");
+                QByteArray payload;
+                QDataStream out(&payload, QIODevice::WriteOnly);
+                out << QVariantMap{{"total", 99}};
+                QSqlQuery q(raw);
+                q.prepare("INSERT INTO report_cache(key,models,payload) SELECT key,6,? FROM positions WHERE "
+                          "uci='g1f3' LIMIT 1");
+                q.addBindValue(payload);
+                check(q.exec(), "Store a report in the cache");
+                raw.close();
+            }
+            QSqlDatabase::removeDatabase("report-cache");
+            check(desk.openingReport(sicilian)["total"].toLongLong() == 99, "A cached report is read back");
+            desk.importGames(
+                t64::parsePgn(game("K", "L", "1-0", "0", "0", "1.e4 c5 2.Nf3", "2025").toStdString()));
+            check(desk.openingReport(sicilian)["total"].toLongLong() == 6,
+                  "A new game drops the cached report");
+        }
+        {
+            // Doublons : même suite de coups et mêmes joueurs, l'un annoté, l'autre daté.
+            t64::Database twins(dir.filePath("twins.sqlite"));
+            twins.importGames(t64::parsePgn(
+                "[White \"Kasparov\"]\n[Black \"Karpov\"]\n[Result \"1-0\"]\n[Date \"????.??.??\"]\n\n"
+                "1.e4 {Le roi des coups} e5 2.Nf3 (2.f4 Bc5) 1-0\n\n"
+                "[White \"Kasparov\"]\n[Black \"Karpov\"]\n[Result \"1-0\"]\n[Date \"1985.10.15\"]\n"
+                "[Event \"Moscou\"]\n\n1.e4 e5 2.Nf3 1-0\n\n"
+                "[White \"Autre\"]\n[Black \"Joueur\"]\n[Result \"1-0\"]\n\n1.e4 e5 2.Nf3 1-0\n\n"));
+            const auto merged = twins.mergeDuplicates();
+            check(merged["groups"].toInt() == 1 && merged["removed"].toInt() == 1,
+                  "Only games with the same players are merged, not every game with the same moves");
+            const auto kept = twins.search();
+            check(kept.size() == 2, "The merged duplicate leaves the library");
+            bool annotated = false;
+            for (const auto &row : kept) {
+                const auto game = twins.load(row.toMap()["id"].toLongLong());
+                if (game.tags.at("White") == "Kasparov")
+                    annotated = game.tags.at("Date") == "1985.10.15" && game.tags.at("Event") == "Moscou" &&
+                                game.pgn().find("Le roi des coups") != std::string::npos &&
+                                game.pgn().find("f4") != std::string::npos;
+            }
+            check(annotated, "The kept game has the comments, the variation and the missing headers");
+            // Comparaison : la base « twins » contre celle du dossier d'ouverture.
+            const auto diff = twins.compareWith(dir.filePath("report.sqlite"));
+            check(diff["mine"].toInt() == 2 && diff["theirs"].toInt() == 6 && diff["common"].toInt() == 0 &&
+                      diff["onlyTheirs"].toInt() == 6 && diff["players"].toList().size() == 10,
+                  "Two libraries are compared game by game, with the players missing here");
+            bool refused = false;
+            try {
+                twins.compareWith(dir.filePath("nowhere.sqlite"));
+            } catch (const std::exception &) {
+                refused = !QFile::exists(dir.filePath("nowhere.sqlite"));
+            }
+            check(refused, "Comparing with a missing file creates nothing");
+        }
+        {
+            // Réparation : une base dont des pages sont écrasées se recopie dans une base saine.
+            const auto damaged = dir.filePath("damaged.sqlite");
+            {
+                t64::Database seed(damaged);
+                QString pgn;
+                for (int i = 0; i < 40; ++i)
+                    pgn += QString("[White \"W%1\"]\n[Black \"B%1\"]\n[Result \"1-0\"]\n\n1.e4 e5 2.Nf3 Nc6 "
+                                   "3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 %2 1-0\n\n")
+                               .arg(i)
+                               .arg(i % 2 ? "6.Re1 b5" : "6.d3 b5");
+                seed.importGames(t64::parsePgn(pgn.toStdString()));
+            }
+            const auto healthy = t64::Database::salvage(damaged, dir.filePath("healthy.sqlite"));
+            check(healthy["games"].toInt() == 40 && healthy["lost"].toInt() == 0 &&
+                      healthy["integrity"] == "ok",
+                  "A sound library is copied whole");
+            QFile file(damaged);
+            check(file.open(QIODevice::ReadWrite) && file.size() > 40 * 4096, "The library spans many pages");
+            for (int page : {6, 9, 12}) {
+                file.seek(qint64(page) * 4096 + 100);
+                file.write(QByteArray(3000, '\xA5'));
+            }
+            file.close();
+            const auto saved = t64::Database::salvage(damaged, dir.filePath("saved.sqlite"));
+            check(saved["integrity"] == "ok" && saved["games"].toInt() > 0,
+                  "A damaged library is rebuilt from what can still be read");
         }
         {
             // Classer les ouvertures : `eco` ne venait que de la balise PGN, et la plupart
@@ -649,7 +735,7 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 15,
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 16,
                       "Schema version 15");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");
@@ -1694,6 +1780,18 @@ int main(int argc, char **argv) {
             for (int i = 0; i < 12; i += 2)
                 swiss.push_back({i, QString("P%1").arg(i), QString("P%1").arg(i + 1), "1-0", 0, 0, 1});
             check(!t64::crosstable(swiss)["matrix"].toBool(), "An open with few pairings is shown by rounds");
+            // Statistiques avancées : un toutes-rondes à trois, deux joueurs à 2400.
+            const auto small = t64::crosstable({{1, "A", "B", "1-0", 2400, 2400, 1},
+                                                {2, "B", "C", "1/2-1/2", 2400, 2300, 2},
+                                                {3, "C", "A", "0-1", 2300, 2400, 3}});
+            const auto summary = small["summary"].toMap();
+            check(summary["averageElo"].toInt() == 2366 && summary["category"].toInt() == 5 &&
+                      summary["decisive"].toInt() == 66 && summary["whiteWins"].toInt() == 1,
+                  "The tournament summary gives the average rating, the FIDE category and the result split");
+            const auto leader = small["players"].toList().first().toMap();
+            check(leader["name"] == "A" && leader["buchholz"].toDouble() == 1 &&
+                      std::abs(leader["change"].toDouble() - 8.6) < 0.11,
+                  "Buchholz sums the opponents' points, the rating change follows the FIDE formula");
         }
         {
             // La même base SCID aux deux formats, écrite à partir de tests/scid/essai.pgn :

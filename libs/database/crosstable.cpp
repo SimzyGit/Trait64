@@ -26,7 +26,7 @@ QString symbol(double value) {
 struct Player {
     QString name;
     int elo = 0;
-    double score = 0, sonneborn = 0;
+    double score = 0, sonneborn = 0, buchholz = 0, expected = 0;
     int games = 0, wins = 0, losses = 0;
     qint64 ratedSum = 0;
     int rated = 0;
@@ -72,6 +72,8 @@ QVariantMap crosstable(const std::vector<CrossGame> &games) {
             if (them.elo > 0) {
                 me.ratedSum += them.elo;
                 ++me.rated;
+                if (me.elo > 0) // score attendu selon la formule Elo
+                    me.expected += 1 / (1 + std::pow(10.0, (them.elo - me.elo) / 400.0));
             }
         }
     }
@@ -81,6 +83,8 @@ QVariantMap crosstable(const std::vector<CrossGame> &games) {
             continue;
         players[size_t(p.white)].sonneborn += p.whitePoints * players[size_t(p.black)].score;
         players[size_t(p.black)].sonneborn += (1 - p.whitePoints) * players[size_t(p.white)].score;
+        players[size_t(p.white)].buchholz += players[size_t(p.black)].score;
+        players[size_t(p.black)].buchholz += players[size_t(p.white)].score;
     }
     std::vector<int> order(players.size());
     for (size_t i = 0; i < order.size(); ++i)
@@ -142,12 +146,36 @@ QVariantMap crosstable(const std::vector<CrossGame> &games) {
         if (player.rated > 0 && player.rated == player.games)
             performance = int(std::lround(double(player.ratedSum) / player.rated +
                                           400.0 * (player.wins - player.losses) / player.games));
+        // Le gain d'Elo à la manière de la FIDE : K = 10 à partir de 2400, 20 en dessous,
+        // sur les seules parties contre des adversaires classés.
+        QVariant change;
+        if (player.elo > 0 && player.rated == player.games && player.games > 0)
+            change = std::round((player.elo >= 2400 ? 10 : 20) * (player.score - player.expected) * 10) / 10;
         rows << QVariantMap{
             {"rank", rank[size_t(i)]}, {"name", player.name},        {"elo", player.elo},
             {"score", player.score},   {"games", player.games},      {"sonneborn", player.sonneborn},
             {"wins", player.wins},     {"performance", performance}, {"cells", line},
-            {"cellGames", lineGames},  {"rounds", lineRounds}};
+            {"cellGames", lineGames},  {"rounds", lineRounds},       {"buchholz", player.buchholz},
+            {"change", change}};
     }
-    return {{"players", rows}, {"rounds", rounds}, {"matrix", matrix}};
+    // Le tournoi d'un coup d'œil : moyenne Elo et catégorie FIDE (une par tranche de
+    // 25 points à partir de 2251), puis la répartition des résultats.
+    int whiteWins = 0, draws = 0, blackWins = 0, ratedPlayers = 0;
+    qint64 eloSum = 0;
+    for (const auto &p : played)
+        whiteWins += p.whitePoints == 1, draws += p.whitePoints == 0.5, blackWins += p.whitePoints == 0;
+    for (const auto &player : players)
+        if (player.elo > 0)
+            eloSum += player.elo, ++ratedPlayers;
+    const int average = ratedPlayers ? int(eloSum / ratedPlayers) : 0;
+    const int finished = whiteWins + draws + blackWins;
+    const QVariantMap summary{{"games", finished},
+                              {"whiteWins", whiteWins},
+                              {"draws", draws},
+                              {"blackWins", blackWins},
+                              {"decisive", finished ? 100 * (whiteWins + blackWins) / finished : 0},
+                              {"averageElo", average},
+                              {"category", average >= 2251 ? (average - 2251) / 25 + 1 : 0}};
+    return {{"players", rows}, {"rounds", rounds}, {"matrix", matrix}, {"summary", summary}};
 }
 } // namespace t64

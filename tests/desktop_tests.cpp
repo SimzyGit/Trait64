@@ -1094,6 +1094,33 @@ int main(int argc, char **argv) {
                   "Reentrant restart retains the distinct results of both verifications");
         }
         {
+            // Fusion des doublons puis réparation, de bout en bout.
+            Controller c(dir.path() + "/maintenance");
+            QSignalSpy messages(&c, &Controller::message);
+            const auto twice =
+                QString("[White \"A\"]\n[Black \"B\"]\n[Result \"1-0\"]\n\n1.e4 {note} e5 1-0\n\n"
+                        "[White \"A\"]\n[Black \"B\"]\n[Result \"1-0\"]\n[Event \"Club\"]\n\n"
+                        "1.e4 e5 1-0\n\n");
+            c.importText(twice);
+            QElapsedTimer wait;
+            const auto settle = [&] {
+                wait.start();
+                while ((c.busy() || c.analysisQueue()->state()["running"].toBool()) && wait.elapsed() < 60000)
+                    QTest::qWait(5);
+            };
+            settle();
+            c.mergeDuplicates();
+            settle();
+            check(c.stats()["games"].toInt() == 1, "Merging duplicates leaves one game");
+            c.repairDatabase();
+            settle();
+            check(!messages.isEmpty() && !messages.last()[1].toBool() && c.stats()["games"].toInt() == 1 &&
+                      QDir(dir.path() + "/maintenance/backups")
+                              .entryList({"before-repair-*"}, QDir::Dirs)
+                              .size() == 1,
+                  "Repair swaps in a sound copy and keeps the original among the backups");
+        }
+        {
             Controller closing(dir.path() + "/integrity-close");
             closing.verifyDatabase(); // Destructor cancels and joins the worker before releasing state.
         }

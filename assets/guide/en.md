@@ -54,7 +54,10 @@ Every game you save (*Ctrl+S*) lives in the library.
 - **Search**: by player, event, date, result, rating, opening; by exact position; by material; by pawn structure; by pieces on squares (*Ke1 Pd4 pd5*, uppercase for White — this last search replays every game and can be slow).
 - **Merge**: *Database → Merge the games shown into one study* turns a search result into a single study, each game becoming a variation where it leaves the others.
 - **Import** large databases: importing is parallel, resumable and checks integrity. *Database → Live tournaments* shows Lichess broadcasts: the boards of a round, and *Follow* opens a game in the analysis, where its moves arrive as it is played. The ⋮ menu of a game in the list opens the *Tournament crosstable*: standings, tie-breaks, performance, and a click on a result opens the game. En Croissant `.db3` databases and SCID format 4 databases (`.si4`, with their `.sn4` and `.sg4` alongside) can be read too.
-- **Duplicates**: *Database → Duplicate moves* finds games saved twice.
+- **Duplicates**: *Database → Duplicate moves* finds games saved twice; *Merge duplicates* keeps, for the same moves between the same players, the most annotated game, adds the comments, variations and headers of the others, and moves those to the trash.
+- **Compare two databases**: *Database → Compare with another database…* counts the shared games and those found on one side only.
+- **Repair**: *Tools → Repair the database* copies everything still readable from a damaged library into a new one; the original stays among the backups.
+- **Players**: a player's card shows their regular lines with each colour and how their choices changed year by year; *PDF file…* exports it.
 - **Position dossier**: for the position shown, the moves played, results by level and the best games.
 
 ## Studies and files

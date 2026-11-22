@@ -435,6 +435,122 @@ void Controller::rebuildIndexes() {
         return r;
     }));
 }
+// Les deux traitements longs de la bibliothèque passent par le même fil que l'import.
+void Controller::mergeDuplicates() {
+    try {
+        need(!busy_, "Attendez la fin du traitement.");
+        checkpoint();
+        const auto path = db_->path();
+        busy_ = true;
+        cancelTask_->store(false);
+        taskProgress_->store(0);
+        taskPoll_.start();
+        emit busyChanged();
+        importer_.setFuture(QtConcurrent::run([path, canceled = cancelTask_, progress = taskProgress_] {
+            ImportResult r;
+            r.operation = "merge";
+            try {
+                t64::Database db(path);
+                const auto merged = db.mergeDuplicates([&](int n) {
+                    progress->store(n);
+                    return !canceled->load();
+                });
+                r.count = merged["removed"].toInt();
+                r.duplicates = merged["groups"].toInt();
+            } catch (const std::exception &e) {
+                r.error = QString::fromUtf8(e.what());
+            }
+            return r;
+        }));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+// L'original n'est jamais modifié : il part dans les sauvegardes, la copie réparée prend
+// sa place une fois relue (même échange que la restauration d'une sauvegarde).
+void Controller::repairDatabase() {
+    try {
+        // Une lecture de répertoire en cours est annulée par l'échange final (openBackup).
+        need(!busy_ && !trainingActive() && !backupWorker_.isRunning() &&
+                 !analysisQueue_.state()["running"].toBool(),
+             "Attendez la fin des traitements en cours avant de réparer.");
+        checkpoint();
+        writeSession();
+        const auto path = db_->path();
+        const QString safety = dataPath_ + "/backups/before-repair-" +
+                               QDateTime::currentDateTimeUtc().toString("yyyyMMdd-HHmmsszzz");
+        need(QDir().mkpath(safety), "Dossier de sauvegarde inaccessible.");
+        for (const char *suffix : {"", "-wal"})
+            if (QFileInfo::exists(path + suffix))
+                need(QFile::copy(path + suffix, safety + "/library.sqlite" + suffix),
+                     "Copie de l’original impossible : rien n’a été changé.");
+        const auto staged = path + ".repair.tmp";
+        for (const char *suffix : {"", "-wal", "-shm"})
+            QFile::remove(staged + suffix);
+        busy_ = true;
+        cancelTask_->store(false);
+        taskProgress_->store(0);
+        taskPoll_.start();
+        emit busyChanged();
+        importer_.setFuture(
+            QtConcurrent::run([path, staged, canceled = cancelTask_, progress = taskProgress_] {
+                ImportResult r;
+                r.operation = "repair";
+                r.detail = staged;
+                try {
+                    const auto done = t64::Database::salvage(path, staged, [&](int n) {
+                        progress->store(n);
+                        return !canceled->load();
+                    });
+                    r.count = done["games"].toInt();
+                    r.duplicates = done["lost"].toInt();
+                    if (done["integrity"] != "ok")
+                        r.error = QObject::tr("La copie réparée reste endommagée : rien n’a été changé.");
+                } catch (const std::exception &e) {
+                    r.error = QString::fromUtf8(e.what());
+                }
+                return r;
+            }));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+void Controller::adoptRepaired(const QString &staged) {
+    const auto target = db_->path();
+    try {
+        db_.reset();
+        for (const char *suffix : {"", "-wal", "-shm"})
+            QFile::remove(target + suffix);
+        need(QFile::rename(staged, target), "Remplacement impossible : l’original est dans les sauvegardes.");
+        db_ = std::make_unique<t64::Database>(target);
+        openBackup(QUrl::fromLocalFile(target).toString());
+    } catch (const std::exception &e) {
+        if (!db_)
+            db_ = std::make_unique<t64::Database>(QFile::exists(target) ? target : staged);
+        fail(e);
+    }
+}
+void Controller::compareLibrary(const QString &url) {
+    try {
+        const auto diff = db_->compareWith(localPath(url));
+        QStringList names;
+        for (const auto &row : diff["players"].toList())
+            names << QString("%1 (%2)").arg(row.toMap()["name"].toString()).arg(row.toMap()["games"].toInt());
+        emit message(
+            tr("%1 : %2 partie(s), dont %3 déjà dans votre bibliothèque. %4 partie(s) n’existent qu’ici, "
+               "%5 que là-bas.")
+                .arg(QFileInfo(localPath(url)).fileName())
+                .arg(diff["theirs"].toLongLong())
+                .arg(diff["common"].toLongLong())
+                .arg(diff["onlyMine"].toLongLong())
+                .arg(diff["onlyTheirs"].toLongLong()) +
+            (names.isEmpty()
+                 ? QString()
+                 : "\n" + tr("Les plus présents parmi celles qui manquent ici : %1.").arg(names.join(", "))));
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
 void Controller::findDuplicates() {
     try {
         auto duplicates = db_->duplicates();

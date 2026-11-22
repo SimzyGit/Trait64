@@ -265,6 +265,21 @@ Controller::Controller(const QString &path, QObject *parent)
                 emit message(tr("Vérification SQLite : ") + r.detail, r.detail != tr("ok"));
             return;
         }
+        if (r.operation == "repair") {
+            if (!r.error.isEmpty()) {
+                for (const char *suffix : {"", "-wal", "-shm"})
+                    QFile::remove(r.detail + suffix);
+                emit message(r.error, true);
+                return;
+            }
+            adoptRepaired(r.detail);
+            emit message(tr("Bibliothèque réparée : %1 partie(s) récupérée(s), %2 ligne(s) illisible(s). "
+                            "L’original est gardé dans les sauvegardes.")
+                             .arg(r.count)
+                             .arg(r.duplicates),
+                         r.duplicates > 0);
+            return;
+        }
         if (r.operation == "puzzles") {
             refreshPuzzleStats();
             publish();
@@ -291,12 +306,13 @@ Controller::Controller(const QString &path, QObject *parent)
                                        : r.error);
         // Taille du lot que le bouton de bilan proposera. Un import raté ou une
         // reconstruction d'index n'ajoutent rien de neuf à passer en revue.
-        if (r.operation != "reindex")
+        const bool maintenance = r.operation == "reindex" || r.operation == "merge";
+        if (!maintenance)
             importedGames_ = r.error.isEmpty() ? std::max(0, r.count) : 0;
         // Les parties qui viennent d'entrer n'ont pour la plupart aucune balise ECO :
         // sans ce classement, la recherche par ouverture les ignorerait en silence. Avant
         // le rafraîchissement, sans quoi la liste montrerait encore l'état d'avant.
-        if (r.error.isEmpty() && r.count > 0 && r.operation != "reindex")
+        if (r.error.isEmpty() && r.count > 0 && !maintenance)
             classifyQuietly(false);
         refreshLibrary();
         // Un dossier de recueils s'importe fichier par fichier : c'est la fin de l'un
@@ -307,6 +323,12 @@ Controller::Controller(const QString &path, QObject *parent)
             emit message(r.error, true);
         else if (r.operation == "reindex")
             emit message(tr("Index reconstruits pour %1 partie(s).").arg(r.count));
+        else if (r.operation == "merge")
+            emit message(r.count ? tr("%1 doublon(s) fusionné(s) dans %2 partie(s), annotations comprises ; "
+                                      "ils sont dans la corbeille.")
+                                       .arg(r.count)
+                                       .arg(r.duplicates)
+                                 : tr("Aucun doublon à fusionner."));
         else if (r.operation == "resumable")
             emit message(tr("Import %1 : %2 parties validées, dont %3 nouvelles.")
                              .arg(r.job["status"] == "completed" ? tr("terminé") : tr("en pause"))

@@ -159,6 +159,8 @@ ApplicationWindow {
             MenuItem {text: qsTr("Bibliothèque"); onTriggered: win.page = 1}
             MenuItem {text: qsTr("Recherche avancée…"); onTriggered: {win.page = 1; advancedDialog.open()}}
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
+            MenuItem {text: qsTr("Fusionner les doublons"); enabled: !controller.busy; onTriggered: {win.page = 1; controller.mergeDuplicates()}}
+            MenuItem {text: qsTr("Comparer avec une autre base…"); onTriggered: compareLibraryDialog.open()}
             MenuItem {text: qsTr("Tournois de la bibliothèque…"); onTriggered: tournamentFinder.open()}
             MenuItem {text: qsTr("Graphiques de la sélection…"); onTriggered: libraryCharts.open()}
             MenuItem {text: qsTr("Supprimer la base…"); enabled: win.selectedBaseId > 0; onTriggered: removeBaseDialog.ask(win.selectedBaseId)}
@@ -298,6 +300,7 @@ ApplicationWindow {
                             MenuItem {objectName:"classifyOpenings";text:qsTr("Classer les ouvertures");enabled:!controller.busy;onTriggered:controller.classifyLibraryOpenings()}
                             MenuItem {objectName:"groupByOpening";text:qsTr("Ranger par ouverture");enabled:!controller.busy;onTriggered:controller.groupLibraryByOpening()}
                             MenuItem {text:qsTr("Doublons de coups");onTriggered:controller.findDuplicates()}
+                            MenuItem {text:qsTr("Fusionner les doublons");enabled:!controller.busy;onTriggered:controller.mergeDuplicates()}
                             MenuItem {objectName:"mergeShown";text:qsTr("Fusionner les parties affichées en une étude");enabled:controller.games.length>1;onTriggered:controller.mergeShownGames()}
                             MenuItem {text:qsTr("Corriger les noms…");objectName:"showNames";onTriggered:namesDialog.open()}
                             MenuSeparator {}
@@ -882,7 +885,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                                 Label {text:qsTr("Intégrité & diagnostic");font.pixelSize:Math.round(15*controller.preferences.fontScale*controller.preferences.uiScale);font.weight:Font.DemiBold}
                                 Label {text:qsTr("Vérifiez la bibliothèque et comptez les positions légales depuis l’échiquier.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted}
                                 Item {Layout.fillHeight:true}
-                                Flow {Layout.fillWidth:true;spacing:8;TButton {objectName:"exportDiagnostic";text:qsTr("Journal de diagnostic…");onClicked:diagnosticDialog.open()} TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()}}
+                                Flow {Layout.fillWidth:true;spacing:8;TButton {objectName:"exportDiagnostic";text:qsTr("Journal de diagnostic…");onClicked:diagnosticDialog.open()} TButton {text:qsTr("Vérifier la base");enabled:!controller.busy;onClicked:controller.verifyDatabase()} TButton {text:qsTr("Réindexer");enabled:!controller.busy;onClicked:controller.rebuildIndexes()} TButton {objectName:"repairDatabase";text:qsTr("Réparer la base");enabled:!controller.busy;ToolTip.visible:hovered;ToolTip.text:qsTr("Recopie ce qui se lit encore dans une base neuve. L’original est gardé dans les sauvegardes.");onClicked:controller.repairDatabase()}}
                             }
                         }
                         Rectangle {Layout.fillWidth:true;Layout.fillHeight:true;implicitHeight:children[0].implicitHeight+36;radius:6;color:win.panel;border.color:win.line
@@ -1103,6 +1106,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcuts {id:shortcutsDialog;objectName:"shortcutsDialog";backend:controller}
     Backups {id:backupsDialog;objectName:"backupsDialog";backend:controller}
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
+    Native.FileDialog {id:compareLibraryDialog;title:qsTr("Base Trait64 à comparer");nameFilters:[qsTr("Bibliothèques Trait64 (*.sqlite)"),qsTr("Tous les fichiers (*)")];onAccepted:controller.compareLibrary(selectedFile.toString())}
     Names {id:namesDialog;objectName:"namesDialog";backend:controller}
     Live {id:liveDialog;objectName:"liveDialog";backend:controller}
     Plans {id:plansDialog;objectName:"plansDialog";backend:controller}

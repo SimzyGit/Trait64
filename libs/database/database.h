@@ -218,6 +218,18 @@ class Database {
     QVariantList similarPositions(const std::string &fen, int limit = 30, int candidates = 1500,
                                   const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
     QVariantList duplicates() const;
+    // Fusionne les doublons : même ligne principale, mêmes joueurs, même résultat. La partie
+    // la plus annotée reste ; les autres lui apportent commentaires, variantes et en-têtes
+    // manquants, puis passent à la corbeille. Rend {groups, removed}.
+    // Recopie ce qui se lit encore de `source` dans une base neuve `target`, puis en
+    // recalcule les index (repair.cpp). Rend {games, rows, lost, integrity}.
+    static QVariantMap salvage(const QString &source, const QString &target,
+                               const std::function<bool(int)> &progress = {});
+    // Compare la bibliothèque à une autre base Trait64, partie par partie (même suite de
+    // coups) : {mine, theirs, common, onlyMine, onlyTheirs, players : les joueurs les plus
+    // présents parmi les parties qui manquent ici}.
+    QVariantMap compareWith(const QString &other) const;
+    QVariantMap mergeDuplicates(const std::function<bool(int)> &progress = {});
     // Parties encore sans clés stratégiques : celles d'avant le schéma 15, à réindexer.
     int gamesWithoutThemes() const;
     int rebuildIndexes(const std::function<bool(int)> &progress = {});
@@ -256,6 +268,9 @@ class Database {
     void upgradeV13(int originalVersion);
     void upgradeV14(int originalVersion);
     void upgradeV15(int originalVersion);
+    void upgradeV16(int originalVersion);
+    QVariantMap computeOpeningReport(qint64 key, int models,
+                                     const std::shared_ptr<std::atomic_bool> &canceled) const;
     // Schéma 12 : index allégé. Voir lightindex.cpp.
     bool light_ = false;
     void saveLegacyIndex(const Game &game, qint64 id);

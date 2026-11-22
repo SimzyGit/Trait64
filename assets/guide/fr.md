@@ -53,8 +53,11 @@ Toutes vos parties enregistrées (*Ctrl+S*) vivent dans la bibliothèque.
 
 - **Rechercher** : par joueur, tournoi, date, résultat, Elo, ouverture ; par position exacte ; par matériel ; par structure de pions ; par pièces sur des cases (*Ke1 Pd4 pd5*, majuscule pour les Blancs — cette dernière recherche rejoue toutes les parties et peut être lente).
 - **Fusionner** : *Base → Fusionner les parties affichées en une étude* fond le résultat d'une recherche en une seule étude, chaque partie devenant une variante là où elle s'écarte des autres.
-- **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. *Base → Tournois en direct* montre les retransmissions de Lichess : les échiquiers d'une ronde, et *Suivre* ouvre une partie dans l'analyse, où ses coups arrivent au fil du jeu. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages, performance, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
-- **Doublons** : *Base → Doublons de coups* repère les parties en double.
+- **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. *Base → Tournois en direct* montre les retransmissions de Lichess : les échiquiers d'une ronde, et *Suivre* ouvre une partie dans l'analyse, où ses coups arrivent au fil du jeu. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages (Sonneborn-Berger, Buchholz), performance, variation d'Elo, Elo moyen et catégorie FIDE, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
+- **Doublons** : *Base → Doublons de coups* repère les parties en double ; *Fusionner les doublons* garde, pour les mêmes coups entre les mêmes joueurs, la partie la plus annotée, lui ajoute les commentaires, variantes et en-têtes des autres, et met celles-ci à la corbeille.
+- **Comparer deux bases** : *Base → Comparer avec une autre base…* compte les parties communes et celles qui n'existent que d'un côté.
+- **Réparer** : *Outils → Réparer la base* recopie ce qui se lit encore d'une bibliothèque abîmée dans une base neuve ; l'original reste dans les sauvegardes.
+- **Joueurs** : la fiche d'un joueur montre ses lignes régulières avec chaque couleur et l'évolution de ses choix année par année ; *Dossier PDF…* l'exporte.
 - **Dossier de position** : pour la position affichée, les coups joués, les résultats par niveau et les meilleures parties.
 
 ## Études et fichiers

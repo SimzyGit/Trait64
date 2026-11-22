@@ -5,6 +5,7 @@
 #include "themes.h"
 #include <QBuffer>
 #include <QCryptographicHash>
+#include <QDataStream>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -78,7 +79,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 15, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 16, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -156,6 +157,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV13(v);
         upgradeV14(v);
         upgradeV15(v);
+        upgradeV16(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
@@ -886,10 +888,63 @@ void Database::favorite(qint64 id, bool value) {
     q.addBindValue(id);
     run(q);
 }
+// Le dossier d'une position très jouée agrège des centaines de milliers de lignes : il
+// est gardé dans la base, et les déclencheurs de upgradeV16 le jettent dès qu'une partie
+// change. Un dossier est donc soit exact, soit absent.
+void Database::upgradeV16(int originalVersion) {
+    if (originalVersion >= 16)
+        return;
+    sql("SAVEPOINT schema16");
+    try {
+        sql("CREATE TABLE IF NOT EXISTS report_cache(key INTEGER NOT NULL,models INTEGER NOT NULL,payload "
+            "BLOB "
+            "NOT NULL,PRIMARY KEY(key,models)) WITHOUT ROWID");
+        for (const char *event : {"INSERT", "DELETE", "UPDATE"})
+            sql(QString("CREATE TRIGGER IF NOT EXISTS report_cache_%1 AFTER %2 ON games BEGIN DELETE FROM "
+                        "report_cache; END")
+                    .arg(QString(event).toLower(), event));
+        sql("PRAGMA user_version=16");
+        sql("RELEASE schema16");
+    } catch (...) {
+        sql("ROLLBACK TO schema16");
+        sql("RELEASE schema16");
+        throw;
+    }
+}
 QVariantMap Database::openingReport(const QString &fen, int models,
                                     const std::shared_ptr<std::atomic_bool> &canceled) const {
-    QueryCancellation cancellation(db_, canceled);
     const auto key = hashKey(fen.toStdString());
+    {
+        QSqlQuery cached(db_);
+        cached.prepare("SELECT payload FROM report_cache WHERE key=? AND models=?");
+        cached.addBindValue(key);
+        cached.addBindValue(models);
+        if (cached.exec() && cached.next()) {
+            QVariantMap report;
+            QDataStream in(cached.value(0).toByteArray());
+            in >> report;
+            if (in.status() == QDataStream::Ok && !report.isEmpty())
+                return report;
+        }
+    }
+    auto report = computeOpeningReport(key, models, canceled);
+    // En dessous de quelques milliers de lignes, le calcul est plus rapide que la lecture.
+    if (report["total"].toLongLong() >= 5000) {
+        QByteArray payload;
+        QDataStream out(&payload, QIODevice::WriteOnly);
+        out << report;
+        QSqlQuery store(db_);
+        store.prepare("INSERT OR REPLACE INTO report_cache(key,models,payload) VALUES(?,?,?)");
+        store.addBindValue(key);
+        store.addBindValue(models);
+        store.addBindValue(payload);
+        store.exec(); // une base occupée par un import n'empêche pas de rendre le dossier
+    }
+    return report;
+}
+QVariantMap Database::computeOpeningReport(qint64 key, int models,
+                                           const std::shared_ptr<std::atomic_bool> &canceled) const {
+    QueryCancellation cancellation(db_, canceled);
     // Les tranches sont celles que l'on distingue réellement : le club, le joueur de
     // tournoi, le maître. Une partie dont un seul Elo manque n'est pas rangée de force.
     const auto bandOf = [](int whiteElo, int blackElo) {
@@ -962,6 +1017,7 @@ QVariantMap Database::openingReport(const QString &fen, int models,
             bandTotals[name] = bandTotals[name].toLongLong() + 1;
         }
     }
+    check(!q.lastError().isValid() && (!canceled || !canceled->load()), "Recherche annulée.");
     QVariantList moves;
     for (auto it = tallies.cbegin(); it != tallies.cend(); ++it) {
         QVariantMap move{{"uci", it.key()},    {"san", it->san},   {"count", it->count},

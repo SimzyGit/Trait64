@@ -7,11 +7,11 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 **1. Petits défauts** — tous corrigés le 21 novembre : nombres à la française dans les compteurs, intitulés alignés dans « Modifier le profil », messages du cœur traduits (121 phrases), journal de diagnostic exportable, feuille de route remise à jour.
 
 **2. Très grandes bases** (le point le plus faible face à ChessBase)
-- [ ] Import qualifié à 2, 5 et 10 millions de parties (vérifié jusqu'à un million).
-- [ ] Ouverture rapide des positions très courantes sur une grosse base.
-- [ ] Fusion intelligente des doublons, annotations comprises.
-- [ ] Réparation d'une base abîmée (sauvegarde et restauration existent).
-- [ ] Comparaison de plusieurs bases, statistiques de tournoi avancées.
+- [ ] Import qualifié à 2, 5 et 10 millions de parties (vérifié jusqu'à un million ; demande un corpus et un disque que la machine de mesure n'a pas).
+- [x] Ouverture rapide des positions très courantes sur une grosse base. — 22 nov. (dossier gardé en base, jeté dès qu'une partie change)
+- [x] Fusion intelligente des doublons, annotations comprises. — 22 nov.
+- [x] Réparation d'une base abîmée. — 22 nov. (copie de ce qui se lit, original gardé)
+- [x] Comparaison de deux bases, statistiques de tournoi avancées. — 22 nov. (Buchholz, ±Elo, catégorie FIDE)
 
 **3. Analyse et bilan**
 - [x] Erreur montrée avec sa réfutation sur l'échiquier ; coup joué et meilleur coup comparés visuellement. — 21 nov.

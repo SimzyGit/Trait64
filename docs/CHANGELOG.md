@@ -1,5 +1,13 @@
 # Changements
 
+## Grandes bases : fusion des doublons, réparation, comparaison, tournois — 22 novembre 2026
+
+- **Fusionner les doublons** (*Base*) : les parties aux mêmes coups **et** aux mêmes joueurs et résultat — deux nulles rapides de joueurs différents ne sont pas confondues. La plus annotée reste et reçoit commentaires, variantes et en-têtes manquants (date, tournoi…) des autres, qui vont à la corbeille.
+- **Réparer la base** (*Outils*) : ce qui se lit encore est recopié dans une base neuve, ligne par ligne là où une page est illisible, puis les index sont recalculés. L'original est d'abord copié dans les sauvegardes et la copie réparée ne le remplace qu'une fois relue saine.
+- **Comparer avec une autre base…** : parties communes, propres à chacune, et les joueurs les plus présents parmi celles qui manquent.
+- **Tableau du tournoi** : Buchholz, variation d'Elo à la manière de la FIDE (K = 10 dès 2400, 20 en dessous), Elo moyen, catégorie FIDE et répartition des résultats.
+- **Dossier d'une position très jouée** gardé dans la bibliothèque (schéma 16) : la position de départ d'une base d'un million de parties demandait 6 à 17 s à chaque ouverture du logiciel ; elle se relit désormais aussitôt, tant qu'aucune partie n'a changé — un déclencheur jette le dossier à la moindre écriture.
+
 ## Préparation : lignes régulières, évolution, dossier PDF — 22 novembre 2026
 
 - **Fiche Joueurs** : les lignes que le joueur joue le plus souvent avec les Blancs et avec les Noirs (huit demi-coups, nombre de parties et score), puis l'**évolution de ses choix** année par année — son premier coup avec les Blancs, sa réponse avec les Noirs.

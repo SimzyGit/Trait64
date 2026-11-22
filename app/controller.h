@@ -340,6 +340,9 @@ class Controller : public QObject {
     Q_INVOKABLE void exportPlayerPdf(const QString &url);
     Q_INVOKABLE void rebuildIndexes();
     Q_INVOKABLE void findDuplicates();
+    Q_INVOKABLE void mergeDuplicates();
+    Q_INVOKABLE void compareLibrary(const QString &url);
+    Q_INVOKABLE void repairDatabase();
     // Les parties de la page affichée (au plus 200, celles d'une recherche) fondues en une
     // étude avec variantes, dans un nouvel onglet.
     Q_INVOKABLE void mergeShownGames();
@@ -671,6 +674,7 @@ class Controller : public QObject {
     QVariantList sources_, importHistory_;
     void initContent();
     void importSourceFile(const QString &url, const QVariantMap &source);
+    void adoptRepaired(const QString &staged);
     struct ImportResult {
         int count = 0, duplicates = 0, skipped = 0;
         QString error, detail, operation = "import";
