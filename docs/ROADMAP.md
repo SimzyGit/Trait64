@@ -20,9 +20,9 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 - [x] Synthèse des conclusions de plusieurs moteurs. — 21 nov.
 
 **4. Préparation contre un adversaire**
-- [ ] Réponses les plus fréquentes, variantes régulières, évolution de ses choix dans le temps.
+- [x] Réponses les plus fréquentes, variantes régulières, évolution de ses choix dans le temps. — 22 nov. (fiche Joueurs)
 - [ ] Nouveautés repérées au-delà de la base locale.
-- [ ] Dossier exporté en PDF (CSV seulement aujourd'hui).
+- [x] Dossier exporté en PDF. — 22 nov.
 
 **5. Entraînement**
 - [x] Exercices de calcul et de visualisation. — Stoyko, puzzle à l'aveugle (21 nov.)

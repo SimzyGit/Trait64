@@ -403,6 +403,7 @@ void Controller::searchAdvanced(const QVariantMap &filters) {
 void Controller::inspectPlayer(const QString &name) {
     try {
         playerProfile_ = db_->player(name);
+        playerProfile_["repertoire"] = db_->playerRepertoire(name);
         emit libraryChanged();
     } catch (const std::exception &e) {
         fail(e);
@@ -1275,6 +1276,85 @@ void Controller::detectOpening() {
         }
         if (!n)
             break;
+    }
+}
+void Controller::exportPlayerPdf(const QString &url) {
+    try {
+        need(!playerProfile_.value("name").toString().isEmpty(), "Choisissez d’abord un joueur.");
+        const auto &p = playerProfile_;
+        db_->validateOutputPath(localPath(url));
+        QSaveFile file(localPath(url));
+        need(file.open(QIODevice::WriteOnly), file.errorString());
+        {
+            QPdfWriter writer(&file);
+            writer.setResolution(96);
+            writer.setPageSize(QPageSize(QPageSize::A4));
+            writer.setTitle(tr("Dossier : %1").arg(p["name"].toString()));
+            QTextDocument doc;
+            doc.setDefaultFont(QFont("DejaVu Sans", 10));
+            const auto e = [](const QVariant &v) { return v.toString().toHtmlEscaped(); };
+            QString html = "<h1>" + e(p["name"]) + "</h1><p>" +
+                           tr("%1 partie(s) · Elo récent : %2 · score %3 %")
+                               .arg(p["games"].toInt())
+                               .arg(e(p["elo"]))
+                               .arg(qRound(p["score"].toDouble())) +
+                           "</p>";
+            const auto rep = p["repertoire"].toMap();
+            const auto table = [&](const QString &title, const QVariantList &rows) {
+                if (rows.isEmpty())
+                    return;
+                html += "<h2>" + title.toHtmlEscaped() +
+                        "</h2><table cellpadding='3' border='1' cellspacing='0'><tr><th>" + tr("Ligne") +
+                        "</th><th>" + tr("Parties") + "</th><th>" + tr("Score") + "</th></tr>";
+                for (const auto &v : rows) {
+                    const auto r = v.toMap();
+                    html += "<tr><td>" + e(r["line"]) + "</td><td align='right'>" + e(r["games"]) +
+                            "</td><td align='right'>" + e(r["score"]) + " %</td></tr>";
+                }
+                html += "</table>";
+            };
+            table(tr("Lignes régulières avec les Blancs"), rep["white"].toList());
+            table(tr("Lignes régulières avec les Noirs"), rep["black"].toList());
+            const auto years = rep["years"].toList();
+            if (!years.isEmpty()) {
+                html += "<h2>" + tr("Évolution de ses choix").toHtmlEscaped() +
+                        "</h2><table cellpadding='3' border='1' cellspacing='0'><tr><th>" + tr("Année") +
+                        "</th><th>" + tr("Blancs") + "</th><th>" + tr("Noirs") + "</th></tr>";
+                for (const auto &v : years) {
+                    const auto y = v.toMap();
+                    const auto cell = [&](const QVariantMap &m) {
+                        return m.isEmpty()
+                                   ? QString("—")
+                                   : e(m["move"]) +
+                                         QString(" (%1/%2)").arg(m["games"].toInt()).arg(m["total"].toInt());
+                    };
+                    html += "<tr><td>" + e(y["year"]) + "</td><td>" + cell(y["white"].toMap()) + "</td><td>" +
+                            cell(y["black"].toMap()) + "</td></tr>";
+                }
+                html += "</table>";
+            }
+            const auto recent = p["recent"].toList();
+            if (!recent.isEmpty()) {
+                html += "<h2>" + tr("Parties récentes").toHtmlEscaped() + "</h2><ul>";
+                for (int i = 0; i < std::min(20, int(recent.size())); ++i) {
+                    const auto g = recent[i].toMap();
+                    html += "<li>" + e(g["date"]) + " · " + e(g["white"]) + " – " + e(g["black"]) + " · " +
+                            e(g["result"]) +
+                            (g["eco"].toString().isEmpty() ? QString() : " · " + e(g["eco"])) + "</li>";
+                }
+                html += "</ul>";
+            }
+            html += "<p style='color:#666'>" +
+                    tr("Dossier établi par Trait64 depuis votre bibliothèque locale.").toHtmlEscaped() +
+                    "</p>";
+            doc.setHtml(html);
+            doc.setPageSize(writer.pageLayout().paintRectPixels(writer.resolution()).size());
+            doc.print(&writer);
+        }
+        need(file.commit(), file.errorString());
+        emit message(tr("Dossier PDF enregistré."));
+    } catch (const std::exception &e) {
+        fail(e);
     }
 }
 void Controller::exportStudyPdf(const QString &url) {

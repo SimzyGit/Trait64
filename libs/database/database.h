@@ -201,6 +201,13 @@ class Database {
     void deleteCard(qint64 id);
     QVariantList players() const;
     QVariantMap player(const QString &name) const;
+    // Le répertoire d'un joueur, tiré de ses parties : ses lignes régulières sur les
+    // `plies` premiers demi-coups, avec les Blancs et avec les Noirs (nombre et score), et
+    // l'évolution de ses premiers choix année par année.
+    QVariantMap playerRepertoire(const QString &name, int plies = 8, int lines = 6) const;
+    // Les premiers coups SAN d'un texte PGN, sans commentaires ni variantes : de quoi
+    // grouper des parties par ligne sans les rejouer.
+    static QStringList openingMoves(const QString &pgn, int plies);
     // L'explorateur de plans : manœuvres et ruptures jouées depuis cette structure de pions,
     // dans les `limit` parties les mieux classées qui l'ont eue (plans.cpp).
     QVariantMap plans(const std::string &fen, int limit = 400,

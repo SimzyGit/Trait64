@@ -1949,5 +1949,19 @@
   "vérifier une variante sans bouger les pièces (exercice de Stoyko)": "check a line without moving the pieces (Stoyko exercise)",
   "Visualisation": "Visualisation",
   "un puzzle les pièces masquées": "a puzzle with the pieces hidden",
-  "Programme du jour": "Today's plan"
+  "Programme du jour": "Today's plan",
+  "Lignes régulières avec les Blancs": "Regular lines with White",
+  "Lignes régulières avec les Noirs": "Regular lines with Black",
+  "%1 partie(s) · %2 %": "%1 game(s) · %2%",
+  "Évolution de ses choix": "How their choices changed",
+  "Blancs : %1": "White: %1",
+  "Noirs : %1": "Black: %1",
+  "Dossier PDF…": "PDF file…",
+  "Enregistrer le dossier du joueur": "Save the player file",
+  "Choisissez d’abord un joueur.": "Choose a player first.",
+  "Dossier : %1": "File: %1",
+  "%1 partie(s) · Elo récent : %2 · score %3 %": "%1 game(s) · recent rating: %2 · score %3%",
+  "Ligne": "Line",
+  "Dossier établi par Trait64 depuis votre bibliothèque locale.": "File prepared by Trait64 from your local library.",
+  "Dossier PDF enregistré.": "PDF file saved."
 }

@@ -2836,6 +2836,14 @@ int main(int argc, char **argv) {
             QFile output(csv);
             check(output.open(QIODevice::ReadOnly) && output.readAll().contains("Rival"),
                   "CSV includes filters for reproducible interpretation");
+            c.inspectPlayer("Rival");
+            check(c.playerProfile()["repertoire"].toMap().contains("years"),
+                  "A player profile carries their regular lines and how they changed");
+            const auto pdf = dir.path() + "/rival.pdf";
+            c.exportPlayerPdf(pdf);
+            QFile dossier(pdf);
+            check(dossier.open(QIODevice::ReadOnly) && dossier.read(4) == "%PDF",
+                  "The player file is saved as a PDF");
             c.playPreparedMove("d2d4");
             const auto resultingFen = c.state()["fen"];
             c.playPreparedMove("e2e4");

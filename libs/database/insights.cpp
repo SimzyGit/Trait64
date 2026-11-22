@@ -42,6 +42,130 @@ QVariantList Database::players() const {
         result << QVariantMap{{"name", q.value(0)}, {"games", q.value(1)}, {"elo", q.value(2)}};
     return result;
 }
+QStringList Database::openingMoves(const QString &pgn, int plies) {
+    QStringList moves;
+    int depth = 0;
+    bool brace = false, tag = false;
+    QString token;
+    const auto flush = [&] {
+        if (token.isEmpty())
+            return;
+        // Numéros (« 12. », « 12... »), résultats et NAG ne sont pas des coups.
+        static const QRegularExpression skip("^(\\d+\\.+|\\$\\d+|1-0|0-1|1/2-1/2|\\*)$");
+        if (!skip.match(token).hasMatch() && moves.size() < plies) {
+            auto move = token;
+            move.remove(QRegularExpression("^\\d+\\.+"));
+            move.remove(QRegularExpression("[!?]+$"));
+            if (!move.isEmpty())
+                moves << move;
+        }
+        token.clear();
+    };
+    for (const QChar c : pgn) {
+        if (moves.size() >= plies)
+            break;
+        if (brace) {
+            brace = c != '}';
+            continue;
+        }
+        if (tag) {
+            tag = c != ']';
+            continue;
+        }
+        if (c == '{') {
+            flush();
+            brace = true;
+        } else if (c == '[' && depth == 0 && token.isEmpty()) {
+            tag = true;
+        } else if (c == '(') {
+            flush();
+            ++depth;
+        } else if (c == ')') {
+            flush();
+            depth = std::max(0, depth - 1);
+        } else if (c.isSpace()) {
+            flush();
+        } else if (depth == 0)
+            token += c;
+    }
+    flush();
+    return moves;
+}
+
+QVariantMap Database::playerRepertoire(const QString &name, int plies, int lines) const {
+    QSqlQuery q(db_);
+    q.prepare("SELECT white,result,date,pgn FROM games WHERE deleted=0 AND (white=? OR black=?)");
+    q.addBindValue(name);
+    q.addBindValue(name);
+    run(q);
+    struct Line {
+        int games = 0;
+        double points = 0;
+    };
+    QMap<QString, Line> asWhite, asBlack;
+    // Par année : le premier coup avec les Blancs, la réponse au premier coup adverse avec
+    // les Noirs (« 1.e4 c5 »).
+    QMap<QString, QMap<QString, int>> whiteYears, blackYears;
+    while (q.next()) {
+        const bool white = q.value(0).toString() == name;
+        const auto result = q.value(1).toString();
+        const double points = result == "1-0"       ? (white ? 1 : 0)
+                              : result == "0-1"     ? (white ? 0 : 1)
+                              : result == "1/2-1/2" ? .5
+                                                    : -1;
+        const auto moves = openingMoves(q.value(3).toString(), plies);
+        if (moves.isEmpty())
+            continue;
+        QStringList numbered;
+        for (int i = 0; i < moves.size(); ++i)
+            numbered << (i % 2 == 0 ? QString::number(i / 2 + 1) + "." + moves[i] : moves[i]);
+        auto &line = (white ? asWhite : asBlack)[numbered.join(' ')];
+        ++line.games;
+        if (points >= 0)
+            line.points += points;
+        const auto year = q.value(2).toString().left(4);
+        if (year.size() == 4 && !year.contains('?')) {
+            if (white)
+                ++whiteYears[year]["1." + moves[0]];
+            else if (moves.size() >= 2)
+                ++blackYears[year]["1." + moves[0] + " " + moves[1]];
+        }
+    }
+    const auto top = [&](const QMap<QString, Line> &all) {
+        QList<QPair<QString, Line>> sorted;
+        for (auto it = all.cbegin(); it != all.cend(); ++it)
+            sorted << qMakePair(it.key(), it.value());
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const auto &a, const auto &b) { return a.second.games > b.second.games; });
+        QVariantList out;
+        for (int i = 0; i < std::min(lines, int(sorted.size())); ++i)
+            out << QVariantMap{{"line", sorted[i].first},
+                               {"games", sorted[i].second.games},
+                               {"score", qRound(100.0 * sorted[i].second.points / sorted[i].second.games)}};
+        return out;
+    };
+    const auto favourite = [](const QMap<QString, int> &counts) {
+        QString best;
+        int total = 0;
+        for (auto it = counts.cbegin(); it != counts.cend(); ++it) {
+            total += it.value();
+            if (best.isEmpty() || it.value() > counts[best])
+                best = it.key();
+        }
+        return best.isEmpty() ? QVariantMap()
+                              : QVariantMap{{"move", best}, {"games", counts[best]}, {"total", total}};
+    };
+    QStringList years = whiteYears.keys() + blackYears.keys();
+    years.removeDuplicates();
+    std::sort(years.begin(), years.end());
+    QVariantList evolution;
+    for (const auto &year : years)
+        evolution << QVariantMap{{"year", year},
+                                 {"white", favourite(whiteYears.value(year))},
+                                 {"black", favourite(blackYears.value(year))}};
+    return {{"white", top(asWhite)}, {"black", top(asBlack)}, {"years", evolution}};
+}
+
 QVariantMap Database::player(const QString &name) const {
     QSqlQuery q(db_);
     q.prepare(

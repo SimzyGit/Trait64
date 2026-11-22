@@ -972,6 +972,40 @@ int main(int argc, char **argv) {
             }
             check(told, "A file of variants only says why nothing was imported");
         }
+        {
+            // Le répertoire d'un adversaire : ses lignes régulières et ses choix par année.
+            check(
+                t64::Database::openingMoves(
+                    "[Event \"x\"]\n1. e4 {[%clk 0:03:00]} e5 (1... c5 2. Nf3) 2. Nf3!? $1 Nc6 3. Bb5 a6 1-0",
+                    4) == QStringList({"e4", "e5", "Nf3", "Nc6"}),
+                "Opening moves skip tags, comments, variations, numbers and NAGs");
+            t64::Database rep(dir.path() + "/repertoire-player.sqlite");
+            const auto file = dir.path() + "/repertoire-player.pgn";
+            QFile out(file);
+            check(out.open(QIODevice::WriteOnly), "Open opponent fixture");
+            out.write(
+                "[White \"Opp\"]\n[Black \"A\"]\n[Date \"2023.01.01\"]\n[Result \"1-0\"]\n1.e4 e5 2.Nf3 Nc6 "
+                "1-0\n\n"
+                "[White \"Opp\"]\n[Black \"B\"]\n[Date \"2024.01.01\"]\n[Result \"1/2-1/2\"]\n1.e4 e5 2.Nf3 "
+                "Nc6 1/2-1/2\n\n"
+                "[White \"Opp\"]\n[Black \"C\"]\n[Date \"2025.01.01\"]\n[Result \"0-1\"]\n1.d4 d5 0-1\n\n"
+                "[White \"D\"]\n[Black \"Opp\"]\n[Date \"2025.02.01\"]\n[Result \"0-1\"]\n1.e4 c5 2.Nf3 d6 "
+                "0-1\n");
+            out.close();
+            rep.importPgnFile(file, [](int) { return true; });
+            const auto r = rep.playerRepertoire("Opp", 4);
+            const auto white = r["white"].toList(), black = r["black"].toList(), years = r["years"].toList();
+            check(white.size() == 2 && white[0].toMap()["line"] == "1.e4 e5 2.Nf3 Nc6" &&
+                      white[0].toMap()["games"] == 2 && white[0].toMap()["score"] == 75 &&
+                      black.size() == 1 && black[0].toMap()["line"] == "1.e4 c5 2.Nf3 d6" &&
+                      black[0].toMap()["score"] == 100,
+                  "An opponent's regular lines come with their frequency and score");
+            check(years.size() == 3 && years[2].toMap()["year"] == "2025" &&
+                      years[2].toMap()["white"].toMap()["move"] == "1.d4" &&
+                      years[2].toMap()["black"].toMap()["move"] == "1.e4 c5" &&
+                      years[0].toMap()["white"].toMap()["move"] == "1.e4",
+                  "An opponent's choices are followed year by year");
+        }
         // Materialized totals must remain equivalent to the raw rows after every write path.
         {
             const auto path = dir.path() + "/counters.sqlite";

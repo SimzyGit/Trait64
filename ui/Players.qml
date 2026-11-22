@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Native
 ScrollView {id:root
     signal preparePlayer(string name)
     signal importOnline()
@@ -16,7 +17,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
         TButton {objectName:"playersImportOnline";text:qsTr("Comptes Lichess / Chess.com");onClicked:root.importOnline()}
         TTextField {id:filter;placeholderText:qsTr("Rechercher un joueur");width:240*root.p.uiScale}
     }
-    RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)}}
+    RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)} TButton {objectName:"playerPdf";text:qsTr("Dossier PDF…");enabled:!!root.profile.name;onClicked:playerPdfDialog.open()}}
     SplitView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:350*controller.preferences.fontScale
         handle:Rectangle {implicitWidth:7;color:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:SplitHandle.hovered||SplitHandle.pressed?root.p.accentColor:root.p.line}}
         ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:1;ScrollBar.vertical:ScrollBar{}
@@ -64,6 +65,29 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
                     text:qsTr("%1 % de parties décisives · %2 coups en moyenne · %3 échec(s) et %4 prise(s) par partie · roques opposés dans %5 % des parties")
                         .arg(st.decisive).arg(st.averageMoves).arg(Number(st.checks||0).toLocaleString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language),"f",1))
                         .arg(Number(st.captures||0).toLocaleString(Qt.locale(controller.preferences.language==="auto"?"":controller.preferences.language),"f",1)).arg(st.oppositeCastling)}
+                // Son répertoire : les lignes qu'il rejoue, avec chaque couleur, puis ses premiers
+                // choix année par année — ce qu'il faut savoir avant de l'affronter.
+                Repeater {model:[{key:"white",title:qsTr("Lignes régulières avec les Blancs")},{key:"black",title:qsTr("Lignes régulières avec les Noirs")}]
+                    delegate:Column {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);spacing:4
+                        readonly property var rows:((root.profile.repertoire||{})[modelData.key])||[]
+                        visible:rows.length>0
+                        Label {text:modelData.title;font.bold:true}
+                        Repeater {model:parent.rows
+                            delegate:Rectangle {required property var modelData;width:parent.width;height:Math.max(32,32*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:4
+                                RowLayout {anchors.fill:parent;anchors.leftMargin:10;anchors.rightMargin:10
+                                    Label {text:modelData.line;Layout.fillWidth:true;elide:Text.ElideRight;font.family:"monospace"}
+                                    Label {text:qsTr("%1 partie(s) · %2 %").arg(modelData.games).arg(modelData.score);color:root.p.muted}}}}
+                    }
+                }
+                Column {objectName:"playerEvolution";x:20;width:Math.max(1,profileBody.width-20);spacing:2
+                    readonly property var years:((root.profile.repertoire||{}).years)||[]
+                    visible:years.length>1
+                    Label {text:qsTr("Évolution de ses choix");font.bold:true}
+                    Repeater {model:parent.years
+                        delegate:Label {required property var modelData;width:parent.width;elide:Text.ElideRight;color:root.p.muted
+                            text:modelData.year+" — "+qsTr("Blancs : %1").arg(modelData.white&&modelData.white.move?modelData.white.move+" ("+modelData.white.games+"/"+modelData.white.total+")":"—")
+                                 +" · "+qsTr("Noirs : %1").arg(modelData.black&&modelData.black.move?modelData.black.move+" ("+modelData.black.games+"/"+modelData.black.total+")":"—")}}
+                }
                 Label {text:qsTr("Ouvertures jouées");visible:!!root.profile.name;x:20;width:Math.max(1,profileBody.width-20);font.bold:true}
                 Repeater {model:root.profile.openings||[]
                     delegate:Rectangle {required property var modelData;x:20;width:Math.max(1,profileBody.width-20);height:Math.max(40,40*root.p.fontScale*root.p.uiScale);color:root.p.panel;radius:2
@@ -131,4 +155,5 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
         }
     }
 }
+    Native.FileDialog {id:playerPdfDialog;title:qsTr("Enregistrer le dossier du joueur");fileMode:Native.FileDialog.SaveFile;defaultSuffix:"pdf";nameFilters:["PDF (*.pdf)"];onAccepted:root.backend.exportPlayerPdf(selectedFile.toString())}
 }

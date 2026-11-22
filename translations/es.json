@@ -1949,5 +1949,19 @@
   "vérifier une variante sans bouger les pièces (exercice de Stoyko)": "comprobar una variante sin mover las piezas (ejercicio de Stoyko)",
   "Visualisation": "Visualización",
   "un puzzle les pièces masquées": "un problema con las piezas ocultas",
-  "Programme du jour": "Programa del día"
+  "Programme du jour": "Programa del día",
+  "Lignes régulières avec les Blancs": "Líneas habituales con blancas",
+  "Lignes régulières avec les Noirs": "Líneas habituales con negras",
+  "%1 partie(s) · %2 %": "%1 partida(s) · %2 %",
+  "Évolution de ses choix": "Evolución de sus elecciones",
+  "Blancs : %1": "Blancas: %1",
+  "Noirs : %1": "Negras: %1",
+  "Dossier PDF…": "Dosier PDF…",
+  "Enregistrer le dossier du joueur": "Guardar el dosier del jugador",
+  "Choisissez d’abord un joueur.": "Elija primero un jugador.",
+  "Dossier : %1": "Dosier: %1",
+  "%1 partie(s) · Elo récent : %2 · score %3 %": "%1 partida(s) · Elo reciente: %2 · puntuación %3 %",
+  "Ligne": "Línea",
+  "Dossier établi par Trait64 depuis votre bibliothèque locale.": "Dosier preparado por Trait64 a partir de su biblioteca local.",
+  "Dossier PDF enregistré.": "Dosier PDF guardado."
 }

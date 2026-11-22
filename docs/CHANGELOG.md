@@ -1,5 +1,10 @@
 # Changements
 
+## Préparation : lignes régulières, évolution, dossier PDF — 22 novembre 2026
+
+- **Fiche Joueurs** : les lignes que le joueur joue le plus souvent avec les Blancs et avec les Noirs (huit demi-coups, nombre de parties et score), puis l'**évolution de ses choix** année par année — son premier coup avec les Blancs, sa réponse avec les Noirs.
+- **Dossier PDF…** : la fiche, ses lignes régulières, son évolution et ses vingt dernières parties dans un PDF à imprimer ou à emporter.
+
 ## Entraînement : après l'erreur, programme du jour, répétition adaptée — 21 novembre 2026
 
 - **Le parcours après une erreur** (puzzles et cartes) : le coup tenté reste fléché en rouge, la réponse qui le punit tout de suite en orange — un mat, sinon la prise qui gagne le plus —, et une phrase les nomme (« Bf4 ? Qxf4 gagne 3 point(s) de matériel. »). *Réessayer* efface ces repères ; *Continuer* joue le bon coup et poursuit l'exercice, qui reste compté comme manqué.

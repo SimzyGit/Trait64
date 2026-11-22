@@ -335,6 +335,9 @@ class Controller : public QObject {
     Q_INVOKABLE void identifyOpening();
     Q_INVOKABLE void searchAdvanced(const QVariantMap &filters);
     Q_INVOKABLE void inspectPlayer(const QString &name);
+    // Le dossier du joueur affiché, en PDF : chiffres, lignes régulières, évolution de ses
+    // choix et dernières parties, pour l'emporter en tournoi.
+    Q_INVOKABLE void exportPlayerPdf(const QString &url);
     Q_INVOKABLE void rebuildIndexes();
     Q_INVOKABLE void findDuplicates();
     // Les parties de la page affichée (au plus 200, celles d'une recherche) fondues en une
