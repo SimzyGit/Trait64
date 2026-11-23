@@ -2133,5 +2133,20 @@
   "Ouvrez une deuxième étude (Nouvelle étude, ou une partie de la bibliothèque) : elle s’affiche ici, à côté de l’échiquier principal.": "Open a second study (New study, or a library game): it shows here, beside the main board.",
   "Rendre actif": "Make active",
   "Le moteur, l’arbre et la notation passent à cet échiquier.": "The engine, tree and notation move to this board.",
-  "Deux échiquiers côte à côte": "Two boards side by side"
+  "Deux échiquiers côte à côte": "Two boards side by side",
+  "Aucune partie de ce profil dans la bibliothèque : rattachez-lui un compte et synchronisez-le.": "No game of this profile in the library: link an account to it and sync it.",
+  "Bilan du moteur": "Engine review",
+  "Cette semaine : %1 partie(s)": "This week: %1 game(s)",
+  "Classement : le dernier inscrit dans vos parties ; moyenne récente : celle des vingt derniers. La cadence se lit dans le contrôle du temps de chaque partie.": "Rating: the latest recorded in your games; recent average: that of the last twenty. The time control is read from each game.",
+  "FIDE : %1": "FIDE: %1",
+  "Force par cadence": "Strength by time control",
+  "Il y a %1 semaine(s) : %2 partie(s)": "%1 week(s) ago: %2 game(s)",
+  "Lente": "Classical",
+  "Moyenne récente": "Recent average",
+  "Par correspondance": "Correspondence",
+  "Performance par ouverture": "Performance by opening",
+  "Régularité des douze dernières semaines": "Activity over the last twelve weeks",
+  "Statistiques": "Statistics",
+  "lente": "classical",
+  "perf. %1": "perf. %1"
 }

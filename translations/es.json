@@ -2133,5 +2133,20 @@
   "Ouvrez une deuxième étude (Nouvelle étude, ou une partie de la bibliothèque) : elle s’affiche ici, à côté de l’échiquier principal.": "Abra un segundo estudio (Nuevo estudio, o una partida de la biblioteca): se muestra aquí, junto al tablero principal.",
   "Rendre actif": "Activar",
   "Le moteur, l’arbre et la notation passent à cet échiquier.": "El motor, el árbol y la notación pasan a este tablero.",
-  "Deux échiquiers côte à côte": "Dos tableros lado a lado"
+  "Deux échiquiers côte à côte": "Dos tableros lado a lado",
+  "Aucune partie de ce profil dans la bibliothèque : rattachez-lui un compte et synchronisez-le.": "Ninguna partida de este perfil en la biblioteca: vincúlele una cuenta y sincronícela.",
+  "Bilan du moteur": "Análisis del motor",
+  "Cette semaine : %1 partie(s)": "Esta semana: %1 partida(s)",
+  "Classement : le dernier inscrit dans vos parties ; moyenne récente : celle des vingt derniers. La cadence se lit dans le contrôle du temps de chaque partie.": "Clasificación: la última inscrita en sus partidas; media reciente: la de las veinte últimas. El ritmo se lee en el control de tiempo de cada partida.",
+  "FIDE : %1": "FIDE: %1",
+  "Force par cadence": "Fuerza por ritmo",
+  "Il y a %1 semaine(s) : %2 partie(s)": "Hace %1 semana(s): %2 partida(s)",
+  "Lente": "Lenta",
+  "Moyenne récente": "Media reciente",
+  "Par correspondance": "Por correspondencia",
+  "Performance par ouverture": "Rendimiento por apertura",
+  "Régularité des douze dernières semaines": "Regularidad de las últimas doce semanas",
+  "Statistiques": "Estadísticas",
+  "lente": "lenta",
+  "perf. %1": "rend. %1"
 }

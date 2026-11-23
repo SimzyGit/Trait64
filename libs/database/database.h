@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "game.h"
+#include <QDate>
 #include <QDateTime>
 #include <QIODevice>
 #include <QSqlDatabase>
@@ -220,6 +221,10 @@ class Database {
     qint64 collectPlayerGames(const QVariantMap &source, const QStringList &names);
     QVariantMap opponentTree(const QStringList &names, bool white, const QStringList &path) const;
     QVariantList opponentWeaknesses(const QStringList &names, int minimum = 5) const;
+    // Statistiques personnelles (stats.cpp) : {cadences : [{cadence, games, score, rating,
+    // recent, date}], openings : [{eco, games, score, performance}], weeks : [{weeksAgo,
+    // games}] sur douze semaines jusqu'à `today`}.
+    QVariantMap personalStats(const QStringList &names, const QDate &today) const;
     // Les premiers coups SAN d'un texte PGN, sans commentaires ni variantes : de quoi
     // grouper des parties par ligne sans les rejouer.
     static QStringList openingMoves(const QString &pgn, int plies);

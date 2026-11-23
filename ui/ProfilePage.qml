@@ -71,12 +71,31 @@ ColumnLayout {
             Profiles { width: editorView.availableWidth; backend: root.backend }
         }
 
-        SkillReport {
-            objectName: "profilePageReport"
+        // Deux lectures du profil : ses statistiques (toutes ses parties) et le bilan du
+        // moteur (les parties passées en revue).
+        ColumnLayout {
             SplitView.fillWidth: true
             SplitView.minimumWidth: 320
-            backend: root.backend
-            profileIndex: root.profileIndex
+            spacing: 6
+            TabBar {
+                id: profileTabs; Layout.fillWidth: true
+                TTabButton { objectName: "profileStatsTab"; text: qsTr("Statistiques") }
+                TTabButton { text: qsTr("Bilan du moteur") }
+            }
+            StackLayout {
+                Layout.fillWidth: true; Layout.fillHeight: true
+                currentIndex: profileTabs.currentIndex
+                PersonalStats {
+                    objectName: "personalStats"
+                    backend: root.backend
+                    profileIndex: root.profileIndex
+                }
+                SkillReport {
+                    objectName: "profilePageReport"
+                    backend: root.backend
+                    profileIndex: root.profileIndex
+                }
+            }
         }
     }
 }

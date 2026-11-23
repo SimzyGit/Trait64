@@ -5,6 +5,7 @@
 // synchronisation existante n'en sait rien et n'a pas à changer.
 #include "accuracy.h"
 #include "controller.h"
+#include <QDate>
 #include <QDateTime>
 #include <QDir>
 #include <QImageReader>
@@ -361,6 +362,29 @@ QStringList Controller::profileAccountNames(int profileIndex) const {
     names.removeAll(QString());
     names.removeDuplicates();
     return names;
+}
+QVariantMap Controller::personalStats(int profileIndex) const {
+    try {
+        const auto all = profiles();
+        if (profileIndex < 0 || profileIndex >= all.size())
+            return {{"ready", false}};
+        const auto profile = all[profileIndex].toMap();
+        auto names = profileAccountNames(profileIndex);
+        const auto own = profile["name"].toString().trimmed();
+        if (!own.isEmpty() && !names.contains(own, Qt::CaseInsensitive))
+            names << own;
+        auto stats = db_->personalStats(names, QDate::currentDate());
+        stats["ready"] = true;
+        stats["name"] = own;
+        QVariantMap fide;
+        for (const auto &speed : QStringList{"Standard", "Rapid", "Blitz"})
+            if (profile.contains("fide" + speed))
+                fide[speed.toLower()] = profile["fide" + speed];
+        stats["fide"] = fide;
+        return stats;
+    } catch (const std::exception &e) {
+        return {{"ready", false}, {"error", QString::fromUtf8(e.what())}};
+    }
 }
 QVariantMap Controller::skillDashboard(int profileIndex) const {
     try {

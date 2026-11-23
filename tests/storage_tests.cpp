@@ -478,6 +478,37 @@ int main(int argc, char **argv) {
             check(weak.size() == 1 && weak.first().toMap()["eco"] == "C50" &&
                       weak.first().toMap()["score"].toInt() == 17,
                   "A weakness is an opening he plays often and scores little in");
+            // Statistiques personnelles : cadence, ouverture, semaines.
+            t64::Database mine(dir.filePath("stats.sqlite"));
+            QString games;
+            for (int i = 0; i < 4; ++i)
+                games +=
+                    QString(
+                        "[White \"Moi\"]\n[Black \"A%1\"]\n[Result \"%2\"]\n[ECO \"B20\"]\n[Date "
+                        "\"2026.11.%3\"]\n"
+                        "[WhiteElo \"%4\"]\n[BlackElo \"1800\"]\n[TimeControl \"180+2\"]\n\n1.e4 c5 %2\n\n")
+                        .arg(i)
+                        .arg(i < 3 ? "1-0" : "0-1")
+                        .arg(10 + i)
+                        .arg(1900 + 10 * i);
+            games += "[White \"B\"]\n[Black \"moi\"]\n[Result \"1/2-1/2\"]\n[Date "
+                     "\"2026.06.01\"]\n[TimeControl \"600+5\"]\n\n1.d4 d5 1/2-1/2\n\n";
+            mine.importGames(t64::parsePgn(games.toStdString()));
+            const auto stats = mine.personalStats({"Moi"}, QDate(2026, 11, 20));
+            const auto cadences = stats["cadences"].toList();
+            check(cadences.size() == 2 && cadences[0].toMap()["cadence"] == "blitz" &&
+                      cadences[0].toMap()["rating"].toInt() == 1930 &&
+                      cadences[0].toMap()["recent"].toInt() == 1915 &&
+                      cadences[1].toMap()["cadence"] == "rapid",
+                  "Strength is read per time control from the ratings in the games");
+            const auto opening = stats["openings"].toList().first().toMap();
+            check(opening["eco"] == "B20" && opening["score"].toInt() == 75 &&
+                      opening["performance"].toInt() == 2000,
+                  "Performance per opening follows the FIDE formula");
+            const auto weeks = stats["weeks"].toList();
+            check(weeks.size() == 12 && weeks.last().toMap()["games"].toInt() == 0 &&
+                      weeks[10].toMap()["games"].toInt() == 4,
+                  "Activity is counted week by week");
             const auto base =
                 prep.collectPlayerGames({{"id", "prep:fide:1"}, {"title", "Préparation : Rival"}}, names);
             check(prep.search({}, {}, false, {}, false, {{"sourceId", base}}).size() == 8,

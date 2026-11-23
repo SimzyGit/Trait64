@@ -1,5 +1,9 @@
 # Changements
 
+## Statistiques personnelles — 23 novembre 2026
+
+- **Onglet Statistiques** de la page Profils, tous les comptes du profil réunis et sans bilan moteur préalable : force par cadence (bullet, blitz, rapide, lente, correspondance, lue dans le contrôle du temps de chaque partie ; dernier classement inscrit et moyenne des vingt derniers), classements FIDE du profil, performance par ouverture (formule FIDE, adversaires tous classés) et régularité semaine par semaine sur douze semaines.
+
 ## Deux échiquiers côte à côte — 23 novembre 2026
 
 - **Second échiquier** : un panneau qui montre une autre étude ouverte à côté de l'échiquier principal (*Affichage → Deux échiquiers côte à côte*). Moteur, arbre et notation restent reliés à l'échiquier actif ; un clic sur le second les fait passer à lui. Il se range, se ferme et se retient dans les dispositions comme les autres panneaux.

@@ -294,6 +294,8 @@ class Controller : public QObject {
     // Tableau de bord d'un profil : notes d'ensemble et par phase, fautes, tactique, et
     // l'évolution mois par mois. Un profil sans compte rattaché ne mesure rien.
     Q_INVOKABLE QVariantMap skillDashboard(int profileIndex) const;
+    // Statistiques d'un profil, tous ses comptes réunis, plus ses classements FIDE.
+    Q_INVOKABLE QVariantMap personalStats(int profileIndex) const;
     // L'écart entre un répertoire et les parties du profil : où le joueur quitte sa
     // propre préparation. Il faut les deux au même endroit pour pouvoir le dire.
     Q_INVOKABLE QVariantMap repertoireGap(qint64 repertoireId, int profileIndex) const;
