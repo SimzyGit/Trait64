@@ -168,6 +168,8 @@ Controller::Controller(const QString &path, QObject *parent)
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     refreshPuzzleStats();
+    if (settings_.value("sync/atStartup", false).toBool())
+        QTimer::singleShot(3000, this, &Controller::syncNow);
     if (settings_.value("reference/atStartup", false).toBool())
         QTimer::singleShot(6000, this, &Controller::updateReference);
     if (settings_.value("syncAtStartup", false).toBool() &&
@@ -426,6 +428,8 @@ Controller::~Controller() {
     // pendant la destruction toucherait des membres déjà détruits.
     disconnect(&classifier_, nullptr, this, nullptr);
     classifier_.waitForFinished();
+    disconnect(&syncWorker_, nullptr, this, nullptr);
+    syncWorker_.waitForFinished();
     disconnect(&positionGamesWorker_, nullptr, this, nullptr);
     if (cancelPositionGames_)
         cancelPositionGames_->store(true);

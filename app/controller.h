@@ -423,6 +423,14 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap reference READ reference NOTIFY referenceChanged)
     QVariantMap reference() const;
     Q_INVOKABLE void updateReference();
+    // Synchronisation entre appareils (sync.cpp) par un dossier que l'utilisateur
+    // synchronise lui-même : répertoires, études, profils, comptes (sans jeton) et
+    // réglages, dans un paquet chiffré par une phrase de passe. Aucun serveur Trait64.
+    Q_PROPERTY(QVariantMap syncState READ syncState NOTIFY syncChanged)
+    QVariantMap syncState() const;
+    Q_INVOKABLE void configureSync(const QString &folderUrl, const QString &passphrase, bool atStartup);
+    Q_INVOKABLE void syncNow();
+    Q_INVOKABLE void forgetSync();
     Q_INVOKABLE void setReferenceAtStartup(bool on) {
         settings_.setValue("reference/atStartup", on);
         emit referenceChanged();
@@ -637,6 +645,7 @@ class Controller : public QObject {
     void positionGamesChanged();
     void opponentChanged();
     void referenceChanged();
+    void syncChanged();
     void sourcesChanged();
     void notationChanged();
     void importsChanged();
@@ -892,6 +901,9 @@ class Controller : public QObject {
     QVariantMap positionGames_, opponent_;
     QNetworkAccessManager *opponentNetwork_ = nullptr;
     t64::Broadcasts *referenceFeed_ = nullptr;
+    QFutureWatcher<QVariantMap> syncWorker_;
+    QString syncStatus_;
+    void applySyncSettings(const QVariantMap &remote);
     QStringList referenceQueue_, referenceDone_;
     QByteArray referencePgn_;
     QString referenceStatus_;

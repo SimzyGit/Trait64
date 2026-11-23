@@ -538,6 +538,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Ouvrir une bibliothèque…"); onTriggered: openDatabaseDialog.open()}
             MenuItem {text: qsTr("Sauvegarde complète…"); onTriggered: backupDialog.open()}
             MenuItem {text: qsTr("Restaurer une sauvegarde…"); onTriggered: backupsDialog.open()}
+            MenuItem {objectName: "syncMenu"; text: qsTr("Synchroniser entre appareils…"); onTriggered: syncDialog.open()}
             MenuSeparator {}
             MenuItem {text: qsTr("Quitter"); onTriggered: win.close()}
         }
@@ -1395,6 +1396,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     TagsDialog {id:baseTagsDialog;backend:controller}
     OpponentPrep {id:opponentPrep;backend:controller}
     ReferenceBase {id:referenceBase;backend:controller}
+    SyncDialog {id:syncDialog;backend:controller}
     TDialog {id:layoutsDialog;objectName:"layoutsDialog";title:qsTr("Dispositions de travail");modal:true;anchors.centerIn:parent
         width:Math.min(460,parent.width-32);standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:8

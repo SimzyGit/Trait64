@@ -3,6 +3,7 @@
 #include "discovery.h"
 #include "move_notation.h"
 #include "sounds.h"
+#include "syncbundle.h"
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
@@ -1158,6 +1159,88 @@ int main(int argc, char **argv) {
                       messages[0][0].toString() == c.uiText("Vérification interrompue.") &&
                       messages[1][0].toString() == c.uiText("Vérification SQLite : ") + "ok",
                   "Reentrant restart retains the distinct results of both verifications");
+        }
+        {
+            // Synchronisation par un dossier partagé : un appareil dépose, l'autre reçoit.
+            // Les réglages partagés par les contrôleurs du test sont remis en l'état après.
+            QVariantMap saved;
+            for (const auto *key : {"profiles", "pieceStyle", "onlineAccounts", "layouts"})
+                saved[key] = QSettings().value(key);
+            const auto restore = qScopeGuard([&] {
+                QSettings settings;
+                for (auto it = saved.cbegin(); it != saved.cend(); ++it)
+                    it.value().isValid() ? settings.setValue(it.key(), it.value())
+                                         : settings.remove(it.key());
+                for (const auto *key : {"sync/folder", "sync/passphrase", "sync/atStartup",
+                                        "sync/lastApplied", "sync/last", "sync/device"})
+                    settings.remove(key);
+            });
+            const auto shared = dir.path() + "/shared";
+            QDir().mkpath(shared);
+            const auto settle = [](Controller &c) {
+                QElapsedTimer wait;
+                wait.start();
+                QTest::qWait(20);
+                while ((c.busy() || c.syncState()["running"].toBool()) && wait.elapsed() < 20000)
+                    QTest::qWait(10);
+            };
+            {
+                Controller first(dir.path() + "/device-a");
+                QFile study(dir.path() + "/finales.pgn");
+                check(study.open(QIODevice::WriteOnly) &&
+                          study.write("[Event \"Finales / Tours\"]\n\n1.e4 {la règle} *\n") > 0,
+                      "Study fixture written");
+                study.close();
+                first.importLabeled(QUrl::fromLocalFile(study.fileName()).toString(), "Finales", true);
+                settle(first);
+                first.setPreference("pieceStyle", "merida");
+                first.addProfile("Moi");
+                first.configureSync(QUrl::fromLocalFile(shared).toString(), "court", false);
+                check(!first.syncState()["ready"].toBool(), "A short passphrase is refused");
+                first.configureSync(QUrl::fromLocalFile(shared).toString(), "phrase secrète", false);
+                first.syncNow();
+                settle(first);
+                check(QFile::exists(shared + "/trait64-sync.t64z") &&
+                          !first.syncState()["status"].toString().isEmpty(),
+                      "A device leaves an encrypted bundle in the shared folder");
+                QFile bundle(shared + "/trait64-sync.t64z");
+                check(bundle.open(QIODevice::ReadOnly) && !bundle.readAll().contains("Finales / Tours"),
+                      "The bundle is unreadable without the passphrase");
+            }
+            // Les contrôleurs d'un test partagent leurs réglages : chaque « appareil » reçoit
+            // ici son propre identifiant, comme sur deux machines.
+            QSettings().remove("sync/device");
+            {
+                Controller second(dir.path() + "/device-b");
+                second.configureSync(QUrl::fromLocalFile(shared).toString(), "phrase secrète", false);
+                second.syncNow();
+                settle(second);
+                bool received = false;
+                for (const auto &row : second.studyCollections())
+                    received = received || row.toMap()["title"] == "Finales";
+                bool profile = false;
+                for (const auto &row : second.profiles())
+                    profile = profile || row.toMap()["name"] == "Moi";
+                check(received, "The other device receives the studies");
+                QMap<QString, QByteArray> files;
+                check(t64::readSyncBundle(shared + "/trait64-sync.t64z", "phrase secrète", &files).isEmpty(),
+                      "The bundle opens with the passphrase");
+                const auto settings = QJsonDocument::fromJson(files.value("settings.json")).object();
+                check(settings["pieceStyle"] == "merida" && settings["profiles"].toArray().size() >= 1 &&
+                          files.value("studies.json").contains("Finales"),
+                      "Settings, profiles and studies travel in the bundle");
+            }
+            QSettings().remove("sync/device");
+            {
+                Controller third(dir.path() + "/device-c");
+                QSignalSpy messages(&third, &Controller::message);
+                third.configureSync(QUrl::fromLocalFile(shared).toString(), "mauvaise phrase", false);
+                third.syncNow();
+                settle(third);
+                check(!messages.isEmpty() && messages.last()[1].toBool() &&
+                          third.studyCollections().isEmpty(),
+                      "A wrong passphrase is refused and leaves the bundle alone");
+            }
         }
         {
             // Préparer un joueur depuis la bibliothèque : base à son nom, arbre, ligne, PDF.

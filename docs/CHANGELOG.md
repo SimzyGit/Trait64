@@ -1,5 +1,11 @@
 # Changements
 
+## Synchronisation entre appareils — 23 novembre 2026
+
+- **Par un dossier partagé, sans serveur** (*Fichier → Synchroniser entre appareils…*) : un paquet `trait64-sync.t64z`, zip chiffré en AES-256 par une phrase de passe (libarchive), contient répertoires, études, profils, comptes sans leurs jetons, dispositions et réglages d'affichage. Les chemins propres à chaque machine (moteur, tables, livre) ne voyagent pas.
+- Chaque passage reçoit d'abord le paquet d'un autre appareil — répertoires et études ajoutés sans doublon, profils, comptes et dispositions réunis par nom — puis réécrit le paquet avec le tout ; rien de la bibliothèque n'est retiré. Une phrase de passe fausse est refusée et le paquet laissé intact. Option au démarrage.
+- La phrase de passe est gardée dans les réglages de l'appareil, pas dans le dossier partagé.
+
 ## Statistiques personnelles — 23 novembre 2026
 
 - **Onglet Statistiques** de la page Profils, tous les comptes du profil réunis et sans bilan moteur préalable : force par cadence (bullet, blitz, rapide, lente, correspondance, lue dans le contrôle du temps de chaque partie ; dernier classement inscrit et moyenne des vingt derniers), classements FIDE du profil, performance par ouverture (formule FIDE, adversaires tous classés) et régularité semaine par semaine sur douze semaines.
