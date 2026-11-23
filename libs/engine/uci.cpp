@@ -81,6 +81,22 @@ bool Uci::pressOption(const QString &name) {
     }
     return false;
 }
+// Pendant une itération, le moteur réordonne ses lignes : un coup passé du rang 7 au rang
+// 3 reste un instant aux deux places. On ne garde que sa ligne la plus profonde.
+static QVariantList distinctLines(const QVariantList &lines) {
+    QHash<QString, int> best;
+    for (int i = 0; i < lines.size(); ++i) {
+        const auto first = lines[i].toMap()["uci"].toString().section(' ', 0, 0);
+        const auto at = best.constFind(first);
+        if (at == best.cend() || lines[i].toMap()["depth"].toInt() > lines[*at].toMap()["depth"].toInt())
+            best[first] = i;
+    }
+    QVariantList out;
+    for (int i = 0; i < lines.size(); ++i)
+        if (best.value(lines[i].toMap()["uci"].toString().section(' ', 0, 0)) == i)
+            out << lines[i];
+    return out;
+}
 Uci::Uci(QObject *parent) : QObject(parent) {
     timeout_.setSingleShot(true);
     publish_.setSingleShot(true);
@@ -340,6 +356,7 @@ void Uci::parse(const QString &line) {
             for (auto it = rawExact_.cbegin(); it != rawExact_.cend(); ++it)
                 if (const auto info = decoded(it.key(), it.value()); !info.isEmpty())
                     result << info;
+            result = distinctLines(result);
             emit completed(completedFen, result);
         }
         // La comparaison n'est pas tautologique : « completed » est émis juste au-dessus,
@@ -386,7 +403,7 @@ void Uci::publishLines() {
         if (const auto info = decoded(it.key(), it.value()); !info.isEmpty())
             list << info;
     if (!list.isEmpty())
-        emit lines(list);
+        emit lines(distinctLines(list));
 }
 QVariantMap Uci::parseInfo(const QString &line, const QString &fen, bool chess960) {
     if (!line.startsWith("info ") || line.startsWith("info string ") || line.size() > 65536)
