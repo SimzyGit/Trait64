@@ -27,6 +27,7 @@ Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Traini
 - **Reference database** (*Database → Reference database…*): *Update now* (or at every start) adds the finished rounds of Lichess broadcasts to “Reference — Lichess broadcasts”, without duplicates and without downloading rounds already read; the date of the last update is shown. The Lichess elite database and TWIC are downloaded from their sites, then imported here, zip included.
 - **Games from a position**: the analysis *Games* panel (tab next to *Tree*) lists the library games that reached the position shown, strongest first, like ChessBase's reference list. It follows every move; a double-click opens the game in a tab, at the move where it reaches the position.
 - **Tags**: *Tags…* (Studies page, or Library once a database is chosen) puts free tags on a database, a collection or a repertoire. On the Studies page, clicking a tag filters the list.
+- **Two boards side by side** (*View → Two boards side by side*): the *Second board* panel shows another open study to the left of the main one. The engine, tree and notation follow the active board; clicking the second one (or *Make active*) swaps them.
 - **Detached windows and layouts**: *View → Detach into a window* opens the board, the notation or the review graph in a separate window, for a second screen. *View → Work layouts…* saves the board's width, the panel heights and the notation tab under a name, and applies them again.
 
 ## Notation and variations

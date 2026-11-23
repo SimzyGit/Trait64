@@ -1322,6 +1322,22 @@ int main(int argc, char **argv) {
                 check(c.layouts().size() == 1 && c.layouts().first().toMap()["name"] == "Essai" &&
                           c.layouts().first().toMap()["dock"].toString().contains("notation"),
                       "A work layout is saved with the panel sizes");
+                // Deux échiquiers côte à côte : le second montre l'autre étude ouverte.
+                c.newGame(); // vierge : changer d'onglet n'enregistre ainsi aucune partie
+                QMetaObject::invokeMethod(window, "showSideBySide");
+                QTest::qWait(80);
+                auto *second = visualItem(window->contentItem(), "secondBoard");
+                check(second && second->isVisible() && c.tabs().size() >= 2,
+                      "A second board shows another open study beside the main one");
+                const int active = c.state()["activeTab"].toInt();
+                QMetaObject::invokeMethod(visualItem(window->contentItem(), "swapBoards"), "clicked");
+                QTest::qWait(30);
+                check(c.state()["activeTab"].toInt() != active,
+                      "The second board becomes the active one on request");
+                c.switchTab(active);
+                c.closeTab(active);
+                QMetaObject::invokeMethod(window, "resetDock");
+                QTest::qWait(50);
                 // Glisser l'onglet « Moteur » sur le bord gauche : il ouvre une colonne à gauche.
                 auto *engineTab = visualItem(window->contentItem(), "engineTab");
                 auto *split = visualItem(window->contentItem(), "analysisSplit");

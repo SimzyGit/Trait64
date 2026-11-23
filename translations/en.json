@@ -2128,5 +2128,10 @@
   "Archive tronquée.": "Truncated archive.",
   "Aucun fichier PGN dans l’archive.": "No PGN file in the archive.",
   "Extraction indisponible.": "Extraction unavailable.",
-  "Fichier décompressé trop volumineux ou disque plein.": "Unpacked file too large or disk full."
+  "Fichier décompressé trop volumineux ou disque plein.": "Unpacked file too large or disk full.",
+  "Second échiquier": "Second board",
+  "Ouvrez une deuxième étude (Nouvelle étude, ou une partie de la bibliothèque) : elle s’affiche ici, à côté de l’échiquier principal.": "Open a second study (New study, or a library game): it shows here, beside the main board.",
+  "Rendre actif": "Make active",
+  "Le moteur, l’arbre et la notation passent à cet échiquier.": "The engine, tree and notation move to this board.",
+  "Deux échiquiers côte à côte": "Two boards side by side"
 }

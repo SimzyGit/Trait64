@@ -107,11 +107,11 @@ ApplicationWindow {
     function copyDock() { return JSON.parse(JSON.stringify(dockLayout)) }
     function panelTitle(id) {
         return ({notation: qsTr("Notation"), tree: qsTr("Arbre"), games: qsTr("Parties"), book: qsTr("Livre"), online: qsTr("Lichess"),
-                 notes: qsTr("Notes"), graph: qsTr("Courbe"), engine: qsTr("Moteur")})[id] || id
+                 notes: qsTr("Notes"), graph: qsTr("Courbe"), engine: qsTr("Moteur"), board2: qsTr("Second échiquier")})[id] || id
     }
     function panelComponent(id) {
         return ({notation: panelNotation, tree: panelTree, games: panelGames, book: panelBook, online: panelOnline,
-                 notes: panelNotes, graph: panelGraph, engine: panelEngine})[id] || null
+                 notes: panelNotes, graph: panelGraph, engine: panelEngine, board2: panelSecondBoard})[id] || null
     }
     function panelHeight(id) { return Math.round((({notes: 104, graph: 140, engine: 200})[id] || 280) * win.textScale) }
     function detachable(id) { return id === "notation" || id === "graph" }
@@ -161,6 +161,14 @@ ApplicationWindow {
         d.right.push({panels: [id], current: 0})
         saveDock(d)
         win.page = 2
+    }
+    // Le second échiquier à gauche du principal, comme deux fenêtres côte à côte.
+    function showSideBySide() {
+        win.page = 2
+        var d = copyDock()
+        removePanel(d, "board2")
+        d.left.unshift({panels: ["board2"], current: 0})
+        saveDock(d)
     }
     function togglePanel(id) { if (locate(dockLayout, id)) closePanel(id); else showPanel(id) }
     function resetDock() { saveDock(JSON.parse(JSON.stringify(dockDefault))) }
@@ -318,6 +326,36 @@ ApplicationWindow {
                                 font.pixelSize:Math.round(11*win.textScale);text:modelData.event||""}
                         }
                     }
+                }
+            }
+        }
+    }
+    // Un second échiquier : une autre étude ouverte, à côté de celle qu'on travaille. Le
+    // moteur, l'arbre et la notation suivent l'échiquier actif ; un clic les échange.
+    Component {id:panelSecondBoard
+        Item {
+            id:secondPanel
+            readonly property var others:controller.tabs.map((t,i)=>Object.assign({index:i},t)).filter(t=>!t.active)
+            property int choice:0
+            readonly property var tab:others.length?others[Math.min(choice,others.length-1)]:null
+            ColumnLayout {anchors.fill:parent;anchors.margins:6;spacing:6
+                Label {visible:!secondPanel.tab;Layout.fillWidth:true;Layout.fillHeight:true;wrapMode:Text.Wrap;color:win.muted
+                       horizontalAlignment:Text.AlignHCenter;verticalAlignment:Text.AlignVCenter
+                       text:qsTr("Ouvrez une deuxième étude (Nouvelle étude, ou une partie de la bibliothèque) : elle s’affiche ici, à côté de l’échiquier principal.")}
+                TComboBox {visible:secondPanel.others.length>1;Layout.fillWidth:true;model:secondPanel.others.map(t=>t.title+(t.move?" · "+t.move:""))
+                           onActivated:secondPanel.choice=currentIndex}
+                Item {visible:!!secondPanel.tab;Layout.fillWidth:true;Layout.fillHeight:true
+                    Board {objectName:"secondBoard";backend:controller;interactive:false;coordinates:controller.preferences.coordinates
+                           squares:secondPanel.tab?controller.squaresForFen(secondPanel.tab.fen,secondPanel.tab.lastUci):[]
+                           width:Math.min(parent.width,parent.height);height:width;anchors.centerIn:parent
+                           TapHandler {onTapped:if(secondPanel.tab)controller.switchTab(secondPanel.tab.index)}
+                           HoverHandler {cursorShape:Qt.PointingHandCursor}}
+                }
+                RowLayout {visible:!!secondPanel.tab;Layout.fillWidth:true;spacing:6
+                    Label {Layout.fillWidth:true;elide:Text.ElideRight;color:win.muted;font.pixelSize:Math.round(11*win.textScale)
+                           text:secondPanel.tab?secondPanel.tab.title+(secondPanel.tab.move?" · "+secondPanel.tab.move:""):""}
+                    TButton {objectName:"swapBoards";text:qsTr("Rendre actif");onClicked:controller.switchTab(secondPanel.tab.index)
+                             ToolTip.visible:hovered;ToolTip.text:qsTr("Le moteur, l’arbre et la notation passent à cet échiquier.")}
                 }
             }
         }
@@ -578,7 +616,7 @@ ApplicationWindow {
             }
             Menu { title: qsTr("Panneaux")
                 Repeater {
-                    model: ["notation", "tree", "games", "book", "online", "notes", "engine", "graph"]
+                    model: ["notation", "tree", "games", "book", "online", "notes", "engine", "graph", "board2"]
                     MenuItem {required property string modelData
                         text: win.panelTitle(modelData); checkable: true
                         checked: !!win.locate(win.dockLayout, modelData); onTriggered: win.togglePanel(modelData)}
@@ -586,6 +624,7 @@ ApplicationWindow {
                 MenuSeparator {}
                 MenuItem {objectName: "resetDock"; text: qsTr("Disposition d’origine"); onTriggered: win.resetDock()}
             }
+            MenuItem {objectName: "sideBySide"; text: qsTr("Deux échiquiers côte à côte"); onTriggered: win.showSideBySide()}
             MenuItem {text: qsTr("Dispositions de travail…"); onTriggered: layoutsDialog.open()}
             MenuItem {text: qsTr("Plein écran"); checkable: true; checked: win.visibility === Window.FullScreen; onTriggered: win.toggleFullScreen()}
             MenuItem {text: qsTr("Analyse assistée"); checkable: true; checked: !!controller.preferences.assistedAnalysis; onTriggered: controller.setPreference("assistedAnalysis", checked)}

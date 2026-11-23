@@ -2128,5 +2128,10 @@
   "Archive tronquée.": "Archivo comprimido truncado.",
   "Aucun fichier PGN dans l’archive.": "Ningún archivo PGN en el archivo comprimido.",
   "Extraction indisponible.": "Extracción no disponible.",
-  "Fichier décompressé trop volumineux ou disque plein.": "Archivo descomprimido demasiado grande o disco lleno."
+  "Fichier décompressé trop volumineux ou disque plein.": "Archivo descomprimido demasiado grande o disco lleno.",
+  "Second échiquier": "Segundo tablero",
+  "Ouvrez une deuxième étude (Nouvelle étude, ou une partie de la bibliothèque) : elle s’affiche ici, à côté de l’échiquier principal.": "Abra un segundo estudio (Nuevo estudio, o una partida de la biblioteca): se muestra aquí, junto al tablero principal.",
+  "Rendre actif": "Activar",
+  "Le moteur, l’arbre et la notation passent à cet échiquier.": "El motor, el árbol y la notación pasan a este tablero.",
+  "Deux échiquiers côte à côte": "Dos tableros lado a lado"
 }

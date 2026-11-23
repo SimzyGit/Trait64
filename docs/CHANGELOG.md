@@ -1,5 +1,9 @@
 # Changements
 
+## Deux échiquiers côte à côte — 23 novembre 2026
+
+- **Second échiquier** : un panneau qui montre une autre étude ouverte à côté de l'échiquier principal (*Affichage → Deux échiquiers côte à côte*). Moteur, arbre et notation restent reliés à l'échiquier actif ; un clic sur le second les fait passer à lui. Il se range, se ferme et se retient dans les dispositions comme les autres panneaux.
+
 ## Base de référence à jour — 23 novembre 2026
 
 - **Diffusions Lichess** (*Base → Base de référence…*) : les rondes terminées des tournois retransmis, téléchargées à la demande ou au démarrage, ajoutées sans doublon à « Référence — diffusions Lichess ». Les rondes déjà lues ne sont plus demandées ; elles ne sont notées qu'une fois l'import fini, de sorte qu'une mise à jour interrompue reprend.

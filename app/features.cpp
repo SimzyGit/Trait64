@@ -139,9 +139,16 @@ QVariantList Controller::tabs() const {
             auto it = g.tags.find(s);
             return it == g.tags.end() ? QString() : qs(it->second);
         };
+        // La position de chaque onglet : le second échiquier montre ainsi une autre étude
+        // ouverte à côté de celle qu'on travaille.
+        const int node = i == activeTab_ ? node_ : studies_[i].position.node;
+        const auto &current = g.nodes[size_t(std::clamp(node, 0, int(g.nodes.size()) - 1))];
         list << QVariantMap{{"title", tag("White") + " — " + tag("Black")},
                             {"active", i == activeTab_},
-                            {"dirty", i == activeTab_ ? dirty_ : studies_[i].position.dirty}};
+                            {"dirty", i == activeTab_ ? dirty_ : studies_[i].position.dirty},
+                            {"fen", qs(current.fen)},
+                            {"lastUci", qs(current.uci)},
+                            {"move", current.san.empty() ? QString() : qs(current.san)}};
     }
     return list;
 }
