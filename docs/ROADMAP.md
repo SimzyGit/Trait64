@@ -7,7 +7,7 @@ Liste confrontée au code du jour, du plus utile au moins urgent. Les sections q
 **1. Petits défauts** — tous corrigés le 21 novembre : nombres à la française dans les compteurs, intitulés alignés dans « Modifier le profil », messages du cœur traduits (121 phrases), journal de diagnostic exportable, feuille de route remise à jour.
 
 **2. Très grandes bases** (le point le plus faible face à ChessBase)
-- [ ] Import qualifié à 2, 5 et 10 millions de parties (vérifié jusqu'à un million ; demande un corpus et un disque que la machine de mesure n'a pas).
+- [ ] ◐ Import qualifié à 5 et 10 millions de parties : protocole prêt (PERFORMANCE.md), mesure à faire sur la machine visée (≈ 7 h et 14 h d'import). Dossier d'une position très courante : ✅ schéma 16.
 - [x] Ouverture rapide des positions très courantes sur une grosse base. — 22 nov. (dossier gardé en base, jeté dès qu'une partie change)
 - [x] Fusion intelligente des doublons, annotations comprises. — 22 nov.
 - [x] Réparation d'une base abîmée. — 22 nov. (copie de ce qui se lit, original gardé)

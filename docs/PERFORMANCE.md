@@ -1,5 +1,48 @@
 # Mesures de lecture et limites de qualification
 
+## Qualifier à 5 et 10 millions de parties — protocole, 23 novembre 2026
+
+**Pas encore mesuré.** La machine de développement n'a ni le corpus (le réseau n'y joint pas
+database.lichess.org) ni le temps : au débit mesuré vers un million de parties (≈ 200 par
+seconde), 5 millions demandent environ 7 heures d'import et 10 millions environ 14. Le
+protocole ci-dessous se lance sur la machine visée ; ses rapports JSON viennent compléter
+cette page.
+
+Construire les outils de mesure :
+
+```bash
+cmake -S . -B build-bench -G Ninja -DCMAKE_BUILD_TYPE=Release -DT64_BENCHMARKS=ON && cmake --build build-bench
+```
+
+Prendre un mois de la base ouverte de Lichess (CC0), assez gros pour 10 millions de parties,
+et le décompresser :
+
+```bash
+zstd -d lichess_db_standard_rated_2016-06.pgn.zst -o corpus.pgn
+```
+
+Importer 5 puis 10 millions de parties, avec un lecteur concurrent mesuré pendant l'import,
+puis la sauvegarde et sa restauration :
+
+```bash
+build-bench/pgn_benchmark --input corpus.pgn --database five.sqlite --threads 4 --limit 5000000 --probe-reads --backup --report import-5M.json
+```
+
+```bash
+build-bench/pgn_benchmark --input corpus.pgn --database ten.sqlite --threads 4 --limit 10000000 --probe-reads --backup --report import-10M.json
+```
+
+Mesurer les recherches à froid sur chaque base (position exacte, matériel, structure de
+pions, joueur, dossier de la position de départ) :
+
+```bash
+build-bench/search_probe ten.sqlite
+```
+
+Le dossier d'une position très jouée — la position de départ d'une telle base agrège toutes
+ses parties — est gardé dans la bibliothèque depuis le schéma 16 : seule la première
+ouverture coûte, les suivantes se relisent aussitôt tant qu'aucune partie ne change.
+
 ## Index allégé (schéma 12) — 12 novembre 2026
 
 Corpus : parties de maîtres réelles (`mega2400` et `mega2600`, 79 demi-coups en moyenne,
