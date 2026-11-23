@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 
+class QNetworkAccessManager;
 class Controller : public QObject {
     Q_OBJECT
     Q_PROPERTY(t64::Content *content READ content CONSTANT)
@@ -406,6 +407,24 @@ class Controller : public QObject {
     Q_INVOKABLE void removeBase(qint64 source);
     // site: "lichess" or "chesscom". Lichess re-imports only games newer than the last import.
     Q_INVOKABLE void importOnline(const QString &site, const QString &user, int max);
+    void importOnlineInto(const QString &site, const QString &user, int max, bool preparation);
+    // Préparer un joueur (opponent.cpp). `site` : « lichess », « chesscom » (pseudo, parties
+    // téléchargées à la suite des précédentes dans « Préparation : <pseudo> »), « fide »
+    // (identifiant ou nom : nom officiel lu chez Lichess, puis ses parties de la
+    // bibliothèque, diffusions comprises) ou « library » (un nom de la bibliothèque).
+    Q_PROPERTY(QVariantMap opponent READ opponent NOTIFY opponentChanged)
+    QVariantMap opponent() const { return opponent_; }
+    Q_INVOKABLE void prepareOpponent(const QString &site, const QString &query);
+    Q_INVOKABLE QVariantMap opponentTree(bool white, const QStringList &path) const;
+    Q_INVOKABLE QVariantList opponentWeaknesses() const;
+    Q_INVOKABLE QVariantMap opponentEvolution() const;
+    // Où il sort du répertoire `repertoire` (il joue l'autre couleur).
+    Q_INVOKABLE QVariantMap opponentDeviations(qint64 repertoire) const;
+    // Une ligne de son arbre dans une nouvelle étude ; une partie ouverte sur un pli donné.
+    Q_INVOKABLE void openLine(const QStringList &path);
+    Q_INVOKABLE void loadGameAtPly(qint64 id, int ply);
+    Q_INVOKABLE void exportOpponentPdf(const QString &url);
+    void finishOpponent(const QString &name, const QStringList &names, qint64 source);
     Q_INVOKABLE void cancelOnline();
     // Saved accounts ("lichess" / "chesscom"); adding one syncs it at once.
     QVariantList onlineAccounts() const;
@@ -603,6 +622,7 @@ class Controller : public QObject {
     void libraryChanged();
     void layoutsChanged();
     void positionGamesChanged();
+    void opponentChanged();
     void sourcesChanged();
     void notationChanged();
     void importsChanged();
@@ -855,7 +875,8 @@ class Controller : public QObject {
     QFutureWatcher<QVariantMap> reportWorker_;
     // Les parties passées par la position affichée (panneau « Parties » de l'analyse).
     QFutureWatcher<QVariantMap> positionGamesWorker_;
-    QVariantMap positionGames_;
+    QVariantMap positionGames_, opponent_;
+    QNetworkAccessManager *opponentNetwork_ = nullptr;
     qint64 positionGamesGeneration_ = 0;
     bool positionGamesPending_ = false;
     std::shared_ptr<std::atomic_bool> cancelPositionGames_;

@@ -11,6 +11,15 @@
 #include <stdexcept>
 namespace t64 {
 namespace {
+// Un joueur peut avoir les Blancs ou les Noirs : chaque note est prise du côté où il se
+// trouvait. Les pseudos sont comparés sans égard à la casse, les sites n'en tenant pas
+// compte non plus.
+QString placeholders(int count) {
+    QStringList marks;
+    for (int i = 0; i < count; ++i)
+        marks << "?";
+    return marks.join(',');
+}
 void run(QSqlQuery &q) {
     if (!q.exec())
         throw std::runtime_error(q.lastError().text().toStdString());
@@ -94,10 +103,18 @@ QStringList Database::openingMoves(const QString &pgn, int plies) {
 }
 
 QVariantMap Database::playerRepertoire(const QString &name, int plies, int lines) const {
+    return playerRepertoire(QStringList{name}, plies, lines);
+}
+QVariantMap Database::playerRepertoire(const QStringList &names, int plies, int lines) const {
+    if (names.isEmpty())
+        return {{"white", QVariantList()}, {"black", QVariantList()}, {"years", QVariantList()}};
+    const auto marks = placeholders(int(names.size()));
     QSqlQuery q(db_);
-    q.prepare("SELECT white,result,date,pgn FROM games WHERE deleted=0 AND (white=? OR black=?)");
-    q.addBindValue(name);
-    q.addBindValue(name);
+    q.prepare("SELECT white,result,date,pgn FROM games WHERE deleted=0 AND (white COLLATE NOCASE IN (" +
+              marks + ") OR black COLLATE NOCASE IN (" + marks + "))");
+    for (int i = 0; i < 2; ++i)
+        for (const auto &n : names)
+            q.addBindValue(n);
     run(q);
     struct Line {
         int games = 0;
@@ -108,7 +125,7 @@ QVariantMap Database::playerRepertoire(const QString &name, int plies, int lines
     // les Noirs (« 1.e4 c5 »).
     QMap<QString, QMap<QString, int>> whiteYears, blackYears;
     while (q.next()) {
-        const bool white = q.value(0).toString() == name;
+        const bool white = names.contains(q.value(0).toString(), Qt::CaseInsensitive);
         const auto result = q.value(1).toString();
         const double points = result == "1-0"       ? (white ? 1 : 0)
                               : result == "0-1"     ? (white ? 0 : 1)
@@ -387,17 +404,6 @@ QVariantMap Database::player(const QString &name) const {
             {"eloHistory", eloHistory},
             {"score", games > unfinished ? 100. * (wins + .5 * draws) / (games - unfinished) : 0}};
 }
-namespace {
-// Un joueur peut avoir les Blancs ou les Noirs : chaque note est prise du côté où il se
-// trouvait. Les pseudos sont comparés sans égard à la casse, les sites n'en tenant pas
-// compte non plus.
-QString placeholders(int count) {
-    QStringList marks;
-    for (int i = 0; i < count; ++i)
-        marks << "?";
-    return marks.join(',');
-}
-} // namespace
 
 QVariantList Database::gamesToReviewFor(const QStringList &names, int depth, int count) const {
     if (names.isEmpty())
@@ -798,7 +804,7 @@ int Database::importPgnFile(const QString &path, const std::function<bool(int)> 
     return stats()["games"].toInt() - before;
 }
 QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names, int limit,
-                                    const std::shared_ptr<std::atomic_bool> &canceled) const {
+                                    const std::shared_ptr<std::atomic_bool> &canceled, bool opponent) const {
     QueryCancellation cancellation(db_, canceled);
     if (names.isEmpty())
         return {{"games", 0}, {"touched", 0}, {"left", 0}, {"rows", QVariantList()}};
@@ -808,6 +814,9 @@ QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names,
     run(meta);
     check(meta.next(), "Répertoire introuvable.");
     const bool white = meta.value(0).toBool();
+    // L'adversaire joue l'autre couleur : c'est à son trait qu'il sort de ce que le
+    // répertoire attend de lui.
+    const bool side = opponent ? !white : white;
     // Les positions d'un répertoire sont rangées sous une clé textuelle, les parties sous
     // l'empreinte Zobrist : on dresse la correspondance une fois, en mémoire, plutôt que
     // de rejouer les coups de chaque partie.
@@ -849,15 +858,22 @@ QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names,
                 q.addBindValue(name);
     };
     // Le joueur ne dévie que de son propre trait : les plis pairs sont aux Blancs.
-    const QString ownSide = white ? "0" : "1";
+    const QString ownSide = side ? "0" : "1";
     const QString mine =
-        white ? "g.white COLLATE NOCASE IN (" + marks + ")" : "g.black COLLATE NOCASE IN (" + marks + ")";
+        side ? "g.white COLLATE NOCASE IN (" + marks + ")" : "g.black COLLATE NOCASE IN (" + marks + ")";
     // « Entrée dans le répertoire » veut dire avoir joué au moins un coup préparé. La
     // seule présence d'une position connue ne dit rien : la position de départ l'est
     // toujours, et toute partie y passe.
-    const QString entered = "EXISTS(SELECT 1 FROM positions p JOIN gap_moves m ON m.key=p.key AND"
-                            " m.uci=p.uci WHERE p.game_id=g.id AND p.ply%" +
-                            QString("2=") + ownSide + ")";
+    // Pour l'adversaire, il suffit d'être arrivé à son trait sur une position préparée :
+    // c'est là qu'il peut surprendre, dès le premier coup.
+    const QString entered =
+        opponent
+            ? "EXISTS(SELECT 1 FROM positions p JOIN gap_positions r ON r.key=p.key WHERE p.game_id=g.id AND "
+              "p.ply%2=" +
+                  ownSide + ")"
+            : "EXISTS(SELECT 1 FROM positions p JOIN gap_moves m ON m.key=p.key AND"
+              " m.uci=p.uci WHERE p.game_id=g.id AND p.ply%" +
+                  QString("2=") + ownSide + ")";
     QSqlQuery counts(db_);
     counts.prepare("SELECT COUNT(*),SUM(" + entered + ") FROM games g WHERE g.deleted=0 AND " + mine);
     bindNames(counts, 1);
@@ -911,6 +927,7 @@ QVariantMap Database::repertoireGap(qint64 repertoire, const QStringList &names,
                                 // Le numéro du coup, pas le pli : c'est ce qu'on lit sur une feuille.
                                 {"move", leave.value(6).toInt() / 2 + 1},
                                 {"played", leave.value(7)},
+                                {"ply", leave.value(6)},
                                 {"expected", prepared}});
     }
     QSqlQuery total(db_);

@@ -1160,6 +1160,37 @@ int main(int argc, char **argv) {
                   "Reentrant restart retains the distinct results of both verifications");
         }
         {
+            // Préparer un joueur depuis la bibliothèque : base à son nom, arbre, ligne, PDF.
+            Controller c(dir.path() + "/opponent");
+            QString pgn;
+            for (int i = 0; i < 6; ++i)
+                pgn += QString("[White \"Rival, Jean\"]\n[Black \"X%1\"]\n[Result \"0-1\"]\n[ECO \"C50\"]\n\n"
+                               "1.e4 e5 2.Nf3 Nc6 3.Bc4 0-1\n\n")
+                           .arg(i);
+            pgn += "[White \"Y\"]\n[Black \"Jean Rival\"]\n[Result \"1-0\"]\n\n1.d4 d5 1-0\n\n";
+            c.importText(pgn);
+            QElapsedTimer wait;
+            wait.start();
+            while (c.busy() && wait.elapsed() < 10000)
+                QTest::qWait(10);
+            c.prepareOpponent("library", "Rival, Jean");
+            const auto info = c.opponent();
+            check(info["status"] == "ready" && info["games"].toInt() == 7 &&
+                      info["whiteGames"].toInt() == 6 && info["source"].toLongLong() > 0,
+                  "Preparing a library player gathers every spelling into a preparation base");
+            const auto tree = c.opponentTree(true, {"e2e4"});
+            check(!tree["hisTurn"].toBool() && tree["moves"].toList().first().toMap()["san"] == "e5",
+                  "The opponent tree follows a line");
+            check(c.opponentWeaknesses().size() == 1, "His weak opening is listed");
+            c.openLine({"e2e4", "e7e5"});
+            check(c.state()["node"].toInt() == 2, "A line of his tree opens on the board");
+            const auto pdf = dir.path() + "/opponent.pdf";
+            c.exportOpponentPdf(pdf);
+            QFile out(pdf);
+            check(out.open(QIODevice::ReadOnly) && out.read(5) == "%PDF-",
+                  "The preparation file is saved as a PDF");
+        }
+        {
             // Panneau « Parties » : les parties passées par la position, les mieux classées
             // d'abord, et l'ouverture sur le coup où la position est atteinte.
             Controller c(dir.path() + "/position-games");

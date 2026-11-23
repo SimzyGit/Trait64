@@ -1,5 +1,12 @@
 # Changements
 
+## Préparer n'importe quel joueur — 23 novembre 2026
+
+- **Préparer un joueur** (*Base → Préparer un joueur…*) : par pseudo Lichess ou Chess.com, ses parties sont téléchargées dans une base « Préparation : <nom> », à la suite des précédentes ; par identifiant FIDE, son nom officiel est lu chez Lichess (`/api/fide/player`) puis ses parties sont cherchées dans la bibliothèque, toutes graphies réunies (la FIDE ne publie pas de parties) ; par nom de la bibliothèque, de même.
+- **Arbre par couleur** : ses coups à chaque position, avec le nombre de parties, son score et la dernière date ; on y descend coup par coup et on ouvre la position sur l'échiquier.
+- **Évolution** de ses choix année par année, **faiblesses observées** (ouvertures jouées au moins cinq fois où il marque moins de 40 %), **sorties de mon répertoire** à son trait, chacune ouvrable sur la position.
+- **Dossier PDF** : ses lignes régulières avec le diagramme de la position où elles mènent, ses faiblesses et son évolution.
+
 ## Fluidité et lignes du moteur — 22 novembre 2026
 
 - **Jusqu'à 100 lignes du moteur** (5 auparavant), réglables en direct par − et + dans le panneau Moteur.

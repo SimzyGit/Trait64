@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs as Native
 ScrollView {id:root
     signal preparePlayer(string name)
+    signal prepareOpponent(string name)
     signal importOnline()
     property var backend
     property var p: backend.preferences
@@ -17,7 +18,7 @@ ColumnLayout {width:root.availableWidth;height:Math.max(root.availableHeight,imp
         TButton {objectName:"playersImportOnline";text:qsTr("Comptes Lichess / Chess.com");onClicked:root.importOnline()}
         TTextField {id:filter;placeholderText:qsTr("Rechercher un joueur");width:240*root.p.uiScale}
     }
-    RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)} TButton {objectName:"playerPdf";text:qsTr("Dossier PDF…");enabled:!!root.profile.name;onClicked:playerPdfDialog.open()}}
+    RowLayout {Layout.fillWidth:true;Label {text:qsTr("Statistiques calculées depuis les parties de votre bibliothèque locale.");wrapMode:Text.WordWrap;color:root.p.muted;Layout.fillWidth:true} TButton {text:qsTr("Préparer cette position");enabled:!!root.profile.name;onClicked:root.preparePlayer(root.profile.name)} TButton {objectName:"prepareThisPlayer";text:qsTr("Préparer ce joueur…");accent:true;enabled:!!root.profile.name;onClicked:root.prepareOpponent(root.profile.name)} TButton {objectName:"playerPdf";text:qsTr("Dossier PDF…");enabled:!!root.profile.name;onClicked:playerPdfDialog.open()}}
     SplitView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.minimumHeight:350*controller.preferences.fontScale
         handle:Rectangle {implicitWidth:7;color:"transparent";Rectangle {anchors.horizontalCenter:parent.horizontalCenter;width:1;height:parent.height;color:SplitHandle.hovered||SplitHandle.pressed?root.p.accentColor:root.p.line}}
         ListView {id:players;SplitView.preferredWidth:240;SplitView.minimumWidth:160;clip:true;model:root.backend.players.filter(function(row){return row.name.toLowerCase().indexOf(filter.text.toLowerCase())>=0});spacing:1;ScrollBar.vertical:ScrollBar{}

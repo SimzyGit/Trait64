@@ -129,7 +129,8 @@ class Database {
     // sont entrées, dans combien le joueur a quitté sa propre préparation, et où. Personne
     // d'autre ne peut le dire : il faut le répertoire et le corpus du joueur au même endroit.
     QVariantMap repertoireGap(qint64 repertoire, const QStringList &names, int limit = 50,
-                              const std::shared_ptr<std::atomic_bool> &canceled = {}) const;
+                              const std::shared_ptr<std::atomic_bool> &canceled = {},
+                              bool opponent = false) const;
     void exportSource(QIODevice &output, qint64 source) const;
     Game load(qint64 id) const;
     QVariantList search(const QString &query = {}, const QString &result = {}, bool favorite = false,
@@ -209,6 +210,16 @@ class Database {
     // `plies` premiers demi-coups, avec les Blancs et avec les Noirs (nombre et score), et
     // l'évolution de ses premiers choix année par année.
     QVariantMap playerRepertoire(const QString &name, int plies = 8, int lines = 6) const;
+    QVariantMap playerRepertoire(const QStringList &names, int plies = 8, int lines = 6) const;
+    // Préparer un adversaire (opponent.cpp). Les graphies de son nom dans la bibliothèque ;
+    // ses parties rattachées à une base (créée au besoin), dont on rend l'identifiant ; ses
+    // coups à la position atteinte par `path` (coups UCI depuis le départ) quand il a la
+    // couleur `white` : {fen, games, score, hisTurn, moves : [{uci, san, games, score, last}]} ;
+    // les ouvertures (ECO) où il marque moins de 40 % sur au moins `minimum` parties.
+    QStringList playerSpellings(const QString &name) const;
+    qint64 collectPlayerGames(const QVariantMap &source, const QStringList &names);
+    QVariantMap opponentTree(const QStringList &names, bool white, const QStringList &path) const;
+    QVariantList opponentWeaknesses(const QStringList &names, int minimum = 5) const;
     // Les premiers coups SAN d'un texte PGN, sans commentaires ni variantes : de quoi
     // grouper des parties par ligne sans les rejouer.
     static QStringList openingMoves(const QString &pgn, int plies);

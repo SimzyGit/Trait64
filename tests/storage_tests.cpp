@@ -448,6 +448,42 @@ int main(int argc, char **argv) {
                   "Tags are tidied: spaces, case-insensitive duplicates, commas and length");
         }
         {
+            // Préparer un adversaire : graphies, base à son nom, arbre et faiblesses.
+            t64::Database prep(dir.filePath("opponent.sqlite"));
+            QString pgn;
+            const auto add = [&](const QString &w, const QString &b, const QString &result,
+                                 const QString &eco, const QString &date, const QString &moves) {
+                pgn += QString("[White \"%1\"]\n[Black \"%2\"]\n[Result \"%3\"]\n[ECO \"%4\"]\n[Date "
+                               "\"%5\"]\n\n%6 %3\n\n")
+                           .arg(w, b, result, eco, date, moves);
+            };
+            for (int i = 0; i < 6; ++i)
+                add("Rival, Jean", QString("X%1").arg(i), i < 5 ? "0-1" : "1-0", "C50",
+                    "2024.01.0" + QString::number(i + 1), "1.e4 e5 2.Nf3 Nc6 3.Bc4");
+            add("Rival,J.", "Y", "1-0", "D02", "2025.03.01", "1.d4 d5 2.Nf3");
+            add("Z", "Jean Rival", "1/2-1/2", "B20", "2025.04.01", "1.e4 c5");
+            prep.importGames(t64::parsePgn(pgn.toStdString()));
+            const auto names = prep.playerSpellings("Rival, Jean");
+            check(names.size() == 3, "Every spelling of a player is found");
+            const auto root = prep.opponentTree(names, true, {});
+            const auto first = root["moves"].toList();
+            check(root["games"].toInt() == 7 && first.size() == 2 && first[0].toMap()["san"] == "e4" &&
+                      first[0].toMap()["games"].toInt() == 6 && first[0].toMap()["score"].toInt() == 17 &&
+                      first[1].toMap()["last"] == "2025.03.01",
+                  "His tree gives each move with its games, score and last date");
+            const auto deeper = prep.opponentTree(names, true, {"e2e4", "e7e5"});
+            check(deeper["hisTurn"].toBool() && deeper["moves"].toList().first().toMap()["san"] == "Nf3",
+                  "The tree follows a line and knows whose move it is");
+            const auto weak = prep.opponentWeaknesses(names);
+            check(weak.size() == 1 && weak.first().toMap()["eco"] == "C50" &&
+                      weak.first().toMap()["score"].toInt() == 17,
+                  "A weakness is an opening he plays often and scores little in");
+            const auto base =
+                prep.collectPlayerGames({{"id", "prep:fide:1"}, {"title", "Préparation : Rival"}}, names);
+            check(prep.search({}, {}, false, {}, false, {{"sourceId", base}}).size() == 8,
+                  "His games are gathered in a preparation base");
+        }
+        {
             // Doublons : même suite de coups et mêmes joueurs, l'un annoté, l'autre daté.
             t64::Database twins(dir.filePath("twins.sqlite"));
             twins.importGames(t64::parsePgn(

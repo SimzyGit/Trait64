@@ -1063,12 +1063,17 @@ void Controller::importText(const QString &text) {
     importBytes(text.toUtf8());
 }
 void Controller::importOnline(const QString &site, const QString &user, int max) {
+    importOnlineInto(site, user, max, false);
+}
+void Controller::importOnlineInto(const QString &site, const QString &user, int max, bool preparation) {
     try {
         require(!busy_ && !online_->busy(), "Un traitement est déjà en cours.");
         require(t64::OnlineGames::validUser(user.trimmed()),
                 "Pseudo invalide : lettres, chiffres, - et _ uniquement.");
         const auto name = user.trimmed().toLower();
-        onlineSyncKey_ = "onlineSync/" + site + "/" + name;
+        // Une préparation a sa propre base et sa propre date : suivre un adversaire ne doit
+        // pas passer pour la synchronisation d'un de ses propres comptes.
+        onlineSyncKey_ = (preparation ? "prepSync/" : "onlineSync/") + site + "/" + name;
         onlineSyncTime_ = QDateTime::currentMSecsSinceEpoch();
         QDir().mkpath(dataPath_ + "/downloads");
         onlineFile_ = dataPath_ + "/downloads/online-" + site + "-" + name + ".pgn";
@@ -1078,7 +1083,8 @@ void Controller::importOnline(const QString &site, const QString &user, int max)
         if (since > 0) {
             bool present = false;
             for (const auto &row : db_->sources())
-                present = present || (row.toMap()["slug"].toString() == site + ":" + name &&
+                present = present || (row.toMap()["slug"].toString() ==
+                                          (preparation ? "prep:" : "") + site + ":" + name &&
                                       row.toMap()["games"].toLongLong() > 0);
             if (!present)
                 since = 0;
@@ -1165,8 +1171,10 @@ void Controller::importOnlineDownload(const QString &downloaded) {
     const auto key = onlineSyncKey_.section('/', 1);
     const auto site = key.section('/', 0, 0), user = key.section('/', 1);
     const bool lichess = site == "lichess";
-    importSourceFile(downloaded, {{"id", site + ":" + user},
-                                  {"title", (lichess ? "Lichess — " : "Chess.com — ") + user},
+    const bool preparation = onlineSyncKey_.startsWith("prepSync/");
+    importSourceFile(downloaded, {{"id", (preparation ? "prep:" : "") + site + ":" + user},
+                                  {"title", preparation ? tr("Préparation : %1").arg(user)
+                                                        : (lichess ? "Lichess — " : "Chess.com — ") + user},
                                   {"source", lichess ? "https://lichess.org/@/" + user
                                                      : "https://www.chess.com/member/" + user},
                                   {"online", true}});
