@@ -218,12 +218,19 @@ if(T64_BUILD_GUI)
     # sans optimisation, le test frôlait la minute.
     if(T64_SANITIZERS)
       set(T64_NOTEBOOK_TIMEOUT 180)
+      # Sous ASan/UBSan, sans optimisation, la sonde de mise en page et les interactions
+      # (une vingtaine de dialogues, deux appareils synchronisés…) passent leur délai
+      # ordinaire sans rien bloquer : on leur laisse trois fois plus.
+      set(T64_LAYOUT_TIMEOUT 360)
+      set(T64_INTERACTIONS_TIMEOUT 900)
     else()
       set(T64_NOTEBOOK_TIMEOUT 60)
+      set(T64_LAYOUT_TIMEOUT 120)
+      set(T64_INTERACTIONS_TIMEOUT 300)
     endif()
     set_tests_properties(move_notebook PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT ${T64_NOTEBOOK_TIMEOUT})
     add_test(NAME desktop_layout COMMAND desktop_tests --ui-layout)
-    set_tests_properties(desktop_layout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
+    set_tests_properties(desktop_layout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT ${T64_LAYOUT_TIMEOUT})
     # Le parcours des études à vrais clics : dossier, fichier, recueil, aperçu, dialogues.
     add_test(NAME study_walk COMMAND desktop_tests --explorer-walk)
     set_tests_properties(study_walk PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 120)
@@ -234,7 +241,7 @@ if(T64_BUILD_GUI)
     add_test(NAME desktop_interactions COMMAND desktop_tests)
     # Le scénario par défaut traverse toute l'application : il lui faut nettement plus
     # de temps que les scénarios ciblés ci-dessus, surtout sous sanitizers.
-    set_tests_properties(desktop_interactions PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT 300)
+    set_tests_properties(desktop_interactions PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software" TIMEOUT ${T64_INTERACTIONS_TIMEOUT})
   endif()
   # BUNDLE ne concerne que macOS, où la cible est un paquet depuis qu'elle porte
   # MACOSX_BUNDLE ; RUNTIME reste la destination sur les autres systèmes.
