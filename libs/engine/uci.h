@@ -64,6 +64,7 @@ class Uci : public QObject {
     // centaines par seconde avec beaucoup de variantes. Elles ne sont décodées (coups
     // légaux, SAN) qu'au moment de les montrer, dix fois par seconde au plus.
     QMap<int, QString> rawLines_, rawExact_;
+    QHash<QString, QString> exactByMove_; // dernière ligne exacte de chaque premier coup
     QMap<int, QPair<QString, QVariantMap>> parsed_;
     QTimer publish_;
     void clearLines();

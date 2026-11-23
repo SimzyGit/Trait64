@@ -3,6 +3,7 @@
 #include "game.h"
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QSet>
 #include <algorithm>
 
 namespace t64 {
@@ -352,11 +353,37 @@ void Uci::parse(const QString &line) {
             publishLines();
         }
         if (complete) {
-            QVariantList result;
-            for (auto it = rawExact_.cbegin(); it != rawExact_.cend(); ++it)
-                if (const auto info = decoded(it.key(), it.value()); !info.isEmpty())
+            // Une ligne par premier coup, dans l'ordre des rangs, celle du coup joué en tête.
+            // Un rang exact périmé peut doubler un autre coup : on le remplace par la
+            // dernière évaluation exacte d'un coup absent, la plus profonde d'abord.
+            const auto best = line.section(' ', 1, 1);
+            QVariantList result, spare;
+            QSet<QString> firsts;
+            for (auto it = rawExact_.cbegin(); it != rawExact_.cend(); ++it) {
+                const auto info = decoded(it.key(), it.value());
+                const auto first = info["uci"].toString().section(' ', 0, 0);
+                if (info.isEmpty() || firsts.contains(first))
+                    continue;
+                firsts << first;
+                if (first == best)
+                    result.prepend(info);
+                else
                     result << info;
-            result = distinctLines(result);
+            }
+            for (auto it = exactByMove_.cbegin(); it != exactByMove_.cend(); ++it)
+                if (!firsts.contains(it.key()))
+                    if (const auto info = parseInfo(it.value(), activeFen_, active960_); !info.isEmpty())
+                        spare << info;
+            std::sort(spare.begin(), spare.end(), [](const QVariant &a, const QVariant &b) {
+                return a.toMap()["depth"].toInt() > b.toMap()["depth"].toInt();
+            });
+            for (int i = 0; i < spare.size() && result.size() < rawExact_.size(); ++i)
+                result << spare[i];
+            for (int i = 0; i < result.size(); ++i) {
+                auto info = result[i].toMap();
+                info["rank"] = i + 1;
+                result[i] = info;
+            }
             emit completed(completedFen, result);
         }
         // La comparaison n'est pas tautologique : « completed » est émis juste au-dessus,
@@ -380,8 +407,11 @@ void Uci::parse(const QString &line) {
     if (rank < 1 || rank > maxLines)
         return;
     rawLines_[rank] = line;
-    if (!line.contains("lowerbound") && !line.contains("upperbound"))
+    if (!line.contains("lowerbound") && !line.contains("upperbound")) {
         rawExact_[rank] = line;
+        const int pv = line.indexOf(" pv ") + 4;
+        exactByMove_[line.mid(pv, line.indexOf(' ', pv) - pv)] = line;
+    }
     if (!publish_.isActive())
         publish_.start();
 }
@@ -389,6 +419,7 @@ void Uci::clearLines() {
     publish_.stop();
     rawLines_.clear();
     rawExact_.clear();
+    exactByMove_.clear();
     parsed_.clear();
 }
 QVariantMap Uci::decoded(int rank, const QString &line) {
