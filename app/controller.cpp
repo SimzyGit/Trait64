@@ -168,6 +168,8 @@ Controller::Controller(const QString &path, QObject *parent)
     QDir().mkpath(path);
     db_ = std::make_unique<t64::Database>(path + "/library.sqlite");
     refreshPuzzleStats();
+    if (settings_.value("reference/atStartup", false).toBool())
+        QTimer::singleShot(6000, this, &Controller::updateReference);
     if (settings_.value("syncAtStartup", false).toBool() &&
         !settings_.value("onlineAccounts").toList().isEmpty())
         QTimer::singleShot(2500, this, &Controller::syncAllAccounts);

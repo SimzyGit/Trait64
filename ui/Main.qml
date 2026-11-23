@@ -541,6 +541,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Doublons de coups"); onTriggered: {win.page = 1; controller.findDuplicates()}}
             MenuItem {text: qsTr("Fusionner les doublons"); enabled: !controller.busy; onTriggered: {win.page = 1; controller.mergeDuplicates()}}
             MenuItem {objectName: "prepareOpponentMenu"; text: qsTr("Préparer un joueur…"); onTriggered: opponentPrep.open()}
+            MenuItem {objectName: "referenceMenu"; text: qsTr("Base de référence…"); onTriggered: referenceBase.open()}
             MenuItem {text: qsTr("Comparer avec une autre base…"); onTriggered: compareLibraryDialog.open()}
             MenuItem {text: qsTr("Tournois de la bibliothèque…"); onTriggered: tournamentFinder.open()}
             MenuItem {text: qsTr("Graphiques de la sélection…"); onTriggered: libraryCharts.open()}
@@ -1354,6 +1355,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Crosstable {id:crosstableDialog;objectName:"crosstableDialog";backend:controller}
     TagsDialog {id:baseTagsDialog;backend:controller}
     OpponentPrep {id:opponentPrep;backend:controller}
+    ReferenceBase {id:referenceBase;backend:controller}
     TDialog {id:layoutsDialog;objectName:"layoutsDialog";title:qsTr("Dispositions de travail");modal:true;anchors.centerIn:parent
         width:Math.min(460,parent.width-32);standardButtons:Dialog.Close
         ColumnLayout {anchors.fill:parent;spacing:8

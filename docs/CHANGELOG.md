@@ -1,5 +1,11 @@
 # Changements
 
+## Base de référence à jour — 23 novembre 2026
+
+- **Diffusions Lichess** (*Base → Base de référence…*) : les rondes terminées des tournois retransmis, téléchargées à la demande ou au démarrage, ajoutées sans doublon à « Référence — diffusions Lichess ». Les rondes déjà lues ne sont plus demandées ; elles ne sont notées qu'une fois l'import fini, de sorte qu'une mise à jour interrompue reprend.
+- **Base élite de Lichess et TWIC** : téléchargées sur leur site par l'utilisateur, puis importées dans leur base de référence, archives zip comprises. Leur téléchargement n'est pas automatisé : les adresses des fichiers élite n'ont pas pu être vérifiées, et les conditions de réutilisation de TWIC ne l'autorisent pas clairement.
+- Le suivi en direct existait déjà (*Base → Tournois en direct*, *Suivre*).
+
 ## Préparer n'importe quel joueur — 23 novembre 2026
 
 - **Préparer un joueur** (*Base → Préparer un joueur…*) : par pseudo Lichess ou Chess.com, ses parties sont téléchargées dans une base « Préparation : <nom> », à la suite des précédentes ; par identifiant FIDE, son nom officiel est lu chez Lichess (`/api/fide/player`) puis ses parties sont cherchées dans la bibliothèque, toutes graphies réunies (la FIDE ne publie pas de parties) ; par nom de la bibliothèque, de même.

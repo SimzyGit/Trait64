@@ -1184,6 +1184,22 @@ int main(int argc, char **argv) {
             check(c.opponentWeaknesses().size() == 1, "His weak opening is listed");
             c.openLine({"e2e4", "e7e5"});
             check(c.state()["node"].toInt() == 2, "A line of his tree opens on the board");
+            // Base de référence : un fichier importé rejoint sa base, sans doublon.
+            QFile reference(dir.path() + "/elite.pgn");
+            check(reference.open(QIODevice::WriteOnly) &&
+                      reference.write("[White \"E1\"]\n[Black \"E2\"]\n[Result \"1-0\"]\n\n1.c4 1-0\n\n") > 0,
+                  "Elite fixture written");
+            reference.close();
+            c.importReferenceFile(reference.fileName(), "elite");
+            wait.restart();
+            while (c.busy() && wait.elapsed() < 10000)
+                QTest::qWait(10);
+            bool elite = false;
+            for (const auto &row : c.sources())
+                elite =
+                    elite || (row.toMap()["slug"] == "reference:elite" && row.toMap()["games"].toInt() == 1);
+            check(elite && c.reference()["last"].toLongLong() > 0,
+                  "A reference file joins its reference base");
             const auto pdf = dir.path() + "/opponent.pdf";
             c.exportOpponentPdf(pdf);
             QFile out(pdf);

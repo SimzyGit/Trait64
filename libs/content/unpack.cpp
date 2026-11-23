@@ -53,3 +53,37 @@ QByteArray unpackIfCompressed(const QString &path, qint64 limit) {
     }
 }
 } // namespace t64
+
+namespace t64 {
+QString extractPgnFromZip(const QString &zip, const QString &target) {
+    std::unique_ptr<struct archive, decltype(&archive_read_free)> reader(archive_read_new(),
+                                                                         &archive_read_free);
+    if (!reader)
+        return "Extraction indisponible.";
+    archive_read_support_format_zip(reader.get());
+    if (archive_read_open_filename(reader.get(), QFile::encodeName(zip).constData(), 1 << 16) != ARCHIVE_OK)
+        return "Archive illisible.";
+    struct archive_entry *item = nullptr;
+    while (archive_read_next_header(reader.get(), &item) == ARCHIVE_OK) {
+        const auto name = QString::fromUtf8(archive_entry_pathname(item));
+        if (archive_entry_filetype(item) != AE_IFREG || !name.endsWith(".pgn", Qt::CaseInsensitive)) {
+            archive_read_data_skip(reader.get());
+            continue;
+        }
+        QFile out(target);
+        if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return out.errorString();
+        char bytes[1 << 16];
+        la_ssize_t n;
+        qint64 written = 0;
+        // Une base élite mensuelle tient quelques centaines de mégaoctets : on borne à 8 Go.
+        while ((n = archive_read_data(reader.get(), bytes, sizeof(bytes))) > 0) {
+            written += n;
+            if (written > 8LL * 1024 * 1024 * 1024 || out.write(bytes, n) != n)
+                return "Fichier décompressé trop volumineux ou disque plein.";
+        }
+        return n == 0 ? QString() : QString("Archive tronquée.");
+    }
+    return "Aucun fichier PGN dans l’archive.";
+}
+} // namespace t64

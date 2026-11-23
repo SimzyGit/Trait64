@@ -10,4 +10,7 @@ namespace t64 {
 // la taille rendue — la taille dépliée n'étant pas annoncée, on s'arrête dès le
 // dépassement plutôt que de laisser quelques kilo-octets remplir la mémoire.
 QByteArray unpackIfCompressed(const QString &path, qint64 limit);
+// Le premier fichier .pgn d'une archive zip, écrit dans `target` ; rend un message
+// d'erreur, vide si tout s'est bien passé.
+QString extractPgnFromZip(const QString &zip, const QString &target);
 } // namespace t64

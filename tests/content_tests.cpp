@@ -2,6 +2,7 @@
 #include "content.h"
 #include "game.h"
 #include "uci.h"
+#include "unpack.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QElapsedTimer>
@@ -80,6 +81,14 @@ int main(int argc, char **argv) {
         const auto archive = dir.path() + "/fixture.zip";
         const QByteArray pgn("[Event \"Test\"]\n1.e4 e5 *\n");
         zip(archive, "Games.pgn", pgn);
+        // Une base mensuelle en zip : son PGN est extrait tel quel pour l'import.
+        check(t64::extractPgnFromZip(archive, dir.path() + "/extracted.pgn").isEmpty(),
+              "A zipped PGN is extracted");
+        QFile extracted(dir.path() + "/extracted.pgn");
+        check(extracted.open(QIODevice::ReadOnly) && extracted.readAll() == pgn,
+              "The extracted PGN is intact");
+        check(!t64::extractPgnFromZip(dir.path() + "/missing.zip", dir.path() + "/x.pgn").isEmpty(),
+              "A missing archive is reported");
         auto installed = t64::Content::installPackage(entry, archive, dir.path() + "/data", canceled);
         QFile file(installed["path"].toString());
         check(file.open(QIODevice::ReadOnly), "Installed data accessible");

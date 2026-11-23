@@ -415,6 +415,17 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap opponent READ opponent NOTIFY opponentChanged)
     QVariantMap opponent() const { return opponent_; }
     Q_INVOKABLE void prepareOpponent(const QString &site, const QString &query);
+    // La base de référence (reference.cpp) : les rondes terminées des diffusions Lichess,
+    // ajoutées sans doublon à « Référence — diffusions Lichess », et les fichiers de la base
+    // élite de Lichess ou de TWIC importés à la main. {running, status, last, added}.
+    Q_PROPERTY(QVariantMap reference READ reference NOTIFY referenceChanged)
+    QVariantMap reference() const;
+    Q_INVOKABLE void updateReference();
+    Q_INVOKABLE void setReferenceAtStartup(bool on) {
+        settings_.setValue("reference/atStartup", on);
+        emit referenceChanged();
+    }
+    Q_INVOKABLE void importReferenceFile(const QString &url, const QString &kind);
     Q_INVOKABLE QVariantMap opponentTree(bool white, const QStringList &path) const;
     Q_INVOKABLE QVariantList opponentWeaknesses() const;
     Q_INVOKABLE QVariantMap opponentEvolution() const;
@@ -623,6 +634,7 @@ class Controller : public QObject {
     void layoutsChanged();
     void positionGamesChanged();
     void opponentChanged();
+    void referenceChanged();
     void sourcesChanged();
     void notationChanged();
     void importsChanged();
@@ -877,6 +889,13 @@ class Controller : public QObject {
     QFutureWatcher<QVariantMap> positionGamesWorker_;
     QVariantMap positionGames_, opponent_;
     QNetworkAccessManager *opponentNetwork_ = nullptr;
+    t64::Broadcasts *referenceFeed_ = nullptr;
+    QStringList referenceQueue_, referenceDone_;
+    QByteArray referencePgn_;
+    QString referenceStatus_;
+    bool referenceRunning_ = false;
+    void nextReferenceRound();
+    void finishReference();
     qint64 positionGamesGeneration_ = 0;
     bool positionGamesPending_ = false;
     std::shared_ptr<std::atomic_bool> cancelPositionGames_;
