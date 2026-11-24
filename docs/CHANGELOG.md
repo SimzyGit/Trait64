@@ -7,6 +7,7 @@
 - Le ruban se replie seul dès qu'il prendrait plus d'un sixième de la hauteur (grand texte, petit écran).
 - En anglais et en espagnol, « Annuler » la dernière modification se lit *Undo* / *Deshacer*, et non plus *Cancel*. Les traductions acceptent un contexte : `qsTr("Annuler", "modification")`.
 - Les bulles d'aide ne s'ouvrent plus sur un élément pas encore placé dans la fenêtre.
+- Les boutons de navigation sous l’échiquier gardent leurs symboles avec un très grand texte.
 
 ## Interface à la manière de ChessBase — 24 novembre 2026
 
