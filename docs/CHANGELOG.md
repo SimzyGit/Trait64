@@ -1,5 +1,11 @@
 # Changements
 
+## Analyse en parcourant une partie — 24 novembre 2026
+
+- **Le moteur ne disparaît plus au coup suivant.** Chaque coup parcouru vidait le panneau, qui restait blanc 290 à 640 ms (mesure : `desktop_tests --engine-walk`, Stockfish réel). Les lignes de la position quittée restent affichées, estompées, jusqu'aux nouvelles ; les flèches de l'échiquier n'en montrent que pour la position affichée.
+- **Une position déjà analysée ne repart pas de zéro** : ses lignes les plus profondes sont gardées (400 positions) et réapparaissent aussitôt qu'on y revient ; le moteur les remplace dès qu'il les dépasse.
+- La recherche part 70 ms après le dernier coup parcouru (180 auparavant) et sa première ligne s'affiche sans attendre le rafraîchissement suivant.
+
 ## Styles d'interface et base FFE — 24 novembre 2026
 
 - **Trois styles d'interface** (*Paramètres → Interface*) : *ChessBase* (ruban, fenêtres en onglets, fenêtre des bases au démarrage), *En Croissant* (barre latérale, barre de menus, accueil au démarrage) et *Personnalisé* : barres affichées, page de démarrage, disposition des panneaux et thème, enregistrés en profils nommés (douze au plus). Un profil sans aucune navigation garde les onglets des fenêtres. Les barres sont des clés de la carte des préférences : changer de style ne réévalue que ce qui en dépend. La préférence `classicInterface` devient le style *En Croissant*.

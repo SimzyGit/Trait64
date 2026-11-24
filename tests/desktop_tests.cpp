@@ -181,6 +181,39 @@ int main(int argc, char **argv) {
             qInfo("préférences : %.1f µs par lecture", read.nsecsElapsed() / 1e3 / 1000);
             return 0;
         }
+        // L'analyse en parcourant une partie : combien de temps l'affichage reste vide à
+        // chaque coup, et à quelle profondeur il repart.
+        if (app.arguments().contains("--engine-walk")) {
+            Controller c(dir.path() + "/engine-walk");
+            c.setPreference("enginePath", qEnvironmentVariable("T64_STOCKFISH", "/usr/games/stockfish"));
+            c.newGame();
+            for (const auto *m : {"e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6"})
+                c.move(m);
+            c.navigate(0);
+            c.toggleAnalysis();
+            QTest::qWait(1500);
+            for (int step = 0; step < 6; ++step) {
+                c.step(step < 3 ? 1 : -1);
+                QElapsedTimer t;
+                t.start();
+                qint64 emptyFor = 0, firstAt = -1;
+                int depth = 0;
+                while (t.elapsed() < 1500) {
+                    const auto lines = c.engineLines();
+                    if (lines.isEmpty())
+                        emptyFor = t.elapsed();
+                    else {
+                        if (firstAt < 0)
+                            firstAt = t.elapsed();
+                        depth = lines.first().toMap()["depth"].toInt();
+                    }
+                    QTest::qWait(5);
+                }
+                qInfo("coup %d : vide jusqu'à %lld ms, premières lignes à %lld ms, profondeur %d après 1,5 s",
+                      step, emptyFor, firstAt, depth);
+            }
+            return 0;
+        }
         if (app.arguments().contains("--explorer-walk"))
             return explorerProbeMain(dir.path());
         if (app.arguments().contains("--board-walk"))
@@ -304,6 +337,34 @@ int main(int argc, char **argv) {
                 Controller second(path);
                 check(QFileInfo(second.preferences()["enginePath"].toString()).isExecutable(),
                       "An engine installed after the first launch is found at the next one");
+                // Parcourir une partie analysée : le panneau ne se vide jamais, et une
+                // position déjà creusée reprend à sa profondeur au lieu de repartir de zéro.
+                second.newGame();
+                second.move("e2e4");
+                second.move("e7e5");
+                second.navigate(1);
+                second.toggleAnalysis();
+                const auto deep = [&](int depth) {
+                    return QTest::qWaitFor(
+                        [&] {
+                            const auto l = second.engineLines();
+                            return !l.isEmpty() && l.first().toMap()["fen"] == second.engineFen() &&
+                                   second.engineFen() == second.state()["fen"] &&
+                                   l.first().toMap()["depth"].toInt() >= depth;
+                        },
+                        10000);
+                };
+                check(deep(12), "The engine analyses the position shown");
+                const int reached = second.engineLines().first().toMap()["depth"].toInt();
+                second.step(1);
+                const bool kept = !second.engineLines().isEmpty();
+                check(kept && deep(1), "Stepping forward keeps the panel filled until the new lines arrive");
+                second.step(-1);
+                check(!second.engineLines().isEmpty() &&
+                          second.engineLines().first().toMap()["fen"] == second.state()["fen"] &&
+                          second.engineLines().first().toMap()["depth"].toInt() >= reached,
+                      "Coming back to an analysed position shows its depth at once");
+                second.toggleAnalysis();
                 second.setPreference("enginePath", dir.path() + "/gone/stockfish");
                 check(!second.useDetectedEngine().isEmpty() &&
                           QFileInfo(second.preferences()["enginePath"].toString()).isExecutable(),

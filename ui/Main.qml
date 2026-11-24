@@ -594,6 +594,8 @@ ApplicationWindow {
                                         required property var modelData
                                         required property int index
                                         width:ListView.view.width;spacing:8
+                                        // Une ligne de la position précédente, en attendant les nouvelles.
+                                        opacity:modelData.fen===controller.engineFen?1:.4
                                         // L'évaluation en pastille, claire si les Blancs sont mieux, sombre sinon, comme
                                         // sur Lichess : le signe se lit avant le chiffre.
                                         Rectangle {Layout.preferredWidth:Math.round(56*win.textScale);Layout.preferredHeight:Math.round(20*win.textScale);radius:3
@@ -1211,7 +1213,7 @@ objectName:"analysisSplit"
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
-                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent
+                                    Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.filter(l=>l.fen===controller.engineFen).slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent
                                         reviewMarks:(controller.state.mistake||{}).marks||win.reviewSpot.marks||[]}
                                 }
                             }

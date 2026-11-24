@@ -412,7 +412,13 @@ void Uci::parse(const QString &line) {
         const int pv = line.indexOf(" pv ") + 4;
         exactByMove_[line.mid(pv, line.indexOf(' ', pv) - pv)] = line;
     }
-    if (!publish_.isActive())
+    // La première ligne d'une recherche s'affiche aussitôt ; les suivantes, dix fois par
+    // seconde au plus.
+    if (!publishedOnce_) {
+        publishedOnce_ = true;
+        publishLines();
+        publish_.start();
+    } else if (!publish_.isActive())
         publish_.start();
 }
 void Uci::clearLines() {
@@ -421,6 +427,7 @@ void Uci::clearLines() {
     rawExact_.clear();
     exactByMove_.clear();
     parsed_.clear();
+    publishedOnce_ = false;
 }
 QVariantMap Uci::decoded(int rank, const QString &line) {
     auto &cached = parsed_[rank];

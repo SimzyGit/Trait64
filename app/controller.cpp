@@ -205,7 +205,9 @@ Controller::Controller(const QString &path, QObject *parent)
         }
     });
     analysisTimer_.setSingleShot(true);
-    analysisTimer_.setInterval(180);
+    // Assez pour ne pas relancer le moteur à chaque coup d'un défilement rapide, assez
+    // peu pour qu'un coup suivant soit analysé aussitôt.
+    analysisTimer_.setInterval(70);
     connect(&analysisTimer_, &QTimer::timeout, this, &Controller::requestEngine);
     connect(&classifier_, &QFutureWatcher<int>::finished, this, [this] {
         const int classified = classifier_.result();
@@ -233,7 +235,32 @@ Controller::Controller(const QString &path, QObject *parent)
             refresh();
     });
     connect(&engine_, &t64::Uci::lines, this, [this](const QVariantList &lines) {
+        // Une liste vide annonce une nouvelle recherche : on garde ce qui est affiché
+        // (estompé s'il s'agit d'une autre position) jusqu'aux premières lignes.
+        if (lines.isEmpty())
+            return;
+        const auto first = lines.first().toMap();
+        const auto fen = first["fen"].toString();
+        const auto cached = lineCache_.value(fen);
+        const int depth = first["depth"].toInt();
+        if (!cached.isEmpty() && cached.first().toMap()["depth"].toInt() > depth && cached.size() >= lines.size()) {
+            // Le moteur repart de zéro sur une position déjà creusée : la ligne plus
+            // profonde reste affichée tant qu'il ne l'a pas rattrapée.
+            if (engineLines_ != cached) {
+                engineLines_ = cached;
+                emit engineChanged();
+            }
+            return;
+        }
         engineLines_ = lines;
+        if (!first["bound"].toBool() && !fen.isEmpty()) {
+            if (!lineCache_.contains(fen)) {
+                lineCacheOrder_ << fen;
+                if (lineCacheOrder_.size() > 400)
+                    lineCache_.remove(lineCacheOrder_.takeFirst());
+            }
+            lineCache_[fen] = lines;
+        }
         // Une liste vide annonce un changement de position, pas une position sans
         // évaluation : on garde la dernière reçue pour que la barre glisse vers la
         // suivante au lieu de clignoter par l'équilibre.
@@ -731,8 +758,17 @@ void Controller::refresh(bool content) {
     publish();
     if (positionFilter_ && previousFen != s(current.fen))
         requestLibrarySearch();
-    if ((analysis_ || playing_) && !trainingActive() && previousFen != s(current.fen))
+    if ((analysis_ || playing_) && !trainingActive() && previousFen != s(current.fen)) {
+        // Une position déjà analysée montre ses lignes tout de suite, sans attendre le
+        // moteur ; la recherche part un instant plus tard.
+        if (analysis_ && !playing_ && !threatActive())
+            if (const auto cached = lineCache_.value(s(current.fen)); !cached.isEmpty()) {
+                engineFen_ = s(current.fen);
+                engineLines_ = cached;
+                emit engineChanged();
+            }
         analysisTimer_.start();
+    }
     if (!trainingActive())
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
 }
@@ -1631,8 +1667,8 @@ void Controller::navigate(int node) {
     engine_.stop();
     node_ = node;
     selected_ = -1;
-    forgetEngineLines();
-    emit engineChanged();
+    // Les lignes de la position quittée restent, estompées, jusqu'aux nouvelles : les
+    // effacer laissait le panneau vide à chaque coup.
     refresh();
     autosave_.start();
 }
@@ -1913,6 +1949,8 @@ void Controller::startEngine() {
     // l'option ne la reçoit pas.
     if (!options.contains("UCI_ShowWDL"))
         options["UCI_ShowWDL"] = true;
+    lineCache_.clear();
+    lineCacheOrder_.clear();
     engine_.setLimitElo(playing_ ? settings_.value("playElo", 0).toInt() : 0);
     engine_.start(settings_.value("enginePath").toString(), engineThreads(), engineHashMb(),
                   settings_.value("multiPV", 3).toInt(), playing_ ? settings_.value("skill", 12).toInt() : 20,
@@ -1972,6 +2010,10 @@ void Controller::requestEngine() {
             fen = fields.join(' ');
             command = "position fen " + fen;
         }
+        engineFen_ = fen;
+        if (const auto cached = lineCache_.value(fen); !cached.isEmpty())
+            engineLines_ = cached;
+        emit engineChanged();
         engine_.analyse(fen, command, false, 800, settings_.value("analysisDepth", 0).toInt(),
                         game_.chess960);
     }

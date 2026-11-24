@@ -67,6 +67,7 @@ class Uci : public QObject {
     QHash<QString, QString> exactByMove_; // dernière ligne exacte de chaque premier coup
     QMap<int, QPair<QString, QVariantMap>> parsed_;
     QTimer publish_;
+    bool publishedOnce_ = false;
     void clearLines();
     QVariantMap decoded(int rank, const QString &line);
     void publishLines();

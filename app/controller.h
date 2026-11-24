@@ -73,6 +73,9 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantList cards READ cards NOTIFY libraryChanged)
     Q_PROPERTY(QVariantList engineOptions READ engineOptions NOTIFY engineChanged)
     Q_PROPERTY(QVariantList engineLines READ engineLines NOTIFY engineChanged)
+    // La position que le moteur analyse : une ligne d'une autre position s'affiche
+    // estompée en attendant les nouvelles, au lieu de laisser le panneau vide.
+    Q_PROPERTY(QString engineFen READ engineFen NOTIFY engineChanged)
     // La dernière évaluation reçue, gardée pendant que le moteur change de position : il
     // vide ses lignes à chaque nouvelle recherche, et la barre retombait à l'équilibre le
     // temps que la première évaluation du coup joué revienne.
@@ -237,6 +240,7 @@ class Controller : public QObject {
     Q_INVOKABLE void setEngineOption(const QString &name, const QVariant &value);
     Q_INVOKABLE void pressEngineOption(const QString &name);
     QVariantList engineLines() const { return engineLines_; }
+    QString engineFen() const { return engineFen_; }
     QVariantMap heldEvaluation() const { return heldEval_; }
     // Les lignes du moteur et la dernière évaluation gardée vont ensemble : les oublier
     // séparément laisserait la barre afficher une valeur d'une autre position.
@@ -868,6 +872,11 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     // Plusieurs clics sur − / + ne relancent le moteur qu'une fois, à la pause.
     QTimer linesRestart_;
+    // Les lignes de chaque position analysée, la plus profonde gardée : revenir sur une
+    // position la montre aussitôt, à la profondeur déjà atteinte.
+    QString engineFen_;
+    QHash<QString, QVariantList> lineCache_;
+    QStringList lineCacheOrder_;
     t64::Uci engine_;
     t64::Comparison comparison_;
     t64::Tournament tournament_;
