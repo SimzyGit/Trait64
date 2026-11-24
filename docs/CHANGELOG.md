@@ -4,6 +4,9 @@
 
 - **Un réglage changé ne réévalue plus toute l'interface.** Les préférences passent à QML en carte de propriétés, comme l'état : chaque liaison ne dépend que de sa clé. Changer le nombre de lignes du moteur prend 1,7 ms au lieu de 503 ms (mesure : `desktop_tests --settings-timing`, interface entière chargée) ; la suite de tests complète passe de 172 s à 59 s.
 - Les lignes du moteur sont recyclées à chaque mise à jour au lieu d'être recréées.
+- Plusieurs clics sur − / + des lignes du moteur ne le relancent qu'une fois, à la pause ; un clic sur le compteur propose 1, 3, 5, 10, 20, 50 ou 100 lignes, la molette ajuste d'une.
+- **Icônes propres à Trait64** (`tools/icons.py`, qui les régénère) : trait et aplat translucide de la même couleur, motifs de l'échiquier — cases, pion, cavalier — au lieu de pictogrammes génériques. Les onglets des fenêtres en portent une ; dans une fenêtre étroite, les onglets inactifs n'affichent qu'elle.
+- Les boutons de parcours sous l'échiquier sont des icônes : les flèches en caractères se chevauchaient selon la police. Le bouton « Lire la partie », masqué puis réaffiché sous 450 px, se posait sur « Début » (Qt 6.4) : il reste toujours visible.
 - **Bilan** : la réfutation d'une erreur s'affiche dans une bande de hauteur fixe sous l'échiquier, à la place de l'état ; l'échiquier ne rétrécit plus.
 
 ## Finitions de l'interface — 24 novembre 2026

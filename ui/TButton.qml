@@ -15,15 +15,32 @@ Button {
     hoverEnabled: true
     font.pixelSize: Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)
     font.weight: control.accent ? Font.DemiBold : Font.Normal
-    contentItem: Text {
-        id: label
-        text: control.text
-        font: control.font
-        color: control.lit ? control.contrast(control.accentColor) : control.palette.buttonText
-        opacity: control.enabled ? 1 : 0.45
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+    // Une icône du jeu de Trait64 à la place du texte : les flèches en caractères
+    // dépendaient de la police et se chevauchaient à certaines tailles.
+    property string glyph: ""
+    contentItem: Item {
+        implicitWidth: control.glyph ? Math.round(16 * controller.preferences.uiScale) : label.implicitWidth
+        implicitHeight: label.implicitHeight
+        Text {
+            id: label
+            anchors.fill: parent
+            visible: !control.glyph
+            text: control.text
+            font: control.font
+            color: control.lit ? control.contrast(control.accentColor) : control.palette.buttonText
+            opacity: control.enabled ? 1 : 0.45
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
+        T64Icon {
+            visible: !!control.glyph
+            anchors.centerIn: parent
+            width: Math.round(16 * controller.preferences.uiScale); height: width
+            source: control.glyph ? "qrc:/assets/icons/" + control.glyph + ".svg" : ""
+            color: label.color
+            opacity: label.opacity
+        }
     }
     background: Rectangle {
         radius: 3

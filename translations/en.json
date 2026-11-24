@@ -2214,5 +2214,7 @@
   "Version": "Version",
   "Vos bases en icônes, rangées par catégorie.": "Your databases as icons, sorted by category.",
   "Édition": "Edit",
-  "Annuler|modification": "Undo"
+  "Annuler|modification": "Undo",
+  "1 ligne": "1 line",
+  "%1 lignes": "%1 lines"
 }

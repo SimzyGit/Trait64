@@ -189,6 +189,12 @@ Controller::Controller(const QString &path, QObject *parent)
         settings_.setValue("enginePath", found.isEmpty() ? QString() : found.first());
         syncPreferences();
     }
+    linesRestart_.setSingleShot(true);
+    linesRestart_.setInterval(250);
+    connect(&linesRestart_, &QTimer::timeout, this, [this] {
+        if (analysis_ && !playing_)
+            startEngine();
+    });
     autosave_.setSingleShot(true);
     autosave_.setInterval(600);
     connect(&autosave_, &QTimer::timeout, this, [this] {
@@ -1920,7 +1926,7 @@ void Controller::setEngineLines(int count) {
         return;
     setPreference("multiPV", lines);
     if (analysis_ && !playing_)
-        startEngine();
+        linesRestart_.start();
 }
 int Controller::engineThreads() const {
     // Plus de fils que de cœurs ralentit le moteur : on borne à ce que la machine a.

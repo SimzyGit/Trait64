@@ -391,7 +391,7 @@ ApplicationWindow {
                                         header:RowLayout {width:miniExplorer.width;spacing:8
                                             Label {text:qsTr("Coup");Layout.preferredWidth:58;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {text:qsTr("Parties");Layout.preferredWidth:58;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
-                                            Label {text:qsTr("Blancs · nulles · Noirs");Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                            Label {text:qsTr("Blancs · nulles · Noirs");Layout.fillWidth:true;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {text:qsTr("Score");Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                         }
                                         delegate:ItemDelegate {
@@ -565,10 +565,17 @@ ApplicationWindow {
                                         TButton {objectName:"fewerLines";text:"−";flat:true;implicitWidth:26;enabled:controller.preferences.multiPV>1
                                                  onClicked:controller.setEngineLines(controller.preferences.multiPV-1)
                                                  ToolTip.visible:hovered;ToolTip.text:qsTr("Une ligne de moins")}
-                                        Label {objectName:"engineLineCount";text:qsTr("%1 l.").arg(controller.preferences.multiPV);color:win.muted
-                                               font.pixelSize:Math.round(11*win.textScale);Layout.minimumWidth:Math.round(30*win.textScale);horizontalAlignment:Text.AlignHCenter
-                                               ToolTip.visible:countHover.hovered;ToolTip.text:qsTr("Lignes du moteur (1 à 100). Plus de lignes coûtent de la profondeur.")
-                                               HoverHandler {id:countHover}}
+                                        // Un clic propose les nombres courants, la molette ajuste d'une ligne.
+                                        Label {objectName:"engineLineCount";text:controller.preferences.multiPV===1?qsTr("1 ligne"):qsTr("%1 lignes").arg(controller.preferences.multiPV);color:win.muted
+                                               font.pixelSize:Math.round(11*win.textScale);Layout.minimumWidth:Math.round(52*win.textScale);horizontalAlignment:Text.AlignHCenter
+                                               ToolTip.visible:countHover.hovered&&!linesMenu.visible;ToolTip.text:qsTr("Lignes du moteur (1 à 100). Plus de lignes coûtent de la profondeur.")
+                                               HoverHandler {id:countHover;cursorShape:Qt.PointingHandCursor}
+                                               TapHandler {onTapped:linesMenu.popup()}
+                                               WheelHandler {onWheel:function(event){controller.setEngineLines(controller.preferences.multiPV+(event.angleDelta.y>0?1:-1))}}
+                                               Menu {id:linesMenu
+                                                   Repeater {model:[1,3,5,10,20,50,100]
+                                                       MenuItem {required property int modelData;text:modelData===1?qsTr("1 ligne"):qsTr("%1 lignes").arg(modelData)
+                                                           checkable:true;checked:controller.preferences.multiPV===modelData;onTriggered:controller.setEngineLines(modelData)}}}}
                                         TButton {objectName:"moreLines";text:"+";flat:true;implicitWidth:26;enabled:controller.preferences.multiPV<100
                                                  onClicked:controller.setEngineLines(controller.preferences.multiPV+1)
                                                  ToolTip.visible:hovered;ToolTip.text:qsTr("Une ligne de plus")}
@@ -837,6 +844,7 @@ ApplicationWindow {
                     ListView {
                         id: pageTabs; objectName: win.classic ? "" : "workspaceTabs"
                         visible: !win.classic
+                        readonly property bool compact: win.width < 1240 * win.textScale
                         Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumWidth: 0
                         orientation: ListView.Horizontal; clip: true; spacing: 0
                         interactive: contentWidth > width; boundsBehavior: Flickable.StopAtBounds
@@ -855,13 +863,26 @@ ApplicationWindow {
                             Accessible.role: Accessible.PageTab
                             Accessible.name: win.nav[modelData]
                             Accessible.selected: active
-                            contentItem: Label {
-                                text: modelData === 2 && controller.state.title ? win.nav[2] + " · " + controller.state.title : win.nav[pageTab.modelData]
-                                elide: Text.ElideRight
-                                width: Math.min(implicitWidth, 170 * win.textScale)
-                                horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                                color: pageTab.active ? win.fg : win.muted
-                                font.weight: pageTab.active ? Font.DemiBold : Font.Normal
+                            readonly property var icons: ({9: "home", 0: "database", 1: "library", 2: "analysis", 3: "openings",
+                                                           8: "studies", 4: "training", 6: "players", 7: "profiles", 5: "tools"})
+                            contentItem: Row {
+                                spacing: 6
+                                T64Icon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.round(15 * win.textScale); height: width
+                                    source: "qrc:/assets/icons/" + pageTab.icons[pageTab.modelData] + ".svg"
+                                    color: pageTab.active ? win.accent : win.muted
+                                }
+                                // Fenêtre étroite : l'icône seule pour les onglets inactifs.
+                                Label {
+                                    visible: pageTab.active || !pageTabs.compact
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: pageTab.modelData === 2 && controller.state.title ? win.nav[2] + " · " + controller.state.title : win.nav[pageTab.modelData]
+                                    elide: Text.ElideRight
+                                    width: Math.min(implicitWidth, 170 * win.textScale)
+                                    color: pageTab.active ? win.fg : win.muted
+                                    font.weight: pageTab.active ? Font.DemiBold : Font.Normal
+                                }
                             }
                             background: Rectangle {
                                 color: pageTab.active ? win.panel : pageTab.hovered ? win.raised : "transparent"
@@ -869,6 +890,8 @@ ApplicationWindow {
                                 Rectangle {visible: pageTab.active; anchors.bottom: parent.bottom; width: parent.width; height: 2; color: win.accent}
                                 Rectangle {anchors.right: parent.right; y: 6; width: 1; height: parent.height - 12; color: win.line; opacity: .6}
                             }
+                            ToolTip.visible: hovered && pageTabs.compact && !active
+                            ToolTip.text: win.nav[modelData]
                             onClicked: win.page = modelData
                         }
                     }
@@ -1103,13 +1126,13 @@ ColumnLayout {width:analysisViewport.availableWidth;height:Math.max(analysisView
                     // voisine de la liste de la bibliothèque remplace celle-ci, sans
                     // aller-retour par l'onglet ni onglet d'étude en plus.
                     RowLayout {spacing:2;visible:!controller.state.training&&controller.state.gameCount>0
-                        TButton {objectName:"previousGame";text:"◀";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
+                        TButton {objectName:"previousGame";text:"◀";glyph:"nav-back";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
                                  enabled:controller.state.gameIndex!==0;onClicked:controller.stepGame(-1)
                                  Accessible.name:qsTr("Partie précédente");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie précédente de la liste (Alt+←)")}
                         Label {color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)
                                text:controller.state.gameIndex>=0?qsTr("%1 / %2").arg(controller.state.gameIndex+1).arg(controller.state.gameCount)
                                                                  :qsTr("hors liste")}
-                        TButton {objectName:"nextGame";text:"▶";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
+                        TButton {objectName:"nextGame";text:"▶";glyph:"nav-forward";flat:true;implicitWidth:26*win.textScale;implicitHeight:26*win.textScale
                                  enabled:controller.state.gameIndex<controller.state.gameCount-1;onClicked:controller.stepGame(1)
                                  Accessible.name:qsTr("Partie suivante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Partie suivante de la liste (Alt+→)")}
                     }
@@ -1181,12 +1204,12 @@ objectName:"analysisSplit"
                             Label {text:controller.state.clockRunning?(controller.state.flipped?controller.state.blackClock:controller.state.whiteClock):((controller.state.flipped?controller.state.tags.BlackElo:controller.state.tags.WhiteElo)||"");color:win.muted}
                         }
                         RowLayout {Layout.fillWidth:true;spacing:6;Layout.leftMargin:Math.max(0,(parent.width-Math.max(chessboard.width,476))/2);Layout.rightMargin:Layout.leftMargin
-                            TButton {text:"|◀";implicitWidth:38;padding:4;font.pixelSize:Math.min(Math.round(13*win.textScale),16);enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2);Accessible.name:qsTr("Début de la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Début")}
-                            TButton {text:"◀";implicitWidth:38;padding:4;font.pixelSize:Math.min(Math.round(13*win.textScale),16);enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-1);Accessible.name:qsTr("Coup précédent");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup précédent")}
-                            TButton {text:"▶";implicitWidth:38;padding:4;font.pixelSize:Math.min(Math.round(13*win.textScale),16);enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(1);Accessible.name:qsTr("Coup suivant");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup suivant")}
-                            TButton {objectName:"autoplay";visible:boardPanel.width>=450;text:autoplay.running?"❚❚":"▶▶";implicitWidth:38;padding:4;font.pixelSize:Math.min(Math.round(13*win.textScale),16);enabled:autoplay.running||(controller.state.canForward&&!controller.state.training);onClicked:autoplay.running=!autoplay.running;Accessible.name:autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:(autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie"))+" ("+qsTr("Espace")+")"}
-                            TButton {text:"▶|";implicitWidth:38;padding:4;font.pixelSize:Math.min(Math.round(13*win.textScale),16);enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2);Accessible.name:qsTr("Fin de la variante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Fin de la variante")}
-                            TButton {text:"⇅";implicitWidth:Math.max(38,contentItem.implicitWidth+12);onClicked:controller.flip();Accessible.name:qsTr("Retourner l’échiquier");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Retourner l’échiquier · F")}
+                            TButton {text:"|◀";glyph:"nav-first";implicitWidth:38;padding:4;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-2);Accessible.name:qsTr("Début de la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Début")}
+                            TButton {text:"◀";glyph:"nav-back";implicitWidth:38;padding:4;enabled:controller.state.canBack&&!controller.state.training;onClicked:controller.step(-1);Accessible.name:qsTr("Coup précédent");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup précédent")}
+                            TButton {text:"▶";glyph:"nav-forward";implicitWidth:38;padding:4;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(1);Accessible.name:qsTr("Coup suivant");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Coup suivant")}
+                            TButton {objectName:"autoplay";text:autoplay.running?"❚❚":"▶▶";glyph:autoplay.running?"nav-pause":"nav-play";implicitWidth:38;padding:4;enabled:autoplay.running||(controller.state.canForward&&!controller.state.training);onClicked:autoplay.running=!autoplay.running;Accessible.name:autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie");ToolTip.visible:hovered||visualFocus;ToolTip.text:(autoplay.running?qsTr("Arrêter la lecture"):qsTr("Lire la partie"))+" ("+qsTr("Espace")+")"}
+                            TButton {text:"▶|";glyph:"nav-last";implicitWidth:38;padding:4;enabled:controller.state.canForward&&!controller.state.training;onClicked:controller.step(2);Accessible.name:qsTr("Fin de la variante");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Fin de la variante")}
+                            TButton {text:"⇅";glyph:"flip";implicitWidth:Math.max(38,contentItem.implicitWidth+12);onClicked:controller.flip();Accessible.name:qsTr("Retourner l’échiquier");ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Retourner l’échiquier · F")}
                             // Taper un coup plutôt que le jouer à la souris : « Cf3 », « e4 », « O-O ».
                             // Entrée le joue dès qu'un seul coup répond ; les candidats s'affichent
                             // pendant la frappe.

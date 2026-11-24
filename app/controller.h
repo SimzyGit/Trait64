@@ -861,6 +861,8 @@ class Controller : public QObject {
     QSettings settings_;
     std::unique_ptr<t64::UiTranslator> translator_;
     QTimer autosave_, analysisTimer_;
+    // Plusieurs clics sur − / + ne relancent le moteur qu'une fois, à la pause.
+    QTimer linesRestart_;
     t64::Uci engine_;
     t64::Comparison comparison_;
     t64::Tournament tournament_;
