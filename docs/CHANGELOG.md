@@ -1,5 +1,13 @@
 # Changements
 
+## Finitions de l'interface — 24 novembre 2026
+
+- **Lieu et ronde** dans la liste des parties, triables, quand la fenêtre a la place. La bibliothèque passe au schéma 18 : les parties déjà rangées les reprennent de leur en-tête PGN.
+- **Échiquier gris-bleu** par défaut, accordé au thème de bureau ; l'ancien vert reste dans les palettes sous le nom « Feutre ». Accent bleu aussi en thème sombre.
+- Le ruban se replie seul dès qu'il prendrait plus d'un sixième de la hauteur (grand texte, petit écran).
+- En anglais et en espagnol, « Annuler » la dernière modification se lit *Undo* / *Deshacer*, et non plus *Cancel*. Les traductions acceptent un contexte : `qsTr("Annuler", "modification")`.
+- Les bulles d'aide ne s'ouvrent plus sur un élément pas encore placé dans la fenêtre.
+
 ## Interface à la manière de ChessBase — 24 novembre 2026
 
 - **Ruban d'onglets** (Fichier, Accueil, Base, Partie, Moteur, Entraînement, Affichage, Aide) à la place de la barre de menus : grandes icônes pour les commandes courantes, petites par trois pour les autres, groupes nommés. Double-clic sur un onglet ou Ctrl+F1 pour le replier ; dans une fenêtre basse, il se replie seul et s'ouvre d'un clic. *Affichage → Interface classique* rend la barre de menus et la barre latérale.

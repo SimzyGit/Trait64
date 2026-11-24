@@ -290,6 +290,7 @@ class Database {
     void upgradeV15(int originalVersion);
     void upgradeV16(int originalVersion);
     void upgradeV17(int originalVersion);
+    void upgradeV18(int originalVersion);
     QVariantMap computeOpeningReport(qint64 key, int models,
                                      const std::shared_ptr<std::atomic_bool> &canceled) const;
     // Schéma 12 : index allégé. Voir lightindex.cpp.

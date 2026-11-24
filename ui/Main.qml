@@ -82,7 +82,7 @@ ApplicationWindow {
                 {text: qsTr("Copier le PGN"), icon: "copy", run: function() { controller.copyText("pgn") }},
                 {text: qsTr("Charger une FEN…"), icon: "paste", run: function() { fenDialog.open() }}]},
             {title: qsTr("Édition"), items: [
-                {text: qsTr("Annuler"), icon: "undo", on: function() { return controller.state.canUndo }, run: function() { controller.undo() }},
+                {text: qsTr("Annuler", "modification"), icon: "undo", on: function() { return controller.state.canUndo }, run: function() { controller.undo() }},
                 {text: qsTr("Rétablir"), icon: "redo", on: function() { return controller.state.canRedo }, run: function() { controller.redo() }},
                 {text: qsTr("Éditer la position…"), icon: "board", run: function() { positionEditor.open() }}]},
             {title: qsTr("Partie"), items: [
@@ -688,7 +688,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Quitter"); onTriggered: win.close()}
         }
         Menu { title: qsTr("É&dition")
-            MenuItem {text: qsTr("Annuler"); enabled: controller.state.canUndo; onTriggered: controller.undo()}
+            MenuItem {text: qsTr("Annuler", "modification"); enabled: controller.state.canUndo; onTriggered: controller.undo()}
             MenuItem {text: qsTr("Rétablir"); enabled: controller.state.canRedo; onTriggered: controller.redo()}
             MenuSeparator {}
             MenuItem {text: qsTr("Copier la FEN"); onTriggered: controller.copyText("fen")}
@@ -800,7 +800,9 @@ ApplicationWindow {
         Layout.fillWidth: true
         tabs: win.ribbonTabs
         minimized: !!controller.preferences.ribbonMinimized
-        autoCollapse: win.height < 720
+        // Déplié, le ruban mesure 114 px à l'échelle 1 : au-delà d'un sixième de la
+        // hauteur, l'échiquier y perdrait trop.
+        autoCollapse: 114 * win.textScale > win.height * .16
         onMinimizedChanged: if (minimized !== !!controller.preferences.ribbonMinimized) controller.setPreference("ribbonMinimized", minimized)
     }
     RowLayout {
@@ -971,10 +973,10 @@ ApplicationWindow {
                                     model:[{t:qsTr("N°"),c:"number",k:"updated"},{t:qsTr("Blancs"),c:"",k:"white"},{t:"Elo",c:"elo",k:"whiteElo"},
                                            {t:qsTr("Noirs"),c:"",k:"black"},{t:"Elo",c:"elo",k:"blackElo"},{t:qsTr("Résultat"),c:"result",k:"result"},
                                            {t:qsTr("Coups"),c:"moves",k:"length"},{t:"ECO",c:"eco",k:"eco"},
-                                           {t:qsTr("Événement"),c:"event",k:"event"},{t:qsTr("Date"),c:"date",k:"date"},
+                                           {t:qsTr("Événement"),c:"event",k:"event"},{t:qsTr("Lieu"),c:"site",k:"site"},{t:qsTr("Ronde"),c:"round",k:"round"},{t:qsTr("Date"),c:"date",k:"date"},
                                            {t:"",c:"actions",k:""}]
                                     Label {required property var modelData
-                                        readonly property real w:modelData.c===""?-1:modelData.c==="event"&&!libraryList.detailed?0:libraryList.columns[modelData.c]
+                                        readonly property real w:modelData.c===""?-1:modelData.c==="event"&&!libraryList.detailed||(modelData.c==="site"||modelData.c==="round")&&!libraryList.wide?0:libraryList.columns[modelData.c]
                                         readonly property bool active:modelData.k!==""&&((win.advanced.sort||"updated")===modelData.k||(win.advanced.sort==="elo"&&modelData.k.indexOf("Elo")>0))
                                         // Flèche vers le haut : de A à Z, du plus petit au plus grand.
                                         readonly property bool rising:["updated","whiteElo","blackElo","date"].indexOf(modelData.k)<0!==!!win.advanced.reverse
@@ -995,8 +997,11 @@ ApplicationWindow {
                             // un passage sur quatre environ). Une page compte au plus 200 lignes.
                             reuseItems:false
                             readonly property bool detailed:width>900*win.textScale
+                            // Lieu et ronde, comme dans ChessBase, quand la liste a la place.
+                            readonly property bool wide:width>1180*win.textScale
                             readonly property var columns:({number:40*win.textScale,elo:42*win.textScale,result:56*win.textScale,moves:44*win.textScale,
-                                                            eco:38*win.textScale,event:200*win.textScale,date:82*win.textScale,actions:132*win.textScale})
+                                                            eco:38*win.textScale,event:200*win.textScale,site:130*win.textScale,round:46*win.textScale,
+                                                            date:82*win.textScale,actions:132*win.textScale})
                             ScrollBar.vertical:ScrollBar {}
                             delegate:Rectangle {required property var modelData;required property int index
                                 // Des lignes de 24 pixels sans état de survol : on ne savait pas
@@ -1022,6 +1027,9 @@ ApplicationWindow {
                                     Label {text:modelData.plies>0?Math.ceil(modelData.plies/2):"";Layout.preferredWidth:libraryList.columns.moves;Layout.maximumWidth:libraryList.columns.moves;Layout.minimumWidth:0;color:win.muted}
                                     Label {text:modelData.eco||"";Layout.preferredWidth:libraryList.columns.eco;Layout.maximumWidth:libraryList.columns.eco;Layout.minimumWidth:0;elide:Text.ElideRight}
                                     Label {visible:libraryList.detailed;text:[modelData.event,modelData.collection].filter(function(s){return !!s}).join(" · ");Layout.preferredWidth:libraryList.columns.event;Layout.maximumWidth:libraryList.columns.event;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
+                                    // « ? » est l'inconnu du PGN : un blanc se lit mieux.
+                                    Label {visible:libraryList.wide;text:modelData.site&&modelData.site!=="?"?modelData.site:"";Layout.preferredWidth:libraryList.columns.site;Layout.maximumWidth:libraryList.columns.site;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
+                                    Label {visible:libraryList.wide;text:modelData.round&&modelData.round!=="?"&&modelData.round!=="-"?modelData.round:"";Layout.preferredWidth:libraryList.columns.round;Layout.maximumWidth:libraryList.columns.round;Layout.minimumWidth:0;elide:Text.ElideRight;color:win.muted}
                                     // Le PGN note une date inconnue « ????.??.?? » : un tiret se
                                     // lit mieux dans une colonne, et dit la même chose.
                                     Label {text:modelData.date && modelData.date.indexOf("?")<0 ? modelData.date : "—";Layout.preferredWidth:libraryList.columns.date;Layout.maximumWidth:libraryList.columns.date;Layout.minimumWidth:0;color:win.muted;elide:Text.ElideRight}

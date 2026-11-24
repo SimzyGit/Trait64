@@ -143,7 +143,8 @@ Item {
                         hoverEnabled: true
                         focusPolicy: Qt.StrongFocus
                         Accessible.name: modelData.title + ", " + root.gamesText(modelData.games)
-                        ToolTip.visible: hovered
+                        // Une icône recréée sous la souris est survolée avant d'avoir une fenêtre.
+                        ToolTip.visible: hovered && Window.window !== null
                         ToolTip.delay: 600
                         ToolTip.text: modelData.title + "\n" + root.gamesText(modelData.games)
                         background: Rectangle {

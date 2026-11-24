@@ -211,6 +211,33 @@ int main(int argc, char **argv) {
                                    "(2.Bc4) Nc6 1-0\n\n[White \"Carol\"]\n1.d4 d5 *");
         check(db.importGames(games) == 2, "Import games");
         check(db.importGames(games) == 0, "Deduplicate exact PGN");
+        {
+            // Lieu et ronde : rangés à l'import, relus par la liste, triables.
+            t64::Database places(dir.filePath("places.sqlite"));
+            places.importGames(t64::parsePgn("[White \"A\"]\n[Black \"B\"]\n[Site \"Wijk aan Zee\"]\n"
+                                             "[Round \"7\"]\n1.e4 *\n\n[White \"C\"]\n[Black \"D\"]\n"
+                                             "[Site \"Biel\"]\n[Round \"2\"]\n1.d4 *"));
+            const auto rows = places.search({}, {}, false, {}, false, {{"sort", "site"}});
+            check(rows.size() == 2 && rows[0].toMap()["site"] == "Biel" && rows[1].toMap()["round"] == "7",
+                  "Site and round are stored and sortable");
+            // Une bibliothèque du schéma 17 les reprend de l'en-tête PGN de ses parties.
+            {
+                auto raw = QSqlDatabase::addDatabase("QSQLITE", "places-v17");
+                raw.setDatabaseName(dir.filePath("places.sqlite"));
+                check(raw.open(), "Open the library behind its back");
+                QSqlQuery q(raw);
+                check(q.exec("UPDATE games SET site='',round=''") && q.exec("PRAGMA user_version=17"),
+                      "Library set back to schema 17");
+            }
+            QSqlDatabase::removeDatabase("places-v17");
+        }
+        {
+            t64::Database places(dir.filePath("places.sqlite"));
+            const auto rows = places.search({}, {}, false, {}, false, {{"sort", "site"}});
+            check(rows.size() == 2 && rows[1].toMap()["site"] == "Wijk aan Zee" &&
+                      rows[0].toMap()["round"] == "2",
+                  "Migration 18 reads site and round from the stored PGN");
+        }
         QBuffer exported;
         exported.open(QIODevice::WriteOnly);
         db.exportPgn(exported);
@@ -805,7 +832,7 @@ int main(int argc, char **argv) {
                 v8.setDatabaseName(v7Path);
                 check(v8.open(), "Open migrated library");
                 QSqlQuery q(v8);
-                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 17,
+                check(q.exec("PRAGMA user_version") && q.next() && q.value(0).toInt() == 18,
                       "Schema version 15");
                 // La marque qui distingue un recueil d'études d'une base téléchargée.
                 check(q.exec("SELECT kind FROM sources LIMIT 1"), "Sources carry their kind");

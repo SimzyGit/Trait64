@@ -79,7 +79,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         version.next();
         const int v = version.value(0).toInt();
         version.finish();
-        check(v <= 17, "Cette bibliothèque nécessite une version plus récente de Trait64.");
+        check(v <= 18, "Cette bibliothèque nécessite une version plus récente de Trait64.");
         QSqlQuery appId(db_);
         appId.exec("PRAGMA application_id");
         appId.next();
@@ -159,6 +159,7 @@ Database::Database(const QString &path) : connection_(QUuid::createUuid().toStri
         upgradeV15(v);
         upgradeV16(v);
         upgradeV17(v);
+        upgradeV18(v);
         createPuzzleTables();
         fts_ = db_.tables().contains("games_fts");
         sql("PRAGMA foreign_keys=ON");
@@ -221,12 +222,14 @@ qint64 Database::save(const Game &game, qint64 id, const QString &collection) {
         for (int n : line)
             fingerprint += ' ' + QByteArray::fromStdString(game.nodes[n].uci);
         auto &q = statement(
-            id ? "UPDATE games SET white=?,black=?,event=?,date=?,result=?,eco=?,pgn=?,digest=?,updated=?,"
-                 "white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?"
-               : "INSERT INTO games(white,black,event,date,result,eco,pgn,digest,updated,white_elo,black_elo,"
-                 "plies,fingerprint,uuid,collection) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            id ? "UPDATE games SET "
+                 "white=?,black=?,event=?,date=?,result=?,eco=?,site=?,round=?,pgn=?,digest=?,"
+                 "updated=?,white_elo=?,black_elo=?,plies=?,fingerprint=? WHERE id=?"
+               : "INSERT INTO "
+                 "games(white,black,event,date,result,eco,site,round,pgn,digest,updated,white_elo,"
+                 "black_elo,plies,fingerprint,uuid,collection) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         int slot = 0;
-        for (const char *key : {"White", "Black", "Event", "Date", "Result", "ECO"})
+        for (const char *key : {"White", "Black", "Event", "Date", "Result", "ECO", "Site", "Round"})
             q.bindValue(slot++, tag(game, key));
         q.bindValue(slot++, pgn);
         q.bindValue(slot++, digest);
@@ -384,7 +387,7 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     static const QString columns =
         "SELECT g.id,g.white,g.black,g.event,g.date,g.result,g.eco,g.collection,"
         "g.favorite,g.updated,(g.white_elo+g.black_elo),g.plies,g.white_elo,g.black_elo,"
-        "g.medals ";
+        "g.medals,g.site,g.round ";
     QString statement = columns;
     QVariantList args;
     if (fullText) {
@@ -600,7 +603,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
     else if (sort == "length")
         order = {{"g.plies", "plies", true}};
     // Les colonnes de la liste : un clic sur leur en-tête trie sur elles.
-    else if (sort == "white" || sort == "black" || sort == "result" || sort == "eco" || sort == "event")
+    else if (sort == "white" || sort == "black" || sort == "result" || sort == "eco" || sort == "event" ||
+             sort == "site" || sort == "round")
         order = {{"g." + sort, sort, true}};
     else if (sort == "whiteElo" || sort == "blackElo")
         order = {{sort == "whiteElo" ? "g.white_elo" : "g.black_elo", sort, false}};
@@ -698,7 +702,8 @@ QVariantList Database::search(const QString &query, const QString &result, bool 
                             {"event", q.value(3)},     {"date", q.value(4)},       {"result", q.value(5)},
                             {"eco", q.value(6)},       {"collection", q.value(7)}, {"favorite", q.value(8)},
                             {"updated", q.value(9)},   {"rating", q.value(10)},    {"plies", q.value(11)},
-                            {"whiteElo", q.value(12)}, {"blackElo", q.value(13)},  {"medals", q.value(14)}};
+                            {"whiteElo", q.value(12)}, {"blackElo", q.value(13)},  {"medals", q.value(14)},
+                            {"site", q.value(15)},     {"round", q.value(16)}};
     check(!q.lastError().isValid(), q.lastError().text());
     check(!canceled || !canceled->load(), "Recherche annulée.");
     return rows;
@@ -932,6 +937,37 @@ void Database::upgradeV17(int originalVersion) {
     } catch (...) {
         sql("ROLLBACK TO schema17");
         sql("RELEASE schema17");
+        throw;
+    }
+}
+// Le lieu et la ronde, colonnes de la liste comme dans ChessBase. Les parties déjà
+// rangées les reprennent de leur en-tête PGN, en une requête, sans copie de sauvegarde
+// puisque rien d'existant ne change.
+void Database::upgradeV18(int originalVersion) {
+    if (originalVersion >= 18)
+        return;
+    sql("SAVEPOINT schema18");
+    try {
+        for (const char *column : {"site", "round"})
+            if (!db_.record("games").contains(column))
+                sql(QString("ALTER TABLE games ADD COLUMN %1 TEXT NOT NULL DEFAULT ''").arg(column));
+        // Le déclencheur du cache des rapports viderait la table à chaque ligne : il
+        // n'a rien à faire ici, ces colonnes n'entrent pas dans les rapports.
+        sql("DROP TRIGGER IF EXISTS report_cache_update");
+        for (const auto &[column, tag] : {std::pair{"site", "Site"}, std::pair{"round", "Round"}}) {
+            const QString open = QString("'[%1 \"'").arg(tag);
+            sql(QString("UPDATE games SET %1=substr(pgn,instr(pgn,%2)+%3,"
+                        "instr(substr(pgn,instr(pgn,%2)+%3),'\"]')-1) WHERE instr(pgn,%2)>0")
+                    .arg(column, open)
+                    .arg(QString(tag).size() + 3));
+        }
+        sql("CREATE TRIGGER IF NOT EXISTS report_cache_update AFTER UPDATE ON games BEGIN DELETE FROM "
+            "report_cache; END");
+        sql("PRAGMA user_version=18");
+        sql("RELEASE schema18");
+    } catch (...) {
+        sql("ROLLBACK TO schema18");
+        sql("RELEASE schema18");
         throw;
     }
 }

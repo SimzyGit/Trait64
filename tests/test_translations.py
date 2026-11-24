@@ -27,7 +27,8 @@ SOURCES = {
         r'runtime_error\("((?:[^"\\]|\\.)*)"\)',
         r'require\([^;]*?,\s*"((?:[^"\\]|\\.)*)"\s*\)',
     ),
-    "ui/*.qml": (r'qsTr\("((?:[^"\\]|\\.)*)"\)',),
+    # qsTr("Annuler", "coup") : la clé devient « Annuler|coup ».
+    "ui/*.qml": (r'qsTr\("((?:[^"\\]|\\.)*)"(?:\s*,\s*"([^"]*)")?\)',),
 }
 
 
@@ -37,6 +38,8 @@ def wanted():
             text = path.read_text(encoding="utf-8")
             for expression in expressions:
                 for found in re.findall(expression, text):
+                    if isinstance(found, tuple):
+                        found = found[0] + ("|" + found[1] if found[1] else "")
                     phrase = found.replace('\\"', '"').replace("\\n", "\n")
                     if re.search(r"[a-zA-Zà-ÿÀ-Ÿ]", phrase) and phrase not in TECHNICAL:
                         yield path.relative_to(root), phrase

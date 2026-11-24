@@ -186,7 +186,7 @@ Rectangle {
                                         Accessible.role: modelData.checked ? Accessible.CheckBox : Accessible.Button
                                         Accessible.name: modelData.text
                                         Accessible.checked: ticked
-                                        ToolTip.visible: hovered && !!modelData.hint
+                                        ToolTip.visible: hovered && !!modelData.hint && Window.window !== null
                                         ToolTip.delay: 500
                                         ToolTip.text: modelData.hint || ""
                                         opacity: enabled ? 1 : .4

@@ -1,3 +1,17 @@
+## 0.5.0-beta.4 — novembre 2026
+
+**Une interface à la manière de ChessBase.** Un ruban d'onglets (Fichier, Accueil, Base, Partie, Moteur, Entraînement, Affichage, Aide) remplace la barre de menus ; les fenêtres de travail passent en onglets dessous. *Affichage → Interface classique* rend l'ancienne présentation.
+
+**La fenêtre des bases** ouvre le logiciel : vos bases en icônes ou en liste, rangées par catégorie (mes bases, comptes, préparations, référence, études, étiquettes) ; un double-clic ouvre leurs parties.
+
+**La fenêtre de partie** : la notation à droite de l'échiquier, le moteur et la référence dessous. *Affichage → Disposition d'origine* y ramène une disposition modifiée.
+
+**Plus sobre.** Thème clair de bureau, gris bleuté et accent bleu, échiquier gris-bleu (l'ancien vert reste dans les palettes, « Feutre »).
+
+**Lieu et ronde** dans la liste des parties, triables.
+
+La bibliothèque passe au schéma 18 (deux colonnes ajoutées, remplies depuis vos parties) : une version antérieure de Trait64 ne l'ouvrira plus.
+
 ## 0.5.0-beta.3 — novembre 2026
 
 **Préparer n'importe quel joueur.** Par pseudo Lichess ou Chess.com, par identifiant FIDE ou par nom de la bibliothèque : son arbre de coups avec chaque couleur, l'évolution de ses choix, ses faiblesses observées, là où il sort de votre répertoire, et un dossier PDF (*Base → Préparer un joueur…*).

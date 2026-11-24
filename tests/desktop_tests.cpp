@@ -1863,6 +1863,8 @@ int main(int argc, char **argv) {
                     if (tile) {
                         const auto at = tile->mapToScene(QPointF(tile->width() / 2, tile->height() / 2)).toPoint();
                         QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                        // La souris s'écarte : rien ne reste survolé quand la page change.
+                        QTest::mouseMove(window, QPoint(2, window->height() - 2));
                         QTest::qWait(150);
                         check(window->property("page").toInt() == 1 &&
                                   window->property("selectedBaseId").toDouble() ==

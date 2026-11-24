@@ -174,9 +174,10 @@ QVariantMap Controller::preferences() const {
                          // lisent tel quel. La liste tient les jeux installés à côté.
                          {"customPiecePath", ""},
                          {"customPieceSets", QVariantList()},
-                         {"boardLight", "#ebe3d1"},
-                         {"boardDark", "#7f9585"},
-                         {"boardHighlight", "#d2ae5a"},
+                         // Un échiquier gris-bleu, accordé au thème de bureau.
+                         {"boardLight", "#dfe5ea"},
+                         {"boardDark", "#8aa1b1"},
+                         {"boardHighlight", "#d6c36b"},
                          {"backgroundColor", ""},
                          {"accentColor", "#ef997a"},
                          {"legalMoves", true},
@@ -258,14 +259,14 @@ QVariantMap Controller::preferences() const {
     // L'échiquier par défaut se met au thème : en sombre, des cases claires de papier
     // éclairaient l'écran à elles seules. Un échiquier choisi par l'utilisateur ne bouge pas.
     if (!light && !settings_.contains("boardLight") && !settings_.contains("boardDark")) {
-        defaults["boardLight"] = "#c8c3b3";
-        defaults["boardDark"] = "#5e7366";
+        defaults["boardLight"] = "#b9c3cc";
+        defaults["boardDark"] = "#5f7686";
         if (!settings_.contains("boardHighlight"))
             defaults["boardHighlight"] = "#a99449";
     }
     if (!settings_.contains("accentColor"))
-        // Le bleu des logiciels d'analyse en clair ; un vert de feutre, plus lisible, en sombre.
-        defaults["accentColor"] = light ? "#1f5fa8" : "#7db893";
+        // Le bleu des logiciels d'analyse, plus clair en thème sombre pour rester lisible.
+        defaults["accentColor"] = light ? "#1f5fa8" : "#73a9e0";
     // Les raccourcis en vigueur : ceux d'origine, recouverts par ceux que l'on a choisis.
     QVariantMap keys;
     const auto chosen = settings_.value("shortcuts").toMap();
@@ -414,7 +415,9 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
 // table associative : l'ordre est voulu — les claires d'abord, les sombres ensuite.
 static const std::vector<std::pair<QString, QStringList>> &boardPresetTable() {
     static const std::vector<std::pair<QString, QStringList>> presets{
-        {"Trait64", {"#ebe3d1", "#7f9585", "#d2ae5a"}},
+        {"Trait64", {"#dfe5ea", "#8aa1b1", "#d6c36b"}},
+        // L'échiquier d'origine, vert de feutre, jusqu'à la version 0.5.0-beta.3.
+        {"Feutre", {"#ebe3d1", "#7f9585", "#d2ae5a"}},
         {"Ardoise bleue", {"#e9dfcb", "#71838c", "#d6a166"}},
         {"Sauge", {"#dce4d3", "#718c7c", "#c9ba55"}},
         {"Noyer", {"#f0d9b5", "#b58863", "#dac35e"}},

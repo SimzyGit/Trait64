@@ -37,8 +37,13 @@ public:
         other_ = code == "en" || code == "fr" ? QJsonObject() : load(code);
     }
     bool isEmpty() const override { return false; }
-    QString translate(const char *, const char *source, const char * = nullptr, int = -1) const override {
-        const QString text = QString::fromUtf8(source);
+    // Un même mot français peut se traduire de deux façons : qsTr("Annuler", "coup")
+    // se cherche sous la clé « Annuler|coup ».
+    QString translate(const char *, const char *source, const char *context = nullptr,
+                      int = -1) const override {
+        const QString text = context && *context
+                                 ? QString::fromUtf8(source) + '|' + QString::fromUtf8(context)
+                                 : QString::fromUtf8(source);
         QReadLocker lock(&lock_);
         if (language_ == "en") return english_.value(text).toString();
         if (language_ != "fr") {
