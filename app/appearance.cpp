@@ -160,9 +160,12 @@ QVariantMap Controller::preferences() const {
                          {"fontScale", 1.0},
                          {"uiScale", 1.0},
                          {"sidebarCompact", false},
-                         // Le ruban à onglets ; « classique » rend la barre de menus et la
-                         // barre latérale d'avant.
-                         {"classicInterface", false},
+                         // Le style de l'interface : « chessbase » (ruban et onglets),
+                         // « croissant » (barre latérale et menus, à la manière d'En
+                         // Croissant) ou « custom », un profil composé par l'utilisateur.
+                         {"interfaceStyle",
+                          settings_.value("classicInterface").toBool() ? "croissant" : "chessbase"},
+                         {"interfaceProfile", ""},
                          {"ribbonMinimized", false},
                          {"figurines", false},
                          {"syncAtStartup", false},
@@ -275,6 +278,24 @@ QVariantMap Controller::preferences() const {
     if (!settings_.contains("accentColor"))
         // Le bleu des logiciels d'analyse, plus clair en thème sombre pour rester lisible.
         defaults["accentColor"] = light ? "#1f5fa8" : "#73a9e0";
+    // Ce que montre l'interface, déduit du style ; un profil personnalisé dit tout lui-même.
+    const auto style = defaults["interfaceStyle"].toString();
+    QVariantMap shown{{"showRibbon", style == "chessbase"},
+                      {"showMenuBar", style == "croissant"},
+                      {"showSidebar", style == "croissant"},
+                      {"showPageTabs", style == "chessbase"},
+                      {"startPage", style == "croissant" ? 9 : 0}};
+    const auto profiles = settings_.value("interfaceProfiles").toList();
+    if (style == "custom")
+        for (const auto &row : profiles)
+            if (const auto p = row.toMap(); p["name"] == defaults["interfaceProfile"])
+                for (auto it = shown.begin(); it != shown.end(); ++it)
+                    it.value() = p.value(it.key(), it.value());
+    // Sans navigation, on ne pourrait plus changer de fenêtre : les onglets reviennent.
+    if (!shown["showRibbon"].toBool() && !shown["showMenuBar"].toBool() && !shown["showSidebar"].toBool())
+        shown["showPageTabs"] = true;
+    defaults.insert(shown);
+    defaults["interfaceProfiles"] = profiles;
     // Les raccourcis en vigueur : ceux d'origine, recouverts par ceux que l'on a choisis.
     QVariantMap keys;
     const auto chosen = settings_.value("shortcuts").toMap();
@@ -303,6 +324,65 @@ void Controller::saveLayout(const QVariantMap &layout) {
     settings_.setValue("layouts", list);
     emit layoutsChanged();
     emit message(tr("Disposition « %1 » enregistrée.").arg(name));
+}
+// Un profil d'interface : les barres affichées, la page de démarrage, la disposition des
+// panneaux et le thème, sous un nom. L'enregistrer le rend actif.
+void Controller::saveInterfaceProfile(const QVariantMap &profile) {
+    const auto name = profile.value("name").toString().simplified().left(40);
+    if (name.isEmpty()) {
+        emit message(tr("Donnez un nom au profil."), true);
+        return;
+    }
+    QVariantMap clean{{"name", name}};
+    for (const char *key : {"showRibbon", "showMenuBar", "showSidebar", "showPageTabs", "lightTheme"})
+        clean[key] = profile.value(key).toBool();
+    clean["startPage"] = QList<int>{0, 1, 2, 9}.contains(profile.value("startPage").toInt())
+                             ? profile.value("startPage").toInt()
+                             : 0;
+    clean["dock"] = profile.value("dock").toString().left(8192);
+    for (const char *key : {"accentColor", "backgroundColor", "boardLight", "boardDark"})
+        if (const QColor color(profile.value(key).toString()); color.isValid())
+            clean[key] = color.name();
+    auto list = settings_.value("interfaceProfiles").toList();
+    list.erase(std::remove_if(list.begin(), list.end(),
+                              [&](const QVariant &row) { return row.toMap()["name"].toString() == name; }),
+               list.end());
+    list.append(clean);
+    while (list.size() > 12)
+        list.removeFirst();
+    settings_.setValue("interfaceProfiles", list);
+    settings_.setValue("interfaceStyle", "custom");
+    settings_.setValue("interfaceProfile", name);
+    emit preferencesChanged();
+    emit message(tr("Profil d’interface « %1 » enregistré.").arg(name));
+}
+// Le thème du profil s'applique avec lui ; ses barres sont lues par preferences().
+void Controller::applyInterfaceProfile(const QString &name) {
+    for (const auto &row : settings_.value("interfaceProfiles").toList()) {
+        const auto p = row.toMap();
+        if (p["name"] != name)
+            continue;
+        settings_.setValue("interfaceStyle", "custom");
+        settings_.setValue("interfaceProfile", name);
+        settings_.setValue("lightTheme", p["lightTheme"]);
+        for (const char *key : {"accentColor", "backgroundColor", "boardLight", "boardDark"})
+            if (p.contains(key))
+                settings_.setValue(key, p[key]);
+        emit preferencesChanged();
+        return;
+    }
+}
+void Controller::removeInterfaceProfile(const QString &name) {
+    auto list = settings_.value("interfaceProfiles").toList();
+    list.erase(std::remove_if(list.begin(), list.end(),
+                              [&](const QVariant &row) { return row.toMap()["name"].toString() == name; }),
+               list.end());
+    settings_.setValue("interfaceProfiles", list);
+    if (settings_.value("interfaceProfile").toString() == name) {
+        settings_.setValue("interfaceStyle", "chessbase");
+        settings_.remove("interfaceProfile");
+    }
+    emit preferencesChanged();
 }
 void Controller::removeLayout(int index) {
     auto list = layouts();
@@ -363,10 +443,13 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
                 if (!QDir::isAbsolutePath(clean.toString()) || !QFileInfo(clean.toString()).isDir())
                     return;
             }
+        } else if (key == "interfaceStyle") {
+            if (!QStringList{"chessbase", "croissant", "custom"}.contains(value.toString()))
+                return;
         } else if (key == "language") {
             if (!QStringList{"auto", "fr", "en", "es"}.contains(value.toString()))
                 return;
-        } else if (QStringList{"sidebarCompact", "classicInterface", "ribbonMinimized", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
+        } else if (QStringList{"sidebarCompact", "ribbonMinimized", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
                                "showHanging", "showAttacks", "assistedAnalysis", "sounds", "wheelMoves",
                                "autoFlip", "blindfold", "autoBackup"}
@@ -470,7 +553,7 @@ void Controller::retranslateUi(QObject *window) {
 }
 void Controller::resetAppearance() {
     for (const auto &key :
-         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "classicInterface", "ribbonMinimized", "highContrast", "reduceMotion",
+         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "interfaceStyle", "interfaceProfile", "ribbonMinimized", "highContrast", "reduceMotion",
                      "analysisPanelRatio", "dockLayout", "lightTheme", "pieceStyle", "boardLight",
                      "boardDark", "boardHighlight", "backgroundColor", "accentColor", "coordinates",
                      "legalMoves", "lastMove", "engineArrows"})

@@ -6,7 +6,13 @@ Trait64 works on your computer: your games, studies and analyses stay with you, 
 2. **Install an engine.** An installed Stockfish is found automatically. Otherwise, *Engine → Engines and databases to download* installs a verified one, and the *Detect* button in the settings searches again.
 3. **Analyse.** On the *Analysis* page, *Analyze* starts the engine on the position shown; *Review* goes through the whole game.
 
-Pages are chosen in the left-hand bar: Home, Analysis, Library, Openings, Training, Players, Profiles, Studies and Tools. It folds into icons with « (or on its own when the window is narrow). *Ctrl+K* opens the command palette, which finds any action by name.
+Three layouts, to choose in *Settings → Interface*:
+
+- **ChessBase** (default): a command ribbon at the top (File, Home, Database, Game, Engine, Training, View, Help), tabbed windows below it — Databases, Games, Analysis… — and the databases window at startup. Double-click a ribbon tab or press *Ctrl+F1* to fold it.
+- **En Croissant**: a page bar on the left, the menu bar, the home page at startup.
+- **Custom**: you choose the ribbon, menu bar, sidebar, tabs and start page; *Save profile* also keeps the panel layout and theme, under a name. Several profiles can be kept and switched.
+
+*Ctrl+K* opens the command palette, which finds any action by name.
 
 ## The board
 
@@ -65,6 +71,7 @@ Every game you save (*Ctrl+S*) lives in the library.
 
 - **Search**: by player, event, date, result, rating, opening; by exact position; by material; by pawn structure; by pieces on squares (*Ke1 Pd4 pd5*, uppercase for White — this last search replays every game and can be slow).
 - **Merge**: *Database → Merge the games shown into one study* turns a search result into a single study, each game becoming a variation where it leaves the others.
+- **FFE database**: *Database → Reference database → Download the FFE games* gathers in the “FFE — French tournaments” database every game of the French tournaments broadcast on Lichess (French championships, Top 12, Top Jeunes, Coupe de France, Nationale 1, opens in France), without duplicates. Finished tournaments are not requested again; an ongoing one is read again next time.
 - **Import** large databases: importing is parallel, resumable and checks integrity. *Database → Live tournaments* shows Lichess broadcasts: the boards of a round, and *Follow* opens a game in the analysis, where its moves arrive as it is played. The ⋮ menu of a game in the list opens the *Tournament crosstable*: standings, tie-breaks, performance, and a click on a result opens the game. En Croissant `.db3` databases and SCID format 4 databases (`.si4`, with their `.sn4` and `.sg4` alongside) can be read too.
 - **Duplicates**: *Database → Duplicate moves* finds games saved twice; *Merge duplicates* keeps, for the same moves between the same players, the most annotated game, adds the comments, variations and headers of the others, and moves those to the trash.
 - **Compare two databases**: *Database → Compare with another database…* counts the shared games and those found on one side only.

@@ -579,6 +579,45 @@ int main(int argc, char **argv) {
                           "Broadcasts ask Lichess the right addresses, refuse an unsafe one and report a "
                           "slow-down");
                 }
+                // La base FFE : la recherche de Lichess, les tournois français, leur PGN entier.
+                {
+                    const QByteArray found =
+                        R"({"currentPage":1,"nextPage":2,"currentPageResults":[
+                        {"tour":{"id":"ffe00001","name":"Championnat de France 2026","slug":"cdf-2026",
+                         "info":{"location":"Vichy, France"}},"round":{"id":"r1","finished":true}},
+                        {"tour":{"id":"ffe00002","name":"Top 12 2026","slug":"top-12"},"round":{"id":"r2"}},
+                        {"tour":{"id":"web00003","name":"Open de Cappelle","slug":"cappelle",
+                         "info":{"website":"https://www.echecs.asso.fr/FicheTournoi.aspx?Ref=1"}}},
+                        {"tour":{"id":"bel00004","name":"Interclubs belges","slug":"ic",
+                         "info":{"location":"Bruxelles, Belgique"}}},
+                        {"tour":{"id":"../bad","name":"Championnat de France"}}]})";
+                    bool more = false;
+                    const auto tours = t64::Broadcasts::parseSearch(found, &more);
+                    int french = 0;
+                    for (const auto &t : tours)
+                        french += t64::Broadcasts::isFrench(t.toMap());
+                    check(more && tours.size() == 4 && french == 3 && tours[0].toMap()["finished"].toBool() &&
+                              !tours[1].toMap()["finished"].toBool(),
+                          "FFE: French tournaments are recognised by name, place or federation site");
+                    Network lichess;
+                    lichess.responses = {{200, found}, {200, "[Event \"CdF\"]\n\n1. d4 *\n"}};
+                    t64::Broadcasts feed(nullptr, &lichess);
+                    QSignalSpy searched(&feed, &t64::Broadcasts::searched), pgn(&feed, &t64::Broadcasts::tourPgnReady),
+                        failed(&feed, &t64::Broadcasts::failed);
+                    feed.search("Championnat de France", 2);
+                    feed.tourPgn("ffe00001");
+                    feed.tourPgn("../etc");
+                    for (int i = 0; i < 200 && (searched.isEmpty() || pgn.isEmpty()); ++i)
+                        QTest::qWait(5);
+                    const auto query = QUrlQuery(lichess.requests.value(0).url());
+                    check(searched.size() == 1 && pgn.size() == 1 && failed.size() == 1 &&
+                              lichess.requests.size() == 2 &&
+                              lichess.requests[0].url().path() == "/api/broadcast/search" &&
+                              query.queryItemValue("q", QUrl::FullyDecoded) == "Championnat de France" &&
+                              query.queryItemValue("page") == "2" &&
+                              lichess.requests[1].url().path() == "/api/broadcast/ffe00001.pgn",
+                          "FFE: Lichess is searched page by page and a whole tournament is exported");
+                }
                 check(t64::syzygy::open({}).largest == 0 &&
                           t64::syzygy::probe("k7/8/1K6/8/8/8/8/7Q b - - 0 1").isEmpty(),
                       "Closing the tables leaves every ending to Lichess");

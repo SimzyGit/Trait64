@@ -6,6 +6,9 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegularExpression>
+#include <QUrl>
+#include <QUrlQuery>
+#include <algorithm>
 
 namespace t64 {
 namespace {
@@ -141,6 +144,64 @@ void Broadcasts::pgn(const QString &roundId) {
     }
     get(site + "/api/broadcast/round/" + roundId + ".pgn?clocks=true", "application/x-chess-pgn",
         [this, roundId](const QByteArray &body) { emit pgnReady(roundId, body); });
+}
+
+void Broadcasts::search(const QString &query, int page) {
+    QUrl url(site + "/api/broadcast/search");
+    QUrlQuery q;
+    q.addQueryItem("q", query.left(80));
+    q.addQueryItem("page", QString::number(std::clamp(page, 1, 20)));
+    url.setQuery(q);
+    get(url.toString(QUrl::FullyEncoded), "application/json", [this, query, page](const QByteArray &body) {
+        bool more = false;
+        const auto tours = parseSearch(body, &more);
+        emit searched(query, page, tours, more);
+    });
+}
+
+void Broadcasts::tourPgn(const QString &tourId) {
+    if (!plain(tourId)) {
+        emit failed("Tournoi inconnu.");
+        return;
+    }
+    get(site + "/api/broadcast/" + tourId + ".pgn", "application/x-chess-pgn",
+        [this, tourId](const QByteArray &body) { emit tourPgnReady(tourId, body); });
+}
+
+QVariantList Broadcasts::parseSearch(const QByteArray &json, bool *more) {
+    const auto root = QJsonDocument::fromJson(json).object();
+    if (more)
+        *more = root["nextPage"].isDouble();
+    QVariantList tours;
+    for (const auto &value : root["currentPageResults"].toArray()) {
+        const auto item = value.toObject();
+        // Un résultat est un tournoi avec sa dernière ronde, ou le tournoi seul.
+        const auto tour = item.contains("tour") ? item["tour"].toObject() : item;
+        const auto round = item["round"].toObject();
+        const auto info = tour["info"].toObject();
+        const auto id = tour["id"].toString();
+        if (!plain(id))
+            continue;
+        tours << QVariantMap{{"id", id},
+                             {"name", tour["name"].toString()},
+                             {"slug", tour["slug"].toString()},
+                             {"location", info["location"].toString()},
+                             {"website", info["website"].toString()},
+                             {"finished", round["finished"].toBool() || round.contains("finishedAt") ||
+                                              tour.contains("finishedAt")}};
+    }
+    return tours;
+}
+
+bool Broadcasts::isFrench(const QVariantMap &tour) {
+    const auto website = tour["website"].toString();
+    if (website.contains("echecs.asso.fr", Qt::CaseInsensitive) || website.contains("ffechecs", Qt::CaseInsensitive))
+        return true;
+    static const QRegularExpression name(
+        R"(\b(FFE|Championnats? de France|Coupe de France|Top ?1[26]|Top Jeunes|Nationale ?[1-4])\b)",
+        QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression place(R"((,\s*|\b)(France|FRA)\s*$)", QRegularExpression::CaseInsensitiveOption);
+    return name.match(tour["name"].toString()).hasMatch() || place.match(tour["location"].toString()).hasMatch();
 }
 
 void Broadcasts::cancel() {

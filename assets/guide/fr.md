@@ -6,7 +6,13 @@ Trait64 travaille sur votre ordinateur : vos parties, vos études et vos analyse
 2. **Installez un moteur.** Stockfish déjà installé est trouvé tout seul. Sinon, *Moteur → Moteurs et bases à télécharger* en installe un vérifié, et le bouton *Détecter* des paramètres relance la recherche.
 3. **Analysez.** Dans l'onglet *Analyse*, *Analyser* lance le moteur sur la position affichée ; *Bilan* passe toute la partie en revue.
 
-Les pages se choisissent dans la barre de gauche : Accueil, Analyse, Bibliothèque, Ouvertures, Entraînement, Joueurs, Profils, Études et Outils. Elle se replie en icônes avec « (ou d'elle-même si la fenêtre est étroite). *Ctrl+K* ouvre la palette de commandes, qui retrouve n'importe quelle action par son nom.
+Trois présentations, au choix dans *Paramètres → Interface* :
+
+- **ChessBase** (par défaut) : un ruban de commandes en haut (Fichier, Accueil, Base, Partie, Moteur, Entraînement, Affichage, Aide), les fenêtres en onglets dessous — Bases, Parties, Analyse… — et la fenêtre des bases à l'ouverture. Double-clic sur un onglet du ruban ou *Ctrl+F1* pour le replier.
+- **En Croissant** : une barre de pages à gauche, la barre de menus, l'accueil à l'ouverture.
+- **Personnalisé** : vous choisissez le ruban, la barre de menus, la barre latérale, les onglets et la page de démarrage ; *Enregistrer le profil* garde aussi la disposition des panneaux et le thème, sous un nom. Plusieurs profils se gardent et s'échangent.
+
+*Ctrl+K* ouvre la palette de commandes, qui retrouve n'importe quelle action par son nom.
 
 ## L'échiquier
 
@@ -66,6 +72,7 @@ Toutes vos parties enregistrées (*Ctrl+S*) vivent dans la bibliothèque.
 - **Rechercher** : par joueur, tournoi, date, résultat, Elo, ouverture ; par position exacte ; par matériel ; par structure de pions ; par pièces sur des cases (*Ke1 Pd4 pd5*, majuscule pour les Blancs — cette dernière recherche rejoue toutes les parties et peut être lente).
 - **Fusionner** : *Base → Fusionner les parties affichées en une étude* fond le résultat d'une recherche en une seule étude, chaque partie devenant une variante là où elle s'écarte des autres.
 - **Importer** de grosses bases : l'import est parallèle, reprenable, et vérifie l'intégrité. *Base → Tournois en direct* montre les retransmissions de Lichess : les échiquiers d'une ronde, et *Suivre* ouvre une partie dans l'analyse, où ses coups arrivent au fil du jeu. Le menu ⋮ d'une partie de la liste ouvre le *Tableau du tournoi* : classement, départages (Sonneborn-Berger, Buchholz), performance, variation d'Elo, Elo moyen et catégorie FIDE, et un clic sur un résultat ouvre la partie. Les bases `.db3` d'En Croissant et les bases SCID au format 4 (`.si4`, avec leurs `.sn4` et `.sg4` à côté) se lisent aussi.
+- **Base FFE** : *Base → Base de référence → Télécharger les parties de la FFE* réunit dans la base « FFE — tournois français » toutes les parties des tournois français retransmis sur Lichess (championnats de France, Top 12, Top Jeunes, Coupe de France, Nationale 1, opens en France), sans doublon. Les tournois terminés ne sont plus redemandés ; un tournoi en cours est relu au passage suivant.
 - **Doublons** : *Base → Doublons de coups* repère les parties en double ; *Fusionner les doublons* garde, pour les mêmes coups entre les mêmes joueurs, la partie la plus annotée, lui ajoute les commentaires, variantes et en-têtes des autres, et met celles-ci à la corbeille.
 - **Comparer deux bases** : *Base → Comparer avec une autre base…* compte les parties communes et celles qui n'existent que d'un côté.
 - **Réparer** : *Outils → Réparer la base* recopie ce qui se lit encore d'une bibliothèque abîmée dans une base neuve ; l'original reste dans les sauvegardes.

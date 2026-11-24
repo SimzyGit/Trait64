@@ -120,12 +120,21 @@ int uiLayoutProbe(const QString &directory) {
     auto *ribbonTabs=visualItem(window->contentItem(),"ribbonTabs");
     check(ribbonTabs&&ribbonTabs->isVisible()&&ribbonTabs->property("count").toInt()==8,"Layout: the ribbon offers its eight tabs");
     // Chaque onglet du ruban s'ouvre sans avertissement QML.
-    // L'interface classique rend la barre de menus et la barre latérale, sans le ruban.
-    c.setPreference("classicInterface",true);QTest::qWait(60);
+    // Le style En Croissant : barre latérale et menus, sans ruban ; puis un profil
+    // personnalisé, et le retour au style ChessBase.
+    auto *ribbonItem=window->findChild<QQuickItem *>("ribbon");
+    QMetaObject::invokeMethod(window,"applyStyle",Q_ARG(QVariant,"croissant"));QTest::qWait(60);
     check(menus->property("visible").toBool()&&visualItem(window->contentItem(),"workspaceTabs")&&
-          !window->findChild<QQuickItem *>("ribbon")->isVisible(),"Layout: the classic interface brings back menus and sidebar");
-    c.setPreference("classicInterface",false);QTest::qWait(60);
-    check(window->findChild<QQuickItem *>("ribbon")->isVisible(),"Layout: the ribbon comes back");
+          !ribbonItem->isVisible(),"Layout: the En Croissant style brings menus and sidebar");
+    c.saveInterfaceProfile({{"name","Analyse seule"},{"showRibbon",false},{"showMenuBar",false},{"showSidebar",false},
+                            {"showPageTabs",false},{"startPage",2},{"lightTheme",true}});QTest::qWait(60);
+    check(c.preferences()["interfaceStyle"]=="custom"&&c.preferences()["showPageTabs"].toBool()&&!ribbonItem->isVisible()&&
+          visualItem(window->contentItem(),"workspaceTabs")->isVisible(),
+          "Layout: a custom profile without any navigation keeps the window tabs");
+    c.removeInterfaceProfile("Analyse seule");
+    QMetaObject::invokeMethod(window,"applyStyle",Q_ARG(QVariant,"chessbase"));QTest::qWait(60);
+    check(ribbonItem->isVisible()&&!menus->property("visible").toBool()&&c.preferences()["interfaceProfiles"].toList().isEmpty(),
+          "Layout: the ChessBase style brings the ribbon back");
     for(int tab=0;tab<8;++tab){window->findChild<QObject *>("ribbon")->setProperty("current",tab);QTest::qWait(20);capture(QString("ribbon-tab%1").arg(tab));}
     window->resize(960,640);window->setProperty("page",2);QTest::qWait(60);
     capture("case8-small-analysis");

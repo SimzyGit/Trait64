@@ -326,6 +326,9 @@ class Controller : public QObject {
     // Une disposition du même nom est remplacée ; douze au plus.
     Q_INVOKABLE void saveLayout(const QVariantMap &layout);
     Q_INVOKABLE void removeLayout(int index);
+    Q_INVOKABLE void saveInterfaceProfile(const QVariantMap &profile);
+    Q_INVOKABLE void applyInterfaceProfile(const QString &name);
+    Q_INVOKABLE void removeInterfaceProfile(const QString &name);
     Q_INVOKABLE void switchTab(int index);
     Q_INVOKABLE void closeTab(int index);
     Q_INVOKABLE void duplicateStudy();
@@ -426,6 +429,8 @@ class Controller : public QObject {
     Q_PROPERTY(QVariantMap reference READ reference NOTIFY referenceChanged)
     QVariantMap reference() const;
     Q_INVOKABLE void updateReference();
+    // Toutes les parties des tournois français retransmis sur Lichess, dans une seule base.
+    Q_INVOKABLE void updateFfe();
     // Synchronisation entre appareils (sync.cpp) par un dossier que l'utilisateur
     // synchronise lui-même : répertoires, études, profils, comptes (sans jeton) et
     // réglages, dans un paquet chiffré par une phrase de passe. Aucun serveur Trait64.
@@ -915,6 +920,15 @@ class Controller : public QObject {
     bool referenceRunning_ = false;
     void nextReferenceRound();
     void finishReference();
+    t64::Broadcasts *ffeFeed_ = nullptr;
+    bool ffeRunning_ = false;
+    QString ffeStatus_;
+    QList<QPair<QString, int>> ffeSearches_;
+    QVariantMap ffeFound_;
+    QStringList ffeQueue_, ffeDone_, ffeFinished_;
+    QByteArray ffePgn_;
+    void nextFfeStep();
+    void finishFfe(const QString &status);
     qint64 positionGamesGeneration_ = 0;
     bool positionGamesPending_ = false;
     std::shared_ptr<std::atomic_bool> cancelPositionGames_;

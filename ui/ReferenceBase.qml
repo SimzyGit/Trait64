@@ -14,9 +14,13 @@ TDialog {
     objectName: "referenceBase"
     title: qsTr("Base de référence")
     width: Math.min(640, parent.width - 32)
+    height: Math.min(implicitHeight, parent.height - 32)
     anchors.centerIn: parent; modal: true; standardButtons: Dialog.Close
+    ScrollView {
+    id: scroller
+    anchors.fill: parent; contentWidth: availableWidth; clip: true
     ColumnLayout {
-        anchors.fill: parent; spacing: 10
+        width: scroller.availableWidth; spacing: 10
         Label { text: qsTr("Diffusions Lichess"); font.weight: Font.DemiBold }
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
@@ -43,6 +47,25 @@ TDialog {
             }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid; opacity: .4 }
+        // La base FFE : tous les tournois français retransmis, réunis dans une seule base.
+        Label { text: qsTr("Base FFE"); font.weight: Font.DemiBold }
+        Label {
+            Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
+            text: qsTr("Toutes les parties des tournois français retransmis sur Lichess — championnats de France, Top 12, Top Jeunes, Coupe de France, Nationale 1, opens en France — réunies dans la base « FFE — tournois français », sans doublon. La FFE ne publie pas elle-même ses parties en PGN.")
+        }
+        Label {
+            objectName: "ffeStatus"; Layout.fillWidth: true; wrapMode: Text.WordWrap
+            visible: text !== ""
+            text: (root.ref.ffeTours > 0 ? qsTr("%1 tournoi(s) terminé(s) déjà dans la base.").arg(root.ref.ffeTours) : "")
+                  + (root.ref.ffeStatus ? (root.ref.ffeTours > 0 ? " · " : "") + root.ref.ffeStatus : "")
+        }
+        TButton {
+            objectName: "updateFfe"; accent: true
+            text: root.ref.ffeRunning ? qsTr("Téléchargement…") : qsTr("Télécharger les parties de la FFE")
+            enabled: !root.ref.ffeRunning && !root.backend.busy
+            onClicked: root.backend.updateFfe()
+        }
+        Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid; opacity: .4 }
         Label { text: qsTr("Grandes bases à télécharger"); font.weight: Font.DemiBold }
         Label {
             Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
@@ -61,6 +84,7 @@ TDialog {
             Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
             text: qsTr("Pour suivre une partie en direct, Base → Tournois en direct ouvre les diffusions en cours : Suivre place la partie sur l’échiquier, coup après coup.")
         }
+    }
     }
     Native.FileDialog {
         id: file; title: qsTr("Fichier PGN à importer")

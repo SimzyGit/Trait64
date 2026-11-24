@@ -169,10 +169,10 @@ int main(int argc, char **argv) {
                 window->setProperty("page", 0);
                 QTest::qWait(100);
                 measure("bases");
-                c.setPreference("classicInterface", true);
+                c.setPreference("interfaceStyle", "croissant");
                 QTest::qWait(100);
                 measure("classique, bases");
-                c.setPreference("classicInterface", false);
+                c.setPreference("interfaceStyle", "chessbase");
             }
             QElapsedTimer read;
             read.start();

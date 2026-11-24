@@ -22,6 +22,10 @@ class Broadcasts : public QObject {
     void round(const QString &tour, const QString &roundSlug, const QString &roundId);
     // Tout le PGN d'une ronde, horloges comprises.
     void pgn(const QString &roundId);
+    // La recherche de Lichess dans les tournois diffusés, page par page.
+    void search(const QString &query, int page);
+    // Toutes les parties de toutes les rondes d'un tournoi.
+    void tourPgn(const QString &tourId);
     void cancel();
 
     // [{tour, round, roundSlug, tourSlug, roundId, ongoing, startsAt, finished, tier}]
@@ -30,10 +34,17 @@ class Broadcasts : public QObject {
     //  black:{…}}]} ; « error » si la réponse ne se lit pas.
     static QVariantMap parseRound(const QByteArray &json);
 
+    // [{id, name, slug, location, website, finished}] ; « more » dit s'il reste une page.
+    static QVariantList parseSearch(const QByteArray &json, bool *more = nullptr);
+    // Un tournoi de la Fédération française : son site, son lieu ou son nom le disent.
+    static bool isFrench(const QVariantMap &tour);
+
   signals:
     void listed(const QVariantList &broadcasts);
     void roundReady(const QVariantMap &round);
     void pgnReady(const QString &roundId, const QByteArray &pgn);
+    void searched(const QString &query, int page, const QVariantList &tours, bool more);
+    void tourPgnReady(const QString &tourId, const QByteArray &pgn);
     void failed(const QString &error);
 
   private:

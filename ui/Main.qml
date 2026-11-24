@@ -108,6 +108,7 @@ ApplicationWindow {
                 {text: qsTr("Mes répertoires…"), icon: "studies", run: function() { repertoiresDialog.open() }}]},
             {title: qsTr("Référence"), items: [
                 {name: "ribbonReference", text: qsTr("Base de référence…"), icon: "reference", large: true, run: function() { referenceBase.open() }},
+                {name: "ribbonFfe", text: qsTr("Base FFE"), icon: "trophy", hint: qsTr("Les parties des tournois français retransmis sur Lichess, dans une seule base."), run: function() { referenceBase.open() }},
                 {text: qsTr("Tournois en direct…"), icon: "live", run: function() { liveDialog.open() }},
                 {text: qsTr("Joueurs"), icon: "players", run: function() { win.page = 6 }}]},
             {title: qsTr("Outils"), items: [
@@ -171,7 +172,8 @@ ApplicationWindow {
                 {text: qsTr("Relations d’attaque"), icon: "arrows", checked: function() { return !!controller.preferences.showAttacks }, run: function() { controller.setPreference("showAttacks", !controller.preferences.showAttacks) }},
                 {text: qsTr("Couper le son"), icon: "sound", checked: function() { return !controller.preferences.sounds }, run: function() { controller.setPreference("sounds", !controller.preferences.sounds) }}]},
             {title: qsTr("Interface"), items: [
-                {name: "ribbonClassic", text: qsTr("Interface classique"), icon: "menu", hint: qsTr("Barre de menus et barre latérale au lieu du ruban."), run: function() { controller.setPreference("classicInterface", true) }},
+                {name: "ribbonCroissant", text: qsTr("Style En Croissant"), icon: "menu", hint: qsTr("Barre latérale et barre de menus au lieu du ruban."), run: function() { win.applyStyle("croissant") }},
+                {name: "ribbonStyle", text: qsTr("Style d’interface…"), icon: "layout", run: function() { settingsDialog.open() }},
                 {text: qsTr("Paramètres…"), icon: "settings", run: function() { settingsDialog.open() }}]}]},
         {title: qsTr("Aide"), groups: [
             {title: qsTr("Aide"), items: [
@@ -221,7 +223,7 @@ ApplicationWindow {
     // Lue une fois : liée aux préférences, elle recréerait tous les panneaux au moindre
     // réglage changé (la langue, une couleur), et chacun perdrait son défilement.
     property var dockLayout: dockDefault
-    Component.onCompleted: dockLayout = parseDock(controller.preferences.dockLayout)
+    Component.onCompleted: { dockLayout = parseDock(controller.preferences.dockLayout); page = controller.preferences.startPage || 0 }
     property bool dockDragging: false
     property string dockDragged: ""
     property var dockHandler: null
@@ -635,6 +637,18 @@ ApplicationWindow {
         return {name: name, ratio: boardPanel.width / Math.max(1, analysisSplit.width),
                 dock: JSON.stringify(dockLayout), boardOnly: win.boardOnly}
     }
+    // Un style prédéfini : ses barres, et la disposition des panneaux qui va avec.
+    readonly property var croissantDock: ({left: [], bottom: [],
+        right: [{panels: ["notation", "tree", "games", "book", "online"], current: 0},
+                {panels: ["notes"], current: 0}, {panels: ["engine", "graph"], current: 0}]})
+    function applyStyle(style) {
+        controller.setPreference("interfaceStyle", style)
+        saveDock(JSON.parse(JSON.stringify(style === "croissant" ? croissantDock : dockDefault)))
+    }
+    function applyInterfaceProfile(p) {
+        controller.applyInterfaceProfile(p.name)
+        if (p.dock) saveDock(parseDock(p.dock))
+    }
     function applyLayout(layout) {
         win.page = 2
         win.boardOnly = !!layout.boardOnly
@@ -665,11 +679,15 @@ ApplicationWindow {
     function systemText(text) { var language=controller.preferences.language; return controller.uiText(text) }
     Rectangle {anchors.fill: parent; color: win.bg}
     // Classic desktop structure: menu bar, a slim row of workspace tabs, then dense panes.
-    readonly property bool classic: !!controller.preferences.classicInterface
-    menuBar: classic ? classicMenus : null
+    // Ce que l'interface montre, selon le style choisi (Paramètres → Interface).
+    readonly property bool showRibbon: !!controller.preferences.showRibbon
+    readonly property bool showMenus: !!controller.preferences.showMenuBar
+    readonly property bool showSidebar: !!controller.preferences.showSidebar
+    readonly property bool showPageTabs: !!controller.preferences.showPageTabs
+    menuBar: showMenus ? classicMenus : null
     MenuBar {
         id: classicMenus
-        visible: win.classic
+        visible: win.showMenus
         objectName: "mainMenuBar"
         font.pixelSize: Math.round(12*win.textScale)
         // La barre de menus prend le ton du fond, avec un filet dessous : en blanc pur, elle
@@ -787,7 +805,8 @@ ApplicationWindow {
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
             MenuItem {text: qsTr("Relations d’attaque"); checkable: true; checked: !!controller.preferences.showAttacks; onTriggered: controller.setPreference("showAttacks", checked)}
             MenuItem {objectName: "muteSounds"; text: qsTr("Couper le son"); checkable: true; checked: !controller.preferences.sounds; onTriggered: controller.setPreference("sounds", !checked)}
-            MenuItem {objectName: "ribbonInterface"; text: qsTr("Interface à ruban"); onTriggered: controller.setPreference("classicInterface", false)}
+            MenuItem {objectName: "ribbonInterface"; text: qsTr("Style ChessBase"); onTriggered: win.applyStyle("chessbase")}
+            MenuItem {text: qsTr("Style d’interface…"); onTriggered: settingsDialog.open()}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}
@@ -806,7 +825,7 @@ ApplicationWindow {
         anchors.fill: parent; spacing: 0
     Ribbon {
         id: ribbon; objectName: "ribbon"
-        visible: !win.classic
+        visible: win.showRibbon
         Layout.fillWidth: true
         tabs: win.ribbonTabs
         minimized: !!controller.preferences.ribbonMinimized
@@ -818,8 +837,8 @@ ApplicationWindow {
     RowLayout {
         Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
         T64Sidebar {
-            id: sidebar; objectName: win.classic ? "workspaceTabs" : "sidebar"
-            visible: win.classic
+            id: sidebar; objectName: win.showPageTabs ? "sidebar" : "workspaceTabs"
+            visible: win.showSidebar
             Layout.fillHeight: true; Layout.preferredWidth: implicitWidth
             currentPage: win.page; preferences: controller.preferences
             collapsed: !!controller.preferences.sidebarCompact || win.width < 1280
@@ -837,13 +856,13 @@ ApplicationWindow {
                 Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: win.line}
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 14*win.uiScale; anchors.rightMargin: 8*win.uiScale; spacing: 6
-                    Label {visible: win.classic; text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter}
-                    Label {visible: win.classic; text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
+                    Label {visible: !win.showPageTabs; text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter}
+                    Label {visible: !win.showPageTabs; text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
                     // Les fenêtres de travail en onglets, comme celles de ChessBase : bases,
                     // liste de parties, partie, et le reste.
                     ListView {
-                        id: pageTabs; objectName: win.classic ? "" : "workspaceTabs"
-                        visible: !win.classic
+                        id: pageTabs; objectName: win.showPageTabs ? "workspaceTabs" : ""
+                        visible: win.showPageTabs
                         readonly property bool compact: win.width < 1240 * win.textScale
                         Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumWidth: 0
                         orientation: ListView.Horizontal; clip: true; spacing: 0
@@ -1738,6 +1757,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     TDialog {id:settingsDialog;objectName:"settingsDialog";title:qsTr("Paramètres");anchors.centerIn:parent;width:700;height:Math.min(690,win.height-32);modal:true;standardButtons:Dialog.Close
         ScrollView {id:settingsScroll;anchors.fill:parent;contentWidth:availableWidth;clip:true
         ColumnLayout {width:settingsScroll.availableWidth;spacing:18
+            InterfaceSettings {win:win;Layout.fillWidth:true}
             Label {text:qsTr("Moteur UCI local");font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);color:win.muted}
             RowLayout {Layout.fillWidth:true;TTextField {id:enginePathField;Layout.fillWidth:true;text:controller.preferences.enginePath;placeholderText:"/usr/games/stockfish";onEditingFinished:controller.setPreference("enginePath",text)} TButton {objectName:"detectEngine";text:qsTr("Détecter");onClicked:{var found=controller.useDetectedEngine();if(found!=="")enginePathField.text=found}
                          ToolTip.visible:hovered;ToolTip.text:qsTr("Cherche Stockfish et les autres moteurs dans les dossiers du système, dans Téléchargements et dans votre dossier personnel.")}
@@ -1923,7 +1943,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:win.keyFor("open");onActivated:importDialog.open()}
     Shortcut {sequence:win.keyFor("save");onActivated:controller.saveGame()}
     Shortcut {sequence:win.keyFor("commands");onActivated:commands.open()}
-    Shortcut {sequence:"Ctrl+F1";enabled:!win.classic;onActivated:ribbon.minimized=!ribbon.minimized}
+    Shortcut {sequence:"Ctrl+F1";enabled:win.showRibbon;onActivated:ribbon.minimized=!ribbon.minimized}
     // Ce qu'un camp a pris, puis son avance en points s'il en a une.
     function takenLine(white){var lead=(controller.state.materialLead||0)*(white?1:-1);return ((white?controller.state.takenByWhite:controller.state.takenByBlack)||"")+(lead>0?" +"+lead:"")}
     // Les raccourcis viennent des réglages ; Raccourcis clavier… permet de les changer.

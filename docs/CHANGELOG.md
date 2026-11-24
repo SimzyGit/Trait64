@@ -1,5 +1,10 @@
 # Changements
 
+## Styles d'interface et base FFE — 24 novembre 2026
+
+- **Trois styles d'interface** (*Paramètres → Interface*) : *ChessBase* (ruban, fenêtres en onglets, fenêtre des bases au démarrage), *En Croissant* (barre latérale, barre de menus, accueil au démarrage) et *Personnalisé* : barres affichées, page de démarrage, disposition des panneaux et thème, enregistrés en profils nommés (douze au plus). Un profil sans aucune navigation garde les onglets des fenêtres. Les barres sont des clés de la carte des préférences : changer de style ne réévalue que ce qui en dépend. La préférence `classicInterface` devient le style *En Croissant*.
+- **Base FFE** (*Base → Base de référence*) : les tournois français retransmis sur Lichess, repérés par la recherche de l'API (`/api/broadcast/search`) et reconnus à leur nom (championnats de France, Top 12, Top Jeunes, Coupe de France, Nationale 1), à leur lieu (« …, France ») ou au site de la FFE ; chacun exporté en entier (`/api/broadcast/{id}.pgn`) et importé dans « FFE — tournois français », sans doublon. Quarante tournois par passage ; les terminés sont retenus. La FFE ne publie pas elle-même ses parties en PGN.
+
 ## Fluidité — 24 novembre 2026
 
 - **Un réglage changé ne réévalue plus toute l'interface.** Les préférences passent à QML en carte de propriétés, comme l'état : chaque liaison ne dépend que de sa clé. Changer le nombre de lignes du moteur prend 1,7 ms au lieu de 503 ms (mesure : `desktop_tests --settings-timing`, interface entière chargée) ; la suite de tests complète passe de 172 s à 59 s.

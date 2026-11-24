@@ -1,4 +1,14 @@
-## 0.5.0-beta.5 — novembre 2026
+## 0.6.0-beta.1 — novembre 2026
+
+Cette version réunit tout ce qui a changé depuis la 0.5.0-beta.4 : la beta.5, préparée, n'a pas été publiée.
+
+**Choisissez votre interface** (*Paramètres → Interface*) : *ChessBase* (ruban et fenêtres en onglets), *En Croissant* (barre latérale et menus) ou *Personnalisé* — vos barres, votre page de démarrage, vos panneaux et votre thème, enregistrés en profils.
+
+**La base FFE** : toutes les parties des tournois français retransmis sur Lichess — championnats de France, Top 12, Top Jeunes, Coupe de France, Nationale 1, opens en France — dans une seule base, sans doublon (*Base → Base de référence*).
+
+Et, de la beta.5 :
+
+## 0.5.0-beta.5 — non publiée
 
 **Beaucoup plus fluide.** Un réglage changé — le nombre de lignes du moteur, une couleur, la langue — ne réévalue plus toute l'interface : 1,6 ms au lieu de 503 ms pour une ligne de moteur en plus. Plusieurs clics sur − / + ne relancent le moteur qu'une fois ; un clic sur le compteur propose 1 à 100 lignes.
 
