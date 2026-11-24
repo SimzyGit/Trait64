@@ -21,8 +21,10 @@ Item {
     readonly property var sections: [
         // « hint » dit ce qu'on trouve derrière chaque entrée : le seul nom ne suffit pas
         // à qui ouvre le logiciel pour la première fois.
-        { text: qsTr("Accueil"), icon: "home", page: 0,
+        { text: qsTr("Accueil"), icon: "home", page: 9,
           hint: qsTr("Reprendre où vous en étiez, ouvrir une partie d’exemple.") },
+        { text: qsTr("Bases"), icon: "base", page: 0,
+          hint: qsTr("Vos bases en icônes, rangées par catégorie.") },
         { text: qsTr("Analyse"), icon: "analysis", page: 2,
           hint: qsTr("Échiquier, notation, moteur et bilan de la partie en cours.") },
         { text: qsTr("Bibliothèque"), icon: "library", page: 1,

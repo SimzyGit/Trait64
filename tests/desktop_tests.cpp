@@ -1839,6 +1839,42 @@ int main(int argc, char **argv) {
                 if (const auto shot = qEnvironmentVariable("T64_CROSSTABLE_SCREENSHOT"); !shot.isEmpty())
                     window->grabWindow().save(shot);
                 QMetaObject::invokeMethod(dialog, "close");
+                // La fenêtre des bases : une icône par base, un double-clic ouvre sa liste.
+                {
+                    // Une base de référence, pour avoir une icône à ouvrir.
+                    QFile twic(dir.path() + "/twic-bases.pgn");
+                    check(twic.open(QIODevice::WriteOnly) &&
+                              twic.write("[White \"T1\"]\n[Black \"T2\"]\n[Result \"0-1\"]\n\n1.d4 0-1\n\n") > 0,
+                          "TWIC fixture written");
+                    twic.close();
+                    c.importReferenceFile(twic.fileName(), "twic");
+                    QTest::qWaitFor([&] { return !c.busy() && !c.sources().isEmpty(); }, 10000);
+                    window->setProperty("page", 0);
+                    QTest::qWait(80);
+                    auto *grid = visualItem(window->contentItem(), "basesGrid");
+                    check(grid && grid->property("count").toInt() == int(c.sources().size()) && !c.sources().isEmpty(),
+                          "The bases window shows one icon per base");
+                    if (const auto shot = qEnvironmentVariable("T64_BASES_SCREENSHOT"); !shot.isEmpty())
+                        window->grabWindow().save(shot);
+                    QQuickItem *tile = nullptr;
+                    if (grid)
+                        QMetaObject::invokeMethod(grid, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, tile), Q_ARG(int, 0));
+                    check(tile != nullptr, "A base icon is drawn");
+                    if (tile) {
+                        const auto at = tile->mapToScene(QPointF(tile->width() / 2, tile->height() / 2)).toPoint();
+                        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                        QTest::qWait(150);
+                        check(window->property("page").toInt() == 1 &&
+                                  window->property("selectedBaseId").toDouble() ==
+                                      c.sources().first().toMap()["id"].toDouble(),
+                              "Double-clicking a base opens its game list");
+                        if (const auto shot = qEnvironmentVariable("T64_LIBRARY_SCREENSHOT"); !shot.isEmpty())
+                            window->grabWindow().save(shot);
+                        window->setProperty("selectedBaseId", 0);
+                        QMetaObject::invokeMethod(window, "filterLibrary");
+                        QTest::qWait(80);
+                    }
+                }
                 // Retrouvé depuis la liste des tournois.
                 auto *finder = window->findChild<QObject *>("tournamentFinder");
                 QMetaObject::invokeMethod(finder, "open");
@@ -2538,7 +2574,7 @@ int main(int argc, char **argv) {
             }
             window->resize(960, 640);
             for (int page = 0; page < 7; ++page) {
-                auto *nav = visualItem(window->contentItem(), "sectionNav" + QString::number(page));
+                auto *nav = visualItem(window->contentItem(), "pageTab" + QString::number(page));
                 check(nav && nav->mapToScene(QPointF(nav->width(), nav->height())).x() <= window->width(),
                       "Numbered navigation remains visible in a small window");
                 QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
@@ -2566,7 +2602,7 @@ int main(int argc, char **argv) {
             c.setPreference("backgroundColor", "");
             window->setProperty("page", 0);
             QTest::qWait(30);
-            check(c.preferences()["accentColor"].toString() == "#2c6a4d", "Light default accent is readable");
+            check(c.preferences()["accentColor"].toString() == "#1f5fa8", "Light default accent is readable");
             c.setPreference("accentColor", "#315ac4");
             c.setPreference("lightTheme", false);
             check(c.preferences()["accentColor"].toString() == "#315ac4",

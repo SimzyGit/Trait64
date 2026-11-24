@@ -55,18 +55,23 @@ int uiLayoutProbe(const QString &directory) {
         }
         auto *catalog=window->findChild<QObject *>("contentList");
         check(catalog&&catalog->property("count").toInt()>0,"Layout: translated catalog still displays engines");
-        for(int page=0;page<7;++page) {
-            auto *nav=visualItem(window->contentItem(),"sectionNav"+QString::number(page));
-            check(nav, "Layout: navigation is present");nav->forceActiveFocus(Qt::TabFocusReason);QTest::qWait(10);QTest::keyClick(window,Qt::Key_Space);QTest::qWait(60);
+        for(int page:{9,0,1,2,3,4,5,6}) {
+            // Les fenêtres s'ouvrent par leurs onglets, sous le ruban.
+            auto *nav=visualItem(window->contentItem(),"pageTab"+QString::number(page));
+            check(nav&&nav->isVisible(), "Layout: navigation is present");nav->forceActiveFocus(Qt::TabFocusReason);QTest::qWait(10);QTest::keyClick(window,Qt::Key_Space);QTest::qWait(60);
             check(window->property("page").toInt()==page, "Layout: keyboard navigation works");
             QJsonObject row{{"scenario",index},{"width",s.width},{"height",s.height},{"textScale",s.text},{"uiScale",s.ui},{"page",page},{"language",s.language},{"light",s.light}};
-            if(page==0||page==2) {
-                auto *board=visualItem(window->contentItem(),page==0?"homeBoard":"chessboard");
+            if(page==0) {
+                auto *grid=visualItem(window->contentItem(),"basesGrid");
+                check(grid&&grid->isVisible()&&grid->width()>=200,"Layout: the bases window shows its icons");
+            }
+            if(page==9||page==2) {
+                auto *board=visualItem(window->contentItem(),page==9?"homeBoard":"chessboard");
                 check(board&&board->width()>=160&&std::abs(board->width()-board->height())<1, "Layout: usable square chessboard");
                 auto pos=board->mapToScene(QPointF());
                 check(pos.x()>=0 && pos.x()+board->width()<=window->width()+1, "Layout: board stays within horizontal viewport");
                 row["boardWidth"]=board->width();
-                if(page==0) {
+                if(page==9) {
                     auto *card=visualItem(window->contentItem(),"homeStudyCard");
                     check(card&&visualItem(window->contentItem(),"homeTodayCard"),"Layout: home study card and dashboard exist");
                     check(board->mapToItem(card,QPointF(board->width(),board->height())).y()<=card->height()+1&&
@@ -111,10 +116,20 @@ int uiLayoutProbe(const QString &directory) {
     QMetaObject::invokeMethod(repertoires,"close");QTest::qWait(30);
     // Classic desktop shell: a menu bar with every family of actions, then workspace tabs.
     auto *menus=window->findChild<QObject *>("mainMenuBar");
-    check(menus&&menus->property("count").toInt()==8,"Layout: the menu bar offers its eight menus");
+    check(menus&&menus->property("count").toInt()==8,"Layout: the classic menu bar keeps its eight menus");
+    auto *ribbonTabs=visualItem(window->contentItem(),"ribbonTabs");
+    check(ribbonTabs&&ribbonTabs->isVisible()&&ribbonTabs->property("count").toInt()==8,"Layout: the ribbon offers its eight tabs");
+    // Chaque onglet du ruban s'ouvre sans avertissement QML.
+    // L'interface classique rend la barre de menus et la barre latérale, sans le ruban.
+    c.setPreference("classicInterface",true);QTest::qWait(60);
+    check(menus->property("visible").toBool()&&visualItem(window->contentItem(),"workspaceTabs")&&
+          !window->findChild<QQuickItem *>("ribbon")->isVisible(),"Layout: the classic interface brings back menus and sidebar");
+    c.setPreference("classicInterface",false);QTest::qWait(60);
+    check(window->findChild<QQuickItem *>("ribbon")->isVisible(),"Layout: the ribbon comes back");
+    for(int tab=0;tab<8;++tab){window->findChild<QObject *>("ribbon")->setProperty("current",tab);QTest::qWait(20);capture(QString("ribbon-tab%1").arg(tab));}
     window->resize(960,640);window->setProperty("page",2);QTest::qWait(60);
     capture("case8-small-analysis");
-    for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton","workspaceTabs"}) {
+    for(const char *name:{"saveStudy","toggleEngineAnalysis","appMenuButton","workspaceTabs","ribbonTabs"}) {
         auto *item=visualItem(window->contentItem(),name);check(item,"Layout: main controls exist in the smallest window");
         const auto point=item->mapToScene(QPointF());
         check(point.x()>=0&&point.x()+item->width()<=window->width()+1,"Layout: main controls stay inside the smallest window");
@@ -128,6 +143,6 @@ int uiLayoutProbe(const QString &directory) {
     c.setPreference("reduceMotion",true);c.setPreference("sidebarCompact",true);QTest::qWait(30);
     check(warnings.isEmpty(), "Layout: no QML warnings");
     if(!output.isEmpty()){QFile file(output+"/matrix.json");check(file.open(QIODevice::WriteOnly),"Layout: report opened");file.write(QJsonDocument(QJsonObject{{"cases",report},{"checks",checks},{"qmlWarnings",warnings.count()}}).toJson());}
-    std::cout<<"UI layout: "<<checks<<" checks, 9 scenarios, 63 page views, "<<dialogViews<<" dialog views, "<<warnings.count()<<" QML warnings\n";
+    std::cout<<"UI layout: "<<checks<<" checks, 9 scenarios, 72 page views, "<<dialogViews<<" dialog views, "<<warnings.count()<<" QML warnings\n";
     return 0;
 }

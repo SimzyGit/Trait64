@@ -102,8 +102,14 @@ Item {
         followedNode = node
         // Keep the move cells visible, without trying to fit a very long comment.
         var item = moves.itemAtIndex(selected)
-        if (!item) moves.positionViewAtIndex(selected, ListView.Beginning)
-        else {
+        if (!item) {
+            // Le coup n'est pas encore construit : on l'amène, puis on corrige au tour
+            // suivant, une fois les hauteurs des lignes au-dessus connues.
+            moves.positionViewAtIndex(selected, ListView.Contain)
+            followedNode = -1
+            followTimer.restart()
+            return
+        } else {
             var top = item.y
             var bottom = top + item.moveHeight
             if (top < moves.contentY) moves.contentY = top

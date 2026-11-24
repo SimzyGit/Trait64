@@ -1,5 +1,14 @@
 # Changements
 
+## Interface à la manière de ChessBase — 24 novembre 2026
+
+- **Ruban d'onglets** (Fichier, Accueil, Base, Partie, Moteur, Entraînement, Affichage, Aide) à la place de la barre de menus : grandes icônes pour les commandes courantes, petites par trois pour les autres, groupes nommés. Double-clic sur un onglet ou Ctrl+F1 pour le replier ; dans une fenêtre basse, il se replie seul et s'ouvre d'un clic. *Affichage → Interface classique* rend la barre de menus et la barre latérale.
+- **Fenêtres en onglets** sous le ruban : Accueil, Bases, Parties, Analyse, Ouvertures, Études, Entraînement, Joueurs, Profils, Outils.
+- **Fenêtre des bases**, ouverte au démarrage : les bases en icônes (ou en liste détaillée), rangées par catégorie — mes bases, comptes en ligne, préparations, référence, études, étiquettes ; un double-clic ouvre la liste de leurs parties, sans les filtres d'une recherche précédente.
+- **Fenêtre de partie** : la notation à droite de l'échiquier, le moteur et la référence (arbre, parties, livre, Lichess) dessous. *Disposition d'origine* y ramène une disposition modifiée.
+- **Thème clair de bureau** par défaut : gris bleuté, panneaux blancs, accent bleu.
+- La notation suit le dernier coup même quand sa ligne n'est pas encore construite.
+
 ## Lignes du moteur — 23 novembre 2026
 
 - Une seule ligne par premier coup, la plus profonde, quand le moteur réordonne ses variantes ; en fin de recherche, la ligne du coup joué reste au rang 1. L'analyse de fond ne rejette plus une position pour une ligne exacte périmée.

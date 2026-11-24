@@ -50,7 +50,138 @@ ApplicationWindow {
         qsTr("Sacrifice"), qsTr("Défense"), qsTr("Matériel"), qsTr("Jeu des pièces"), qsTr("Finale"),
         qsTr("Gaffe tactique"), qsTr("Erreur stratégique"), qsTr("Personnelle")]
     function medalList(mask) { return medalNames.filter(function(name, i) { return (mask & (1 << i)) !== 0 }).join(", ") }
-    property var nav: [qsTr("Accueil"), qsTr("Bibliothèque"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils"), qsTr("Études")]
+    property var nav: [qsTr("Bases"), qsTr("Parties"), qsTr("Analyse"), qsTr("Ouvertures"), qsTr("Entraînement"), qsTr("Outils"), qsTr("Joueurs"), qsTr("Profils"), qsTr("Études"), qsTr("Accueil")]
+    // Le ruban : les commandes des menus, rangées comme dans ChessBase. Les menus restent
+    // pour l'interface classique (Affichage → Interface classique) ; chaque commande garde
+    // ici le même texte, déjà traduit.
+    readonly property var ribbonTabs: [
+        {title: qsTr("Fichier"), groups: [
+            {title: qsTr("Nouveau"), items: [
+                {name: "ribbonNew", text: qsTr("Nouvelle étude"), icon: "new", large: true, run: function() { controller.newGame(); win.page = 2 }},
+                {text: qsTr("Nouvelle partie Chess960…"), icon: "shuffle", run: function() { chess960Dialog.open() }},
+                {text: qsTr("Coller un PGN"), icon: "paste", run: function() { pgnDialog.open() }}]},
+            {title: qsTr("Ouvrir"), items: [
+                {text: qsTr("Ouvrir une bibliothèque…"), icon: "database", large: true, run: function() { openDatabaseDialog.open() }},
+                {name: "ribbonImport", text: qsTr("Importer des parties…"), icon: "import", large: true, run: function() { importDialog.open() }},
+                {text: qsTr("Imports PGN reprenables…"), icon: "resume", run: function() { importsDialog.open() }},
+                {text: qsTr("Comptes Lichess et Chess.com…"), icon: "accounts", run: function() { accountsDialog.open() }}]},
+            {title: qsTr("Enregistrer"), items: [
+                {name: "ribbonSave", text: qsTr("Enregistrer l’étude"), icon: "save", large: true, on: function() { return !controller.state.training }, run: function() { controller.saveGame() }},
+                {text: qsTr("Exporter la bibliothèque…"), icon: "export", run: function() { win.openExport(true) }},
+                {text: qsTr("Exporter un livre Polyglot…"), icon: "book", run: function() { polyglotDialog.open() }},
+                {text: qsTr("Exporter l’étude en PDF…"), icon: "pdf", run: function() { pdfOptions.open() }}]},
+            {title: qsTr("Sauvegarde"), items: [
+                {text: qsTr("Sauvegarde complète…"), icon: "backup", run: function() { backupDialog.open() }},
+                {text: qsTr("Restaurer une sauvegarde…"), icon: "restore", run: function() { backupsDialog.open() }},
+                {name: "ribbonSync", text: qsTr("Synchroniser entre appareils…"), icon: "sync", run: function() { syncDialog.open() }}]},
+            {title: "", items: [
+                {text: qsTr("Quitter"), icon: "quit", large: true, run: function() { win.close() }}]}]},
+        {title: qsTr("Accueil"), groups: [
+            {title: qsTr("Presse-papiers"), items: [
+                {text: qsTr("Copier la FEN"), icon: "copy", run: function() { controller.copyText("fen") }},
+                {text: qsTr("Copier le PGN"), icon: "copy", run: function() { controller.copyText("pgn") }},
+                {text: qsTr("Charger une FEN…"), icon: "paste", run: function() { fenDialog.open() }}]},
+            {title: qsTr("Édition"), items: [
+                {text: qsTr("Annuler"), icon: "undo", on: function() { return controller.state.canUndo }, run: function() { controller.undo() }},
+                {text: qsTr("Rétablir"), icon: "redo", on: function() { return controller.state.canRedo }, run: function() { controller.redo() }},
+                {text: qsTr("Éditer la position…"), icon: "board", run: function() { positionEditor.open() }}]},
+            {title: qsTr("Partie"), items: [
+                {text: qsTr("Informations de la partie…"), icon: "info", large: true, run: function() { tagsDialog.open() }},
+                {text: controller.state.playing ? qsTr("Arrêter la partie") : qsTr("Jouer une partie…"), icon: "play", large: true, run: function() { controller.state.playing ? controller.stopPlaying() : playDialog.open() }},
+                {text: qsTr("Ouvrir sur un téléphone (QR)…"), icon: "qr", run: function() { positionQr.open() }},
+                {text: qsTr("Exporter le diagramme…"), icon: "image", run: function() { diagramDialog.open() }}]},
+            {title: qsTr("Fenêtres"), items: [
+                {text: win.nav[0], icon: "database", large: true, run: function() { win.page = 0 }},
+                {text: win.nav[1], icon: "library", large: true, run: function() { win.page = 1 }},
+                {text: win.nav[2], icon: "board", large: true, run: function() { win.page = 2 }}]}]},
+        {title: qsTr("Base"), groups: [
+            {title: qsTr("Recherche"), items: [
+                {text: qsTr("Recherche avancée…"), icon: "search", large: true, run: function() { win.page = 1; advancedDialog.open() }},
+                {text: qsTr("Parties de la position"), icon: "position", large: true, run: function() { win.bestGamesHere() }},
+                {text: qsTr("Doublons de coups"), icon: "duplicates", run: function() { win.page = 1; controller.findDuplicates() }},
+                {text: qsTr("Fusionner les doublons"), icon: "merge", on: function() { return !controller.busy }, run: function() { win.page = 1; controller.mergeDuplicates() }},
+                {text: qsTr("Corriger les noms…"), icon: "pencil", run: function() { namesDialog.open() }}]},
+            {title: qsTr("Préparation"), items: [
+                {name: "ribbonPrepare", text: qsTr("Préparer un joueur…"), icon: "preparation", large: true, run: function() { opponentPrep.open() }},
+                {text: qsTr("Dossier de la position…"), icon: "report", run: function() { openingReportDialog.open() }},
+                {text: qsTr("Préparation par position…"), icon: "position", run: function() { preparationDialog.open() }},
+                {text: qsTr("Mes répertoires…"), icon: "studies", run: function() { repertoiresDialog.open() }}]},
+            {title: qsTr("Référence"), items: [
+                {name: "ribbonReference", text: qsTr("Base de référence…"), icon: "reference", large: true, run: function() { referenceBase.open() }},
+                {text: qsTr("Tournois en direct…"), icon: "live", run: function() { liveDialog.open() }},
+                {text: qsTr("Joueurs"), icon: "players", run: function() { win.page = 6 }}]},
+            {title: qsTr("Outils"), items: [
+                {text: qsTr("Comparer avec une autre base…"), icon: "compare", run: function() { compareLibraryDialog.open() }},
+                {text: qsTr("Tournois de la bibliothèque…"), icon: "trophy", run: function() { tournamentFinder.open() }},
+                {text: qsTr("Graphiques de la sélection…"), icon: "chart", run: function() { libraryCharts.open() }},
+                {text: qsTr("Fusionner les parties affichées en une étude"), icon: "merge", on: function() { return controller.games.length > 1 }, run: function() { controller.mergeShownGames() }},
+                {text: qsTr("Supprimer la base…"), icon: "trash", on: function() { return win.selectedBaseId > 0 }, run: function() { removeBaseDialog.ask(win.selectedBaseId) }}]}]},
+        {title: qsTr("Partie"), groups: [
+            {title: qsTr("Bilan"), items: [
+                {text: qsTr("Bilan de la partie…"), icon: "review", large: true, on: function() { return !controller.state.training }, run: function() { reviewDialog.open() }},
+                {text: qsTr("Chercher la nouveauté"), icon: "novelty", run: function() { controller.findNovelty() }},
+                {text: qsTr("Identifier l’ouverture"), icon: "openings", run: function() { controller.identifyOpening() }},
+                {text: qsTr("Tableau du tournoi"), icon: "grid", on: function() { return controller.state.savedId > 0 }, run: function() { crosstableDialog.show(controller.state.savedId) }}]},
+            {title: qsTr("Structure"), items: [
+                {text: qsTr("Plans de cette structure"), icon: "bulb", run: function() { plansDialog.open() }},
+                {text: qsTr("Positions semblables"), icon: "duplicates", run: function() { similarDialog.open() }},
+                {text: qsTr("Créer une carte d’entraînement"), icon: "cards", run: function() { cardDialog.open() }}]},
+            {title: qsTr("Exporter"), items: [
+                {text: qsTr("Exporter le diagramme…"), icon: "image", run: function() { diagramDialog.open() }},
+                {text: qsTr("Exporter l’étude en PDF…"), icon: "pdf", run: function() { pdfOptions.open() }},
+                {text: qsTr("Exporter cette étude"), icon: "export", run: function() { win.openExport(false) }}]}]},
+        {title: qsTr("Moteur"), groups: [
+            {title: qsTr("Analyse"), items: [
+                {name: "ribbonAnalysis", text: controller.state.analysis ? qsTr("Arrêter l’analyse") : qsTr("Analyser la position"), icon: controller.state.analysis ? "stop" : "engine", large: true,
+                 on: function() { return !controller.state.training }, run: function() { controller.toggleAnalysis() }},
+                {text: qsTr("Analyses en arrière-plan…"), icon: "queue", large: true, run: function() { analysisQueueDialog.open() }}]},
+            {title: qsTr("Moteurs"), items: [
+                {text: qsTr("Comparer plusieurs moteurs…"), icon: "compare", run: function() { compareDialog.open() }},
+                {text: qsTr("Tournoi de moteurs…"), icon: "trophy", run: function() { tournamentDialog.open() }},
+                {text: qsTr("Moteurs et bases à télécharger…"), icon: "download", run: function() { downloadsDialog.open() }}]},
+            {title: qsTr("Réglages"), items: [
+                {text: qsTr("Paramètres du moteur…"), icon: "sliders", large: true, run: function() { settingsDialog.open() }}]}]},
+        {title: qsTr("Entraînement"), groups: [
+            {title: qsTr("Exercices"), items: [
+                {text: qsTr("Puzzles tactiques…"), icon: "puzzle", large: true, run: function() { puzzlesDialog.open() }},
+                {text: qsTr("Coordonnées…"), icon: "coordinates", run: function() { coordinatesDialog.open() }},
+                {text: qsTr("Finales à jouer…"), icon: "endgame", run: function() { endgamesDialog.open() }},
+                {text: qsTr("Vérifier mes variantes (exercice de Stoyko)…"), icon: "check", run: function() { stoykoDialog.open() }}]},
+            {title: qsTr("Deviner"), items: [
+                {text: qsTr("Deviner les coups des Blancs"), icon: "guess", on: function() { return !controller.busy }, run: function() { controller.startGuessing(true) }},
+                {text: qsTr("Deviner les coups des Noirs"), icon: "guess", on: function() { return !controller.busy }, run: function() { controller.startGuessing(false) }},
+                {text: qsTr("Répondre aux questions de l’étude"), icon: "help", on: function() { return !controller.busy }, run: function() { controller.startQuestions() }}]},
+            {title: qsTr("Révision"), items: [
+                {text: qsTr("Réviser la prochaine carte"), icon: "cards", large: true, on: function() { return (controller.stats.due || 0) > 0 }, run: function() { controller.nextDueCard() }},
+                {text: qsTr("Réviser un répertoire…"), icon: "studies", run: function() { repertoiresDialog.open() }},
+                {text: qsTr("Tableau d’entraînement"), icon: "training", run: function() { win.page = 4 }}]}]},
+        {title: qsTr("Affichage"), groups: [
+            {title: qsTr("Apparence"), items: [
+                {text: win.light ? qsTr("Thème sombre") : qsTr("Thème clair"), icon: "theme", large: true, run: function() { controller.setPreference("lightTheme", !win.light); controller.setPreference("backgroundColor", "") }},
+                {text: qsTr("Pièces, échiquier et couleurs…"), icon: "palette", large: true, run: function() { appearanceDialog.open() }}]},
+            {title: qsTr("Disposition"), items: [
+                {text: qsTr("Échiquier seul"), icon: "board", checked: function() { return win.boardOnly }, run: function() { win.boardOnly = !win.boardOnly; win.page = 2 }},
+                {text: qsTr("Deux échiquiers côte à côte"), icon: "two-boards", run: function() { win.showSideBySide() }},
+                {text: qsTr("Plein écran"), icon: "fullscreen", checked: function() { return win.visibility === Window.FullScreen }, run: function() { win.toggleFullScreen() }},
+                {text: qsTr("Dispositions de travail…"), icon: "layout", run: function() { layoutsDialog.open() }},
+                {text: qsTr("Disposition d’origine"), icon: "reset", run: function() { win.resetDock() }}]},
+            {title: qsTr("Aides au jeu"), items: [
+                {text: qsTr("Analyse assistée"), icon: "bulb", checked: function() { return !!controller.preferences.assistedAnalysis }, run: function() { controller.setPreference("assistedAnalysis", !controller.preferences.assistedAnalysis) }},
+                {text: qsTr("Pièces en prise"), icon: "warning", checked: function() { return !!controller.preferences.showHanging }, run: function() { controller.setPreference("showHanging", !controller.preferences.showHanging) }},
+                {text: qsTr("Relations d’attaque"), icon: "arrows", checked: function() { return !!controller.preferences.showAttacks }, run: function() { controller.setPreference("showAttacks", !controller.preferences.showAttacks) }},
+                {text: qsTr("Couper le son"), icon: "sound", checked: function() { return !controller.preferences.sounds }, run: function() { controller.setPreference("sounds", !controller.preferences.sounds) }}]},
+            {title: qsTr("Interface"), items: [
+                {name: "ribbonClassic", text: qsTr("Interface classique"), icon: "menu", hint: qsTr("Barre de menus et barre latérale au lieu du ruban."), run: function() { controller.setPreference("classicInterface", true) }},
+                {text: qsTr("Paramètres…"), icon: "settings", run: function() { settingsDialog.open() }}]}]},
+        {title: qsTr("Aide"), groups: [
+            {title: qsTr("Aide"), items: [
+                {text: qsTr("Guide de l’utilisateur"), icon: "guide", large: true, run: function() { guideDialog.openAt(0) }},
+                {text: qsTr("Aide et raccourcis"), icon: "help", run: function() { helpDialog.open() }},
+                {text: qsTr("Raccourcis clavier…"), icon: "keyboard", run: function() { shortcutsDialog.open() }},
+                {text: qsTr("Rechercher une commande…"), icon: "search", run: function() { commands.open() }}]},
+            {title: qsTr("Version"), items: [
+                {text: qsTr("Mises à jour…"), icon: "update", large: true, run: function() { updatesDialog.open() }}]}]}
+    ]
     palette.window: bg; palette.windowText: fg; palette.base: panel; palette.text: fg
     palette.button: panel; palette.buttonText: fg; palette.mid: line
     palette.alternateBase: raised; palette.highlight: accent; palette.highlightedText: contrast(accent)
@@ -82,9 +213,11 @@ ApplicationWindow {
     // ---- Panneaux ancrés -------------------------------------------------------------
     // La disposition : trois zones (gauche, droite, sous l'échiquier), chacune une liste de
     // piles {panels, current, size}. Elle se garde dans les préférences, en JSON.
-    readonly property var dockDefault: ({left: [], bottom: [],
-        right: [{panels: ["notation", "tree", "games", "book", "online"], current: 0},
-                {panels: ["notes"], current: 0}, {panels: ["engine", "graph"], current: 0}]})
+    // Celle d'origine suit la fenêtre de partie de ChessBase : la notation à droite de
+    // l'échiquier, le moteur et la référence (arbre, parties, livre) dessous.
+    readonly property var dockDefault: ({left: [],
+        right: [{panels: ["notation", "notes"], current: 0}],
+        bottom: [{panels: ["engine", "graph"], current: 0}, {panels: ["tree", "games", "book", "online"], current: 0}]})
     // Lue une fois : liée aux préférences, elle recréerait tous les panneaux au moindre
     // réglage changé (la langue, une couleur), et chacun perdrait son défilement.
     property var dockLayout: dockDefault
@@ -228,6 +361,9 @@ ApplicationWindow {
                                         // En finale, le score de ce matériel dans la bibliothèque, quelle
                                         // que soit la place des pièces.
                                         footer:Column {width:miniExplorer.width
+                                            // Dans le pied et non centré sur la liste : dans un panneau bas,
+                                            // le message recouvrait les liens qui suivent.
+                                            Label {width:parent.width;padding:8;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                             Label {objectName:"endgameOdds";width:parent.width;padding:6;wrapMode:Text.WordWrap;color:win.muted
                                                 readonly property var odds:controller.state.endgame||({})
                                                 visible:(odds.games||0)>0
@@ -275,7 +411,6 @@ ApplicationWindow {
                                                 Label {text:Math.round(100*(treeRow.modelData.white+treeRow.modelData.draw/2)/treeRow.total)+" %";Layout.preferredWidth:44;horizontalAlignment:Text.AlignRight;color:win.muted}
                                             }
                                         }
-                                        Label {anchors.centerIn:parent;width:parent.width-16;wrapMode:Text.WordWrap;horizontalAlignment:Text.AlignHCenter;visible:controller.openings.length===0;text:win.pastOpeningIndex()?qsTr("L’arbre couvre les 20 premiers coups. Au-delà, la recherche de position retrouve les parties."):qsTr("Aucune suite dans votre base.");color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                                     }
         }
     }
@@ -506,6 +641,12 @@ ApplicationWindow {
     function sortLibrary(key){var f=Object.assign({},advanced);f.reverse=(f.sort||"updated")===key?!f.reverse:false;f.sort=key;advanced=f;applyAdvanced()}
     Connections {target:controller;function onLibraryOpened(){win.selectedBaseId=0;win.advanced=({});baseBox.currentIndex=0;win.filterLibrary()}}
     function openExport(all) {exportAll=all;exportDialog.open()}
+    // Depuis la fenêtre des bases : la liste des parties de cette base.
+    // Comme dans ChessBase, une base s'ouvre sur toutes ses parties : les filtres restés
+    // d'une recherche précédente sont levés.
+    function openBase(id) {selectedBaseId=id;baseBox.currentIndex=Math.max(0,baseBox.indexOfValue(id))
+        searchField.text="";resultBox.currentIndex=0;favoriteCheck.checked=false;positionCheck.checked=false;pawnCheck.checked=false;trashCheck.checked=false
+        advanced=({});searchTimer.stop();page=1;filterLibrary()}
 
     property real uiScale: controller.preferences.uiScale
     property real textScale: controller.preferences.fontScale * uiScale
@@ -514,7 +655,11 @@ ApplicationWindow {
     function systemText(text) { var language=controller.preferences.language; return controller.uiText(text) }
     Rectangle {anchors.fill: parent; color: win.bg}
     // Classic desktop structure: menu bar, a slim row of workspace tabs, then dense panes.
-    menuBar: MenuBar {
+    readonly property bool classic: !!controller.preferences.classicInterface
+    menuBar: classic ? classicMenus : null
+    MenuBar {
+        id: classicMenus
+        visible: win.classic
         objectName: "mainMenuBar"
         font.pixelSize: Math.round(12*win.textScale)
         // La barre de menus prend le ton du fond, avec un filet dessous : en blanc pur, elle
@@ -632,6 +777,7 @@ ApplicationWindow {
             MenuItem {text: qsTr("Pièces en prise"); checkable: true; checked: !!controller.preferences.showHanging; onTriggered: controller.setPreference("showHanging", checked)}
             MenuItem {text: qsTr("Relations d’attaque"); checkable: true; checked: !!controller.preferences.showAttacks; onTriggered: controller.setPreference("showAttacks", checked)}
             MenuItem {objectName: "muteSounds"; text: qsTr("Couper le son"); checkable: true; checked: !controller.preferences.sounds; onTriggered: controller.setPreference("sounds", !checked)}
+            MenuItem {objectName: "ribbonInterface"; text: qsTr("Interface à ruban"); onTriggered: controller.setPreference("classicInterface", false)}
             MenuItem {text: qsTr("Raccourcis clavier…"); onTriggered: shortcutsDialog.open()}
             MenuItem {text: qsTr("Rechercher une commande…"); onTriggered: commands.open()}
             MenuSeparator {}
@@ -646,10 +792,22 @@ ApplicationWindow {
     // Une seule navigation, à gauche, comme ChessBase 18 et En Croissant : la rangée
     // d'onglets du haut répétait la barre de menus. Repliée en icônes si la fenêtre est
     // étroite ou si on le demande.
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent; spacing: 0
+    Ribbon {
+        id: ribbon; objectName: "ribbon"
+        visible: !win.classic
+        Layout.fillWidth: true
+        tabs: win.ribbonTabs
+        minimized: !!controller.preferences.ribbonMinimized
+        autoCollapse: win.height < 720
+        onMinimizedChanged: if (minimized !== !!controller.preferences.ribbonMinimized) controller.setPreference("ribbonMinimized", minimized)
+    }
+    RowLayout {
+        Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
         T64Sidebar {
-            id: sidebar; objectName: "workspaceTabs"
+            id: sidebar; objectName: win.classic ? "workspaceTabs" : "sidebar"
+            visible: win.classic
             Layout.fillHeight: true; Layout.preferredWidth: implicitWidth
             currentPage: win.page; preferences: controller.preferences
             collapsed: !!controller.preferences.sidebarCompact || win.width < 1280
@@ -667,8 +825,48 @@ ApplicationWindow {
                 Rectangle {anchors.bottom: parent.bottom; width: parent.width; height: 1; color: win.line}
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 14*win.uiScale; anchors.rightMargin: 8*win.uiScale; spacing: 6
-                    Label {text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter}
-                    Label {text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
+                    Label {visible: win.classic; text: win.nav[win.page] || ""; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter}
+                    Label {visible: win.classic; text: "·  " + controller.state.title; elide: Text.ElideRight; color: win.muted; Layout.fillWidth: true; Layout.minimumWidth: 0; Layout.alignment: Qt.AlignVCenter}
+                    // Les fenêtres de travail en onglets, comme celles de ChessBase : bases,
+                    // liste de parties, partie, et le reste.
+                    ListView {
+                        id: pageTabs; objectName: win.classic ? "" : "workspaceTabs"
+                        visible: !win.classic
+                        Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumWidth: 0
+                        orientation: ListView.Horizontal; clip: true; spacing: 0
+                        interactive: contentWidth > width; boundsBehavior: Flickable.StopAtBounds
+                        model: [9, 0, 1, 2, 3, 8, 4, 6, 7, 5]
+                        cacheBuffer: 4000 // tous les onglets existent, même hors de vue
+                        Accessible.role: Accessible.PageTabList
+                        delegate: AbstractButton {
+                            id: pageTab
+                            required property int modelData
+                            readonly property bool active: win.page === modelData
+                            objectName: "pageTab" + modelData
+                            height: pageTabs.height
+                            width: implicitContentWidth + 22 * win.uiScale
+                            hoverEnabled: true
+                            focusPolicy: Qt.TabFocus
+                            Accessible.role: Accessible.PageTab
+                            Accessible.name: win.nav[modelData]
+                            Accessible.selected: active
+                            contentItem: Label {
+                                text: modelData === 2 && controller.state.title ? win.nav[2] + " · " + controller.state.title : win.nav[pageTab.modelData]
+                                elide: Text.ElideRight
+                                width: Math.min(implicitWidth, 170 * win.textScale)
+                                horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                                color: pageTab.active ? win.fg : win.muted
+                                font.weight: pageTab.active ? Font.DemiBold : Font.Normal
+                            }
+                            background: Rectangle {
+                                color: pageTab.active ? win.panel : pageTab.hovered ? win.raised : "transparent"
+                                border.width: pageTab.visualFocus ? 2 : 0; border.color: win.accent
+                                Rectangle {visible: pageTab.active; anchors.bottom: parent.bottom; width: parent.width; height: 2; color: win.accent}
+                                Rectangle {anchors.right: parent.right; y: 6; width: 1; height: parent.height - 12; color: win.line; opacity: .6}
+                            }
+                            onClicked: win.page = modelData
+                        }
+                    }
                     TButton {objectName: "commandPaletteButton"; text: "Ctrl K"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Rechercher une commande"); onClicked: commands.open()}
                     TButton {id: appMenuButton; objectName: "appMenuButton"; text: "⚙"; flat: true; Layout.alignment: Qt.AlignVCenter; Accessible.name: qsTr("Apparence et langue"); onClicked: appearanceDialog.open()}
                 }
@@ -680,17 +878,14 @@ ApplicationWindow {
             // barre latérale et la fenêtre paraissait trop pleine.
             Layout.leftMargin:14*win.uiScale;Layout.rightMargin:14*win.uiScale;Layout.topMargin:10*win.uiScale;Layout.bottomMargin:6*win.uiScale
 
-            Home {
+            BasesPage {
+                objectName: "basesPage"
                 backend: controller
-                onNewStudy: controller.newGame()
-                onImportStudy: importDialog.open()
-                onResumeStudy: win.page = 2
-                onShowLibrary: win.page = 1
-                onShowTraining: win.page = 4
-                onShowRepertoires: repertoiresDialog.open()
-                onShowPreparation: preparationDialog.open()
-                onShowEngines: settingsDialog.open()
-                onShowAccounts: accountsDialog.open()
+                onOpenBase: function(id) { win.openBase(id) }
+                onImportGames: importDialog.open()
+                onOpenLibrary: openDatabaseDialog.open()
+                onEditTags: function(b) { if (b) baseTagsDialog.ask("base", b.id, b.title, b.tags) }
+                onRemoveBase: function(id) { removeBaseDialog.ask(id) }
             }
 
             // LIBRARY
@@ -1012,7 +1207,7 @@ objectName:"analysisSplit"
                         DockColumn {
                             objectName:"bottomDock";dock:win;zone:"bottom"
                             visible:!win.boardOnly&&stacks.length>0
-                            Layout.fillWidth:true;Layout.preferredHeight:Math.round(190*win.textScale)
+                            Layout.fillWidth:true;Layout.preferredHeight:Math.min(Math.round(210*win.textScale),win.height*.24)
                         }
                     }
                     // Right column, ChessBase style: notation, tree and book above, the engine pane below.
@@ -1196,7 +1391,20 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             Players {backend:controller;Layout.margins:0;onPreparePlayer:function(name){preparationDialog.usePlayer(name)};onPrepareOpponent:function(name){opponentPrep.prepareName(name)};onImportOnline:accountsDialog.open()}
             ProfilePage {objectName:"profilePage";backend:controller}
             StudiesPage {objectName:"studiesPage";backend:controller;onOpenDetails:repertoiresDialog.open()}
+            Home {
+                backend: controller
+                onNewStudy: controller.newGame()
+                onImportStudy: importDialog.open()
+                onResumeStudy: win.page = 2
+                onShowLibrary: win.page = 1
+                onShowTraining: win.page = 4
+                onShowRepertoires: repertoiresDialog.open()
+                onShowPreparation: preparationDialog.open()
+                onShowEngines: settingsDialog.open()
+                onShowAccounts: accountsDialog.open()
+            }
         }
+    }
     }
     }
     footer:Rectangle {
@@ -1601,7 +1809,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             {title:qsTr("Nouvelle étude"),run:function(){controller.newGame()}},
             {title:qsTr("Enregistrer"),run:function(){controller.saveGame()}},
             {title:qsTr("Importer un PGN"),run:function(){importDialog.open()}},
-            {title:qsTr("Accueil"),run:function(){win.page=0}},
+            {title:qsTr("Accueil"),run:function(){win.page=9}},{title:qsTr("Bases"),run:function(){win.page=0}},
             {title:qsTr("Bibliothèque"),run:function(){win.page=1}},
             {title:qsTr("Analyse"),run:function(){win.page=2}},
             {title:qsTr("Ouvertures"),run:function(){win.page=3}},
@@ -1665,6 +1873,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:win.keyFor("open");onActivated:importDialog.open()}
     Shortcut {sequence:win.keyFor("save");onActivated:controller.saveGame()}
     Shortcut {sequence:win.keyFor("commands");onActivated:commands.open()}
+    Shortcut {sequence:"Ctrl+F1";enabled:!win.classic;onActivated:ribbon.minimized=!ribbon.minimized}
     // Ce qu'un camp a pris, puis son avance en points s'il en a une.
     function takenLine(white){var lead=(controller.state.materialLead||0)*(white?1:-1);return ((white?controller.state.takenByWhite:controller.state.takenByBlack)||"")+(lead>0?" +"+lead:"")}
     // Les raccourcis viennent des réglages ; Raccourcis clavier… permet de les changer.

@@ -152,6 +152,10 @@ QVariantMap Controller::preferences() const {
                          {"fontScale", 1.0},
                          {"uiScale", 1.0},
                          {"sidebarCompact", false},
+                         // Le ruban à onglets ; « classique » rend la barre de menus et la
+                         // barre latérale d'avant.
+                         {"classicInterface", false},
+                         {"ribbonMinimized", false},
                          {"figurines", false},
                          {"syncAtStartup", false},
                          {"highContrast", false},
@@ -218,9 +222,9 @@ QVariantMap Controller::preferences() const {
     defaults["fontFamilies"] = fonts;
     QColor bg(defaults["backgroundColor"].toString());
     if (!bg.isValid())
-        // Un papier chaud et un graphite à peine teinté plutôt que des gris neutres : des
-        // heures devant un échiquier fatiguent moins sur un fond qui ne tire pas au bleu.
-        bg = QColor(defaults["lightTheme"].toBool() ? "#eeebe4" : "#1c1c1b");
+        // Clair : le gris bleuté des logiciels de bureau, panneaux blancs dessus.
+        // Sombre : un graphite à peine teinté.
+        bg = QColor(defaults["lightTheme"].toBool() ? "#e8ecf1" : "#1c1c1b");
     auto linear = [](double x) { return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4); };
     const double luminance =
         .2126 * linear(bg.redF()) + .7152 * linear(bg.greenF()) + .0722 * linear(bg.blueF());
@@ -241,11 +245,11 @@ QVariantMap Controller::preferences() const {
                                 bg.blueF() + (1 - bg.blueF()) * factor)
             .name();
     };
-    defaults["panel"] = light ? towardWhite(.85) : blend(.045);
+    defaults["panel"] = light ? towardWhite(.92) : blend(.045);
     defaults["raised"] = blend(.085);
     defaults["line"] = blend(.17);
-    defaults["foreground"] = light ? "#211f1b" : "#e8e4dc";
-    defaults["muted"] = light ? "#69645a" : "#a29d93";
+    defaults["foreground"] = light ? "#1b2330" : "#e8e4dc";
+    defaults["muted"] = light ? "#5a6575" : "#a29d93";
     if (defaults["highContrast"].toBool()) {
         defaults["foreground"] = light ? "#000000" : "#ffffff";
         defaults["muted"] = light ? "#202020" : "#eeeeee";
@@ -260,9 +264,8 @@ QVariantMap Controller::preferences() const {
             defaults["boardHighlight"] = "#a99449";
     }
     if (!settings_.contains("accentColor"))
-        // Un vert profond, celui du feutre des tables de club et des pendules, plutôt que le
-        // bleu de toutes les applications ; plus clair en thème sombre pour rester lisible.
-        defaults["accentColor"] = light ? "#2c6a4d" : "#7db893";
+        // Le bleu des logiciels d'analyse en clair ; un vert de feutre, plus lisible, en sombre.
+        defaults["accentColor"] = light ? "#1f5fa8" : "#7db893";
     // Les raccourcis en vigueur : ceux d'origine, recouverts par ceux que l'on a choisis.
     QVariantMap keys;
     const auto chosen = settings_.value("shortcuts").toMap();
@@ -354,7 +357,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         } else if (key == "language") {
             if (!QStringList{"auto", "fr", "en", "es"}.contains(value.toString()))
                 return;
-        } else if (QStringList{"sidebarCompact", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
+        } else if (QStringList{"sidebarCompact", "classicInterface", "ribbonMinimized", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
                                "showHanging", "showAttacks", "assistedAnalysis", "sounds", "wheelMoves",
                                "autoFlip", "blindfold", "autoBackup"}
@@ -456,7 +459,7 @@ void Controller::retranslateUi(QObject *window) {
 }
 void Controller::resetAppearance() {
     for (const auto &key :
-         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "highContrast", "reduceMotion",
+         QStringList{"fontFamily", "fontScale", "uiScale", "sidebarCompact", "classicInterface", "ribbonMinimized", "highContrast", "reduceMotion",
                      "analysisPanelRatio", "dockLayout", "lightTheme", "pieceStyle", "boardLight",
                      "boardDark", "boardHighlight", "backgroundColor", "accentColor", "coordinates",
                      "legalMoves", "lastMove", "engineArrows"})
