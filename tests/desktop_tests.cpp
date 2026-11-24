@@ -306,8 +306,12 @@ int main(int argc, char **argv) {
                       "The backup list shows the automatic backup and its game count");
                 const auto stray = dir.path() + "/stray.sqlite";
                 QFile::copy(list[0].toMap()["file"].toString(), stray);
+                // La restauration refuse de partir pendant un traitement : sous les
+                // vérificateurs mémoire, le classement qui suit les enregistrements dure.
+                QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
                 vault.restoreBackup(stray);
                 check(settle(3) == 3, "A file outside the list is not restored");
+                QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
                 vault.restoreBackup(list[0].toMap()["file"].toString());
                 const auto after = vault.backups();
                 check(settle(1) == 1, "Restoring brings the library back to the backup");
