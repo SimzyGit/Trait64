@@ -1,3 +1,15 @@
+## 0.5.0-beta.5 — novembre 2026
+
+**Beaucoup plus fluide.** Un réglage changé — le nombre de lignes du moteur, une couleur, la langue — ne réévalue plus toute l'interface : 1,6 ms au lieu de 503 ms pour une ligne de moteur en plus. Plusieurs clics sur − / + ne relancent le moteur qu'une fois ; un clic sur le compteur propose 1 à 100 lignes.
+
+**Des icônes à lui.** Un jeu dessiné pour Trait64, aux motifs de l'échiquier, dans le ruban, les onglets et les boutons de parcours.
+
+**Le bilan ne fait plus rétrécir l'échiquier** : la réfutation d'une erreur s'affiche dans une bande fixe sous lui.
+
+**Corrigé.** Le bouton « Lire la partie » pouvait se poser sur « Début » dans une fenêtre étroite ; l'en-tête de l'arbre se chevauchait dans un panneau étroit.
+
+Pas de changement de schéma depuis la beta.4.
+
 ## 0.5.0-beta.4 — novembre 2026
 
 **Une interface à la manière de ChessBase.** Un ruban d'onglets (Fichier, Accueil, Base, Partie, Moteur, Entraînement, Affichage, Aide) remplace la barre de menus ; les fenêtres de travail passent en onglets dessous. *Affichage → Interface classique* rend l'ancienne présentation.
