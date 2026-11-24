@@ -1,3 +1,9 @@
+## 0.6.0-beta.2 — novembre 2026
+
+**Le moteur ne disparaît plus au coup suivant.** En parcourant une partie analysée, le panneau restait vide 300 à 600 ms à chaque coup et l'analyse repartait de zéro. Les lignes du coup quitté restent affichées, estompées, jusqu'aux nouvelles ; revenir sur une position déjà analysée la montre aussitôt à la profondeur atteinte. Le moteur repart plus vite après chaque coup.
+
+Pas de changement de schéma depuis la 0.6.0-beta.1.
+
 ## 0.6.0-beta.1 — novembre 2026
 
 Cette version réunit tout ce qui a changé depuis la 0.5.0-beta.4 : la beta.5, préparée, n'a pas été publiée.
