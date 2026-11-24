@@ -65,10 +65,14 @@ void atomicWrite(const QString &path, const QByteArray &bytes) {
 Controller::Controller(const QString &path, QObject *parent)
     : QObject(parent), dataPath_(path), sessionPath_(path + "/session.json"), engine_(this),
       comparison_(this) {
+    // Avant toute connexion de l'interface : la carte est refaite avant d'être relue.
+    connect(this, &Controller::preferencesChanged, this, &Controller::syncPreferences);
+    preferencesMap_ = new QQmlPropertyMap(this);
     stateObject_ = new QQmlPropertyMap(this);
     cells_ = new QQmlPropertyMap(this);
     translator_ = std::make_unique<t64::UiTranslator>();
     translator_->setLanguage(settings_.value("language", "auto").toString());
+    syncPreferences();
     adoptLoneCustomPieceSet();
     openBook();
     connect(&engine_, &t64::Uci::initialized, this, [this] {
@@ -183,6 +187,7 @@ Controller::Controller(const QString &path, QObject *parent)
         current.isEmpty() || !QFileInfo(current).isExecutable()) {
         const auto found = detectEngines();
         settings_.setValue("enginePath", found.isEmpty() ? QString() : found.first());
+        syncPreferences();
     }
     autosave_.setSingleShot(true);
     autosave_.setInterval(600);

@@ -578,6 +578,9 @@ ApplicationWindow {
                                 }
                                 ListView {
                                     Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:2
+                                    // Dix mises à jour par seconde remplacent tout le modèle : les lignes
+                                    // sont recyclées au lieu d'être recréées à chaque fois.
+                                    reuseItems:true
                                     delegate:RowLayout {
                                         required property var modelData
                                         required property int index
@@ -1210,8 +1213,24 @@ objectName:"analysisSplit"
                             }
                             TButton {text:controller.state.playing?qsTr("Arrêter"):qsTr("Jouer");visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
-                        Label {objectName:"reviewNote";visible:!!((controller.state.mistake||{}).note||win.reviewSpot.note);text:(controller.state.mistake||{}).note||win.reviewSpot.note||"";color:"#c0523f";Layout.alignment:Qt.AlignHCenter;wrapMode:Text.WordWrap;Layout.maximumWidth:boardArea.width;horizontalAlignment:Text.AlignHCenter;font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)}
-                        Label {text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent;Layout.alignment:Qt.AlignHCenter;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale);Layout.topMargin:2}
+                        // L'état et la réfutation d'un bilan partagent une bande de hauteur fixe :
+                        // la note, ajoutée sous l'échiquier, le faisait rétrécir à chaque erreur.
+                        Item {
+                            id:boardMessage
+                            readonly property string note:(controller.state.mistake||{}).note||win.reviewSpot.note||""
+                            Layout.fillWidth:true
+                            Layout.preferredHeight:Math.ceil(2.6*12*controller.preferences.fontScale*controller.preferences.uiScale)+4
+                            Label {objectName:"reviewNote";visible:boardMessage.note!=="";text:boardMessage.note
+                                anchors.fill:parent;anchors.leftMargin:8;anchors.rightMargin:8
+                                color:"#c0523f";wrapMode:Text.WordWrap;maximumLineCount:2;elide:Text.ElideRight
+                                horizontalAlignment:Text.AlignHCenter;verticalAlignment:Text.AlignVCenter
+                                font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)
+                                HoverHandler {id:noteHover}
+                                ToolTip.visible:noteHover.hovered&&truncated;ToolTip.text:text}
+                            Label {visible:boardMessage.note==="";anchors.centerIn:parent
+                                text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent
+                                font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                        }
                         DockColumn {
                             objectName:"bottomDock";dock:win;zone:"bottom"
                             visible:!win.boardOnly&&stacks.length>0

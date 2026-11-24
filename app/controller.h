@@ -78,7 +78,9 @@ class Controller : public QObject {
     // temps que la première évaluation du coup joué revienne.
     Q_PROPERTY(QVariantMap heldEvaluation READ heldEvaluation NOTIFY engineChanged)
     Q_PROPERTY(QString engineStatus READ engineStatus NOTIFY engineChanged)
-    Q_PROPERTY(QVariantMap preferences READ preferences NOTIFY preferencesChanged)
+    // Une carte de propriétés, comme « state » : chaque liaison QML ne dépend que de sa
+    // clé. Avec une seule QVariantMap, un réglage changé réévaluait toute l'interface.
+    Q_PROPERTY(QQmlPropertyMap *preferences READ preferencesObject CONSTANT)
     // Les dispositions de travail enregistrées : [{name, ratio, panel, boardOnly, tab}].
     Q_PROPERTY(QVariantList layouts READ layouts NOTIFY layoutsChanged)
     // {fen, games : [rangées de la bibliothèque], running} pour la position affichée.
@@ -204,6 +206,7 @@ class Controller : public QObject {
                                    bool trash, const QVariantMap &filters);
     QVariantMap state() const { return state_; }
     QQmlPropertyMap *stateObject() const { return stateObject_; }
+    QQmlPropertyMap *preferencesObject() const { return preferencesMap_; }
     QVariantList squares() const { return squares_; }
     QVariantList notation() const;
     QVariantList moveRows() const { return moveRows_; }
@@ -956,7 +959,8 @@ class Controller : public QObject {
     // par liste, puis « changed » pour ceux qui écoutent tout.
     void publish();
     void refreshNotation();
-    QQmlPropertyMap *stateObject_ = nullptr, *cells_ = nullptr;
+    QQmlPropertyMap *stateObject_ = nullptr, *cells_ = nullptr, *preferencesMap_ = nullptr;
+    void syncPreferences();
     QVariantList moveRows_, moveFlow_;
     QVariantList shownSquares_, shownOpenings_, shownBook_, shownTabs_;
     int heardNode_ = 0;

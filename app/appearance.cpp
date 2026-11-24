@@ -127,6 +127,14 @@ void Controller::resetShortcuts() {
     settings_.remove("shortcuts");
     emit preferencesChanged();
 }
+// Seules les clés qui changent sont réécrites : leurs liaisons, et elles seules, se
+// réévaluent.
+void Controller::syncPreferences() {
+    const auto fresh = preferences();
+    for (auto it = fresh.cbegin(); it != fresh.cend(); ++it)
+        if (preferencesMap_->value(it.key()) != it.value())
+            preferencesMap_->insert(it.key(), it.value());
+}
 QVariantMap Controller::preferences() const {
     QVariantMap defaults{{"enginePath", ""},
                          {"uciOptions", QVariantMap()},

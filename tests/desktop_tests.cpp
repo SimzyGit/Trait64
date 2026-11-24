@@ -143,6 +143,44 @@ int main(int argc, char **argv) {
                   t.nsecsElapsed() / 1e6 / 200);
             return 0;
         }
+        // Le coût d'un réglage changé, l'interface entière chargée : tout ce qui lit les
+        // préférences se réévalue.
+        if (app.arguments().contains("--settings-timing")) {
+            Controller c(dir.path() + "/settings-timing");
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+            window->resize(1440, 900);
+            window->setProperty("page", 2);
+            QTest::qWait(300);
+            const auto measure = [&](const char *label) {
+                QElapsedTimer t;
+                t.start();
+                for (int i = 0; i < 20; ++i) {
+                    c.setEngineLines(3 + i % 2 * 5);
+                    QCoreApplication::processEvents();
+                }
+                qInfo("réglage (%s) : %.2f ms par changement du nombre de lignes", label,
+                      t.nsecsElapsed() / 1e6 / 20);
+            };
+            measure("analyse");
+            if (qEnvironmentVariableIsSet("T64_SETTINGS_DETAIL")) {
+                window->setProperty("page", 0);
+                QTest::qWait(100);
+                measure("bases");
+                c.setPreference("classicInterface", true);
+                QTest::qWait(100);
+                measure("classique, bases");
+                c.setPreference("classicInterface", false);
+            }
+            QElapsedTimer read;
+            read.start();
+            for (int i = 0; i < 1000; ++i)
+                c.preferences();
+            qInfo("préférences : %.1f µs par lecture", read.nsecsElapsed() / 1e3 / 1000);
+            return 0;
+        }
         if (app.arguments().contains("--explorer-walk"))
             return explorerProbeMain(dir.path());
         if (app.arguments().contains("--board-walk"))
@@ -1956,6 +1994,21 @@ int main(int argc, char **argv) {
             window->setProperty("page", 2);
             QTest::qWait(50);
             {
+                // Une réfutation de bilan s'affiche sous l'échiquier sans le rétrécir.
+                {
+                    auto *board = visualItem(window->contentItem(), "chessboard");
+                    const auto before = board->width();
+                    c.stateObject()->insert(
+                        "mistake",
+                        QVariantMap{{"note", "Erreur : 12...Cxe4 perd une pièce après 13.Fxf7+ Rxf7 "
+                                             "14.Dd5+ et les Blancs reprennent le cavalier."}});
+                    QTest::qWait(80);
+                    auto *note = visualItem(window->contentItem(), "reviewNote");
+                    check(note && note->isVisible() && std::abs(board->width() - before) < 0.5,
+                          "A review refutation leaves the board its size");
+                    c.stateObject()->insert("mistake", QVariant());
+                    QTest::qWait(30);
+                }
                 // L'échiquier seul : le panneau d'analyse s'efface et l'échiquier grandit.
                 auto *board = visualItem(window->contentItem(), "chessboard");
                 auto *panel = visualItem(window->contentItem(), "boardPanel");

@@ -1,5 +1,11 @@
 # Changements
 
+## Fluidité — 24 novembre 2026
+
+- **Un réglage changé ne réévalue plus toute l'interface.** Les préférences passent à QML en carte de propriétés, comme l'état : chaque liaison ne dépend que de sa clé. Changer le nombre de lignes du moteur prend 1,7 ms au lieu de 503 ms (mesure : `desktop_tests --settings-timing`, interface entière chargée) ; la suite de tests complète passe de 172 s à 59 s.
+- Les lignes du moteur sont recyclées à chaque mise à jour au lieu d'être recréées.
+- **Bilan** : la réfutation d'une erreur s'affiche dans une bande de hauteur fixe sous l'échiquier, à la place de l'état ; l'échiquier ne rétrécit plus.
+
 ## Finitions de l'interface — 24 novembre 2026
 
 - **Lieu et ronde** dans la liste des parties, triables, quand la fenêtre a la place. La bibliothèque passe au schéma 18 : les parties déjà rangées les reprennent de leur en-tête PGN.
