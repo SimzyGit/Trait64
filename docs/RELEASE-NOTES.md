@@ -1,3 +1,19 @@
+## 0.5.0-beta.3 — novembre 2026
+
+**Préparer n'importe quel joueur.** Par pseudo Lichess ou Chess.com, par identifiant FIDE ou par nom de la bibliothèque : son arbre de coups avec chaque couleur, l'évolution de ses choix, ses faiblesses observées, là où il sort de votre répertoire, et un dossier PDF (*Base → Préparer un joueur…*).
+
+**Une base de référence à jour.** Les rondes terminées des tournois retransmis sur Lichess s'ajoutent sans doublon, à la demande ou au démarrage ; la base élite de Lichess et TWIC s'importent depuis leur fichier téléchargé (*Base → Base de référence…*).
+
+**Deux échiquiers côte à côte** (*Affichage*), le moteur et l'arbre suivant celui qu'on touche.
+
+**Statistiques personnelles** dans la page Profils : force par cadence, performance par ouverture, régularité semaine par semaine.
+
+**Synchronisation entre appareils** par un dossier partagé (Syncthing, Nextcloud, clé USB…), dans un paquet chiffré en AES-256 par une phrase de passe (*Fichier → Synchroniser entre appareils…*).
+
+**Corrigé.** Avec beaucoup de lignes, le moteur pouvait montrer deux fois le même coup quand il réordonnait ses variantes, et l'analyse de fond rejetait parfois une position pour la même raison.
+
+Pas de changement de schéma depuis la beta.2.
+
 ## 0.5.0-beta.2 — novembre 2026
 
 **La synchronisation des comptes est réparée (Lichess comme Chess.com).** Après le premier compte, le classement ECO qui suit l'import bloquait la file : avec « Tout synchroniser », seul le premier compte se téléchargeait. La file repart désormais d'elle-même. Une base de compte supprimée se retélécharge entièrement au lieu d'être déclarée à jour.

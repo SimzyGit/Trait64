@@ -1,5 +1,9 @@
 # Changements
 
+## Lignes du moteur — 23 novembre 2026
+
+- Une seule ligne par premier coup, la plus profonde, quand le moteur réordonne ses variantes ; en fin de recherche, la ligne du coup joué reste au rang 1. L'analyse de fond ne rejette plus une position pour une ligne exacte périmée.
+
 ## Synchronisation entre appareils — 23 novembre 2026
 
 - **Par un dossier partagé, sans serveur** (*Fichier → Synchroniser entre appareils…*) : un paquet `trait64-sync.t64z`, zip chiffré en AES-256 par une phrase de passe (libarchive), contient répertoires, études, profils, comptes sans leurs jetons, dispositions et réglages d'affichage. Les chemins propres à chaque machine (moteur, tables, livre) ne voyagent pas.
