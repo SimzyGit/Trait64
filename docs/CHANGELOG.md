@@ -1,5 +1,13 @@
 # Changements
 
+## Bifurcations, annotations, ouvertures et sons — 26 novembre 2026
+
+- **Bifurcations à la manière de Lichess** : à une position qui a plusieurs suites, les coups possibles s'affichent sous l'échiquier ; ↑ et ↓ choisissent celui que → jouera, un clic le joue. Avant, → suivait toujours la ligne principale.
+- **Symboles d'annotation** (panneau *Notes*), comme dans En Croissant : coup (!!, !, !?, ?!, ?, ??, □), position (+−, ±, ⩲, =, ∞, ⩱, ∓, −+) et idées (N, ↑, →, ⇆, =∞, ⟳, ⨀, Δ, ⊕). Un symbole de coup et un de position par coup, les idées s'ajoutent ; tous s'écrivent en NAG dans le PGN et se lisent à l'import. Initiative, attaque et les autres symboles par camp vont à celui qui vient de jouer.
+- **Notation en liste ou en ligne** aussi dans *Paramètres → Interface*.
+- **Performance par ouverture** : le nom de l'ouverture (A40 : *Queen's Pawn Game*), son code ECO à côté.
+- **Sons de Lichess (standard) et de Chess.com** : ces sons ne sont pas libres et ne sont pas livrés, mais un dossier personnel les lit désormais en MP3 sous leurs noms d'origine (Move, Capture, Checkmate ; move-self, move-check, game-end…), décodés par minimp3 (domaine public). Deux entrées du choix des sons y mènent.
+
 ## Analyse en parcourant une partie — 24 novembre 2026
 
 - **Le moteur ne disparaît plus au coup suivant.** Chaque coup parcouru vidait le panneau, qui restait blanc 290 à 640 ms (mesure : `desktop_tests --engine-walk`, Stockfish réel). Les lignes de la position quittée restent affichées, estompées, jusqu'aux nouvelles ; les flèches de l'échiquier n'en montrent que pour la position affichée.

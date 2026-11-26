@@ -64,6 +64,22 @@ ColumnLayout {
             }
         }
     }
+    // La notation : en liste (un coup blanc et un coup noir par ligne) ou en ligne, à la
+    // suite comme dans un livre. Le même choix que les boutons du panneau de notation.
+    RowLayout {
+        spacing: 8
+        Label { text: qsTr("Notation des coups") }
+        Repeater {
+            model: [{key: "table", text: qsTr("En liste")}, {key: "flow", text: qsTr("En ligne")}]
+            TButton {
+                required property var modelData
+                objectName: "notation_" + modelData.key
+                text: modelData.text
+                accent: (root.prefs.notebookLayout || "table") === modelData.key
+                onClicked: controller.setPreference("notebookLayout", modelData.key)
+            }
+        }
+    }
     // Le profil personnalisé : choisi, composé, enregistré.
     ColumnLayout {
         visible: root.style === "custom"

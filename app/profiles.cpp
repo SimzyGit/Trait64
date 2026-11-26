@@ -8,6 +8,7 @@
 #include <QDate>
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QImageReader>
 #include <QUuid>
 #include <algorithm>
@@ -374,6 +375,14 @@ QVariantMap Controller::personalStats(int profileIndex) const {
         if (!own.isEmpty() && !names.contains(own, Qt::CaseInsensitive))
             names << own;
         auto stats = db_->personalStats(names, QDate::currentDate());
+        // Le nom de chaque ouverture, pas seulement son code ECO.
+        QVariantList openings;
+        for (const auto &row : stats["openings"].toList()) {
+            auto opening = row.toMap();
+            opening["name"] = ecoName(opening["eco"].toString());
+            openings << opening;
+        }
+        stats["openings"] = openings;
         stats["ready"] = true;
         stats["name"] = own;
         QVariantMap fide;
@@ -474,4 +483,30 @@ QVariantMap Controller::repertoireGap(qint64 repertoireId, int profileIndex) con
     } catch (const std::exception &e) {
         return {{"ready", false}, {"reason", QString::fromUtf8(e.what())}};
     }
+}
+
+// Le nom d'un code ECO : celui de la ligne la plus courte qui le porte dans les tables
+// d'ouvertures, la plus générale (A40 : « Queen's Pawn Game »). Lu une fois.
+QString Controller::ecoName(const QString &eco) {
+    static const QHash<QString, QString> names = [] {
+        QHash<QString, QString> found;
+        QHash<QString, int> length;
+        for (const auto *volume : {"a", "b", "c", "d", "e"}) {
+            QFile file(":/assets/openings/" + QString(volume) + ".tsv");
+            if (!file.open(QIODevice::ReadOnly))
+                continue;
+            while (!file.atEnd()) {
+                const auto columns = QString::fromUtf8(file.readLine()).trimmed().split('\t');
+                if (columns.size() < 3 || columns[0] == "eco")
+                    continue;
+                const int plies = int(columns[2].count(' '));
+                if (!found.contains(columns[0]) || plies < length[columns[0]]) {
+                    found[columns[0]] = columns[1];
+                    length[columns[0]] = plies;
+                }
+            }
+        }
+        return found;
+    }();
+    return names.value(eco.left(3).toUpper());
 }

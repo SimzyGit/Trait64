@@ -148,13 +148,16 @@ TDialog {
             Label {text:qsTr("Sons");font.bold:true}
             Flow {Layout.fillWidth:true;Layout.preferredWidth:1;spacing:10
                 TCheckBox {objectName:"soundsEnabled";text:qsTr("Sons des coups");checked:root.backend.preferences.sounds;onToggled:root.backend.setPreference("sounds",checked)}
-                // Les quatre jeux libres de Lichess, puis « Mes sons » : un dossier de WAV à soi.
+                // Les quatre jeux libres de Lichess, puis trois entrées qui ouvrent un dossier à
+                // soi : les sons standard de Lichess et ceux de Chess.com ne sont pas libres, on
+                // ne les livre pas, mais leurs fichiers d'origine se lisent tels quels.
                 TComboBox {id:soundTheme;objectName:"soundTheme";width:170;enabled:root.backend.preferences.sounds
                     readonly property var keys:["bois","feutre","clic","marbre","retro","lichess-sfx","lichess-piano","lichess-nes","lichess-futuriste"]
-                    readonly property int shown:{const i=keys.indexOf(root.backend.preferences.soundTheme);return i<0?keys.length:i}
-                    model:[qsTr("Bois"),qsTr("Feutre"),qsTr("Clic"),qsTr("Marbre"),qsTr("Rétro"),"Lichess SFX",qsTr("Lichess Piano"),"Lichess NES",qsTr("Lichess Futuriste"),qsTr("Mes sons…")];translateOptions:false
+                    readonly property int shown:{const i=keys.indexOf(root.backend.preferences.soundTheme);return i<0?keys.length+2:i}
+                    model:[qsTr("Bois"),qsTr("Feutre"),qsTr("Clic"),qsTr("Marbre"),qsTr("Rétro"),"Lichess SFX",qsTr("Lichess Piano"),"Lichess NES",qsTr("Lichess Futuriste"),
+                           qsTr("Lichess Standard (vos fichiers)…"),qsTr("Chess.com (vos fichiers)…"),qsTr("Mes sons…")];translateOptions:false
                     currentIndex:shown
-                    onActivated:function(index){if(index===keys.length){soundFolder.open();return}
+                    onActivated:function(index){if(index>=keys.length){soundFolder.open();return}
                         root.backend.setPreference("soundTheme",keys[index]);root.backend.previewSound(keys[index])}}
                 Label {text:qsTr("Volume");height:28*root.backend.preferences.uiScale;verticalAlignment:Text.AlignVCenter;color:root.backend.preferences.muted}
                 Slider {objectName:"soundVolume";width:160;from:0;to:100;stepSize:5;enabled:root.backend.preferences.sounds
@@ -163,8 +166,10 @@ TDialog {
                 TButton {text:qsTr("Écouter");enabled:root.backend.preferences.sounds&&root.backend.preferences.soundVolume>0
                          onClicked:root.backend.previewSound(root.backend.preferences.soundTheme)}
             }
-            Label {visible:soundTheme.shown===soundTheme.keys.length;Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.backend.preferences.muted
-                text:qsTr("Sons lus dans %1 : move, capture, check, castle, promote et mate (ou Checkmate) en WAV 16 bits. Ceux qui manquent restent en bois.").arg(root.backend.preferences.soundTheme)}
+            Label {visible:soundTheme.shown>=soundTheme.keys.length;Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.backend.preferences.muted
+                text:qsTr("Sons lus dans %1, en WAV ou MP3, sous les noms de Trait64 (move, capture, check, castle, promote, mate), de Lichess (Move, Capture, Checkmate) ou de Chess.com (move-self, capture, move-check, castle, promote, game-end). Ceux qui manquent restent en bois.").arg(root.backend.preferences.soundTheme)}
+            Label {Layout.fillWidth:true;wrapMode:Text.WordWrap;color:root.backend.preferences.muted
+                text:qsTr("Les sons standard de Lichess et ceux de Chess.com ne sont pas libres : Trait64 ne peut pas les fournir. Choisissez le dossier où vous les avez, par exemple celui de l’extension Lichess Tools.")}
             TButton {text:qsTr("Rétablir l’apparence par défaut");onClicked:root.backend.resetAppearance()}
             Label {text:qsTr("Pièces : C. M. L. Burnett et A. Hernandez Marroquin (GPL-2.0+), Maurizio Monge (MIT), therealqtpi (AGPL-3.0+). Sons Lichess : Enigmahack (AGPL-3.0+). Les choix sont enregistrés automatiquement.");wrapMode:Text.WordWrap;Layout.fillWidth:true;font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale);opacity:.7}
         }

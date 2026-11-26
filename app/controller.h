@@ -247,6 +247,7 @@ class Controller : public QObject {
     void forgetEngineLines();
     QString engineStatus() const { return engineStatus_; }
     QVariantMap preferences() const;
+    static QString ecoName(const QString &eco);
     bool busy() const { return busy_ || (online_ && online_->busy()); }
     int taskProgress() const { return taskProgress_->load(); }
     QString taskStatus() const {
@@ -872,6 +873,7 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     // Plusieurs clics sur − / + ne relancent le moteur qu'une fois, à la pause.
     QTimer linesRestart_;
+    int forkChoice_ = 0; // le coup que → jouera à une bifurcation
     // Les lignes de chaque position analysée, la plus profonde gardée : revenir sur une
     // position la montre aussitôt, à la profondeur déjà atteinte.
     QString engineFen_;

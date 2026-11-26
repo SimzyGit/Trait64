@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "game.h"
+#include <QHash>
 #include <QRegularExpression>
 #include <QVariant>
 #include <algorithm>
@@ -184,6 +185,25 @@ inline Turn fenTurn(const std::string &fen) {
     return turn;
 }
 
+// Les symboles d'annotation (NAG) : ceux du coup, de l'évaluation de la position et
+// des idées, comme dans ChessBase et En Croissant. Un NAG sans symbole s'écrit « $n ».
+inline QString nagSymbol(int nag) {
+    static const QHash<int, QString> symbols{
+        {1, "!"},   {2, "?"},   {3, "!!"},  {4, "??"},  {5, "!?"},  {6, "?!"},  {7, "□"},
+        {10, "="},  {13, "∞"},  {14, "⩲"},  {15, "⩱"},  {16, "±"},  {17, "∓"},  {18, "+−"},
+        {19, "−+"}, {22, "⨀"},  {23, "⨀"},  {32, "⟳"},  {33, "⟳"},  {36, "↑"},  {37, "↑"},
+        {40, "→"},  {41, "→"},  {44, "=∞"}, {45, "=∞"}, {132, "⇆"}, {133, "⇆"}, {138, "⊕"},
+        {139, "⊕"}, {140, "Δ"}, {146, "N"}};
+    return symbols.value(nag, "$" + QString::number(nag));
+}
+// Un symbole de coup se colle au coup (e4!), les autres s'en détachent (e4 ±).
+inline QString withNags(QString text, const std::vector<int> &nags) {
+    for (int nag : nags)
+        if (nag != diagramNag)
+            text += (nag >= 1 && nag <= 7 ? "" : " ") + nagSymbol(nag);
+    return text;
+}
+
 inline QVariantList moveRows(const Game &game, int current, int french) {
     QVariantList rows;
     rows << QVariantMap{{"initial", true},
@@ -192,11 +212,7 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
                         {"comment", splitComment(game.nodes[0].comment).text}};
     auto entry = [&](int id) {
         const auto &node = game.nodes[id];
-        QString text = displaySan(node.san, french);
-        static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
-        for (int nag : node.nags)
-            if (nag != diagramNag)
-                text += " " + (nag >= 0 && nag < symbols.size() ? symbols[nag] : "$" + QString::number(nag));
+        const QString text = withNags(displaySan(node.san, french), node.nags);
         const auto parts = splitComment(node.comment);
         return QVariantMap{{"id", id},
                            {"parent", node.parent},
@@ -255,7 +271,6 @@ inline QVariantList moveRows(const Game &game, int current, int french) {
 // Tokens: "move" (id, number, text), "open"/"close" around a variation, "comment".
 inline QVariantList moveFlow(const Game &game, int current, int french) {
     QVariantList tokens;
-    static const QStringList symbols{"", "!", "?", "!!", "??", "!?", "?!"};
     auto comment = [&](int id, int depth) {
         const auto text = splitComment(game.nodes[id].comment).text;
         if (text.isEmpty())
@@ -271,10 +286,7 @@ inline QVariantList moveFlow(const Game &game, int current, int french) {
             const auto &node = game.nodes[id];
             const auto turn = fenTurn(game.nodes[node.parent].fen);
             const bool white = turn.white;
-            QString text = displaySan(node.san, french);
-            for (int nag : node.nags)
-                if (nag != diagramNag)
-                    text += nag >= 0 && nag < symbols.size() ? symbols[nag] : " $" + QString::number(nag);
+            QString text = withNags(displaySan(node.san, french), node.nags);
             const auto parts = splitComment(node.comment);
             // Le titre se lit avant le coup qu'il annonce, sur sa propre ligne.
             if (!parts.title.isEmpty()) {

@@ -193,3 +193,13 @@ Les exécutables restent des téléchargements externes depuis les publications 
 ## Sources de parties à la demande
 
 [PGN Mentor](https://www.pgnmentor.com/files.html) propose des collections de joueurs, ouvertures et événements en téléchargement gratuit. Ce constat ne vaut pas licence ouverte de redistribution : les conditions et cette limite sont affichées dans le catalogue. Les fichiers sont téléchargés directement chez ce fournisseur sur demande ; ils ne sont pas redistribués dans Trait64, ni placés sous la licence AGPL du logiciel. Source et empreinte reçue sont conservées dans les reçus locaux et l’historique d’import.
+
+## minimp3 (lieff)
+
+- Source : https://github.com/lieff/minimp3 (révision `afb604c06bc8beb145fecd42c0ceb5bda8795144`), CC0 1.0 (domaine public).
+- Repris tel quel dans `third_party/minimp3/` (`minimp3.h`, `LICENSE`) : le décodage des sons MP3 d'un dossier personnel (jeux de Lichess ou de Chess.com fournis par l'utilisateur).
+
+## Noto Sans Math (extrait)
+
+- Source : https://github.com/notofonts/math (fichier publié sur notofonts.github.io), Copyright 2022 The Noto Project Authors, SIL Open Font License 1.1 (`assets/fonts/OFL-Noto-Sans-Math.txt`).
+- `assets/fonts/NotoSansMath-Symbols.ttf` n'en garde que les symboles d'annotation (± ∓ ∞ ⩲ ⩱ □ ⨀ ⟳ ↑ → ⇆ Δ ⊕ et quelques lettres), extraits avec fontTools (`pyftsubset`) ; ils servent de secours aux polices qui ne les ont pas.

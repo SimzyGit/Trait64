@@ -9,6 +9,7 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QClipboard>
 #include <QGuiApplication>
 #include <QImage>
 #include <QImageReader>
@@ -224,6 +225,9 @@ int main(int argc, char **argv) {
             return importGuiProbe(app, dir.path());
         {
             using t64::BoardSound;
+            check(Controller::ecoName("A40") == "Queen's Pawn Game" && Controller::ecoName("b20") == "Sicilian Defense" &&
+                      Controller::ecoName("Z99").isEmpty(),
+                  "An ECO code is named after its most general line");
             check(t64::soundFor("e4") == BoardSound::Move && t64::soundFor("Nf3") == BoardSound::Move,
                   "A quiet move sounds like a move");
             check(t64::soundFor("exd5") == BoardSound::Capture, "A capture has its own sound");
@@ -279,6 +283,15 @@ int main(int argc, char **argv) {
                       t64::soundClip(BoardSound::Capture, folder, 100) ==
                           t64::soundClip(BoardSound::Capture, "bois", 100),
                   "A folder of one's own sounds replaces them, wood filling the gaps");
+            // Les noms et le MP3 de Chess.com : « move-self.mp3 » sert au coup, et, faute
+            // de mieux, à l'échec et au roque.
+            QTemporaryDir chesscom;
+            QFile::copy(QString(T64_TEST_DATA) + "/sounds/move-self.mp3", chesscom.filePath("move-self.mp3"));
+            const auto mp3 = t64::soundClip(BoardSound::Move, chesscom.path(), 100);
+            check(mp3.startsWith("RIFF") && mp3.mid(8, 4) == "WAVE" && mp3.size() > 2000 && peak(mp3) > 2000 &&
+                      t64::soundClip(BoardSound::Check, chesscom.path(), 100) == mp3 &&
+                      t64::soundClip(BoardSound::Castle, chesscom.path(), 100) == mp3,
+                  "A Chess.com or Lichess MP3 is decoded and stands in under its own name");
         }
         {
             // Trouver un moteur déjà installé : par son nom, dans les dossiers du système
@@ -407,10 +420,10 @@ int main(int argc, char **argv) {
                 QFile::copy(list[0].toMap()["file"].toString(), stray);
                 // La restauration refuse de partir pendant un traitement : sous les
                 // vérificateurs mémoire, le classement qui suit les enregistrements dure.
-                QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
+                (void)QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
                 vault.restoreBackup(stray);
                 check(settle(3) == 3, "A file outside the list is not restored");
-                QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
+                (void)QTest::qWaitFor([&] { return !vault.busy(); }, 20000);
                 vault.restoreBackup(list[0].toMap()["file"].toString());
                 const auto after = vault.backups();
                 check(settle(1) == 1, "Restoring brings the library back to the backup");
@@ -1567,6 +1580,44 @@ int main(int argc, char **argv) {
             c.navigate(2);
             check(c.state()["comment"].toString() == "Plan: develop the knight",
                   "Previous note remains intact");
+            // Une bifurcation, comme sur Lichess : ↓ choisit le second coup, → le joue.
+            c.navigate(1);
+            QTest::qWait(30);
+            auto *fork = visualItem(window->contentItem(), "forkChooser");
+            check(c.state()["fork"].toList().size() == 2 && fork && fork->isVisible(),
+                  "A fork shows the moves that follow");
+            c.stepVariation(1);
+            check(c.state()["node"].toInt() == 1 && c.state()["forkChoice"].toInt() == 1,
+                  "Down picks the next move of a fork without leaving the position");
+            c.step(1);
+            check(c.state()["fen"].toString().startsWith("rnbqkbnr/pp1ppppp/8/2p5/4P3"),
+                  "Right plays the move chosen at the fork");
+            c.navigate(2);
+            // Les symboles d'annotation : un par famille pour le coup et la position, les
+            // autres s'ajoutent et s'ôtent ; tous passent dans la notation et le PGN.
+            {
+                const auto nags = [&] {
+                    QList<int> list;
+                    for (const auto &v : c.state()["nags"].toList())
+                        list << v.toInt();
+                    return list;
+                };
+                c.setNag(1);
+                c.setNag(16);
+                c.setNag(3);
+                c.setNag(146);
+                check(nags() == QList<int>{3, 16, 146}, "A move takes one move symbol, one evaluation and ideas");
+                c.setNag(146);
+                check(nags() == QList<int>{3, 16}, "An idea symbol is removed by a second click");
+                check(c.moveRows().size() > 1 && c.moveRows()[1].toMap()["black"].toMap()["text"].toString().endsWith("!! ±"),
+                      "The notation shows the move symbol joined and the evaluation apart");
+                c.copyText("pgn");
+                check(QGuiApplication::clipboard()->text().contains("$3 $16"), "The symbols are written to the PGN");
+                c.setNag(0);
+                check(nags().isEmpty(), "Clear removes every symbol");
+                QTest::qWait(30);
+                check(visualItem(window->contentItem(), "nag146") != nullptr, "The annotation palette offers the novelty");
+            }
             auto *save = window->findChild<QQuickItem *>("saveStudy");
             check(save != nullptr, "Save button exists");
             QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
@@ -1951,7 +2002,7 @@ int main(int argc, char **argv) {
                           "TWIC fixture written");
                     twic.close();
                     c.importReferenceFile(twic.fileName(), "twic");
-                    QTest::qWaitFor([&] { return !c.busy() && !c.sources().isEmpty(); }, 10000);
+                    (void)QTest::qWaitFor([&] { return !c.busy() && !c.sources().isEmpty(); }, 10000);
                     window->setProperty("page", 0);
                     QTest::qWait(80);
                     auto *grid = visualItem(window->contentItem(), "basesGrid");

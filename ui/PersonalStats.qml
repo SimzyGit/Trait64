@@ -89,7 +89,12 @@ ScrollView {
             RowLayout {
                 required property var modelData
                 Layout.fillWidth: true; spacing: 12
-                Label { text: modelData.eco; font.weight: Font.DemiBold; Layout.preferredWidth: 50 }
+                // Le nom de l'ouverture d'abord, son code ECO à côté, plus discret.
+                Label { text: modelData.name || modelData.eco; font.weight: Font.DemiBold; elide: Text.ElideRight
+                        Layout.preferredWidth: 230; Layout.minimumWidth: 80
+                        ToolTip.visible: nameHover.hovered && truncated; ToolTip.text: text
+                        HoverHandler { id: nameHover } }
+                Label { text: modelData.name ? modelData.eco : ""; color: palette.placeholderText; Layout.preferredWidth: 34 }
                 Label { text: qsTr("%1 partie(s)").arg(modelData.games); Layout.preferredWidth: 90; color: palette.placeholderText }
                 ProgressBar { from: 0; to: 100; value: modelData.score; Layout.fillWidth: true }
                 Label { text: modelData.score + " %"; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }

@@ -525,8 +525,42 @@ ApplicationWindow {
     Component {id:panelNotes
         Item {
             ColumnLayout {anchors.fill:parent;spacing:0
-                                RowLayout {Layout.fillWidth:true;Layout.margins:4;spacing:4;visible:!controller.state.training
-                                    TComboBox {id:nagBox;model:["Annotation","! Bon coup","? Erreur","!! Excellent","?? Gaffe","!? Intéressant","?! Douteux"];currentIndex:Math.min(controller.state.nag,6);onActivated:controller.setNag(currentIndex);Layout.fillWidth:true;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
+                                // Les symboles d'annotation, comme dans En Croissant : le coup, la position,
+                                // les idées. Un clic pose le symbole, un second l'ôte ; un symbole de coup
+                                // ou de position remplace le précédent de sa famille.
+                                Flow {objectName:"nagPalette";Layout.fillWidth:true;Layout.margins:4;spacing:3;visible:!controller.state.training
+                                    // Initiative, attaque… existent pour chaque camp : celui qui vient de jouer.
+                                    readonly property bool blackMoved:!!controller.state.whiteTurn
+                                    readonly property var groups:[
+                                        [[3,"!!",qsTr("Excellent coup")],[1,"!",qsTr("Bon coup")],[5,"!?",qsTr("Coup intéressant")],[6,"?!",qsTr("Coup douteux")],
+                                         [2,"?",qsTr("Erreur")],[4,"??",qsTr("Gaffe")],[7,"□",qsTr("Seul coup")]],
+                                        [[18,"+−",qsTr("Les Blancs gagnent")],[16,"±",qsTr("Avantage blanc")],[14,"⩲",qsTr("Léger avantage blanc")],[10,"=",qsTr("Égalité")],
+                                         [13,"∞",qsTr("Position incertaine")],[15,"⩱",qsTr("Léger avantage noir")],[17,"∓",qsTr("Avantage noir")],[19,"−+",qsTr("Les Noirs gagnent")]],
+                                        [[146,"N",qsTr("Nouveauté")],[36,"↑",qsTr("Initiative"),1],[40,"→",qsTr("Attaque"),1],[132,"⇆",qsTr("Contre-jeu"),1],
+                                         [44,"=∞",qsTr("Compensation"),1],[32,"⟳",qsTr("Avance de développement"),1],[22,"⨀",qsTr("Zugzwang"),1],
+                                         [140,"Δ",qsTr("Avec l’idée"),0],[138,"⊕",qsTr("Zeitnot"),1]]]
+                                    Repeater {model:parent.groups.length
+                                        Row {required property int index;spacing:2
+                                            readonly property var symbols:parent.groups[index]
+                                            Repeater {model:parent.symbols
+                                                AbstractButton {
+                                                    required property var modelData
+                                                    readonly property int nag:modelData[0]+(modelData[3]&&parent.parent.parent.blackMoved?1:0)
+                                                    readonly property bool on:(controller.state.nags||[]).indexOf(nag)>=0
+                                                    objectName:"nag"+modelData[0]
+                                                    enabled:controller.state.node>0
+                                                    width:Math.max(Math.round(24*win.textScale),symbol.implicitWidth+8);height:Math.round(24*win.textScale)
+                                                    hoverEnabled:true;focusPolicy:Qt.TabFocus
+                                                    Accessible.name:modelData[2];Accessible.checked:on;Accessible.role:Accessible.CheckBox
+                                                    ToolTip.visible:hovered;ToolTip.delay:300;ToolTip.text:modelData[2]
+                                                    contentItem:Label {id:symbol;text:parent.modelData[1];horizontalAlignment:Text.AlignHCenter;verticalAlignment:Text.AlignVCenter
+                                                        font.weight:Font.DemiBold;color:parent.on?win.fg:win.muted}
+                                                    background:Rectangle {radius:3;color:parent.on?Qt.rgba(win.accent.r,win.accent.g,win.accent.b,.2):parent.hovered?win.raised:"transparent"
+                                                        border.color:parent.on?win.accent:win.line;opacity:parent.enabled?1:.4}
+                                                    onClicked:controller.setNag(nag)}}
+                                            Rectangle {width:1;height:Math.round(20*win.textScale);color:win.line;anchors.verticalCenter:parent.verticalCenter}
+                                        }}
+                                    TButton {text:qsTr("Effacer");flat:true;enabled:(controller.state.nags||[]).length>0;onClicked:controller.setNag(0)}
                                     TButton {text:"↑";enabled:controller.state.node>0;onClicked:controller.promote();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Promouvoir en ligne principale")}
                                 }
                                 ScrollView {Layout.fillWidth:true;Layout.fillHeight:true;Layout.leftMargin:4;Layout.rightMargin:4;Layout.bottomMargin:4
@@ -1271,7 +1305,24 @@ objectName:"analysisSplit"
                                 font.pixelSize:Math.round(12*controller.preferences.fontScale*controller.preferences.uiScale)
                                 HoverHandler {id:noteHover}
                                 ToolTip.visible:noteHover.hovered&&truncated;ToolTip.text:text}
-                            Label {visible:boardMessage.note==="";anchors.centerIn:parent
+                            // Une bifurcation : les coups possibles, celui que → jouera en évidence
+                            // (↑ ↓ pour en changer), comme sous l'échiquier de Lichess.
+                            Row {objectName:"forkChooser";visible:boardMessage.note===""&&(controller.state.fork||[]).length>1
+                                anchors.centerIn:parent;spacing:6
+                                Repeater {model:controller.state.fork||[]
+                                    AbstractButton {required property var modelData;required property int index
+                                        readonly property bool chosen:index===(controller.state.forkChoice||0)
+                                        height:Math.round(22*win.textScale);width:forkText.implicitWidth+16
+                                        Accessible.name:modelData.san;Accessible.selected:chosen
+                                        contentItem:Label {id:forkText;text:modelData.san;horizontalAlignment:Text.AlignHCenter;verticalAlignment:Text.AlignVCenter
+                                            font.weight:parent.chosen?Font.DemiBold:Font.Normal;color:parent.chosen?win.fg:win.muted}
+                                        background:Rectangle {radius:3;color:parent.chosen?Qt.rgba(win.accent.r,win.accent.g,win.accent.b,.18):"transparent"
+                                            border.color:parent.chosen?win.accent:win.line}
+                                        onClicked:controller.navigate(modelData.id)}}
+                                Label {text:"↑ ↓  →";color:win.muted;anchors.verticalCenter:parent.verticalCenter
+                                    font.pixelSize:Math.round(10*controller.preferences.fontScale*controller.preferences.uiScale)}
+                            }
+                            Label {visible:boardMessage.note===""&&(controller.state.fork||[]).length<2;anchors.centerIn:parent
                                 text:win.systemText(controller.state.clockResult||controller.state.status);color:win.accent
                                 font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
                         }

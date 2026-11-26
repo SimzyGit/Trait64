@@ -2,6 +2,7 @@
 #include "controller.h"
 #include <QDebug>
 #include <QDir>
+#include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QIcon>
@@ -39,6 +40,12 @@ int main(int argc, char *argv[]) {
     // lieu de la police par défaut de chacun.
     for (const char *weight : {"Regular", "Medium", "SemiBold", "Bold"})
         QFontDatabase::addApplicationFont(QString(":/assets/fonts/IBMPlexSans-%1.ttf").arg(weight));
+    // Les symboles d'annotation rares (⩲ ⩱ ⟳ ⨀…) manquent à la plupart des polices : un
+    // extrait de Noto Sans Math (OFL) les fournit, en secours de chaque famille.
+    QFontDatabase::addApplicationFont(":/assets/fonts/NotoSansMath-Symbols.ttf");
+    for (const auto &family : QFontDatabase::families())
+        if (family != "Noto Sans Math")
+            QFont::insertSubstitution(family, "Noto Sans Math");
     const bool smoke = app.arguments().contains("--smoke-test");
     QTemporaryDir temporary;
     if (smoke) {

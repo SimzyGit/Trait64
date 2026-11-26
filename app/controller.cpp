@@ -636,7 +636,25 @@ void Controller::refresh(bool content) {
                                  QString::number(repertoireExercise_.isEmpty() ? solution_.size() : 1)},
         {"canBack", node_ > 0},
         {"canForward", !current.children.empty()},
+        // Une bifurcation, comme sur Lichess : les coups possibles après la position, et
+        // celui que → jouera (↑ et ↓ en changent).
+        {"fork", [&] {
+             QVariantList moves;
+             if (current.children.size() > 1)
+                 for (int child : current.children)
+                     moves << QVariantMap{{"id", child},
+                                          {"san", t64::displaySan(game_.nodes[child].san, frenchNotation())}};
+             return moves;
+         }()},
+        {"forkChoice", forkChoice_},
         {"nag", current.nags.empty() || current.nags[0] == t64::diagramNag ? 0 : current.nags[0]},
+        {"nags", [&] {
+             QVariantList list;
+             for (int nag : current.nags)
+                 if (nag != t64::diagramNag)
+                     list << nag;
+             return list;
+         }()},
         {"whiteTurn", board.sideToMove() == chess::Color::WHITE}};
     // Relations d'attaque de la pièce choisie, comme dans ChessBase : une flèche rouge
     // depuis chaque pièce adverse qui l'attaque, une verte depuis chaque pièce qui la
@@ -865,9 +883,7 @@ QVariantList Controller::notation() const {
             const auto &v = game_.nodes[n];
             const auto turn = t64::fenTurn(game_.nodes[v.parent].fen);
             QString label = QString::number(turn.number) + (turn.white ? ". " : "… ") + s(v.san);
-            static const QStringList nags = {"", "!", "?", "!!", "??", "!?", "?!"};
-            for (int nag : v.nags)
-                label += " " + (nag < 7 ? nags[nag] : "$" + QString::number(nag));
+            label = t64::withNags(label, v.nags);
             notation_ << QVariantMap{{"id", n},
                                      {"text", label},
                                      {"depth", depth},
@@ -1667,6 +1683,7 @@ void Controller::navigate(int node) {
     engine_.stop();
     node_ = node;
     selected_ = -1;
+    forkChoice_ = 0;
     // Les lignes de la position quittée restent, estompées, jusqu'aux nouvelles : les
     // effacer laissait le panneau vide à chaque coup.
     refresh();
@@ -1677,8 +1694,10 @@ void Controller::step(int direction) {
         navigate(0);
     else if (direction == -1 && node_ > 0)
         navigate(game_.nodes[node_].parent);
-    else if (direction == 1 && !game_.nodes[node_].children.empty())
-        navigate(game_.nodes[node_].children[0]);
+    else if (direction == 1 && !game_.nodes[node_].children.empty()) {
+        const auto &children = game_.nodes[node_].children;
+        navigate(children[std::clamp(forkChoice_, 0, int(children.size()) - 1)]);
+    }
     else if (direction == 2) {
         int n = node_;
         while (!game_.nodes[n].children.empty())
@@ -1689,7 +1708,16 @@ void Controller::step(int direction) {
 // Haut et bas passent d'une variante à sa voisine : les coups qui répondent à la même
 // position, dans l'ordre où la notation les montre.
 void Controller::stepVariation(int delta) {
-    if (node_ <= 0 || trainingActive())
+    if (trainingActive())
+        return;
+    // À une bifurcation, ↑ et ↓ choisissent le coup que → jouera, sans quitter la position.
+    if (const auto &children = game_.nodes[node_].children; children.size() > 1) {
+        const int count = int(children.size());
+        forkChoice_ = ((forkChoice_ + delta) % count + count) % count;
+        refresh();
+        return;
+    }
+    if (node_ <= 0)
         return;
     const auto &siblings = game_.nodes[game_.nodes[node_].parent].children;
     const auto here = std::find(siblings.begin(), siblings.end(), node_) - siblings.begin();
@@ -1722,12 +1750,24 @@ void Controller::setNag(int nag) {
     if (trainingActive())
         return;
     remember();
-    // Le symbole du coup change ; un diagramme posé après lui reste.
+    // Un symbole par famille : celui du coup (1 à 7) et celui de la position (10 à 19)
+    // remplacent leur précédent ; les autres (initiative, attaque, nouveauté…) se posent
+    // et s'ôtent un à un. 0 efface tout, sauf un diagramme posé après le coup.
     auto &nags = game_.nodes[node_].nags;
+    const auto family = [](int n) { return n >= 1 && n <= 7 ? 1 : n >= 10 && n <= 19 ? 2 : 3; };
     const bool diagram = t64::hasDiagram(game_.nodes[node_]);
-    nags.clear();
-    if (nag > 0 && nag <= 255 && nag != t64::diagramNag)
+    std::erase(nags, t64::diagramNag);
+    if (nag <= 0 || nag > 255 || nag == t64::diagramNag)
+        nags.clear();
+    else if (std::find(nags.begin(), nags.end(), nag) != nags.end())
+        std::erase(nags, nag);
+    else {
+        if (family(nag) != 3)
+            std::erase_if(nags, [&](int n) { return family(n) == family(nag); });
         nags.push_back(nag);
+        // Le coup d'abord, puis la position, puis le reste : l'ordre où on les lit.
+        std::stable_sort(nags.begin(), nags.end(), [&](int a, int b) { return family(a) < family(b); });
+    }
     if (diagram)
         nags.push_back(t64::diagramNag);
     refresh(true);
