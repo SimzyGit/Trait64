@@ -1,3 +1,17 @@
+## 0.6.0-beta.3 — novembre 2026
+
+**Les variantes au clavier, comme sur Lichess.** À une bifurcation, les coups possibles s'affichent sous l'échiquier : ↑ et ↓ choisissent celui que → jouera, un clic le joue.
+
+**Tous les symboles d'annotation** (panneau *Notes*) : coup (!!, !, !?, ?!, ?, ??, □), position (+−, ±, ⩲, =, ∞, ⩱, ∓, −+) et idées (nouveauté, initiative, attaque, contre-jeu, compensation, zugzwang…), écrits dans le PGN.
+
+**La notation en liste ou en ligne**, aussi dans *Paramètres → Interface*.
+
+**La performance par ouverture** donne le nom de l'ouverture, pas seulement son code ECO.
+
+**Vos sons Lichess ou Chess.com** : un dossier de sons lit maintenant le MP3, sous les noms d'origine de Lichess et de Chess.com. Ces sons ne sont pas libres et Trait64 ne les fournit pas : choisissez le dossier où vous les avez.
+
+Pas de changement de schéma depuis la 0.6.0-beta.2.
+
 ## 0.6.0-beta.2 — novembre 2026
 
 **Le moteur ne disparaît plus au coup suivant.** En parcourant une partie analysée, le panneau restait vide 300 à 600 ms à chaque coup et l'analyse repartait de zéro. Les lignes du coup quitté restent affichées, estompées, jusqu'aux nouvelles ; revenir sur une position déjà analysée la montre aussitôt à la profondeur atteinte. Le moteur repart plus vite après chaque coup.
