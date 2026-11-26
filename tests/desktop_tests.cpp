@@ -2095,12 +2095,15 @@ int main(int argc, char **argv) {
                 check(groups.size() == 1 && groups.first().toMap()["names"].toList().size() == 2,
                       "Two spellings of Liren Ding are grouped, Ding alone has no initial");
                 c.unifyNames("player", {"Liren Ding"}, "Ding, Liren");
-                settle.restart();
-                QTest::qWait(20);
-                while ((c.nameVariants()["running"].toBool() || c.librarySearching()) &&
-                       settle.elapsed() < 10000)
-                    QTest::qWait(10);
-                check(c.nameVariants()["groups"].toList().isEmpty(), "Once unified, nothing is left to fix");
+                // Le recensement des graphies repart en arrière-plan : sur une machine chargée,
+                // il n'a pas encore commencé 20 ms plus tard. On attend son résultat.
+                check(QTest::qWaitFor(
+                          [&] {
+                              return !c.busy() && !c.nameVariants()["running"].toBool() &&
+                                     !c.librarySearching() && c.nameVariants()["groups"].toList().isEmpty();
+                          },
+                          10000),
+                      "Once unified, nothing is left to fix");
                 QMetaObject::invokeMethod(names, "close");
             }
             window->setProperty("page", 2);
