@@ -1,3 +1,13 @@
+## 0.6.0-beta.4 — novembre 2026
+
+**Parcourir une partie est près de trois fois plus fluide** : 4,5 ms par coup au clavier au lieu de 12,4, l'interface entière chargée.
+
+**L'échiquier se redimensionne à la souris, comme sur Lichess** : une poignée au coin inférieur droit ; double-clic pour la pleine taille. La taille est retenue.
+
+**Corrigé.** Le curseur « Taille de l'échiquier » de l'apparence et Ctrl + molette sur l'échiquier étaient ignorés.
+
+Pas de changement de schéma depuis la 0.6.0-beta.3.
+
 ## 0.6.0-beta.3 — novembre 2026
 
 **Les variantes au clavier, comme sur Lichess.** À une bifurcation, les coups possibles s'affichent sous l'échiquier : ↑ et ↓ choisissent celui que → jouera, un clic le joue.
