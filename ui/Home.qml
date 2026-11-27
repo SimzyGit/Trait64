@@ -61,9 +61,13 @@ ScrollView {
                 objectName:"homeStudyCard";heading:qsTr("Étude en cours")
                 Layout.fillWidth:!grid.wide;Layout.preferredWidth:grid.wide?Math.min(380*root.p.uiScale,root.availableWidth*.34):-1
                 Item {
-                    Layout.fillWidth:true;Layout.preferredHeight:thumbnail.height
-                    Board {id:thumbnail;objectName:"homeBoard";backend:root.backend;coordinates:false;interactive:false
-                        width:Math.min(parent.width,300*root.p.uiScale);height:width;anchors.horizontalCenter:parent.horizontalCenter}
+                    id:thumbnailBox
+                    Layout.fillWidth:true;Layout.preferredHeight:Math.min(width,300*root.p.uiScale)
+                    // Construite seulement quand l'accueil est affiché : cachée, elle suivait
+                    // quand même chaque coup de l'analyse et doublait le travail de l'échiquier.
+                    Loader {active:root.visible;anchors.fill:parent
+                        sourceComponent:Board {id:thumbnail;objectName:"homeBoard";backend:root.backend;coordinates:false;interactive:false
+                            width:Math.min(thumbnailBox.width,300*root.p.uiScale);height:width;anchors.horizontalCenter:parent.horizontalCenter}}
                     TapHandler {onTapped:root.resumeStudy()}
                     HoverHandler {cursorShape:Qt.PointingHandCursor}
                 }

@@ -791,6 +791,13 @@ void Controller::refresh(bool content) {
         comparison_.setPosition(s(current.fen), positionCommand(), game_.chess960);
 }
 void Controller::publish() {
+    // Les 64 pièces d'un bloc, pour l'animation des pièces qui glissent : la lire case
+    // par case coûtait soixante-quatre recherches à chaque coup.
+    QStringList pieces;
+    pieces.reserve(squares_.size());
+    for (const auto &square : std::as_const(squares_))
+        pieces << square.toMap().value("code").toString();
+    state_["pieces"] = pieces;
     // Une case par clé : après un coup, seules les deux ou trois cases touchées
     // préviennent l'échiquier, les soixante autres ne sont pas réévaluées.
     for (int i = 0; i < squares_.size(); ++i) {

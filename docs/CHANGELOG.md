@@ -1,5 +1,11 @@
 # Changements
 
+## Parcours plus fluide, échiquier redimensionnable — 27 novembre 2026
+
+- **Parcourir une partie au clavier coûte 4,5 ms par coup au lieu de 12,4** (mesure : `desktop_tests --step-timing`, interface entière chargée). Trois causes, trouvées au profileur QML : l'animation des pièces lisait les 64 cases une à une (les 64 pièces arrivent maintenant d'un bloc) ; la vignette de l'accueil, cachée, suivait chaque coup ; la liste des onglets d'études, qui portait la position de l'onglet actif, était refaite à chaque coup et recréait ses boutons.
+- **L'échiquier se redimensionne à la souris, comme sur Lichess** : une poignée au coin inférieur droit le réduit ou l'agrandit ; au-delà de la place disponible, sa colonne s'élargit aux dépens des panneaux. Double-clic : pleine taille. La taille est retenue.
+- Corrigé : la taille de l'échiquier n'était pas une préférence reconnue ; le curseur de l'apparence et Ctrl + molette sur l'échiquier étaient ignorés.
+
 ## Bifurcations, annotations, ouvertures et sons — 26 novembre 2026
 
 - **Bifurcations à la manière de Lichess** : à une position qui a plusieurs suites, les coups possibles s'affichent sous l'échiquier ; ↑ et ↓ choisissent celui que → jouera, un clic le joue. Avant, → suivait toujours la ligne principale.

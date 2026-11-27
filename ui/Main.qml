@@ -1237,7 +1237,11 @@ objectName:"analysisSplit"
                             // La barre prend sa place d'abord : si l'échiquier se dimensionnait
                             // sur la largeur totale, les deux se poursuivraient sans se poser.
                             readonly property real barSpace:controller.preferences.evalBar?26:0
-                            readonly property real side:Math.max(0,Math.min(width-12-barSpace,height-12))*controller.preferences.boardScale
+                            readonly property real fullSide:Math.max(0,Math.min(width-12-barSpace,height-12))
+                            // Pendant qu'on tire la poignée, la taille suit la souris ; elle n'est
+                            // enregistrée qu'au lâcher.
+                            property real dragScale:-1
+                            readonly property real side:fullSide*(dragScale>=0?dragScale:controller.preferences.boardScale)
                             Row {
                                 anchors.centerIn:parent;spacing:boardArea.barSpace>0?5:0
                                 // Hauteur tenue de l'échiquier lui-même, et non recalculée à
@@ -1247,6 +1251,39 @@ objectName:"analysisSplit"
                                 Item {
                                     width:boardArea.side+12;height:width;anchors.verticalCenter:parent.verticalCenter
                                     Rectangle {anchors.fill:parent;color:"transparent";border.color:win.line}
+                                    // La poignée de Lichess : tirer le coin agrandit ou réduit l'échiquier.
+                                    // Au-delà de la place disponible, la colonne de l'échiquier s'élargit
+                                    // aux dépens des panneaux ; un double-clic rend la pleine taille.
+                                    Item {
+                                        id:boardGrip;objectName:"boardResizeGrip"
+                                        z:2;width:20;height:20;anchors.right:parent.right;anchors.bottom:parent.bottom
+                                        visible:!controller.state.training
+                                        property real startSide:0
+                                        property real startPanel:0
+                                        Canvas {anchors.fill:parent;opacity:gripArea.containsMouse||gripArea.pressed?1:.55
+                                            onPaint:{var g=getContext("2d");g.reset();g.strokeStyle=win.muted;g.lineWidth=1.5
+                                                for(var k=4;k<=12;k+=4){g.beginPath();g.moveTo(width-k,height-1);g.lineTo(width-1,height-k);g.stroke()}}}
+                                        // Une MouseArea et non un DragHandler : l'échiquier dessous prendrait
+                                        // le clic avant que le glisser ne commence.
+                                        MouseArea {
+                                            id:gripArea;anchors.fill:parent;hoverEnabled:true;cursorShape:Qt.SizeFDiagCursor;preventStealing:true
+                                            property point startAt
+                                            onPressed:function(mouse){var p=mapToItem(null,mouse.x,mouse.y);startAt=Qt.point(p.x,p.y)
+                                                boardGrip.startSide=boardArea.side;boardGrip.startPanel=boardPanel.width;boardArea.dragScale=controller.preferences.boardScale}
+                                            onPositionChanged:function(mouse){if(!pressed)return
+                                                var p=mapToItem(null,mouse.x,mouse.y)
+                                                var wanted=boardGrip.startSide+Math.max(p.x-startAt.x,p.y-startAt.y)
+                                                var room=Math.max(1,boardArea.fullSide)
+                                                boardArea.dragScale=Math.max(.5,Math.min(1,wanted/room))
+                                                // Plus grand que la place : la colonne s'élargit, jusqu'à laisser 312 px aux panneaux.
+                                                if(wanted>room)boardPanel.SplitView.preferredWidth=Math.min(analysisSplit.width-312,boardGrip.startPanel+(wanted-boardGrip.startSide))}
+                                            onReleased:{if(boardArea.dragScale>=0)controller.setPreference("boardScale",boardArea.dragScale)
+                                                boardArea.dragScale=-1;if(analysisSplit.width>0)controller.setPreference("analysisPanelRatio",boardPanel.width/analysisSplit.width)}
+                                            onDoubleClicked:{boardArea.dragScale=-1;controller.setPreference("boardScale",1)}
+                                        }
+                                        ToolTip.visible:gripArea.containsMouse&&!gripArea.pressed;ToolTip.delay:600
+                                        ToolTip.text:qsTr("Tirer pour redimensionner l’échiquier ; double-clic : pleine taille")
+                                    }
                                     Board {id:chessboard;objectName:"chessboard";backend:controller;hintThreat:!!controller.state.threat;hintMoves:controller.state.analysis&&controller.preferences.engineArrows&&!controller.state.training&&!controller.state.playing?controller.engineLines.filter(l=>l.fen===controller.engineFen).slice(0,3).map(l=>(l.uci||"").split(" ")[0]).filter(m=>m.length>=4).join(" "):"";coordinates:controller.preferences.coordinates;width:boardArea.side;height:width;anchors.centerIn:parent
                                         reviewMarks:(controller.state.mistake||{}).marks||win.reviewSpot.marks||[]}
                                 }

@@ -31,7 +31,8 @@ Item {
     // un retour en arrière ou un roque, sans rien savoir du coup lui-même.
     function slide() {
         var now = [], gone = [], come = [], i
-        for (i = 0; i < 64; ++i) now.push(cellAt(i).code || "")
+        if (squares) for (i = 0; i < 64; ++i) now.push((squares[i] || {}).code || "")
+        else now = (backend.state.pieces || []).slice()
         var before = shown
         shown = now
         for (i = 0; i < sliders.length; ++i) sliders[i].destroy()

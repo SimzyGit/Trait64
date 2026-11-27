@@ -141,14 +141,20 @@ QVariantList Controller::tabs() const {
         };
         // La position de chaque onglet : le second échiquier montre ainsi une autre étude
         // ouverte à côté de celle qu'on travaille.
-        const int node = i == activeTab_ ? node_ : studies_[i].position.node;
-        const auto &current = g.nodes[size_t(std::clamp(node, 0, int(g.nodes.size()) - 1))];
-        list << QVariantMap{{"title", tag("White") + " — " + tag("Black")},
-                            {"active", i == activeTab_},
-                            {"dirty", i == activeTab_ ? dirty_ : studies_[i].position.dirty},
-                            {"fen", qs(current.fen)},
-                            {"lastUci", qs(current.uci)},
-                            {"move", current.san.empty() ? QString() : qs(current.san)}};
+        // Pas pour l'onglet actif : sa position change à chaque coup, et la liste des
+        // onglets, refaite à chaque fois, recréait leurs boutons (l'échiquier actif a
+        // déjà la sienne).
+        QVariantMap tab{{"title", tag("White") + " — " + tag("Black")},
+                        {"active", i == activeTab_},
+                        {"dirty", i == activeTab_ ? dirty_ : studies_[i].position.dirty}};
+        if (i != activeTab_) {
+            const int node = studies_[i].position.node;
+            const auto &current = g.nodes[size_t(std::clamp(node, 0, int(g.nodes.size()) - 1))];
+            tab["fen"] = qs(current.fen);
+            tab["lastUci"] = qs(current.uci);
+            tab["move"] = current.san.empty() ? QString() : qs(current.san);
+        }
+        list << tab;
     }
     return list;
 }

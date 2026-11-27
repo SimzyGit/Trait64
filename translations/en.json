@@ -2276,5 +2276,6 @@
   "Lichess Standard (vos fichiers)…": "Lichess Standard (your files)…",
   "Chess.com (vos fichiers)…": "Chess.com (your files)…",
   "Sons lus dans %1, en WAV ou MP3, sous les noms de Trait64 (move, capture, check, castle, promote, mate), de Lichess (Move, Capture, Checkmate) ou de Chess.com (move-self, capture, move-check, castle, promote, game-end). Ceux qui manquent restent en bois.": "Sounds read from %1, as WAV or MP3, under Trait64 names (move, capture, check, castle, promote, mate), Lichess names (Move, Capture, Checkmate) or Chess.com names (move-self, capture, move-check, castle, promote, game-end). Missing ones stay wooden.",
-  "Les sons standard de Lichess et ceux de Chess.com ne sont pas libres : Trait64 ne peut pas les fournir. Choisissez le dossier où vous les avez, par exemple celui de l’extension Lichess Tools.": "Lichess standard sounds and Chess.com sounds are not free: Trait64 cannot ship them. Choose the folder where you have them, for example the Lichess Tools extension folder."
+  "Les sons standard de Lichess et ceux de Chess.com ne sont pas libres : Trait64 ne peut pas les fournir. Choisissez le dossier où vous les avez, par exemple celui de l’extension Lichess Tools.": "Lichess standard sounds and Chess.com sounds are not free: Trait64 cannot ship them. Choose the folder where you have them, for example the Lichess Tools extension folder.",
+  "Tirer pour redimensionner l’échiquier ; double-clic : pleine taille": "Drag to resize the board; double-click: full size"
 }

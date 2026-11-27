@@ -215,6 +215,59 @@ int main(int argc, char **argv) {
             }
             return 0;
         }
+        // Le coût d'un coup parcouru, l'interface entière chargée et dessinée : ce que
+        // l'utilisateur sent quand il tient la flèche enfoncée.
+        if (app.arguments().contains("--step-timing")) {
+            Controller c(dir.path() + "/step-timing");
+            QQmlApplicationEngine engine;
+            engine.rootContext()->setContextProperty("controller", &c);
+            engine.load(QUrl("qrc:/ui/Main.qml"));
+            auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+            window->resize(1440, 900);
+            window->setProperty("page", 2);
+            c.newGame();
+            const QStringList cycle{"g1f3", "g8f6", "f3g1", "f6g8"};
+            for (int i = 0; i < 120; ++i)
+                c.move(cycle[i % 4]);
+            c.navigate(0);
+            QTest::qWait(500);
+            int frames = 0;
+            QObject::connect(window, &QQuickWindow::frameSwapped, [&] { ++frames; });
+            QElapsedTimer t;
+            t.start();
+            for (int i = 0; i < 60; ++i) {
+                QTest::keyClick(window, Qt::Key_Right);
+                QCoreApplication::processEvents();
+            }
+            const double perKey = t.nsecsElapsed() / 1e6 / 60;
+            QTest::qWait(200);
+            qInfo("pas : %.2f ms par coup (clavier, interface entière), %d images", perKey, frames);
+            const auto measure = [&](const char *label) {
+                c.navigate(0);
+                QTest::qWait(200);
+                QElapsedTimer m;
+                m.start();
+                const int steps = qEnvironmentVariableIntValue("T64_STEPS") > 0 ? qEnvironmentVariableIntValue("T64_STEPS") : 60;
+                for (int i = 0; i < steps; ++i)
+                    c.step(i % 120 == 119 ? -2 : 1);
+                qInfo("pas (%s) : %.2f ms par coup", label, m.nsecsElapsed() / 1e6 / steps);
+            };
+            measure("analyse");
+            if (qEnvironmentVariableIsSet("T64_STEPS"))
+                return 0;
+            window->setProperty("page", 0);
+            QTest::qWait(200);
+            measure("page des bases");
+            window->setProperty("page", 2);
+            for (const char *panel : {"notation", "tree", "notes", "engine", "graph"}) {
+                QMetaObject::invokeMethod(window, "togglePanel", Q_ARG(QVariant, QString(panel)));
+                QTest::qWait(100);
+                measure((QString("sans ") + panel).toUtf8().constData());
+                QMetaObject::invokeMethod(window, "togglePanel", Q_ARG(QVariant, QString(panel)));
+                QTest::qWait(100);
+            }
+            return 0;
+        }
         if (app.arguments().contains("--explorer-walk"))
             return explorerProbeMain(dir.path());
         if (app.arguments().contains("--board-walk"))
@@ -1563,6 +1616,32 @@ int main(int argc, char **argv) {
                 QTest::qWait(30);
                 check(!visualItem(window->contentItem(), "leftDock")->isVisible(),
                       "Applying the saved layout puts the panel back");
+                // La poignée de l'échiquier, comme sur Lichess : tirer le coin vers l'intérieur
+                // le réduit, et la taille est retenue ; un double-clic rend la pleine taille.
+                {
+                    auto *board = visualItem(window->contentItem(), "chessboard");
+                    auto *grip = visualItem(window->contentItem(), "boardResizeGrip");
+                    check(grip && grip->isVisible(), "The board has a resize grip");
+                    if (grip) {
+                        const auto before = board->width();
+                        const auto from = grip->mapToScene(QPointF(grip->width() / 2, grip->height() / 2)).toPoint();
+                        const auto to = from - QPoint(int(before * .3), int(before * .3));
+                        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+                        for (int step = 1; step <= 10; ++step)
+                            QTest::mouseMove(window, from + (to - from) * step / 10, 10);
+                        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+                        QTest::qWait(60);
+                        const double scale = c.preferences()["boardScale"].toDouble();
+                        check(board->width() < before * .85 && scale < .9 && scale >= .5,
+                              "Dragging the grip inwards shrinks the board and keeps its size");
+                        const auto at = grip->mapToScene(QPointF(grip->width() / 2, grip->height() / 2)).toPoint();
+                        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, at);
+                        QTest::qWait(60);
+                        check(c.preferences()["boardScale"].toDouble() == 1.0 && std::abs(board->width() - before) < 2,
+                              "Double-clicking the grip gives the board its full size back");
+                    }
+                }
+
                 c.removeLayout(0);
                 check(c.layouts().isEmpty(), "A work layout is removed");
             }

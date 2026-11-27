@@ -406,12 +406,15 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
             if (!ok)
                 throw std::runtime_error("Nombre invalide.");
             clean = std::clamp(n, limits[key].first, limits[key].second);
-        } else if (key == "fontScale" || key == "uiScale" || key == "analysisPanelRatio") {
+        } else if (key == "fontScale" || key == "uiScale" || key == "analysisPanelRatio" || key == "boardScale") {
             bool ok = false;
             const double number = value.toDouble(&ok);
             if (!ok || !std::isfinite(number))
                 throw std::runtime_error("Échelle invalide.");
+            // La taille de l'échiquier n'était pas dans cette liste : le curseur de
+            // l'apparence et Ctrl + molette sur l'échiquier étaient ignorés sans un mot.
             clean = key == "analysisPanelRatio" ? std::clamp(number, .3, .75)
+                    : key == "boardScale"       ? std::clamp(number, .5, 1.0)
                                                 : std::clamp(number, .9, key == "fontScale" ? 1.5 : 1.25);
         } else if (key == "fontFamily") {
             clean = QFontDatabase::families().contains(value.toString()) ? value.toString()
