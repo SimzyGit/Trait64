@@ -1506,7 +1506,10 @@ int main(int argc, char **argv) {
             settle();
             c.mergeDuplicates();
             settle();
-            check(c.stats()["games"].toInt() == 1, "Merging duplicates leaves one game");
+            // La fusion part en arrière-plan : sur une machine chargée, elle n'a pas encore
+            // commencé quand settle() regarde. On attend son résultat.
+            check(QTest::qWaitFor([&] { return !c.busy() && c.stats()["games"].toInt() == 1; }, 60000),
+                  "Merging duplicates leaves one game");
             c.repairDatabase();
             settle();
             check(!messages.isEmpty() && !messages.last()[1].toBool() && c.stats()["games"].toInt() == 1 &&

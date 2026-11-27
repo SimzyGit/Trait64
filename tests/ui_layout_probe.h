@@ -66,7 +66,12 @@ int uiLayoutProbe(const QString &directory) {
                 check(grid&&grid->isVisible()&&grid->width()>=200,"Layout: the bases window shows its icons");
             }
             if(page==9||page==2) {
-                auto *board=visualItem(window->contentItem(),page==9?"homeBoard":"chessboard");
+                // La vignette de l'accueil n'est construite qu'à l'affichage de la page.
+                const char *boardName=page==9?"homeBoard":"chessboard";
+                (void)QTest::qWaitFor([&]{auto *b=visualItem(window->contentItem(),boardName);return b&&b->width()>=160&&std::abs(b->width()-b->height())<1;},2000);
+                auto *board=visualItem(window->contentItem(),boardName);
+                if(!(board&&board->width()>=160&&std::abs(board->width()-board->height())<1))
+                    qWarning()<<"Échiquier"<<boardName<<"page"<<page<<"scénario"<<index<<(board?board->size():QSizeF());
                 check(board&&board->width()>=160&&std::abs(board->width()-board->height())<1, "Layout: usable square chessboard");
                 auto pos=board->mapToScene(QPointF());
                 check(pos.x()>=0 && pos.x()+board->width()<=window->width()+1, "Layout: board stays within horizontal viewport");
