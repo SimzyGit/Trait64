@@ -2206,6 +2206,37 @@ int main(int argc, char **argv) {
                     c.stateObject()->insert("mistake", QVariant());
                     QTest::qWait(30);
                 }
+                // L'animation : chaque coup parcouru fait glisser la pièce jouée, et elle seule.
+                // Déclenchée par la FEN, elle lisait les pièces d'avant le coup : rien ne
+                // glissait, puis la pièce du coup précédent glissait au coup suivant.
+                {
+                    auto *board = visualItem(window->contentItem(), "chessboard");
+                    c.newGame();
+                    c.move("e2e4");
+                    c.move("e7e5");
+                    c.navigate(0);
+                    QTest::qWait(30);
+                    const auto slid = [&] {
+                        QStringList codes;
+                        for (const auto &v : board->property("sliders").toList())
+                            if (auto *piece = v.value<QObject *>())
+                                codes << piece->property("code").toString() + ":" +
+                                             QString::number(piece->property("from").toInt()) + ">" +
+                                             QString::number(piece->property("to").toInt());
+                        return codes;
+                    };
+                    c.step(1);
+                    QTest::qWait(20);
+                    const auto first = slid();
+                    c.step(1);
+                    QTest::qWait(20);
+                    const auto second = slid();
+                    check(first.size() == 1 && first[0].startsWith("w") && second.size() == 1 &&
+                              second[0].startsWith("b"),
+                          "Each move slides the piece just played, and only it");
+                    c.closeTab(c.state()["activeTab"].toInt());
+                    QTest::qWait(30);
+                }
                 // L'échiquier seul : le panneau d'analyse s'efface et l'échiquier grandit.
                 auto *board = visualItem(window->contentItem(), "chessboard");
                 auto *panel = visualItem(window->contentItem(), "boardPanel");

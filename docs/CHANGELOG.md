@@ -1,5 +1,9 @@
 # Changements
 
+## Animation des pièces — 28 novembre 2026
+
+- Corrigé : en parcourant une partie, la pièce jouée ne glissait pas, puis celle du coup précédent glissait depuis de mauvaises cases. L'animation, déclenchée par la FEN, lisait les pièces publiées après elle ; elle part maintenant du changement des pièces. Un test vérifie que chaque coup fait glisser la pièce jouée, et elle seule.
+
 ## Parcours plus fluide, échiquier redimensionnable — 27 novembre 2026
 
 - **Parcourir une partie au clavier coûte 4,5 ms par coup au lieu de 12,4** (mesure : `desktop_tests --step-timing`, interface entière chargée). Trois causes, trouvées au profileur QML : l'animation des pièces lisait les 64 cases une à une (les 64 pièces arrivent maintenant d'un bloc) ; la vignette de l'accueil, cachée, suivait chaque coup ; la liste des onglets d'études, qui portait la position de l'onglet actif, était refaite à chaque coup et recréait ses boutons.

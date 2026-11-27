@@ -19,7 +19,12 @@ Item {
     property var sliders: []
     property bool dropped: false
     property string position: squares ? "" : backend.state.fen
-    onPositionChanged: { slide(); if (hintMoves) drawing.requestPaint() }
+    onPositionChanged: if (hintMoves) drawing.requestPaint()
+    // L'animation part du changement des pièces elles-mêmes : déclenchée par la FEN,
+    // publiée avant elles, elle comparait l'ancienne position à elle-même puis faisait
+    // glisser les pièces depuis de mauvaises cases au coup suivant.
+    property var pieces: squares ? null : backend.state.pieces
+    onPiecesChanged: if (!squares) slide()
     onSquaresChanged: slide()
     Component.onCompleted: slide()
     function place(n) {
