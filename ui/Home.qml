@@ -65,9 +65,11 @@ ScrollView {
                     Layout.fillWidth:true;Layout.preferredHeight:Math.min(width,300*root.p.uiScale)
                     // Construite seulement quand l'accueil est affiché : cachée, elle suivait
                     // quand même chaque coup de l'analyse et doublait le travail de l'échiquier.
-                    Loader {active:root.visible;anchors.fill:parent
-                        sourceComponent:Board {id:thumbnail;objectName:"homeBoard";backend:root.backend;coordinates:false;interactive:false
-                            width:Math.min(thumbnailBox.width,300*root.p.uiScale);height:width;anchors.horizontalCenter:parent.horizontalCenter}}
+                    // Le Loader prend la taille de l'échiquier, et non l'inverse : rempli sur la
+                    // boîte, il étirait l'échiquier à sa largeur sous Qt 6.8 (348 × 300).
+                    Loader {active:root.visible;anchors.horizontalCenter:parent.horizontalCenter
+                        width:Math.min(thumbnailBox.width,300*root.p.uiScale);height:width
+                        sourceComponent:Board {id:thumbnail;objectName:"homeBoard";backend:root.backend;coordinates:false;interactive:false}}
                     TapHandler {onTapped:root.resumeStudy()}
                     HoverHandler {cursorShape:Qt.PointingHandCursor}
                 }
