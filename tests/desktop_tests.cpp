@@ -2885,6 +2885,12 @@ int main(int argc, char **argv) {
             check(!c.state()["playing"].toBool() && !c.reviewState()["running"].toBool(),
                   "Finished game without automatic review when disabled");
             c.setPreference("reviewAfterGame", true);
+            // Le nuage de Lichess est désactivé d'office : aucune position ne part sans accord.
+            check(!c.preferences()["cloudEval"].toBool() && c.cloudEval().isEmpty(),
+                  "Cloud evaluation is off until chosen");
+            c.setPreference("cloudEval", true);
+            check(c.preferences()["cloudEval"].toBool(), "Cloud evaluation can be enabled");
+            c.setPreference("cloudEval", false);
             // Exercise every new dialog including small window layout and keyboard capture.
             for (const auto &name :
                  QStringList{"appearanceDialog", "positionEditor", "reviewDialog", "settingsDialog",

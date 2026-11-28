@@ -1,3 +1,15 @@
+## 0.6.0-beta.5 — novembre 2026
+
+**Jouer contre l'ordinateur.** Six niveaux tout faits, de Débutant (800) à Maximum, et, à force limitée, un moteur qui réfléchit à un rythme humain, variable. Un coup se reprend (Ctrl + Retour arrière) ; le bilan se lance de lui-même à la fin de la partie.
+
+**Méthode Woodpecker** : une série fixe de puzzles, refaite en cycles chronométrés, sans toucher au classement.
+
+**L'évaluation du nuage Lichess dans le panneau du moteur** (bouton *Nuage*, désactivé d'office : la position est envoyée à Lichess) : affichée aussitôt, tant qu'elle voit plus loin que le moteur local.
+
+**Corrigé.** L'animation des pièces en parcourant une partie.
+
+Pas de changement de schéma depuis la 0.6.0-beta.3.
+
 ## 0.6.0-beta.4 — novembre 2026
 
 **Parcourir une partie est près de trois fois plus fluide** : 4,5 ms par coup au clavier au lieu de 12,4, l'interface entière chargée.

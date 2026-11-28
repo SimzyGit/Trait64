@@ -4,6 +4,8 @@
 
 - **Reprendre un coup** contre le moteur (bouton *Reprendre*, ruban, Ctrl + Retour arrière) : on revient à son dernier trait, son coup et la réponse du moteur effacés ; à deux joueurs, un seul coup. La pendule continue, Ctrl + Z rend la suite reprise.
 - **Bilan à la fin de la partie** : au mat, au pat ou à la nulle d'une partie jouée, le bilan se lance de lui-même. Une case de la fenêtre *Partie locale* le désactive.
+- **Niveaux tout faits** dans *Partie locale* : Débutant 800, Club 1400, Confirmé 1900, Expert 2300, Maître 2700, Maximum. À force limitée, le moteur prend de la moitié à une fois et demie du temps réglé, comme un joueur, au lieu d'un coup à la seconde pile.
+- **Nuage de Lichess dans le panneau du moteur** (bouton *Nuage*, désactivé d'office puisque la position part chez Lichess) : la meilleure ligne que Lichess garde pour la position s'affiche 400 ms après le dernier coup parcouru, tant qu'elle est plus profonde que celle du moteur local. Chaque position n'est demandée qu'une fois.
 - **Méthode Woodpecker** (fenêtre *Puzzles*) : une série fixe de 10 à 1 000 puzzles, tirée du thème et de l'origine choisis près de votre classement, à refaire en cycles. Chaque cycle garde son score et son temps ; le classement n'est pas touché par ces répétitions. Un puzzle ordinaire met la série en pause sans la perdre.
 
 ## Animation des pièces — 28 novembre 2026

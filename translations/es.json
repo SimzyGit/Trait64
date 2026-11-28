@@ -2294,5 +2294,13 @@
   "Manqué · %1/%2 du cycle.": "Fallado · %1/%2 del ciclo.",
   "Aucun puzzle pour cette série : importez la base Lichess, ou élargissez le thème.": "No hay problemas para esta serie: importe la base de Lichess o amplíe el tema.",
   "Aucune série Woodpecker en cours.": "No hay ninguna serie Woodpecker en curso.",
-  "Ce puzzle de la série a disparu de la base : recommencez une série.": "Este problema de la serie ya no está en la base: empiece una serie nueva."
+  "Ce puzzle de la série a disparu de la base : recommencez une série.": "Este problema de la serie ya no está en la base: empiece una serie nueva.",
+  "Nuage": "Nube",
+  "Montre aussitôt l’analyse que Lichess garde pour la position, souvent plus profonde. La position est envoyée à Lichess.": "Muestra al instante el análisis que Lichess guarda para la posición, a menudo más profundo. La posición se envía a Lichess.",
+  "Lichess · d%1": "Lichess · p%1",
+  "Débutant": "Principiante",
+  "Confirmé": "Intermedio",
+  "Expert": "Experto",
+  "Maître": "Maestro",
+  "Maximum": "Máximo"
 }

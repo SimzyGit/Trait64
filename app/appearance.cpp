@@ -199,6 +199,8 @@ QVariantMap Controller::preferences() const {
                          {"assistedAnalysis", false},
                          // Le bilan lancé de lui-même à la fin d'une partie jouée.
                          {"reviewAfterGame", true},
+                         // Envoie la position à Lichess : désactivé tant qu'on ne l'a pas choisi.
+                         {"cloudEval", false},
                          {"sounds", true},
                          {"autoFlip", true},
                          {"soundTheme", "bois"},
@@ -457,7 +459,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         } else if (QStringList{"sidebarCompact", "ribbonMinimized", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
                                "showHanging", "showAttacks", "assistedAnalysis", "sounds", "wheelMoves",
-                               "autoFlip", "blindfold", "autoBackup", "reviewAfterGame"}
+                               "autoFlip", "blindfold", "autoBackup", "reviewAfterGame", "cloudEval"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}
@@ -494,6 +496,10 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         }
         if (key == "figurines" || key == "showHanging" || key == "showAttacks" || key == "assistedAnalysis") {
             refresh();
+        }
+        if (key == "cloudEval" && analysis_) {
+            requestCloud(engineFen_);
+            emit engineChanged();
         }
         if (key == "enginePath")
             emit engineChanged();

@@ -76,6 +76,8 @@ class Controller : public QObject {
     // La position que le moteur analyse : une ligne d'une autre position s'affiche
     // estompée en attendant les nouvelles, au lieu de laisser le panneau vide.
     Q_PROPERTY(QString engineFen READ engineFen NOTIFY engineChanged)
+    // L'évaluation du nuage de Lichess pour la position analysée : {fen, depth, eval, line}.
+    Q_PROPERTY(QVariantMap cloudEval READ cloudEval NOTIFY engineChanged)
     // La dernière évaluation reçue, gardée pendant que le moteur change de position : il
     // vide ses lignes à chaque nouvelle recherche, et la barre retombait à l'équilibre le
     // temps que la première évaluation du coup joué revienne.
@@ -245,6 +247,7 @@ class Controller : public QObject {
     Q_INVOKABLE void pressEngineOption(const QString &name);
     QVariantList engineLines() const { return engineLines_; }
     QString engineFen() const { return engineFen_; }
+    QVariantMap cloudEval() const { return cloudEval_.value("fen") == engineFen_ ? cloudEval_ : QVariantMap(); }
     QVariantMap heldEvaluation() const { return heldEval_; }
     // Les lignes du moteur et la dernière évaluation gardée vont ensemble : les oublier
     // séparément laisserait la barre afficher une valeur d'une autre position.
@@ -880,6 +883,15 @@ class Controller : public QObject {
     QTimer autosave_, analysisTimer_;
     // Plusieurs clics sur − / + ne relancent le moteur qu'une fois, à la pause.
     QTimer linesRestart_;
+    // Le nuage de Lichess, interrogé 400 ms après le dernier coup parcouru ; les réponses,
+    // trouvées ou non, sont gardées pour ne demander qu'une fois chaque position.
+    void requestCloud(const QString &fen);
+    int playMoveTime() const;
+    t64::OpeningExplorer *cloud_ = nullptr;
+    QTimer cloudTimer_;
+    QString cloudFen_;
+    QVariantMap cloudEval_;
+    QHash<QString, QVariantMap> cloudCache_;
     int forkChoice_ = 0; // le coup que → jouera à une bifurcation
     // Les lignes de chaque position analysée, la plus profonde gardée : revenir sur une
     // position la montre aussitôt, à la profondeur déjà atteinte.

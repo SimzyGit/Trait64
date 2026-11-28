@@ -2294,5 +2294,13 @@
   "Manqué · %1/%2 du cycle.": "Missed · %1/%2 of the cycle.",
   "Aucun puzzle pour cette série : importez la base Lichess, ou élargissez le thème.": "No puzzles for this set: import the Lichess database, or widen the theme.",
   "Aucune série Woodpecker en cours.": "No Woodpecker set in progress.",
-  "Ce puzzle de la série a disparu de la base : recommencez une série.": "This puzzle of the set is no longer in the database: start a new set."
+  "Ce puzzle de la série a disparu de la base : recommencez une série.": "This puzzle of the set is no longer in the database: start a new set.",
+  "Nuage": "Cloud",
+  "Montre aussitôt l’analyse que Lichess garde pour la position, souvent plus profonde. La position est envoyée à Lichess.": "Instantly shows the analysis Lichess keeps for the position, often deeper. The position is sent to Lichess.",
+  "Lichess · d%1": "Lichess · d%1",
+  "Débutant": "Beginner",
+  "Confirmé": "Intermediate",
+  "Expert": "Expert",
+  "Maître": "Master",
+  "Maximum": "Maximum"
 }

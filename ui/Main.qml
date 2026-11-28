@@ -617,8 +617,19 @@ ApplicationWindow {
                                                  onClicked:controller.setEngineLines(controller.preferences.multiPV+1)
                                                  ToolTip.visible:hovered;ToolTip.text:qsTr("Une ligne de plus")}
                                     }
+                                    TButton {objectName:"toggleCloud";visible:!!controller.preferences.enginePath;text:qsTr("Nuage");accent:!!controller.preferences.cloudEval
+                                             onClicked:controller.setPreference("cloudEval",!controller.preferences.cloudEval)
+                                             ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Montre aussitôt l’analyse que Lichess garde pour la position, souvent plus profonde. La position est envoyée à Lichess.")}
                                     TButton {objectName:"toggleThreat";visible:!!controller.preferences.enginePath;text:qsTr("Menace");accent:!!controller.state.threat;enabled:!controller.state.training&&!controller.state.playing;onClicked:controller.toggleThreat();ToolTip.visible:hovered||visualFocus;ToolTip.text:qsTr("Ce que jouerait l’adversaire si vous passiez votre tour (touche M).")}
                                     TButton {objectName:"toggleEngineAnalysis";visible:!!controller.preferences.enginePath;text:controller.state.analysis?qsTr("Arrêter"):qsTr("Analyser");accent:!controller.state.analysis;enabled:!controller.state.training;onClicked:controller.toggleAnalysis()}
+                                }
+                                // Le nuage de Lichess, tant qu'il voit plus loin que le moteur local.
+                                RowLayout {objectName:"cloudEvalRow";Layout.fillWidth:true;spacing:8
+                                    readonly property var c:controller.cloudEval
+                                    visible:controller.state.analysis&&!!c.eval&&c.depth>((controller.engineLines[0]||{}).fen===controller.engineFen?(controller.engineLines[0].depth||0):0)
+                                    Label {text:"☁ "+(parent.c.eval||"");font.weight:Font.DemiBold;Layout.preferredWidth:Math.round(56*win.textScale);horizontalAlignment:Text.AlignHCenter}
+                                    Label {text:parent.c.line||"";elide:Text.ElideRight;Layout.fillWidth:true}
+                                    Label {text:qsTr("Lichess · d%1").arg(parent.c.depth||0);color:win.muted;font.pixelSize:Math.round(11*win.textScale)}
                                 }
                                 ListView {
                                     Layout.fillWidth:true;Layout.fillHeight:true;visible:controller.state.analysis;clip:true;model:controller.engineLines;spacing:2
@@ -1653,6 +1664,12 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
             TComboBox {id:opponent;model:["Deux joueurs sur cet ordinateur","Contre le moteur UCI"];currentIndex:1;Layout.fillWidth:true}
             GridLayout {columns:2;Layout.fillWidth:true;Label {text:qsTr("Minutes")} TSpinBox {id:clockMinutes;from:1;to:180;value:10;editable:true} Label {text:qsTr("Incrément (s)")} TSpinBox {id:clockIncrement;from:0;to:120;value:5;editable:true}}
             TComboBox {id:playSide;model:["Je joue les Blancs","Je joue les Noirs"];Layout.fillWidth:true}
+            // Des niveaux tout faits : la force limitée de Stockfish, à un rythme humain.
+            Flow {Layout.fillWidth:true;visible:opponent.currentIndex===1;spacing:6
+                Repeater {model:[{t:qsTr("Débutant"),e:800},{t:qsTr("Club"),e:1400},{t:qsTr("Confirmé"),e:1900},{t:qsTr("Expert"),e:2300},{t:qsTr("Maître"),e:2700},{t:qsTr("Maximum"),e:0}]
+                    TButton {required property var modelData;objectName:"playLevel"+modelData.e;text:modelData.e?modelData.t+" · "+modelData.e:modelData.t
+                        accent:controller.preferences.playElo===modelData.e
+                        onClicked:{controller.setPreference("playElo",modelData.e);limitElo.checked=modelData.e>0;if(modelData.e)playEloValue.value=modelData.e}}}}
             RowLayout {Layout.fillWidth:true;visible:opponent.currentIndex===1;spacing:10
                 TCheckBox {id:limitElo;objectName:"limitElo";text:qsTr("Limiter la force à");checked:controller.preferences.playElo>0
                     onToggled:controller.setPreference("playElo",checked?playEloValue.value:0)}

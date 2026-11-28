@@ -27,6 +27,7 @@
 #include <QJsonObject>
 #include <QLocale>
 #include <QRegularExpression>
+#include <QRandomGenerator>
 #include <QSaveFile>
 #include <QScopeGuard>
 #include <QStandardPaths>
@@ -2045,8 +2046,7 @@ void Controller::requestEngine() {
     if (playing_) {
         auto b = game_.boardAt(node_);
         if ((b.sideToMove() == chess::Color::WHITE) != humanWhite_)
-            engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), true,
-                            settings_.value("moveTime", 1000).toInt(),
+            engine_.analyse(s(game_.nodes[node_].fen), positionCommand(), true, playMoveTime(),
                             settings_.value("analysisDepth", 0).toInt(), game_.chess960);
     } else if (analysis_) {
         // La menace : la même position, le trait rendu à l'adversaire. Ce que le moteur
@@ -2063,10 +2063,54 @@ void Controller::requestEngine() {
         engineFen_ = fen;
         if (const auto cached = lineCache_.value(fen); !cached.isEmpty())
             engineLines_ = cached;
+        requestCloud(fen);
         emit engineChanged();
         engine_.analyse(fen, command, false, 800, settings_.value("analysisDepth", 0).toInt(),
                         game_.chess960);
     }
+}
+// À force limitée, le moteur joue à un rythme humain : de la moitié à une fois et demie
+// le temps réglé, au lieu d'un coup toutes les secondes pile.
+int Controller::playMoveTime() const {
+    const int base = settings_.value("moveTime", 1000).toInt();
+    if (settings_.value("playElo", 0).toInt() <= 0)
+        return base;
+    return std::max(100, int(base * (0.5 + QRandomGenerator::global()->generateDouble())));
+}
+void Controller::requestCloud(const QString &fen) {
+    cloudTimer_.stop();
+    if (!settings_.value("cloudEval", false).toBool() || threatActive() || game_.chess960)
+        return;
+    if (cloudCache_.contains(fen)) {
+        cloudEval_ = cloudCache_.value(fen);
+        return;
+    }
+    if (!cloud_) {
+        cloud_ = new t64::OpeningExplorer(this);
+        cloudTimer_.setSingleShot(true);
+        cloudTimer_.setInterval(400);
+        connect(&cloudTimer_, &QTimer::timeout, this, [this] { cloud_->query("cloud", cloudFen_); });
+        connect(cloud_, &t64::OpeningExplorer::ready, this, [this](const QVariantMap &report) {
+            QVariantMap found{{"fen", cloudFen_}};
+            const auto moves = report["moves"].toList();
+            if (!moves.isEmpty()) {
+                const auto best = moves.front().toMap();
+                found.insert({{"depth", report["depth"]}, {"eval", best["eval"]}, {"line", best["line"]},
+                              {"uci", best["uci"]}});
+            }
+            if (cloudCache_.size() >= 500)
+                cloudCache_.clear();
+            cloudCache_.insert(cloudFen_, found);
+            cloudEval_ = found;
+            emit engineChanged();
+        });
+        // Hors ligne ou limité : rien à montrer, et l'on ne redemande pas cette position.
+        connect(cloud_, &t64::OpeningExplorer::failed, this,
+                [this](const QString &) { cloudCache_.insert(cloudFen_, {{"fen", cloudFen_}}); });
+    }
+    cloud_->cancel();
+    cloudFen_ = fen;
+    cloudTimer_.start();
 }
 void Controller::toggleThreat() {
     if (trainingActive() || playing_ || localGame_)
