@@ -2159,8 +2159,7 @@ void Controller::takeBack() {
         return;
     int target = game_.nodes[node_].parent;
     if (playing_)
-        while (target > 0 &&
-               (game_.boardAt(target).sideToMove() == chess::Color::WHITE) != humanWhite_)
+        while (target > 0 && (game_.boardAt(target).sideToMove() == chess::Color::WHITE) != humanWhite_)
             target = game_.nodes[target].parent;
     if (playing_ && (game_.boardAt(target).sideToMove() == chess::Color::WHITE) != humanWhite_)
         return;

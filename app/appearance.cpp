@@ -197,7 +197,7 @@ QVariantMap Controller::preferences() const {
                          {"showHanging", false},
                          {"showAttacks", false},
                          {"assistedAnalysis", false},
-                         // Le bilan lancé de lui-même au mat, au pat ou à la nulle d'une partie jouée.
+                         // Le bilan lancé de lui-même à la fin d'une partie jouée.
                          {"reviewAfterGame", true},
                          {"sounds", true},
                          {"autoFlip", true},
