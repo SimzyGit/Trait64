@@ -69,6 +69,36 @@ TDialog {
                     if (root.backend.puzzles.active) root.close()
                 }
             }
+            // La méthode Woodpecker : la même série refaite en cycles, chacun plus vite que le
+            // précédent, jusqu'à ce que les motifs viennent d'eux-mêmes.
+            Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
+            Label { text: qsTr("Méthode Woodpecker"); font.bold: true }
+            readonly property var series: root.state.woodpecker || null
+            Label {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap; color: palette.placeholderText
+                text: parent.series
+                      ? qsTr("Cycle %1 · %2/%3 puzzles").arg(parent.series.cycle).arg(parent.series.index).arg(parent.series.count)
+                        + (parent.series.cycles || []).map((c, i) => "\n" + qsTr("Cycle %1 : %2/%3 en %4 min").arg(i + 1).arg(c.solved).arg(parent.series.count).arg(Math.round(c.seconds / 60))).join("")
+                      : qsTr("Une série fixe, tirée du thème et de l’origine choisis, à refaire en cycles de plus en plus rapides. Le classement n’en tient pas compte.")
+            }
+            Flow {
+                Layout.fillWidth: true; spacing: 8
+                readonly property var series: parent.series
+                TSpinBox { id: seriesSize; objectName: "woodpeckerSize"; from: 10; to: 1000; stepSize: 10; value: 100; editable: true }
+                TButton {
+                    objectName: "startWoodpecker"; text: parent.series ? qsTr("Nouvelle série") : qsTr("Créer la série"); enabled: !root.backend.busy
+                    onClicked: {
+                        root.backend.startWoodpecker(seriesSize.value, root.themes[theme.currentIndex].tag, ["", "lichess", "mine", "library"][source.currentIndex])
+                        if (root.backend.puzzles.active) root.close()
+                    }
+                }
+                TButton {
+                    objectName: "continueWoodpecker"; text: qsTr("Continuer la série"); accent: true; visible: !!parent.series; enabled: !root.backend.busy
+                    onClicked: { root.backend.continueWoodpecker(); if (root.backend.puzzles.active) root.close() }
+                }
+                TButton { text: qsTr("Abandonner la série"); visible: !!parent.series; onClicked: root.backend.stopWoodpecker() }
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; opacity: .4; color: palette.mid }
             TButton {
                 objectName: "harvestMates"; text: qsTr("Tirer des mats de la bibliothèque"); enabled: !root.backend.busy
                 ToolTip.visible: hovered

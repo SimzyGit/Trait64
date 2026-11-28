@@ -193,6 +193,11 @@ class Database {
     int duePuzzles(const QDateTime &now = QDateTime::currentDateTimeUtc()) const;
     QVariantMap nextPuzzle(int rating, int spread = 150, const QString &theme = {},
                            const QString &source = {}) const;
+    // Une série fixe pour la méthode Woodpecker : `count` puzzles tirés au hasard près de
+    // `rating`, puis un puzzle par son identifiant.
+    QList<qint64> pickPuzzles(int count, int rating, int spread = 200, const QString &theme = {},
+                              const QString &source = {}) const;
+    QVariantMap puzzle(qint64 id) const;
     void recordPuzzle(qint64 id, bool success, double seconds, int ratingAfter);
     QVariantMap puzzleStats() const;
     // First main-line move no other game of the library played from that position.

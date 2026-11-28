@@ -2280,5 +2280,19 @@
   "Tirer pour redimensionner l’échiquier ; double-clic : pleine taille": "Arrastre para redimensionar el tablero; doble clic: tamaño completo",
   "Reprendre le coup": "Deshacer jugada",
   "Revient à votre dernier trait (Ctrl+Retour arrière)": "Vuelve a su último turno (Ctrl+Retroceso)",
-  "Bilan de la partie à la fin": "Análisis de la partida al terminar"
+  "Bilan de la partie à la fin": "Análisis de la partida al terminar",
+  "Méthode Woodpecker": "Método Woodpecker",
+  "Cycle %1 · %2/%3 puzzles": "Ciclo %1 · %2/%3 problemas",
+  "Cycle %1 : %2/%3 en %4 min": "Ciclo %1: %2/%3 en %4 min",
+  "Une série fixe, tirée du thème et de l’origine choisis, à refaire en cycles de plus en plus rapides. Le classement n’en tient pas compte.": "Una serie fija, tomada del tema y el origen elegidos, para repetir en ciclos cada vez más rápidos. No afecta a su clasificación.",
+  "Nouvelle série": "Nueva serie",
+  "Créer la série": "Crear la serie",
+  "Continuer la série": "Continuar la serie",
+  "Abandonner la série": "Abandonar la serie",
+  "Cycle %1 terminé : %2/%3 en %4 min.": "Ciclo %1 terminado: %2/%3 en %4 min.",
+  "Résolu en %1 s · %2/%3 du cycle.": "Resuelto en %1 s · %2/%3 del ciclo.",
+  "Manqué · %1/%2 du cycle.": "Fallado · %1/%2 del ciclo.",
+  "Aucun puzzle pour cette série : importez la base Lichess, ou élargissez le thème.": "No hay problemas para esta serie: importe la base de Lichess o amplíe el tema.",
+  "Aucune série Woodpecker en cours.": "No hay ninguna serie Woodpecker en curso.",
+  "Ce puzzle de la série a disparu de la base : recommencez une série.": "Este problema de la serie ya no está en la base: empiece una serie nueva."
 }

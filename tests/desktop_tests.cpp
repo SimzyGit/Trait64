@@ -937,6 +937,29 @@ int main(int argc, char **argv) {
             c.nextPuzzle();
             check(c.puzzles()["active"].toBool(), "Unsolved puzzles stay available");
             c.finishTraining();
+            // Woodpecker : les deux puzzles, en cycle ; le classement ne bouge pas.
+            const int woodRating = c.puzzles()["rating"].toInt();
+            c.startWoodpecker(10, "mateIn1", "lichess");
+            for (int i = 0; i < 2; ++i) {
+                check(c.puzzles()["woodpecker"].toMap()["active"].toBool() &&
+                          c.puzzles()["woodpecker"].toMap()["index"].toInt() == i,
+                      "Woodpecker serves the series in order");
+                c.move("d1d8");
+                c.nextPuzzle();
+            }
+            const auto wood = c.puzzles()["woodpecker"].toMap();
+            check(wood["count"].toInt() == 2 && wood["cycle"].toInt() == 2 && wood["index"].toInt() == 0 &&
+                      wood["cycles"].toList().size() == 1 &&
+                      wood["cycles"].toList()[0].toMap()["solved"].toInt() == 2 &&
+                      c.puzzles()["rating"].toInt() == woodRating,
+                  "A Woodpecker cycle ends with its score and leaves the rating alone");
+            c.startPuzzle("mateIn1", "lichess");
+            check(!c.puzzles()["woodpecker"].toMap()["active"].toBool() &&
+                      c.puzzles()["woodpecker"].toMap()["cycle"].toInt() == 2,
+                  "A normal puzzle pauses the series without losing it");
+            c.stopWoodpecker();
+            check(!c.puzzles().contains("woodpecker"), "The series can be abandoned");
+            c.finishTraining();
             c.importText(
                 "[Event \"x\"]\n\n1. e4 e5 *\n\n[Event \"y\"]\n\n1. d4 d5 *\n\n[Event \"z\"]\n\n1. c4 e5 *");
             wait.restart();

@@ -224,6 +224,10 @@ class Controller : public QObject {
     // Puzzles: theme is a Lichess theme tag ("fork", "mateIn2"…), source "lichess", "mine" or "".
     Q_INVOKABLE void startPuzzle(const QString &theme = {}, const QString &source = {});
     Q_INVOKABLE void nextPuzzle();
+    // Méthode Woodpecker : une série fixe refaite en cycles, de plus en plus vite.
+    Q_INVOKABLE void startWoodpecker(int count, const QString &theme = {}, const QString &source = {});
+    Q_INVOKABLE void continueWoodpecker();
+    Q_INVOKABLE void stopWoodpecker();
     // Visualisation : un puzzle les pièces masquées ; l'option « À l'aveugle » revient à son
     // réglage d'avant quand on quitte l'exercice.
     Q_INVOKABLE void startBlindPuzzle(const QString &theme = {}, const QString &source = {});
@@ -815,6 +819,8 @@ class Controller : public QObject {
     QElapsedTimer puzzleClock_;
     void refreshPuzzleStats();
     void finishPuzzle();
+    void servePuzzle(const QString &theme, const QString &source);
+    bool woodpecker_ = false;
     bool acceptPuzzleMate(const QString &uci);
     t64::OnlineGames *online_ = nullptr;
     t64::LichessLogin *lichessLogin_ = nullptr;

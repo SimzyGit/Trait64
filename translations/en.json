@@ -2280,5 +2280,19 @@
   "Tirer pour redimensionner l’échiquier ; double-clic : pleine taille": "Drag to resize the board; double-click: full size",
   "Reprendre le coup": "Take back",
   "Revient à votre dernier trait (Ctrl+Retour arrière)": "Goes back to your last turn (Ctrl+Backspace)",
-  "Bilan de la partie à la fin": "Review the game when it ends"
+  "Bilan de la partie à la fin": "Review the game when it ends",
+  "Méthode Woodpecker": "Woodpecker method",
+  "Cycle %1 · %2/%3 puzzles": "Cycle %1 · %2/%3 puzzles",
+  "Cycle %1 : %2/%3 en %4 min": "Cycle %1: %2/%3 in %4 min",
+  "Une série fixe, tirée du thème et de l’origine choisis, à refaire en cycles de plus en plus rapides. Le classement n’en tient pas compte.": "A fixed set, drawn from the chosen theme and source, to solve again in faster and faster cycles. Your rating is not affected.",
+  "Nouvelle série": "New set",
+  "Créer la série": "Create the set",
+  "Continuer la série": "Continue the set",
+  "Abandonner la série": "Abandon the set",
+  "Cycle %1 terminé : %2/%3 en %4 min.": "Cycle %1 finished: %2/%3 in %4 min.",
+  "Résolu en %1 s · %2/%3 du cycle.": "Solved in %1 s · %2/%3 of the cycle.",
+  "Manqué · %1/%2 du cycle.": "Missed · %1/%2 of the cycle.",
+  "Aucun puzzle pour cette série : importez la base Lichess, ou élargissez le thème.": "No puzzles for this set: import the Lichess database, or widen the theme.",
+  "Aucune série Woodpecker en cours.": "No Woodpecker set in progress.",
+  "Ce puzzle de la série a disparu de la base : recommencez une série.": "This puzzle of the set is no longer in the database: start a new set."
 }

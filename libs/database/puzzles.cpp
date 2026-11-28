@@ -92,6 +92,47 @@ QVariantMap Database::nextPuzzle(int rating, int spread, const QString &theme, c
     return {};
 }
 
+QList<qint64> Database::pickPuzzles(int count, int rating, int spread, const QString &theme,
+                                    const QString &source) const {
+    QList<qint64> ids;
+    // Élargie tant que la série n'est pas complète : un thème rare n'a pas cent puzzles à
+    // ± 200 points.
+    for (int width = spread; ids.size() < count && width <= 3400; width *= 2) {
+        QString statement = "SELECT id FROM puzzles WHERE rating BETWEEN ? AND ?";
+        QVariantList args{rating - width, rating + width};
+        if (!source.isEmpty()) {
+            statement += " AND source=?";
+            args << source;
+        }
+        if (!theme.isEmpty()) {
+            statement += " AND (' '||themes||' ') LIKE ?";
+            args << "% " + theme + " %";
+        }
+        statement += " ORDER BY random() LIMIT ?";
+        args << count;
+        QSqlQuery q(db_);
+        q.prepare(statement);
+        for (const auto &arg : args)
+            q.addBindValue(arg);
+        run(q);
+        ids.clear();
+        while (q.next())
+            ids << q.value(0).toLongLong();
+    }
+    return ids;
+}
+
+QVariantMap Database::puzzle(qint64 id) const {
+    QSqlQuery q(db_);
+    q.prepare("SELECT id,fen,solution,rating,themes,source FROM puzzles WHERE id=?");
+    q.addBindValue(id);
+    run(q);
+    if (!q.next())
+        return {};
+    return {{"id", q.value(0)},     {"fen", q.value(1)},    {"solution", q.value(2)},
+            {"rating", q.value(3)}, {"themes", q.value(4)}, {"source", q.value(5)}};
+}
+
 namespace {
 // Les puzzles manqués au moins une fois, avec la date de leur dernière tentative et le
 // nombre de réussites depuis le dernier échec ; n'en reste que ceux dont le délai est passé.

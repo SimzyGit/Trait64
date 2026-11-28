@@ -1,5 +1,11 @@
 # Changements
 
+## Jeu contre l'ordinateur et méthode Woodpecker — 28 novembre 2026
+
+- **Reprendre un coup** contre le moteur (bouton *Reprendre*, ruban, Ctrl + Retour arrière) : on revient à son dernier trait, son coup et la réponse du moteur effacés ; à deux joueurs, un seul coup. La pendule continue, Ctrl + Z rend la suite reprise.
+- **Bilan à la fin de la partie** : au mat, au pat ou à la nulle d'une partie jouée, le bilan se lance de lui-même. Une case de la fenêtre *Partie locale* le désactive.
+- **Méthode Woodpecker** (fenêtre *Puzzles*) : une série fixe de 10 à 1 000 puzzles, tirée du thème et de l'origine choisis près de votre classement, à refaire en cycles. Chaque cycle garde son score et son temps ; le classement n'est pas touché par ces répétitions. Un puzzle ordinaire met la série en pause sans la perdre.
+
 ## Animation des pièces — 28 novembre 2026
 
 - Corrigé : en parcourant une partie, la pièce jouée ne glissait pas, puis celle du coup précédent glissait depuis de mauvaises cases. L'animation, déclenchée par la FEN, lisait les pièces publiées après elle ; elle part maintenant du changement des pièces. Un test vérifie que chaque coup fait glisser la pièce jouée, et elle seule.

@@ -28,6 +28,13 @@ QVariantMap Controller::puzzles() const {
     state["active"] = puzzleId_ != 0;
     state["current"] = puzzle_;
     state["started"] = puzzleStarted_;
+    auto series = settings_.value("woodpecker").toMap();
+    if (!series.isEmpty()) {
+        series.remove("ids");
+        series["count"] = settings_.value("woodpecker").toMap()["ids"].toList().size();
+        series["active"] = woodpecker_ && puzzleId_ != 0;
+        state["woodpecker"] = series;
+    }
     return state;
 }
 
@@ -40,16 +47,66 @@ void Controller::refreshPuzzleStats() {
 }
 
 void Controller::startPuzzle(const QString &theme, const QString &source) {
+    woodpecker_ = false;
+    servePuzzle(theme, source);
+}
+
+void Controller::startWoodpecker(int count, const QString &theme, const QString &source) {
+    try {
+        need(!busy_, "Un traitement est déjà en cours.");
+        const auto ids = db_->pickPuzzles(std::clamp(count, 10, 1000),
+                                          settings_.value("puzzleRating", 1500).toInt(), 200, theme, source);
+        need(!ids.isEmpty(), "Aucun puzzle pour cette série : importez la base Lichess, ou élargissez le thème.");
+        QVariantList list;
+        for (auto id : ids)
+            list << id;
+        settings_.setValue("woodpecker", QVariantMap{{"ids", list},
+                                                     {"theme", theme},
+                                                     {"source", source},
+                                                     {"cycle", 1},
+                                                     {"index", 0},
+                                                     {"solved", 0},
+                                                     {"seconds", 0.0},
+                                                     {"cycles", QVariantList()}});
+        continueWoodpecker();
+    } catch (const std::exception &e) {
+        fail(e);
+    }
+}
+
+void Controller::continueWoodpecker() {
+    if (settings_.value("woodpecker").toMap().isEmpty())
+        return;
+    woodpecker_ = true;
+    servePuzzle({}, {});
+}
+
+void Controller::stopWoodpecker() {
+    woodpecker_ = false;
+    settings_.remove("woodpecker");
+    emit puzzlesChanged();
+}
+
+void Controller::servePuzzle(const QString &theme, const QString &source) {
     try {
         need(!busy_, "Un traitement est déjà en cours.");
         if (trainingActive() && !puzzleId_)
             finishTraining();
         const int rating = settings_.value("puzzleRating", 1500).toInt();
-        // Les puzzles manqués dont le délai est passé d'abord : c'est en les revoyant qu'on
-        // progresse, pas en en découvrant toujours de nouveaux.
-        auto next = db_->duePuzzle(theme, source);
-        if (next.isEmpty())
-            next = db_->nextPuzzle(rating, 150, theme, source);
+        QVariantMap next;
+        if (woodpecker_) {
+            const auto series = settings_.value("woodpecker").toMap();
+            const auto ids = series["ids"].toList();
+            need(!ids.isEmpty(), "Aucune série Woodpecker en cours.");
+            next = db_->puzzle(ids.value(series["index"].toInt() % ids.size()).toLongLong());
+            need(!next.isEmpty(), "Ce puzzle de la série a disparu de la base : recommencez une série.");
+        } else {
+            // Les puzzles manqués dont le délai est passé d'abord : c'est en les revoyant
+            // qu'on progresse, pas en en découvrant toujours de nouveaux.
+            next = db_->duePuzzle(theme, source);
+            if (next.isEmpty())
+                next = db_->nextPuzzle(rating, 150, theme, source);
+        }
         need(!next.isEmpty(),
              source == "library"
                  ? "Aucun mat tiré de la bibliothèque : « Tirer des mats de la bibliothèque »."
@@ -96,7 +153,7 @@ void Controller::startPuzzle(const QString &theme, const QString &source) {
 }
 
 void Controller::nextPuzzle() {
-    startPuzzle(puzzleTheme_, puzzleSource_);
+    servePuzzle(puzzleTheme_, puzzleSource_);
 }
 
 void Controller::puzzleHint() {
@@ -133,6 +190,43 @@ void Controller::finishPuzzle() {
     const bool success = !trainingFailed_;
     const double seconds = puzzleClock_.elapsed() / 1000.0;
     const int before = settings_.value("puzzleRating", 1500).toInt();
+    if (woodpecker_) {
+        // Les mêmes puzzles reviennent à chaque cycle : le classement n'en tient pas compte,
+        // seuls le score et le temps du cycle comptent.
+        try {
+            db_->recordPuzzle(puzzleId_, success, seconds, before);
+        } catch (const std::exception &e) {
+            fail(e);
+        }
+        auto series = settings_.value("woodpecker").toMap();
+        const int size = series["ids"].toList().size();
+        series["solved"] = series["solved"].toInt() + (success ? 1 : 0);
+        series["seconds"] = series["seconds"].toDouble() + seconds;
+        series["index"] = series["index"].toInt() + 1;
+        QString done;
+        if (series["index"].toInt() >= size) {
+            auto cycles = series["cycles"].toList();
+            cycles << QVariantMap{{"solved", series["solved"]}, {"seconds", qRound(series["seconds"].toDouble())}};
+            done = tr("Cycle %1 terminé : %2/%3 en %4 min.")
+                       .arg(series["cycle"].toInt())
+                       .arg(series["solved"].toInt())
+                       .arg(size)
+                       .arg(qRound(series["seconds"].toDouble() / 60));
+            series["cycles"] = cycles;
+            series["cycle"] = series["cycle"].toInt() + 1;
+            series["index"] = series["solved"] = 0;
+            series["seconds"] = 0.0;
+        }
+        settings_.setValue("woodpecker", series);
+        refreshPuzzleStats();
+        emit message(!done.isEmpty() ? done
+                     : success       ? tr("Résolu en %1 s · %2/%3 du cycle.")
+                                     .arg(qRound(seconds))
+                                     .arg(series["index"].toInt())
+                                     .arg(size)
+                                     : tr("Manqué · %1/%2 du cycle.").arg(series["index"].toInt()).arg(size));
+        return;
+    }
     const int difficulty = puzzle_["rating"].toInt();
     const double expected = 1.0 / (1.0 + std::pow(10.0, (difficulty - before) / 400.0));
     const int after =
