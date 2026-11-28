@@ -555,7 +555,10 @@ void Controller::refresh(bool content) {
                            end.first == chess::GameResultReason::STALEMATE ||
                            end.first == chess::GameResultReason::INSUFFICIENT_MATERIAL;
         if (final) {
-            if (playing_ || localGame_)
+            const bool played = playing_ || localGame_;
+            if (played && settings_.value("reviewAfterGame", true).toBool())
+                QTimer::singleShot(0, this, [this] { analyseGame(); });
+            if (played)
                 game_.tags["Result"] = end.first == chess::GameResultReason::CHECKMATE
                                            ? (board.sideToMove() == chess::Color::WHITE ? "0-1" : "1-0")
                                            : "1/2-1/2";
@@ -2148,6 +2151,36 @@ void Controller::stopPlaying() {
     engine_.stop();
     forgetEngineLines();
     refresh();
+}
+// Reprendre : contre le moteur, on revient au dernier trait du joueur (son coup et la réponse
+// du moteur) ; à deux, d'un seul coup. La suite reprise est effacée, Ctrl+Z la rend.
+void Controller::takeBack() {
+    if (!(playing_ || localGame_) || node_ <= 0)
+        return;
+    int target = game_.nodes[node_].parent;
+    if (playing_)
+        while (target > 0 &&
+               (game_.boardAt(target).sideToMove() == chess::Color::WHITE) != humanWhite_)
+            target = game_.nodes[target].parent;
+    if (playing_ && (game_.boardAt(target).sideToMove() == chess::Color::WHITE) != humanWhite_)
+        return;
+    if (clockRunning_) {
+        tickClock();
+        if (!clockRunning_)
+            return;
+    }
+    engine_.stop();
+    remember();
+    int first = node_;
+    while (game_.nodes[first].parent != target)
+        first = game_.nodes[first].parent;
+    game_.removeVariation(first);
+    node_ = target;
+    game_.tags["Result"] = "*";
+    review_.clear();
+    reviewQuality_.clear();
+    emit reviewChanged();
+    refresh(true);
 }
 void Controller::createCard(const QString &title) {
     try {

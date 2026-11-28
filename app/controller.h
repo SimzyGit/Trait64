@@ -601,6 +601,7 @@ class Controller : public QObject {
     Q_INVOKABLE void addEngineLine(int index);
     Q_INVOKABLE void playComputer(bool humanWhite);
     Q_INVOKABLE void stopPlaying();
+    Q_INVOKABLE void takeBack();
     Q_INVOKABLE void createCard(const QString &title);
     Q_INVOKABLE void startCard(qint64 id);
     // Deviner le coup : la partie ouverte est rejouée depuis le début, et l'on cherche

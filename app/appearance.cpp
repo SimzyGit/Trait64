@@ -197,6 +197,8 @@ QVariantMap Controller::preferences() const {
                          {"showHanging", false},
                          {"showAttacks", false},
                          {"assistedAnalysis", false},
+                         // Le bilan lancé de lui-même au mat, au pat ou à la nulle d'une partie jouée.
+                         {"reviewAfterGame", true},
                          {"sounds", true},
                          {"autoFlip", true},
                          {"soundTheme", "bois"},
@@ -455,7 +457,7 @@ void Controller::setPreference(const QString &key, const QVariant &value) {
         } else if (QStringList{"sidebarCompact", "ribbonMinimized", "figurines", "syncAtStartup", "highContrast", "reduceMotion",
                                "lightTheme", "coordinates", "legalMoves", "lastMove", "engineArrows",
                                "showHanging", "showAttacks", "assistedAnalysis", "sounds", "wheelMoves",
-                               "autoFlip", "blindfold", "autoBackup"}
+                               "autoFlip", "blindfold", "autoBackup", "reviewAfterGame"}
                        .contains(key))
             clean = value.toBool();
         else if (QStringList{"boardLight", "boardDark", "boardHighlight", "backgroundColor", "accentColor"}

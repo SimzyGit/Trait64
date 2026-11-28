@@ -2847,8 +2847,21 @@ int main(int argc, char **argv) {
             check(c.state()["clockRunning"].toBool(), "Local clock starts");
             c.move("e2e4");
             check(c.state()["whiteClock"].toString() == "1:01", "Increment applied after completed move");
+            c.move("e7e5");
+            c.takeBack();
+            check(c.state()["node"].toInt() == 1 && c.state()["clockRunning"].toBool() &&
+                      !c.state()["canForward"].toBool(),
+                  "Take back removes the last move and keeps the clock running");
             c.stopPlaying();
             check(!c.state()["clockRunning"].toBool(), "Stopping game stops clock");
+            c.setPreference("reviewAfterGame", false);
+            c.newGame();
+            c.startLocalGame(5, 0, 0, true);
+            for (const char *m : {"f2f3", "e7e5", "g2g4", "d8h4"})
+                c.move(m);
+            check(!c.state()["playing"].toBool() && !c.reviewState()["running"].toBool(),
+                  "Finished game without automatic review when disabled");
+            c.setPreference("reviewAfterGame", true);
             // Exercise every new dialog including small window layout and keyboard capture.
             for (const auto &name :
                  QStringList{"appearanceDialog", "positionEditor", "reviewDialog", "settingsDialog",

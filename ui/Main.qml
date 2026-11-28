@@ -88,6 +88,7 @@ ApplicationWindow {
             {title: qsTr("Partie"), items: [
                 {text: qsTr("Informations de la partie…"), icon: "info", large: true, run: function() { tagsDialog.open() }},
                 {text: controller.state.playing ? qsTr("Arrêter la partie") : qsTr("Jouer une partie…"), icon: "play", large: true, run: function() { controller.state.playing ? controller.stopPlaying() : playDialog.open() }},
+                {name: "ribbonTakeBack", text: qsTr("Reprendre le coup"), icon: "undo", hint: qsTr("Revient à votre dernier trait (Ctrl+Retour arrière)"), on: function() { return controller.state.playing && controller.state.canBack }, run: function() { controller.takeBack() }},
                 {text: qsTr("Ouvrir sur un téléphone (QR)…"), icon: "qr", run: function() { positionQr.open() }},
                 {text: qsTr("Exporter le diagramme…"), icon: "image", run: function() { diagramDialog.open() }}]},
             {title: qsTr("Fenêtres"), items: [
@@ -1326,6 +1327,7 @@ objectName:"analysisSplit"
                                     MenuItem {text:controller.state.playing?qsTr("Arrêter la partie"):qsTr("Jouer une partie");onTriggered:controller.state.playing?controller.stopPlaying():playDialog.open()}
                                 }
                             }
+                            TButton {objectName:"takeBackButton";text:qsTr("Reprendre");visible:controller.state.playing&&analysisSplit.width>1000;enabled:controller.state.canBack;onClicked:controller.takeBack()}
                             TButton {text:controller.state.playing?qsTr("Arrêter"):qsTr("Jouer");visible:!controller.state.training&&analysisSplit.width>1000;onClicked:controller.state.playing?controller.stopPlaying():playDialog.open()}
                         }
                         // L'état et la réfutation d'un bilan partagent une bande de hauteur fixe :
@@ -1659,6 +1661,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
                     onValueModified:if(limitElo.checked)controller.setPreference("playElo",value)}
                 Label {text:qsTr("Elo");color:win.muted}
             }
+            TCheckBox {objectName:"reviewAfterGame";text:qsTr("Bilan de la partie à la fin");checked:controller.preferences.reviewAfterGame;onToggled:controller.setPreference("reviewAfterGame",checked)}
             TButton {text:qsTr("Démarrer avec pendule");accent:true;Layout.fillWidth:true;onClicked:{controller.startLocalGame(clockMinutes.value,clockIncrement.value,opponent.currentIndex,playSide.currentIndex===0);playDialog.close()}}
             TButton {text:qsTr("Moteur sans pendule");visible:opponent.currentIndex===1;Layout.fillWidth:true;onClicked:{controller.playComputer(playSide.currentIndex===0);playDialog.close()}}
             Label {text:qsTr("La partie démarre depuis la position de l’échiquier. Parcourir les coups arrête la pendule.");wrapMode:Text.WordWrap;Layout.fillWidth:true;color:win.muted;font.pixelSize:Math.round(11*controller.preferences.fontScale*controller.preferences.uiScale)}
@@ -2034,6 +2037,7 @@ ColumnLayout {width:trainingViewport.availableWidth;height:Math.max(trainingView
     Shortcut {sequence:win.keyFor("save");onActivated:controller.saveGame()}
     Shortcut {sequence:win.keyFor("commands");onActivated:commands.open()}
     Shortcut {sequence:"Ctrl+F1";enabled:win.showRibbon;onActivated:ribbon.minimized=!ribbon.minimized}
+    Shortcut {sequence:"Ctrl+Backspace";enabled:controller.state.playing;onActivated:controller.takeBack()}
     // Ce qu'un camp a pris, puis son avance en points s'il en a une.
     function takenLine(white){var lead=(controller.state.materialLead||0)*(white?1:-1);return ((white?controller.state.takenByWhite:controller.state.takenByBlack)||"")+(lead>0?" +"+lead:"")}
     // Les raccourcis viennent des réglages ; Raccourcis clavier… permet de les changer.
